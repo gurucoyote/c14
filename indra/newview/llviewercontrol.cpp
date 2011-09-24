@@ -36,11 +36,15 @@
 #include "llviewercontrol.h"
 
 #include "indra_constants.h"
+#include "llaudioengine.h"
+#include "llkeyboard.h"
+#include "llparcel.h"
+#include "llrender.h"
+#include "llversionviewer.h"
 
 // For Listeners
 #include "llagent.h"
 #include "llappviewer.h"
-#include "llaudioengine.h"
 #include "llavatarnamecache.h"
 #include "llcallingcard.h"
 #include "llconsole.h"
@@ -51,15 +55,11 @@
 #include "llflexibleobject.h"
 #include "llfloater.h"
 #include "llfloaterchat.h"
-#include "llkeyboard.h"
 #include "llmeshrepository.h"
 #include "llnetmap.h"
-#include "llnotify.h"
-#include "llparcel.h"
-#include "llrender.h"
 #include "llsky.h"
 #include "lltoolbar.h"
-#include "llversionviewer.h"
+#include "lltracker.h"
 #include "llvieweraudio.h"
 #include "llviewerjoystick.h"
 #include "llviewerparcelmedia.h"
@@ -353,6 +353,12 @@ static bool handleCameraCollisionsChanged(const LLSD& newvalue)
 	return true;
 }
 
+static bool handleCameraChanged(const LLSD& newvalue)
+{
+	gAgent.setupCameraView();
+	return true;
+}
+
 static bool handleAudioStreamMusicChanged(const LLSD& newvalue)
 {
 	if (gAudiop)
@@ -609,6 +615,12 @@ static bool handleToolbarButtonsChanged(const LLSD&)
 	return true;
 }
 
+static bool handleCheesyBeaconChanged(const LLSD& newvalue)
+{
+	LLTracker::sCheesyBeacon = newvalue.asBoolean();
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 void settings_setup_listeners()
@@ -712,6 +724,11 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("JoystickAxis5")->getSignal()->connect(boost::bind(&handleJoystickChanged, _2));
 	gSavedSettings.getControl("JoystickAxis6")->getSignal()->connect(boost::bind(&handleJoystickChanged, _2));
 	gSavedSettings.getControl("CameraIgnoreCollisions")->getSignal()->connect(boost::bind(&handleCameraCollisionsChanged, _2));
+	gSavedSettings.getControl("CameraFrontView")->getSignal()->connect(boost::bind(&handleCameraChanged, _2));
+	gSavedSettings.getControl("FocusOffsetDefault")->getSignal()->connect(boost::bind(&handleCameraChanged, _2));
+	gSavedSettings.getControl("CameraOffsetDefault")->getSignal()->connect(boost::bind(&handleCameraChanged, _2));
+	gSavedSettings.getControl("FocusOffsetFrontView")->getSignal()->connect(boost::bind(&handleCameraChanged, _2));
+	gSavedSettings.getControl("CameraOffsetFrontView")->getSignal()->connect(boost::bind(&handleCameraChanged, _2));
 	gSavedSettings.getControl("FlycamAxisScale0")->getSignal()->connect(boost::bind(&handleJoystickChanged, _2));
 	gSavedSettings.getControl("FlycamAxisScale1")->getSignal()->connect(boost::bind(&handleJoystickChanged, _2));
 	gSavedSettings.getControl("FlycamAxisScale2")->getSignal()->connect(boost::bind(&handleJoystickChanged, _2));
@@ -785,4 +802,5 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("ShowMiniMapButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
 	gSavedSettings.getControl("ShowMapButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
 	gSavedSettings.getControl("ShowInventoryButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
+	gSavedSettings.getControl("CheesyBeacon")->getSignal()->connect(boost::bind(&handleCheesyBeaconChanged, _2));	
 }

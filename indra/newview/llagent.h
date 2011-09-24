@@ -198,9 +198,10 @@ public:
 	void			updateLookAt(const S32 mouse_x, const S32 mouse_y);
 
 
-	void			updateCamera();			// call once per frame to update camera location/orientation
+	void			updateCamera();						// call once per frame to update camera location/orientation
 	void			resetCamera();						// slam camera into its default position
 	void			setupSitCamera();
+	void			setupCameraView(bool reset = false);
 	void			setCameraCollidePlane(const LLVector4 &plane) { mCameraCollidePlane = plane; }
 
 	void			changeCameraToDefault();
@@ -843,6 +844,7 @@ private:
 	F32				mCameraFOVDefault;				// default field of view that is basis for FOV zoom effect
 	LLVector3d		mCameraFocusOffset;				// offset from focus point in build mode
 	LLVector3d		mCameraFocusOffsetTarget;		// target towards which we are lerping the camera's focus offset
+	LLVector3		mCameraFocusOffsetDefault;		// default focus point offset relative to avatar
 	LLVector3		mCameraOffsetDefault;			// default third-person camera offset
 	LLVector4		mCameraCollidePlane;			// colliding plane for camera
 	F32				mCurrentCameraDistance;			// current camera offset from avatar

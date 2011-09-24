@@ -54,13 +54,12 @@
 #include "llagent.h"
 #include "llviewercontrol.h"
 
-
 // Used when app not active to avoid processing hover.
 LLTool*			gToolNull	= NULL;
 
 LLToolset*		gBasicToolset		= NULL;
 LLToolset*		gCameraToolset		= NULL;
-//LLToolset*		gLandToolset		= NULL;
+//LLToolset*	gLandToolset		= NULL;
 LLToolset*		gMouselookToolset	= NULL;
 LLToolset*		gFaceEditToolset	= NULL;
 
@@ -68,13 +67,12 @@ LLToolset*		gFaceEditToolset	= NULL;
 // LLToolMgr
 
 LLToolMgr::LLToolMgr()
-	:
-	mBaseTool(NULL), 
+:	mBaseTool(NULL), 
 	mSavedTool(NULL),
-	mTransientTool( NULL ),
-	mOverrideTool( NULL ),
-	mSelectedTool( NULL ),
-	mCurrentToolset( NULL )
+	mTransientTool(NULL),
+	mOverrideTool(NULL),
+	mSelectedTool(NULL),
+	mCurrentToolset(NULL)
 {
 	gToolNull = new LLTool(LLStringUtil::null);  // Does nothing
 	setCurrentTool(gToolNull);
@@ -89,28 +87,28 @@ LLToolMgr::LLToolMgr()
 void LLToolMgr::initTools()
 {
 	static BOOL initialized = FALSE;
-	if(initialized)
+	if (initialized)
 	{
 		return;
 	}
 	initialized = TRUE;
-	gBasicToolset->addTool( LLToolPie::getInstance() );
-	gBasicToolset->addTool( LLToolCamera::getInstance() );
-	gCameraToolset->addTool( LLToolCamera::getInstance() );
-	gBasicToolset->addTool( LLToolGrab::getInstance() );
-	gBasicToolset->addTool( LLToolCompTranslate::getInstance() );
-	gBasicToolset->addTool( LLToolCompCreate::getInstance() );
-	gBasicToolset->addTool( LLToolBrushLand::getInstance() );
-	gMouselookToolset->addTool( LLToolCompGun::getInstance() );
-	gBasicToolset->addTool( LLToolCompInspect::getInstance() );
-	gFaceEditToolset->addTool( LLToolCamera::getInstance() );
+	gBasicToolset->addTool(LLToolPie::getInstance());
+	gBasicToolset->addTool(LLToolCamera::getInstance());
+	gCameraToolset->addTool(LLToolCamera::getInstance());
+	gBasicToolset->addTool(LLToolGrab::getInstance());
+	gBasicToolset->addTool(LLToolCompTranslate::getInstance());
+	gBasicToolset->addTool(LLToolCompCreate::getInstance());
+	gBasicToolset->addTool(LLToolBrushLand::getInstance());
+	gMouselookToolset->addTool(LLToolCompGun::getInstance());
+	gBasicToolset->addTool(LLToolCompInspect::getInstance());
+	gFaceEditToolset->addTool(LLToolCamera::getInstance());
 
 	// In case focus was lost before we got here
 	clearSavedTool();
 	// On startup, use "select" tool
 	setCurrentToolset(gBasicToolset);
 
-	gBasicToolset->selectTool( LLToolPie::getInstance() );
+	gBasicToolset->selectTool(LLToolPie::getInstance());
 }
 
 LLToolMgr::~LLToolMgr()
@@ -126,7 +124,7 @@ LLToolMgr::~LLToolMgr()
 
 	delete gCameraToolset;
 	gCameraToolset = NULL;
-	
+
 	delete gToolNull;
 	gToolNull = NULL;
 }
@@ -153,7 +151,7 @@ void LLToolMgr::setCurrentToolset(LLToolset* current)
 		mCurrentToolset->selectFirstTool();
 	}
 	// update current tool based on new toolset
-	setCurrentTool( mCurrentToolset->getSelectedTool() );
+	setCurrentTool(mCurrentToolset->getSelectedTool());
 }
 
 LLToolset* LLToolMgr::getCurrentToolset()
@@ -161,7 +159,7 @@ LLToolset* LLToolMgr::getCurrentToolset()
 	return mCurrentToolset;
 }
 
-void LLToolMgr::setCurrentTool( LLTool* tool )
+void LLToolMgr::setCurrentTool(LLTool* tool)
 {
 	if (mTransientTool)
 	{
@@ -200,7 +198,7 @@ LLTool* LLToolMgr::getCurrentTool()
 	LLTool* prev_tool = mSelectedTool;
 	// Set the selected tool to avoid infinite recursion
 	mSelectedTool = cur_tool;
-	
+
 	//update tool selection status
 	if (prev_tool != cur_tool)
 	{
@@ -239,12 +237,9 @@ bool LLToolMgr::inBuildMode()
 	// when entering mouselook inEdit() immediately returns true before 
 	// cameraMouselook() actually starts returning true.  Also, appearance edit
 	// sets build mode to true, so let's exclude that.
-	bool b=(inEdit() 
-			&& gSavedSettings.getBOOL("BuildBtnState")
-			&& !gAgent.cameraMouselook()
-			&& mCurrentToolset != gFaceEditToolset);
-	
-	return b;
+	static LLCachedControl<bool> build_btn_state(gSavedSettings, "BuildBtnState");
+	return inEdit() && build_btn_state && !gAgent.cameraMouselook() &&
+		   mCurrentToolset != gFaceEditToolset;
 }
 
 void LLToolMgr::setTransientTool(LLTool* tool)
@@ -279,7 +274,6 @@ void LLToolMgr::clearTransientTool()
 	updateToolStatus();
 }
 
-
 void LLToolMgr::onAppFocusLost()
 {
 	if (mSelectedTool)
@@ -308,63 +302,59 @@ void LLToolMgr::clearSavedTool()
 
 void LLToolset::addTool(LLTool* tool)
 {
-	mToolList.push_back( tool );
-	if( !mSelectedTool )
+	mToolList.push_back(tool);
+	if (!mSelectedTool)
 	{
 		mSelectedTool = tool;
 	}
 }
 
-
 void LLToolset::selectTool(LLTool* tool)
 {
 	mSelectedTool = tool;
-	LLToolMgr::getInstance()->setCurrentTool( mSelectedTool );
+	LLToolMgr::getInstance()->setCurrentTool(mSelectedTool);
 }
 
-
-void LLToolset::selectToolByIndex( S32 index )
+void LLToolset::selectToolByIndex(S32 index)
 {
 	LLTool *tool = (index >= 0 && index < (S32)mToolList.size()) ? mToolList[index] : NULL;
 	if (tool)
 	{
 		mSelectedTool = tool;
-		LLToolMgr::getInstance()->setCurrentTool( tool );
+		LLToolMgr::getInstance()->setCurrentTool(tool);
 	}
 }
 
-BOOL LLToolset::isToolSelected( S32 index )
+BOOL LLToolset::isToolSelected(S32 index)
 {
 	LLTool *tool = (index >= 0 && index < (S32)mToolList.size()) ? mToolList[index] : NULL;
 	return (tool == mSelectedTool);
 }
 
-
 void LLToolset::selectFirstTool()
 {
 	mSelectedTool = (0 < mToolList.size()) ? mToolList[0] : NULL;
-	LLToolMgr::getInstance()->setCurrentTool( mSelectedTool );
+	LLToolMgr::getInstance()->setCurrentTool(mSelectedTool);
 }
-
 
 void LLToolset::selectNextTool()
 {
 	LLTool* next = NULL;
-	for( tool_list_t::iterator iter = mToolList.begin();
-		 iter != mToolList.end(); )
+	for (tool_list_t::iterator iter = mToolList.begin();
+		 iter != mToolList.end();)
 	{
 		LLTool* cur = *iter++;
-		if( cur == mSelectedTool && iter != mToolList.end() )
+		if (cur == mSelectedTool && iter != mToolList.end())
 		{
 			next = *iter;
 			break;
 		}
 	}
 
-	if( next )
+	if (next)
 	{
 		mSelectedTool = next;
-		LLToolMgr::getInstance()->setCurrentTool( mSelectedTool );
+		LLToolMgr::getInstance()->setCurrentTool(mSelectedTool);
 	}
 	else
 	{
@@ -375,21 +365,21 @@ void LLToolset::selectNextTool()
 void LLToolset::selectPrevTool()
 {
 	LLTool* prev = NULL;
-	for( tool_list_t::reverse_iterator iter = mToolList.rbegin();
+	for (tool_list_t::reverse_iterator iter = mToolList.rbegin();
 		 iter != mToolList.rend(); )
 	{
 		LLTool* cur = *iter++;
-		if( cur == mSelectedTool && iter != mToolList.rend() )
+		if (cur == mSelectedTool && iter != mToolList.rend())
 		{
 			prev = *iter;
 			break;
 		}
 	}
 
-	if( prev )
+	if (prev)
 	{
 		mSelectedTool = prev;
-		LLToolMgr::getInstance()->setCurrentTool( mSelectedTool );
+		LLToolMgr::getInstance()->setCurrentTool(mSelectedTool);
 	}
 	else if (mToolList.size() > 0)
 	{
@@ -397,8 +387,8 @@ void LLToolset::selectPrevTool()
 	}
 }
 
-void select_tool( void *tool_pointer )
+void select_tool(void *tool_pointer)
 {
 	LLTool *tool = (LLTool *)tool_pointer;
-	LLToolMgr::getInstance()->getCurrentToolset()->selectTool( tool );
+	LLToolMgr::getInstance()->getCurrentToolset()->selectTool(tool);
 }

@@ -72,7 +72,7 @@ BOOL QLToolAlign::handleMouseDown(S32 x, S32 y, MASK mask)
 	{
 		gViewerWindow->pickAsync(x, y, mask, pickCallback);
 	}
-		
+
 	return TRUE;
 }
 
@@ -139,11 +139,11 @@ void QLToolAlign::pickCallback(const LLPickInfo& pick_info)
 			LLSelectMgr::getInstance()->deselectAll();
 			LLSelectMgr::getInstance()->selectObjectAndFamily(object);
 		}
-		
+
 	}
 	else
 	{
-		if (!(pick_info.mKeyMask == MASK_SHIFT))
+		if (pick_info.mKeyMask != MASK_SHIFT)
 		{
 			LLSelectMgr::getInstance()->deselectAll();
 		}
@@ -156,7 +156,7 @@ void QLToolAlign::handleSelect()
 {
 	// no parts, please
 
-	llwarns << "in select" << llendl;
+	LL_DEBUGS("ToolAlign") << "Tool Align in select." << LL_ENDL;
 	LLSelectMgr::getInstance()->promoteSelectionToRoot();
 	LLSelectMgr::getInstance()->updateSelectionCenter();
 	gFloaterTools->setStatusText("align");
@@ -171,6 +171,8 @@ BOOL QLToolAlign::findSelectedManipulator(S32 x, S32 y)
 	mHighlightedAxis = -1;
 	mHighlightedDirection = 0;
 
+	LLViewerCamera* camera = LLViewerCamera::getInstance();
+
 	LLMatrix4 transform;
 	if (LLSelectMgr::getInstance()->getSelection()->getSelectType() == SELECT_TYPE_HUD)
 	{
@@ -180,7 +182,7 @@ BOOL QLToolAlign::findSelectedManipulator(S32 x, S32 y)
 		transform *= cfr;
 		LLMatrix4 window_scale;
 		F32 zoom_level = 2.f * gAgent.mHUDCurZoom;
-		window_scale.initAll(LLVector3(zoom_level / LLViewerCamera::getInstance()->getAspect(), zoom_level, 0.f),
+		window_scale.initAll(LLVector3(zoom_level / camera->getAspect(), zoom_level, 0.f),
 							 LLQuaternion::DEFAULT,
 							 LLVector3::zero);
 		transform *= window_scale;
@@ -189,8 +191,8 @@ BOOL QLToolAlign::findSelectedManipulator(S32 x, S32 y)
 	{
 		transform.initAll(LLVector3(1.f, 1.f, 1.f), mBBox.getRotation(), mBBox.getCenterAgent());
 
-		LLMatrix4 projection_matrix = LLViewerCamera::getInstance()->getProjection();
-		LLMatrix4 model_matrix = LLViewerCamera::getInstance()->getModelview();
+		LLMatrix4 projection_matrix = camera->getProjection();
+		LLMatrix4 model_matrix = camera->getModelview();
 
 		transform *= model_matrix;
 		transform *= projection_matrix;
@@ -204,14 +206,14 @@ BOOL QLToolAlign::findSelectedManipulator(S32 x, S32 y)
 	LLVector2 delta;
 
 	LLVector3 bbox_scale = mBBox.getMaxLocal() - mBBox.getMinLocal();
-	
+
 	for (S32 axis = VX; axis <= VZ; axis++)
 	{
 		for (F32 direction = -1.0; direction <= 1.0; direction += 2.0)
 		{
 			LLVector3 axis_vector = LLVector3(0, 0, 0);
 			axis_vector.mV[axis] = direction * bbox_scale.mV[axis] / 2.0;
-			
+
 			LLVector4 manipulator_center = 	LLVector4(axis_vector);
 
 			LLVector4 screen_center = manipulator_center * transform;
@@ -244,7 +246,7 @@ BOOL QLToolAlign::handleHover(S32 x, S32 y, MASK mask)
 	{
 		mForce = TRUE;
 	}
-	
+
 	gViewerWindow->setCursor(UI_CURSOR_ARROW);
 	return findSelectedManipulator(x, y);
 }
@@ -301,7 +303,7 @@ LLBBox get_selection_axis_aligned_bbox()
 {
 	LLBBox selection_bbox = LLSelectMgr::getInstance()->getBBoxOfSelection();
 	LLVector3 position = selection_bbox.getPositionAgent();
-	
+
 	LLBBox axis_aligned_bbox = LLBBox(position, LLQuaternion(), LLVector3(), LLVector3());
 	axis_aligned_bbox.addPointLocal(LLVector3());
 
@@ -326,9 +328,11 @@ LLBBox get_selection_axis_aligned_bbox()
 
 void QLToolAlign::computeManipulatorSize()
 {
+	LLViewerCamera* camera = LLViewerCamera::getInstance();
+
 	if (LLSelectMgr::getInstance()->getSelection()->getSelectType() == SELECT_TYPE_HUD)
 	{
-		mManipulatorSize = MANIPULATOR_SIZE / (LLViewerCamera::getInstance()->getViewHeightInPixels() *
+		mManipulatorSize = MANIPULATOR_SIZE / (camera->getViewHeightInPixels() *
 											   gAgent.mHUDCurZoom);
 	}
 	else
@@ -338,8 +342,8 @@ void QLToolAlign::computeManipulatorSize()
 		if (distance > 0.001f)
 		{
 			// range != zero
-			F32 fraction_of_fov = MANIPULATOR_SIZE / LLViewerCamera::getInstance()->getViewHeightInPixels();
-			F32 apparent_angle = fraction_of_fov * LLViewerCamera::getInstance()->getView();  // radians
+			F32 fraction_of_fov = MANIPULATOR_SIZE / camera->getViewHeightInPixels();
+			F32 apparent_angle = fraction_of_fov * camera->getView();  // radians
 			mManipulatorSize = MANIPULATOR_SIZE * distance * tan(apparent_angle);
 		}
 		else
@@ -350,16 +354,16 @@ void QLToolAlign::computeManipulatorSize()
 	}
 }
 
-LLColor4 manipulator_color[3] = { LLColor4(0.7f, 0.0f, 0.0f, 0.5f),
-								   LLColor4(0.0f, 0.7f, 0.0f, 0.5f),
-								   LLColor4(0.0f, 0.0f, 0.7f, 0.5f) };
+LLColor4 manipulator_color[3] = {	LLColor4(0.7f, 0.0f, 0.0f, 0.5f),
+									LLColor4(0.0f, 0.7f, 0.0f, 0.5f),
+									LLColor4(0.0f, 0.0f, 0.7f, 0.5f) };
 								   
 void QLToolAlign::renderManipulators()
 {
 	computeManipulatorSize();
 	LLVector3 bbox_center = mBBox.getCenterAgent();
 	LLVector3 bbox_scale = mBBox.getMaxLocal() - mBBox.getMinLocal();
-	
+
 	for (S32 axis = VX; axis <= VZ; axis++)
 	{
 		for (F32 direction = -1.0; direction <= 1.0; direction += 2.0)
@@ -367,7 +371,7 @@ void QLToolAlign::renderManipulators()
 			F32 size = mManipulatorSize;
 			LLColor4 color = manipulator_color[axis];
 
-			if ((axis == mHighlightedAxis) && (direction == mHighlightedDirection))
+			if (axis == mHighlightedAxis && direction == mHighlightedDirection)
 			{
 				size *= 2.0;
 				color *= 1.5;
@@ -381,20 +385,20 @@ void QLToolAlign::renderManipulators()
 
 			for (S32 i = 0; i < arrows; i++)
 			{
-				LLVector3 axis_vector = LLVector3(0,0,0);
-				axis_vector.mV[axis] = direction * (bbox_scale.mV[axis] / 2.0 + i * (size/3.0));
-			
+				LLVector3 axis_vector = LLVector3(0, 0, 0);
+				axis_vector.mV[axis] = direction * (bbox_scale.mV[axis] / 2.0 + i * (size / 3.0));
+
 				LLVector3 manipulator_center = 	bbox_center + axis_vector;
 
 				LLQuaternion manipulator_rotation;
 				manipulator_rotation.shortestArc(LLVector3(0,0,1), -1.0 * axis_vector);
-				
+
 				LLBBox manipulator_bbox = LLBBox(manipulator_center, manipulator_rotation,
 												 LLVector3(), LLVector3());
 
 				manipulator_bbox.addPointLocal(LLVector3(-1, -1, -0.75) * size * 0.5);
 				manipulator_bbox.addPointLocal(LLVector3(1, 1, 0.75) * size * 0.5);
-			
+
 				gGL.color4fv(color.mV);
 				// sadly, gCone doesn't use gGL like gBox does so we also set the raw GL color.
 				// Hopefully this won't screw-up later rendering.
@@ -429,7 +433,8 @@ void QLToolAlign::render()
 		{
 			virtual bool apply(LLViewerObject* objectp)
 			{
-				return objectp->permMove() && (objectp->permModify() || !gSavedSettings.getBOOL("EditLinkedParts"));
+				static LLCachedControl<bool> edit_linked_parts(gSavedSettings, "EditLinkedParts");
+				return objectp->permMove() && (objectp->permModify() || !edit_linked_parts);
 			}
 		} func;
 		can_move = selection->applyToObjects(&func);
@@ -445,31 +450,33 @@ void QLToolAlign::render()
 BOOL bbox_overlap(LLBBox bbox1, LLBBox bbox2)
 {
 	const F32 FUDGE = 0.001f;  // because of stupid SL precision/rounding
-	
+
 	LLVector3 delta = bbox1.getCenterAgent() - bbox2.getCenterAgent();
 
 	LLVector3 half_extent = (bbox1.getExtentLocal() + bbox2.getExtentLocal()) / 2.0;
 
-	return ((fabs(delta.mV[VX]) < half_extent.mV[VX] - FUDGE) &&
-			(fabs(delta.mV[VY]) < half_extent.mV[VY] - FUDGE) &&
-			(fabs(delta.mV[VZ]) < half_extent.mV[VZ] - FUDGE));
+	return (fabs(delta.mV[VX]) < half_extent.mV[VX] - FUDGE &&
+			fabs(delta.mV[VY]) < half_extent.mV[VY] - FUDGE &&
+			fabs(delta.mV[VZ]) < half_extent.mV[VZ] - FUDGE);
 }
 
 // used to sort bboxes before packing
 class BBoxCompare
 {
 public:
-	BBoxCompare(S32 axis, F32 direction, std::map<LLPointer<LLViewerObject>, LLBBox >& bboxes) :
-		mAxis(axis), mDirection(direction), mBBoxes(bboxes) {}
+	BBoxCompare(S32 axis, F32 direction, std::map<LLPointer<LLViewerObject>, LLBBox >& bboxes)
+	:	mAxis(axis), mDirection(direction), mBBoxes(bboxes)
+	{
+	}
 
 	BOOL operator() (LLViewerObject* object1, LLViewerObject* object2)
 	{
 		LLVector3 corner1 = mBBoxes[object1].getCenterAgent() -
-			mDirection * mBBoxes[object1].getExtentLocal()/2.0;
+							mDirection * mBBoxes[object1].getExtentLocal() / 2.0;
 
 		LLVector3 corner2 = mBBoxes[object2].getCenterAgent() -
-			mDirection * mBBoxes[object2].getExtentLocal()/2.0;
-		
+							mDirection * mBBoxes[object2].getExtentLocal() / 2.0;
+
 		return mDirection * corner1.mV[mAxis] < mDirection * corner2.mV[mAxis];
 	}
 
@@ -482,10 +489,10 @@ void QLToolAlign::align()
 {
 	// no linkset parts, please
 	LLSelectMgr::getInstance()->promoteSelectionToRoot();
-	
+
 	std::vector<LLPointer<LLViewerObject> > objects;
 	std::map<LLPointer<LLViewerObject>, LLBBox > original_bboxes;
-	
+
     // cycle over the nodes in selection and collect them into an array
 	for (LLObjectSelection::root_iterator selection_iter = LLSelectMgr::getInstance()->getSelection()->root_begin();
 		 selection_iter != LLSelectMgr::getInstance()->getSelection()->root_end();
@@ -498,7 +505,7 @@ void QLToolAlign::align()
 			if (object)
 			{
 				LLVector3 position = object->getPositionAgent();
-	
+
 				LLBBox bbox = LLBBox(position, LLQuaternion(), LLVector3(), LLVector3());
 				bbox.addPointLocal(LLVector3());
 
@@ -513,7 +520,7 @@ void QLToolAlign::align()
 					LLViewerObject* child = *i;
 					bbox.addBBoxAgent(child->getBoundingBoxAgent());
 				}
-				
+
 				objects.push_back(object);
 				original_bboxes[object] = bbox;
 			}
@@ -535,8 +542,8 @@ void QLToolAlign::align()
 	{
 		LLBBox target_bbox = mBBox;
 		LLVector3 target_corner = target_bbox.getCenterAgent() - 
-			direction * target_bbox.getExtentLocal() / 2.0;
-	
+								  direction * target_bbox.getExtentLocal() / 2.0;
+
 		LLViewerObject* object = objects[i];
 
 		LLBBox this_bbox = original_bboxes[object];
@@ -551,9 +558,9 @@ void QLToolAlign::align()
 			LLVector3 delta = target_corner - this_corner;
 
 			// new position moves only on one axis, please
-			LLVector3 delta_one_axis = LLVector3(0,0,0);
+			LLVector3 delta_one_axis = LLVector3(0, 0, 0);
 			delta_one_axis.mV[axis] = delta.mV[axis];
-			
+
 			LLVector3 new_position = this_bbox.getCenterAgent() + delta_one_axis;
 
 			// construct the new bbox
@@ -564,8 +571,8 @@ void QLToolAlign::align()
 			// check to see if it overlaps the previously placed objects
 			BOOL overlap = FALSE;
 
-			llwarns << "i=" << i << " j=" << j << llendl;
-			
+			LL_DEBUGS("ToolAlign") << "i=" << i << " j=" << j << LL_ENDL;
+
 			if (!mForce) // well, don't check if in force mode
 			{
 				for (S32 k = 0; k < i; k++)
@@ -577,8 +584,15 @@ void QLToolAlign::align()
 
 					if (overlaps_this)
 					{
-						llwarns << "overlap" << new_bbox.getCenterAgent() << other_bbox.getCenterAgent() << llendl;
-						llwarns << "extent" << new_bbox.getExtentLocal() << other_bbox.getExtentLocal() << llendl;
+						LL_WARNS("ToolAlign") << "Overlap: "
+											  << new_bbox.getCenterAgent()
+											  << " / "
+											  << other_bbox.getCenterAgent()
+											  << " - Extent: "
+											  << new_bbox.getExtentLocal()
+											  << " / "
+											  << other_bbox.getExtentLocal()
+											  << LL_ENDL;
 					}
 
 					overlap = (overlap || overlaps_this);
@@ -603,7 +617,7 @@ void QLToolAlign::align()
 			{
 				LLBBox next_bbox = new_bboxes[objects[j]];
 				target_corner = next_bbox.getCenterAgent() +
-					direction * next_bbox.getExtentLocal() / 2.0;
+								direction * next_bbox.getExtentLocal() / 2.0;
 			}
 		}
 	}
@@ -617,7 +631,7 @@ void QLToolAlign::align()
 		LLBBox new_bbox = new_bboxes[object];
 
 		LLVector3 delta = new_bbox.getCenterAgent() - original_bbox.getCenterAgent();
-		
+
 		LLVector3 original_position = object->getPositionAgent();
 		LLVector3 new_position = original_position + delta;
 

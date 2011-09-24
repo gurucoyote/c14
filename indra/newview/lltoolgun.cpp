@@ -48,8 +48,8 @@
 #include "lltoolmgr.h"
 #include "lltoolgrab.h"
 
-LLToolGun::LLToolGun( LLToolComposite* composite )
-:	LLTool( std::string("gun"), composite ),
+LLToolGun::LLToolGun(LLToolComposite* composite)
+:	LLTool(std::string("gun"), composite),
 		mIsSelected(FALSE)
 {
 }
@@ -73,30 +73,33 @@ void LLToolGun::handleDeselect()
 BOOL LLToolGun::handleMouseDown(S32 x, S32 y, MASK mask)
 {
 	gGrabTransientTool = this;
-	LLToolMgr::getInstance()->getCurrentToolset()->selectTool( LLToolGrab::getInstance() );
+	LLToolMgr::getInstance()->getCurrentToolset()->selectTool(LLToolGrab::getInstance());
 
 	return LLToolGrab::getInstance()->handleMouseDown(x, y, mask);
 }
 
 BOOL LLToolGun::handleHover(S32 x, S32 y, MASK mask) 
 {
-	if( gAgent.cameraMouselook() && mIsSelected )
+	if (gAgent.cameraMouselook() && mIsSelected)
 	{
 		const F32 NOMINAL_MOUSE_SENSITIVITY = 0.0025f;
 
-		F32 mouse_sensitivity = gSavedSettings.getF32("MouseSensitivity");
-		mouse_sensitivity = clamp_rescale(mouse_sensitivity, 0.f, 15.f, 0.5f, 2.75f) * NOMINAL_MOUSE_SENSITIVITY;
+		static LLCachedControl<F32> sensitivity(gSavedSettings, "MouseSensitivity");
+		F32 mouse_sensitivity = clamp_rescale((F32)sensitivity,
+											  0.f, 15.f, 0.5f, 2.75f)
+								* NOMINAL_MOUSE_SENSITIVITY;
 
 		// ...move the view with the mouse
 
 		// get mouse movement delta
 		S32 dx = -gViewerWindow->getCurrentMouseDX();
 		S32 dy = -gViewerWindow->getCurrentMouseDY();
-		
+
 		if (dx != 0 || dy != 0)
 		{
 			// ...actually moved off center
-			if (gSavedSettings.getBOOL("InvertMouse"))
+			static LLCachedControl<bool> invert_mouse(gSavedSettings, "InvertMouse");
+			if (invert_mouse)
 			{
 				gAgent.pitch(mouse_sensitivity * -dy);
 			}
@@ -107,7 +110,8 @@ BOOL LLToolGun::handleHover(S32 x, S32 y, MASK mask)
 			LLVector3 skyward = gAgent.getReferenceUpVector();
 			gAgent.rotate(mouse_sensitivity * dx, skyward.mV[VX], skyward.mV[VY], skyward.mV[VZ]);
 
-			if (gSavedSettings.getBOOL("MouseSun"))
+			static LLCachedControl<bool> mouse_sun(gSavedSettings, "MouseSun");
+			if (mouse_sun)
 			{
 				gSky.setSunDirection(LLViewerCamera::getInstance()->getAtAxis(), LLVector3(0.f, 0.f, 0.f));
 				gSky.setOverrideSun(TRUE);
@@ -125,7 +129,9 @@ BOOL LLToolGun::handleHover(S32 x, S32 y, MASK mask)
 		lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGun (not mouselook)" << llendl;
 	}
 
-	// HACK to avoid assert: error checking system makes sure that the cursor is set during every handleHover.  This is actually a no-op since the cursor is hidden.
+	// HACK to avoid assert: error checking system makes sure that the cursor
+	// is set during every handleHover.  This is actually a no-op since the
+	// cursor is hidden.
 	gViewerWindow->setCursor(UI_CURSOR_ARROW);  
 
 	return TRUE;
@@ -133,11 +139,11 @@ BOOL LLToolGun::handleHover(S32 x, S32 y, MASK mask)
 
 void LLToolGun::draw()
 {
-	if( gSavedSettings.getBOOL("ShowCrosshairs") )
+	static LLCachedControl<bool> show_crosshairs(gSavedSettings, "ShowCrosshairs");
+	if (show_crosshairs)
 	{
 		LLUIImagePtr crosshair = LLUI::getUIImage("UIImgCrosshairsUUID");
-		crosshair->draw(
-			( gViewerWindow->getWindowWidth() - crosshair->getWidth() ) / 2,
-			( gViewerWindow->getWindowHeight() - crosshair->getHeight() ) / 2);
+		crosshair->draw((gViewerWindow->getWindowWidth() - crosshair->getWidth()) / 2,
+						(gViewerWindow->getWindowHeight() - crosshair->getHeight()) / 2);
 	}
 }

@@ -56,7 +56,6 @@
 #define CONTROL_ERRS LL_WARNS("ControlErrors")
 #endif
 
-
 template <> eControlType get_control_type<U32>();
 template <> eControlType get_control_type<S32>();
 template <> eControlType get_control_type<F32>();
@@ -140,13 +139,13 @@ bool LLControlVariable::llsd_compare(const LLSD& a, const LLSD & b)
 }
 
 LLControlVariable::LLControlVariable(const std::string& name, eControlType type,
-							 LLSD initial, const std::string& comment,
-							 bool persist, bool hidefromsettingseditor)
-	: mName(name),
-	  mComment(comment),
-	  mType(type),
-	  mPersist(persist),
-	  mHideFromSettingsEditor(hidefromsettingseditor)
+							 		 LLSD initial, const std::string& comment,
+							 		 bool persist, bool hidefromsettingseditor)
+:	mName(name),
+	mComment(comment),
+	mType(type),
+	mPersist(persist),
+	mHideFromSettingsEditor(hidefromsettingseditor)
 {
 	if (mPersist && mComment.empty())
 	{
@@ -155,8 +154,6 @@ LLControlVariable::LLControlVariable(const std::string& name, eControlType type,
 	//Push back versus setValue'ing here, since we don't want to call a signal yet
 	mValues.push_back(initial);
 }
-
-
 
 LLControlVariable::~LLControlVariable()
 {
@@ -167,10 +164,10 @@ LLSD LLControlVariable::getComparableValue(const LLSD& value)
 	// *FIX:MEP - The following is needed to make the LLSD::ImplString 
 	// work with boolean controls...
 	LLSD storable_value;
-	if(TYPE_BOOLEAN == type() && value.isString())
+	if (TYPE_BOOLEAN == type() && value.isString())
 	{
 		BOOL temp;
-		if(LLStringUtil::convertToBOOL(value.asString(), temp)) 
+		if (LLStringUtil::convertToBOOL(value.asString(), temp)) 
 		{
 			storable_value = (bool)temp;
 		}
@@ -211,7 +208,7 @@ void LLControlVariable::setValue(const LLSD& new_value, bool saved_value)
 
 	LLSD storable_value = getComparableValue(new_value);
 	bool value_changed = llsd_compare(getValue(), storable_value) == FALSE;
-	if(saved_value)
+	if (saved_value)
 	{
 		// If we're going to save this value, return to default but don't fire
 		resetToDefault(false);
@@ -227,13 +224,13 @@ void LLControlVariable::setValue(const LLSD& new_value, bool saved_value)
 		// the result of getSaveValue()
 		if (llsd_compare(mValues.back(), storable_value) == FALSE)
 		{
-			while(mValues.size() > 2)
+			while (mValues.size() > 2)
 			{
 				// Remove any unsaved values.
 				mValues.pop_back();
 			}
 
-			if(mValues.size() < 2)
+			if (mValues.size() < 2)
 			{
 				// Add the default to the 'save' value.
 				mValues.push_back(mValues[0]);
@@ -244,7 +241,7 @@ void LLControlVariable::setValue(const LLSD& new_value, bool saved_value)
 		}
 	}
 
-	if(value_changed)
+	if (value_changed)
 	{
 		mCommitSignal(this, storable_value);
 	}
@@ -261,7 +258,7 @@ void LLControlVariable::setDefaultValue(const LLSD& value)
 	bool value_changed = (llsd_compare(getValue(), comparable_value) == FALSE);
 	resetToDefault(false);
 	mValues[0] = comparable_value;
-	if(value_changed)
+	if (value_changed)
 	{
 		firePropertyChanged();
 	}
@@ -286,12 +283,12 @@ void LLControlVariable::resetToDefault(bool fire_signal)
 {
 	//The first setting is always the default
 	//Pop to it and fire off the listener
-	while(mValues.size() > 1)
+	while (mValues.size() > 1)
 	{
 		mValues.pop_back();
 	}
-	
-	if(fire_signal) 
+
+	if (fire_signal) 
 	{
 		firePropertyChanged();
 	}
@@ -307,16 +304,15 @@ LLSD LLControlVariable::getSaveValue() const
 {
 	//The first level of the stack is default
 	//We assume that the second level is user preferences that should be saved
-	if(mValues.size() > 1) return mValues[1];
+	if (mValues.size() > 1) return mValues[1];
 	return mValues[0];
 }
 
-LLPointer<LLControlVariable> LLControlGroup::getControl(const std::string& name)
+LLControlVariablePtr LLControlGroup::getControl(const std::string& name)
 {
 	ctrl_name_table_t::iterator iter = mNameTable.find(name);
-	return iter == mNameTable.end() ? LLPointer<LLControlVariable>() : iter->second;
+	return iter == mNameTable.end() ? LLControlVariablePtr() : iter->second;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -351,7 +347,7 @@ eControlType LLControlGroup::typeStringToEnum(const std::string& typestr)
 {
 	for(int i = 0; i < (int)TYPE_COUNT; ++i)
 	{
-		if(mTypeString[i] == typestr) return (eControlType)i;
+		if (mTypeString[i] == typestr) return (eControlType)i;
 	}
 	return (eControlType)-1;
 }
@@ -385,7 +381,7 @@ BOOL LLControlGroup::declareControl(const std::string& name, eControlType type, 
 
 	// if not, create the control and add it to the name table
 	LLControlVariable* control = new LLControlVariable(name, type, initial_val, comment, persist, hidefromsettingseditor);
-	mNameTable[name] = control;	
+	mNameTable[name] = control;
 	return TRUE;
 }
 
@@ -429,22 +425,22 @@ BOOL LLControlGroup::declareRect(const std::string& name, const LLRect &initial_
 	return declareControl(name, TYPE_RECT, initial_val.getValue(), comment, persist);
 }
 
-BOOL LLControlGroup::declareColor4U(const std::string& name, const LLColor4U &initial_val, const std::string& comment, BOOL persist )
+BOOL LLControlGroup::declareColor4U(const std::string& name, const LLColor4U &initial_val, const std::string& comment, BOOL persist)
 {
 	return declareControl(name, TYPE_COL4U, initial_val.getValue(), comment, persist);
 }
 
-BOOL LLControlGroup::declareColor4(const std::string& name, const LLColor4 &initial_val, const std::string& comment, BOOL persist )
+BOOL LLControlGroup::declareColor4(const std::string& name, const LLColor4 &initial_val, const std::string& comment, BOOL persist)
 {
 	return declareControl(name, TYPE_COL4, initial_val.getValue(), comment, persist);
 }
 
-BOOL LLControlGroup::declareColor3(const std::string& name, const LLColor3 &initial_val, const std::string& comment, BOOL persist )
+BOOL LLControlGroup::declareColor3(const std::string& name, const LLColor3 &initial_val, const std::string& comment, BOOL persist)
 {
 	return declareControl(name, TYPE_COL3, initial_val.getValue(), comment, persist);
 }
 
-BOOL LLControlGroup::declareLLSD(const std::string& name, const LLSD &initial_val, const std::string& comment, BOOL persist )
+BOOL LLControlGroup::declareLLSD(const std::string& name, const LLSD &initial_val, const std::string& comment, BOOL persist)
 {
 	return declareControl(name, TYPE_LLSD, initial_val, comment, persist);
 }
@@ -502,7 +498,6 @@ LLRect LLControlGroup::getRect(const std::string& name)
 	return get<LLRect>(name);
 }
 
-
 LLColor4 LLControlGroup::getColor(const std::string& name)
 {
 	ctrl_name_table_t::const_iterator i = mNameTable.find(name);
@@ -523,14 +518,14 @@ LLColor4 LLControlGroup::getColor(const std::string& name)
 			}
 			default:
 			{
-				CONTROL_ERRS << "Control " << name << " not a color" << llendl;
+				CONTROL_ERRS << "Control " << name << " not a color" << LL_ENDL;
 				return LLColor4::white;
 			}
 		}
 	}
 	else
 	{
-		CONTROL_ERRS << "Invalid getColor control " << name << llendl;
+		CONTROL_ERRS << "Invalid getColor control " << name << LL_ENDL;
 		return LLColor4::white;
 	}
 }
@@ -623,17 +618,16 @@ void LLControlGroup::setUntypedValue(const std::string& name, const LLSD& val)
 	}
 
 	LLControlVariable* control = getControl(name);
-	
+
 	if (control)
 	{
 		control->setValue(val);
 	}
 	else
 	{
-		CONTROL_ERRS << "Invalid control " << name << llendl;
+		CONTROL_ERRS << "Invalid control " << name << LL_ENDL;
 	}
 }
-
 
 //---------------------------------------------------------------
 // Load and save
@@ -659,10 +653,10 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		return 0;
 	}
 
-	U32		item = 0;
-	U32		validitems = 0;
+	U32 item = 0;
+	U32 validitems = 0;
 	S32 version;
-	
+
 	rootp->getAttributeS32("version", version);
 
 	// Check file version
@@ -673,10 +667,10 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 	}
 
 	LLXmlTreeNode* child_nodep = rootp->getFirstChild();
-	while(child_nodep)
+	while (child_nodep)
 	{
-		name = child_nodep->getName();		
-		
+		name = child_nodep->getName();
+
 		BOOL declared = controlExists(name);
 
 		if (require_declaration && !declared)
@@ -698,7 +692,7 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		// If not declared, assume it's a string
 		if (!declared)
 		{
-			switch(declare_as)
+			switch (declare_as)
 			{
 			case TYPE_COL4:
 				declareColor4(name, LLColor4::white, LLStringUtil::null, NO_PERSIST);
@@ -717,8 +711,8 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		LLControlVariable *control = getControl(name);
 
 		llassert(control);
-		
-		switch(control->mType)
+
+		switch (control->mType)
 		{
 		case TYPE_F32:
 			{
@@ -815,7 +809,7 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		case TYPE_COL4:
 			{
 				LLColor4 color;
-				
+
 				child_nodep->getAttributeColor4("value", color);
 				control->set(color.getValue());
 				validitems++;
@@ -824,7 +818,7 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		case TYPE_COL3:
 			{
 				LLVector3 color;
-				
+
 				child_nodep->getAttributeVector3("value", color);
 				control->set(LLColor3(color.mV).getValue());
 				validitems++;
@@ -835,7 +829,7 @@ U32 LLControlGroup::loadFromFileLegacy(const std::string& filename, BOOL require
 		  break;
 
 		}
-	
+
 		child_nodep = rootp->getNextChild();
 	}
 
@@ -855,7 +849,7 @@ U32 LLControlGroup::saveToFile(const std::string& filename, BOOL nondefault_only
 			llwarns << "Tried to save invalid control: " << iter->first << llendl;
 		}
 
-		if( control && control->isPersisted() )
+		if (control && control->isPersisted())
 		{
 			if (!(nondefault_only && (control->isSaveValueDefault())))
 			{
@@ -893,7 +887,7 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 	LLSD settings;
 	llifstream infile;
 	infile.open(filename);
-	if(!infile.is_open())
+	if (!infile.is_open())
 	{
 		llwarns << "Cannot find file " << filename << " to load." << llendl;
 		return 0;
@@ -904,7 +898,7 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 	if (ret <= 0)
 	{
 		infile.close();
-		llwarns << "Unable to open LLSD control file " << filename << ". Trying Legacy Method." << llendl;		
+		llwarns << "Unable to open LLSD control file " << filename << ". Trying Legacy Method." << llendl;
 		return loadFromFileLegacy(filename, TRUE, TYPE_STRING);
 	}
 
@@ -917,7 +911,7 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 		std::string const & name = itr->first;
 		LLSD const & control_map = itr->second;
 
-		if(control_map.has("Persist")) 
+		if (control_map.has("Persist")) 
 		{
 			persist = control_map["Persist"].asInteger();
 		}
@@ -925,7 +919,7 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 		// Sometimes we want to use the settings system to provide cheap persistence, but we
 		// don't want the settings themselves to be easily manipulated in the UI because 
 		// doing so can cause support problems. So we have this option:
-		if(control_map.has("HideFromEditor"))
+		if (control_map.has("HideFromEditor"))
 		{
 			hidefromsettingseditor = control_map["HideFromEditor"].asInteger();
 		}
@@ -933,17 +927,17 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 		{
 			hidefromsettingseditor = false;
 		}
-		
+
 		// If the control exists just set the value from the input file.
 		LLControlVariable* existing_control = getControl(name);
-		if(existing_control)
+		if (existing_control)
 		{
-			if(set_default_values)
+			if (set_default_values)
 			{
 				// Override all previously set properties of this control.
 				// ... except for type. The types must match.
 				eControlType new_type = typeStringToEnum(control_map["Type"].asString());
-				if(existing_control->isType(new_type))
+				if (existing_control->isType(new_type))
 				{
 					existing_control->setDefaultValue(control_map["Value"]);
 					existing_control->setPersist(persist);
@@ -957,7 +951,7 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 						   << filename << "'." << llendl;
 				}
 			}
-			else if(existing_control->isPersisted())
+			else if (existing_control->isPersisted())
 			{
 				existing_control->setValue(control_map["Value"], save_values);
 			}
@@ -971,10 +965,9 @@ U32 LLControlGroup::loadFromFile(const std::string& filename, bool set_default_v
 						   control_map["Value"], 
 						   control_map["Comment"].asString(), 
 						   persist,
-						   hidefromsettingseditor
-						   );
+						   hidefromsettingseditor);
 		}
-		
+
 		++validitems;
 	}
 
@@ -985,8 +978,8 @@ void LLControlGroup::resetToDefaults()
 {
 	ctrl_name_table_t::iterator control_iter;
 	for (control_iter = mNameTable.begin();
-		control_iter != mNameTable.end();
-		++control_iter)
+		 control_iter != mNameTable.end();
+		 ++control_iter)
 	{
 		LLControlVariable* control = (*control_iter).second;
 		control->resetToDefault();
@@ -1068,7 +1061,6 @@ template <> eControlType get_control_type<LLSD>()
 	return TYPE_LLSD; 
 }
 
-
 template <> LLSD convert_to_llsd<U32>(const U32& in) 
 { 
 	return (LLSD::Integer)in; 
@@ -1104,27 +1096,37 @@ template <> LLSD convert_to_llsd<LLColor3>(const LLColor3& in)
 	return in.getValue(); 
 }
 
-
 template<>
 bool convert_from_llsd<bool>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_BOOLEAN)
+	{
 		return sd.asBoolean();
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid BOOL value for " << control_name << ": " << sd << llendl;
-		return FALSE;
+		CONTROL_ERRS << "Invalid BOOL value for " << control_name << ": " << sd << LL_ENDL;
+		if (type == TYPE_S32 || type == TYPE_U32)
+		{
+			return sd.asInteger() != 0;
+		}
+		else
+		{
+			return FALSE;
+		}
 	}
 }
 
 template<>
 S32 convert_from_llsd<S32>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
-	if (type == TYPE_S32)
+	if (type == TYPE_S32 || type == TYPE_U32)	// *HACK: TYPE_U32 needed for LLCachedControl<U32> !
+	{
 		return sd.asInteger();
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid S32 value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid S32 value for " << control_name << ": " << sd << LL_ENDL;
 		return 0;
 	}
 }
@@ -1132,12 +1134,21 @@ S32 convert_from_llsd<S32>(const LLSD& sd, eControlType type, const std::string&
 template<>
 U32 convert_from_llsd<U32>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
-	if (type == TYPE_U32)	
+	if (type == TYPE_U32)
+	{
 		return sd.asInteger();
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid U32 value for " << control_name << ": " << sd << llendl;
-		return 0;
+		CONTROL_ERRS << "Invalid U32 value for " << control_name << ": " << sd << LL_ENDL;
+		if (type == TYPE_S32 && sd.asInteger() >= 0)
+		{
+			return sd.asInteger();
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }
 
@@ -1145,11 +1156,20 @@ template<>
 F32 convert_from_llsd<F32>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_F32)
-		return (F32) sd.asReal();
+	{
+		return (F32)sd.asReal();
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid F32 value for " << control_name << ": " << sd << llendl;
-		return 0.0f;
+		CONTROL_ERRS << "Invalid F32 value for " << control_name << ": " << sd << LL_ENDL;
+		if (type == TYPE_S32 || type == TYPE_U32)
+		{
+			return (F32)sd.asInteger();
+		}
+		else
+		{
+			return 0.0f;
+		}
 	}
 }
 
@@ -1157,10 +1177,12 @@ template<>
 std::string convert_from_llsd<std::string>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_STRING)
+	{
 		return sd.asString();
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid string value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid string value for " << control_name << ": " << sd << LL_ENDL;
 		return LLStringUtil::null;
 	}
 }
@@ -1175,10 +1197,12 @@ template<>
 LLVector3 convert_from_llsd<LLVector3>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_VEC3)
+	{
 		return (LLVector3)sd;
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid LLVector3 value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid LLVector3 value for " << control_name << ": " << sd << LL_ENDL;
 		return LLVector3::zero;
 	}
 }
@@ -1187,10 +1211,12 @@ template<>
 LLVector3d convert_from_llsd<LLVector3d>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_VEC3D)
+	{
 		return (LLVector3d)sd;
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid LLVector3d value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid LLVector3d value for " << control_name << ": " << sd << LL_ENDL;
 		return LLVector3d::zero;
 	}
 }
@@ -1199,14 +1225,15 @@ template<>
 LLRect convert_from_llsd<LLRect>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_RECT)
+	{
 		return LLRect(sd);
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid rect value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid rect value for " << control_name << ": " << sd << LL_ENDL;
 		return LLRect::null;
 	}
 }
-
 
 template<>
 LLColor4 convert_from_llsd<LLColor4>(const LLSD& sd, eControlType type, const std::string& control_name)
@@ -1235,7 +1262,7 @@ LLColor4 convert_from_llsd<LLColor4>(const LLSD& sd, eControlType type, const st
 	}
 	else
 	{
-		CONTROL_ERRS << "Control " << control_name << " not a color" << llendl;
+		CONTROL_ERRS << "Control " << control_name << " not a color" << LL_ENDL;
 		return LLColor4::white;
 	}
 }
@@ -1244,10 +1271,12 @@ template<>
 LLColor4U convert_from_llsd<LLColor4U>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_COL4U)
+	{
 		return LLColor4U(sd);
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid LLColor4U value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid LLColor4U value for " << control_name << ": " << sd << LL_ENDL;
 		return LLColor4U::white;
 	}
 }
@@ -1256,10 +1285,12 @@ template<>
 LLColor3 convert_from_llsd<LLColor3>(const LLSD& sd, eControlType type, const std::string& control_name)
 {
 	if (type == TYPE_COL3)
+	{
 		return sd;
+	}
 	else
 	{
-		CONTROL_ERRS << "Invalid LLColor3 value for " << control_name << ": " << sd << llendl;
+		CONTROL_ERRS << "Invalid LLColor3 value for " << control_name << ": " << sd << LL_ENDL;
 		return LLColor3::white;
 	}
 }
@@ -1320,4 +1351,3 @@ void LLControlGroup::resetWarnings()
 }
 
 //============================================================================
-

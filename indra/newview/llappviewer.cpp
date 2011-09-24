@@ -89,7 +89,8 @@
 #   include <sys/file.h> // For initMarkerFile support
 #endif
 
-#include "llnotify.h"
+#include "lleventtimer.h"
+#include "llnotifications.h"
 #include "llviewerkeyboard.h"
 #include "lllfsthread.h"
 #include "llworkerthread.h"

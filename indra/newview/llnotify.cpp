@@ -34,32 +34,29 @@
 
 #include "llnotify.h"
 
-#include "llchat.h"
-#include "llfocusmgr.h"
-#include "llrender.h"
-
+#include "llalertdialog.h"
 #include "llbutton.h"
+#include "llchat.h"
 #include "llfocusmgr.h"
 #include "llglheaders.h"
 #include "lliconctrl.h"
+#include "llrender.h"
 #include "lltextbox.h"
 #include "lltexteditor.h"
 #include "lluiconstants.h"
 #include "llui.h"
+#include "lluictrlfactory.h"
 #include "llxmlnode.h"
-#include "llalertdialog.h"
+
+//MK
+#include "llagent.h"
+#include "llviewerregion.h"
+//mk
+#include "llfloaterchat.h"		// for add_chat_history()
 #include "llviewercontrol.h"
 #include "llviewerdisplay.h"
 #include "llviewertexturelist.h"
-#include "llfloaterchat.h"	// for add_chat_history()
-#include "lloverlaybar.h" // for gOverlayBar
-#include "lluictrlfactory.h"
-
-
-//MK
-#include "llviewerregion.h"
-#include "llagent.h"
-//mk
+#include "lloverlaybar.h"		// for gOverlayBar
 
 // Globals
 LLNotifyBoxView* gNotifyBoxView = NULL;
@@ -67,13 +64,11 @@ LLNotifyBoxView* gNotifyBoxView = NULL;
 const F32 ANIMATION_TIME = 0.333f;
 const S32 BOTTOM_PAD = VPAD * 3;
 
-
 // statics
 S32 LLNotifyBox::sNotifyBoxCount = 0;
 const LLFontGL* LLNotifyBox::sFont = NULL;
 const LLFontGL* LLNotifyBox::sFontSmall = NULL;
 std::map<std::string, LLNotifyBox*> LLNotifyBox::sOpenUniqueNotifyBoxes;
-
 
 //---------------------------------------------------------------------------
 // LLNotifyBox
@@ -82,8 +77,12 @@ std::map<std::string, LLNotifyBox*> LLNotifyBox::sOpenUniqueNotifyBoxes;
 //static 
 void LLNotifyBox::initClass()
 {
-	LLNotificationChannel::buildChannel("Notifications", "Visible", LLNotificationFilters::filterBy<std::string>(&LLNotification::getType, "notify"));
-	LLNotificationChannel::buildChannel("NotificationTips", "Visible", LLNotificationFilters::filterBy<std::string>(&LLNotification::getType, "notifytip"));
+	LLNotificationChannel::buildChannel("Notifications", "Visible",
+										LLNotificationFilters::filterBy<std::string>(&LLNotification::getType,
+																					 "notify"));
+	LLNotificationChannel::buildChannel("NotificationTips", "Visible",
+										LLNotificationFilters::filterBy<std::string>(&LLNotification::getType,
+																					 "notifytip"));
 
 	LLNotifications::instance().getChannel("Notifications")->connectChanged(&LLNotifyBox::onNotification);
 	LLNotifications::instance().getChannel("NotificationTips")->connectChanged(&LLNotifyBox::onNotification);
@@ -93,10 +92,11 @@ void LLNotifyBox::initClass()
 bool LLNotifyBox::onNotification(const LLSD& notify)
 {
 	LLNotificationPtr notification = LLNotifications::instance().find(notify["id"].asUUID());
-	
+
 	if (!notification) return false;
 
-	if(notify["sigtype"].asString() == "add" || notify["sigtype"].asString() == "change")
+	if (notify["sigtype"].asString() == "add" ||
+		notify["sigtype"].asString() == "change")
 	{
 		//bring existing notification to top
 		LLNotifyBox* boxp = LLNotifyBox::getInstance(notification->getID());
@@ -106,11 +106,13 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 		}
 		else
 		{
-			bool is_script_dialog = (notification->getName() == "ScriptDialog" || notification->getName() == "ScriptDialogGroup");
-			LLNotifyBox* notify_box = new LLNotifyBox(
-				notification,
-				is_script_dialog); //layout_script_dialog);
-
+			bool is_script_dialog = (notification->getName() == "ScriptDialog" ||
+									 notification->getName() == "ScriptDialogOurs");
+			bool is_ours = (notification->getName() == "ScriptDialogOurs" ||
+							notification->getName() == "ScriptTextBoxOurs");
+			LLNotifyBox* notify_box = new LLNotifyBox(notification,
+													  is_script_dialog,
+													  is_ours);
 			gNotifyBoxView->addChild(notify_box);
 		}
 	}
@@ -128,21 +130,24 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 
 //---------------------------------------------------------------------------
 LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
-						 BOOL layout_script_dialog)
-	:	LLPanel(notification->getName(), LLRect(), BORDER_NO),
-		LLEventTimer(notification->getExpiration() == LLDate() 
-			? LLDate(LLDate::now().secondsSinceEpoch() + (F64)gSavedSettings.getF32("NotifyTipDuration")) 
-			: notification->getExpiration()),
-		LLInstanceTracker<LLNotifyBox, LLUUID>(notification->getID()),
-	  mNotification(notification),
-	  mIsTip(notification->getType() == "notifytip"),
-	  mAnimating(TRUE),
-	  mNextBtn(NULL),
-	  mNumOptions(0),
-	  mNumButtons(0),
-	  mAddedDefaultBtn(FALSE),
-	  mLayoutScriptDialog(layout_script_dialog),
-	  mUserInputBox(NULL)
+						 bool script_dialog,
+						 bool is_ours)
+:	LLPanel(notification->getName(), LLRect(), BORDER_NO),
+			LLEventTimer(notification->getExpiration() == LLDate() ?
+						 LLDate(LLDate::now().secondsSinceEpoch() +
+								(F64)gSavedSettings.getF32("NotifyTipDuration")) :
+						 notification->getExpiration()),
+	LLInstanceTracker<LLNotifyBox, LLUUID>(notification->getID()),
+	mNotification(notification),
+	mIsTip(notification->getType() == "notifytip"),
+	mAnimating(TRUE),
+	mNextBtn(NULL),
+	mNumOptions(0),
+	mNumButtons(0),
+	mAddedDefaultBtn(false),
+	mLayoutScriptDialog(script_dialog),
+	mIsFromOurObject(is_ours),
+	mUserInputBox(NULL)
 {
 	std::string edit_text_name;
 	std::string edit_text_contents;
@@ -150,7 +155,7 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	// class init
 	if (!sFont)
 	{
-		sFont = LLFontGL::getFontSansSerif();
+		sFont = LLFontGL::getFontSansSerif ();
 		sFontSmall = LLFontGL::getFontSansSerifSmall();
 	}
 
@@ -161,11 +166,15 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	if (gRRenabled && gAgent.mRRInterface.mContainsShowloc)
 	{
 		// hide every occurrence of the Parcel name if the location restriction is active
-		mMessage = gAgent.mRRInterface.stringReplace (mMessage, gAgent.mRRInterface.getParcelName(), "(Parcel hidden)");
+		mMessage = gAgent.mRRInterface.stringReplace(mMessage,
+													 gAgent.mRRInterface.getParcelName(),
+													 "(Parcel hidden)");
 		// hide every occurrence of the Region name if the location restriction is active
-		mMessage = gAgent.mRRInterface.stringReplace (mMessage, gAgent.getRegion()->getName(), "(Region hidden)");
+		mMessage = gAgent.mRRInterface.stringReplace(mMessage,
+													 gAgent.getRegion()->getName(),
+													 "(Region hidden)");
 	}
-	
+
 	if (gRRenabled && gAgent.mRRInterface.mContainsShownames)
 	{
 		mMessage = gAgent.mRRInterface.getCensoredMessage(mMessage);
@@ -184,10 +193,14 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	mIsCaution = notification->getPriority() >= NOTIFICATION_PRIORITY_HIGH;
 
 	// Only animate first window
-	if( gNotifyBoxView->getChildCount() > 0 )
+	if (gNotifyBoxView->getChildCount() > 0)
+	{
 		mAnimating = FALSE;
+	}
 	else
+	{
 		mAnimating = TRUE;
+	}
 
 	LLNotificationFormPtr form(notification->getForm());
 
@@ -196,59 +209,64 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	bool is_textbox = form->getElement("message").isDefined();
 
 	LLRect rect = mIsTip ? getNotifyTipRect(mMessage)
-		   		  		 : getNotifyRect(is_textbox ? 10 : mNumOptions, layout_script_dialog, mIsCaution);
+		   		  		 : getNotifyRect(is_textbox ? 10 : mNumOptions,
+										 script_dialog, mIsCaution);
 	setRect(rect);
-	setFollows(mIsTip ? (FOLLOWS_BOTTOM|FOLLOWS_RIGHT) : (FOLLOWS_TOP|FOLLOWS_RIGHT));
+	setFollows(mIsTip ? (FOLLOWS_BOTTOM | FOLLOWS_RIGHT)
+					  : (FOLLOWS_TOP | FOLLOWS_RIGHT));
 	setBackgroundVisible(FALSE);
 	setBackgroundOpaque(TRUE);
 
-	LLIconCtrl* icon;
 	LLTextEditor* text;
 
-	const S32 TOP = getRect().getHeight() - (mIsTip ? (S32)sFont->getLineHeight() : 32);
+	const S32 TOP = getRect().getHeight() -
+					(mIsTip ? (S32)sFont->getLineHeight() : 32);
 	const S32 BOTTOM = (S32)sFont->getLineHeight();
 	S32 x = HPAD + HPAD;
 	S32 y = TOP;
 
+	std::string icon_name;
 	if (mIsTip)
 	{
 		// use the tip notification icon
-		icon = new LLIconCtrl(std::string("icon"), LLRect(x, y, x+32, TOP-32), std::string("notify_tip_icon.tga"));
+		icon_name = "notify_tip_icon.tga";
 	}
 	else if (mIsCaution)
 	{
 		// use the caution notification icon
-		icon = new LLIconCtrl(std::string("icon"), LLRect(x, y, x+32, TOP-32), std::string("notify_caution_icon.tga"));
+		icon_name = "notify_caution_icon.tga";
 	}
 	else
 	{
 		// use the default notification icon
-		icon = new LLIconCtrl(std::string("icon"), LLRect(x, y, x+32, TOP-32), std::string("notify_box_icon.tga"));
+		icon_name = "notify_box_icon.tga";
 	}
-
+	LLIconCtrl* icon = new LLIconCtrl(std::string("icon"),
+									  LLRect(x, y, x + 32, TOP - 32),
+									  icon_name);
 	icon->setMouseOpaque(FALSE);
 	addChild(icon);
 
-	x += HPAD + HPAD + 32;
+	x += 2 * HPAD + 32;
 
 	// add a caution textbox at the top of a caution notification
 	LLTextBox* caution_box = NULL;
 	if (mIsCaution && !mIsTip)
 	{
 		S32 caution_height = ((S32)sFont->getLineHeight() * 2) + VPAD;
-		caution_box = new LLTextBox(
-			std::string("caution_box"), 
-			LLRect(x, y, getRect().getWidth() - 2, caution_height), 
-			LLStringUtil::null, 
-			sFont, 
-			FALSE);
+		caution_box = new LLTextBox(std::string("caution_box"), 
+									LLRect(x, y, getRect().getWidth() - 2,
+										   caution_height),
+									LLStringUtil::null, 
+									sFont, 
+									FALSE);
 
 		caution_box->setFontStyle(LLFontGL::BOLD);
 		caution_box->setColor(gColors.getColor("NotifyCautionWarnColor"));
 		caution_box->setBackgroundColor(gColors.getColor("NotifyCautionBoxColor"));
 		caution_box->setBorderVisible(FALSE);
 		caution_box->setWrappedText(notification->getMessage());
-		
+
 		addChild(caution_box);
 
 		// adjust the vertical position of the next control so that 
@@ -258,17 +276,17 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	else
 	{
 
-		const S32 BTN_TOP = BOTTOM_PAD + (((mNumOptions-1+2)/3)) * (BTN_HEIGHT+VPAD);
+		const S32 BTN_TOP = BOTTOM_PAD + (mNumOptions / 3) * (BTN_HEIGHT + VPAD);
 
 		// Tokenization on \n is handled by LLTextBox
 
-		const S32 MAX_LENGTH = 512 + 20 + 
-			DB_FIRST_NAME_BUF_SIZE + 
-			DB_LAST_NAME_BUF_SIZE +
-			DB_INV_ITEM_NAME_BUF_SIZE;  // For script dialogs: add space for title.
+		const S32 MAX_LENGTH = 512 + 20 + DB_FIRST_NAME_BUF_SIZE +
+							   DB_LAST_NAME_BUF_SIZE +
+							   DB_INV_ITEM_NAME_BUF_SIZE;  // For script dialogs: add space for title.
 
 		text = new LLTextEditor(std::string("box"),
-								LLRect(x, y, getRect().getWidth()-2, mIsTip ? BOTTOM : BTN_TOP+16),
+								LLRect(x, y, getRect().getWidth() - 2,
+									   mIsTip ? BOTTOM : BTN_TOP + 16),
 								MAX_LENGTH,
 								mMessage,
 								sFont,
@@ -279,10 +297,10 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 		text->setBorderVisible(FALSE);
 		text->setTakesNonScrollClicks(FALSE);
 		text->setHideScrollbarForShortDocs(TRUE);
-		text->setReadOnlyBgColor ( LLColor4::transparent ); // the background color of the box is manually 
+		text->setReadOnlyBgColor(LLColor4::transparent); // the background color of the box is manually 
 															// rendered under the text box, therefore we want 
 															// the actual text box to be transparent
-		text->setReadOnlyFgColor ( gColors.getColor("NotifyTextColor") );
+		text->setReadOnlyFgColor(gColors.getColor("NotifyTextColor"));
 		text->setEnabled(FALSE); // makes it read-only
 		text->setTabStop(FALSE); // can't tab to it (may be a problem for scrolling via keyboard)
 		addChild(text);
@@ -290,7 +308,8 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 
 	if (mIsTip)
 	{
-		if (!gSavedSettings.getBOOL("HideNotificationsInChat")) {
+		if (!gSavedSettings.getBOOL("HideNotificationsInChat"))
+		{
 			// TODO: Make a separate archive for these.
 			LLChat chat(mMessage);
 			chat.mSourceType = CHAT_SOURCE_SYSTEM;
@@ -301,7 +320,8 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 	{
 		LLButton* btn;
 		btn = new LLButton(std::string("next"),
-						   LLRect(getRect().getWidth()-26, BOTTOM_PAD + 20, getRect().getWidth()-2, BOTTOM_PAD),
+						   LLRect(getRect().getWidth() - 26, BOTTOM_PAD + 20,
+								  getRect().getWidth() - 2, BOTTOM_PAD),
 						   std::string("notify_next.png"),
 						   std::string("notify_next.png"),
 						   LLStringUtil::null,
@@ -320,7 +340,10 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 			std::string element_type = form_element["type"].asString();
 			if (element_type == "button") 
 			{
-				addButton(form_element["name"].asString(), form_element["text"].asString(), TRUE, form_element["default"].asBoolean());
+				addButton(form_element["name"].asString(),
+						  form_element["text"].asString(),
+						  TRUE,
+						  form_element["default"].asBoolean());
 			}
 			else if (element_type == "input") 
 			{
@@ -331,11 +354,13 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 
 		if (is_textbox)
 		{
-			S32 button_rows = (layout_script_dialog) ? 2 : 1;
+			S32 button_rows = (script_dialog ? 2 : 1);
 
 			LLRect input_rect;
-			input_rect.setOriginAndSize(x, BOTTOM_PAD + button_rows * (BTN_HEIGHT + VPAD),
-										3 * 80 + 4 * HPAD, button_rows * (BTN_HEIGHT + VPAD) + BTN_HEIGHT);
+			input_rect.setOriginAndSize(x,
+										BOTTOM_PAD + button_rows * (BTN_HEIGHT + VPAD),
+										3 * 80 + 4 * HPAD,
+										button_rows * (BTN_HEIGHT + VPAD) + BTN_HEIGHT);
 
 			mUserInputBox = new LLTextEditor(edit_text_name, input_rect, 254,
 											 edit_text_contents, sFont, FALSE);
@@ -358,19 +383,18 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 		if (mNumButtons == 0)
 		{
 			addButton("OK", "OK", FALSE, TRUE);
-			mAddedDefaultBtn = TRUE;
+			mAddedDefaultBtn = true;
 		}
-		
+
 		sNotifyBoxCount++;
 
 		if (sNotifyBoxCount <= 0)
 		{
 			llwarns << "A notification was mishandled. sNotifyBoxCount = " << sNotifyBoxCount << llendl;
 		}
-		
+
 		// If this is the only notify box, don't show the next button
-		if (sNotifyBoxCount == 1
-			&& mNextBtn)
+		if (sNotifyBoxCount == 1 && mNextBtn)
 		{
 			mNextBtn->setVisible(FALSE);
 		}
@@ -388,34 +412,34 @@ LLButton* LLNotifyBox::addButton(const std::string& name, const std::string& lab
 {
 	// make caution notification buttons slightly narrower
 	// so that 3 of them can fit without overlapping the "next" button
-	S32 btn_width = mIsCaution? 84 : 90;
+	S32 btn_width = mIsCaution ? 84 : 90;
 
 	LLRect btn_rect;
 	LLButton* btn;
-	S32 btn_height= BTN_HEIGHT;
+	S32 btn_height = BTN_HEIGHT;
 	const LLFontGL* font = sFont;
 	S32 ignore_pad = 0;
 	S32 button_index = mNumButtons;
 	S32 index = button_index;
-	S32 x = (HPAD * 4) + 32;
+	S32 x = HPAD * 4 + 32;
 
 	if (mLayoutScriptDialog)
 	{
-		// Add two "blank" option spaces, before the "Ignore" button
-		index = button_index + 2;
-		if (button_index == 0)
+		// Add one "blank" option space, before the "Mute" and "Ignore" buttons
+		index = button_index + 1;
+		if (button_index == 0 || button_index == 1)
 		{
-			// Ignore button is smaller, less wide
+			// Ignore and mute buttons are smaller, less wide
 			btn_height = BTN_HEIGHT_SMALL;
 			font = sFontSmall;
 			ignore_pad = 10;
 		}
 	}
 
-	btn_rect.setOriginAndSize(x + (index % 3) * (btn_width+HPAD+HPAD) + ignore_pad,
-		BOTTOM_PAD + (index / 3) * (BTN_HEIGHT+VPAD),
-		btn_width - 2*ignore_pad,
-		btn_height);
+	btn_rect.setOriginAndSize(x + (index % 3) * (btn_width + 2 * HPAD) + ignore_pad,
+							  BOTTOM_PAD + (index / 3) * (BTN_HEIGHT + VPAD),
+							  btn_width - 2 * ignore_pad,
+							  btn_height);
 
 	InstanceAndS32* userdata = new InstanceAndS32;
 	userdata->mSelf = this;
@@ -423,10 +447,13 @@ LLButton* LLNotifyBox::addButton(const std::string& name, const std::string& lab
 
 	mBtnCallbackData.push_back(userdata);
 
-
 	btn = new LLButton(name, btn_rect, "", onClickButton, userdata);
 	btn->setLabel(label);
 	btn->setFont(font);
+	if (mIsFromOurObject && button_index == 0)
+	{
+		btn->setEnabled(false);	// disable the Mute button for our scripted objects
+	}
 
 	if (mIsCaution)
 	{
@@ -450,7 +477,6 @@ BOOL LLNotifyBox::handleMouseUp(S32 x, S32 y, MASK mask)
 	if (mIsTip)
 	{
 		mNotification->respond(mNotification->getResponseTemplate(LLNotification::WITH_DEFAULT_BUTTON));
-
 		close();
 		return TRUE;
 	}
@@ -472,7 +498,6 @@ BOOL LLNotifyBox::handleRightMouseDown(S32 x, S32 y, MASK mask)
 	return LLPanel::handleRightMouseDown(x, y, mask);
 }
 
-
 // virtual
 void LLNotifyBox::draw()
 {
@@ -485,7 +510,7 @@ void LLNotifyBox::draw()
 	{
 		mEventTimer.start();
 	}
-		
+
 	F32 display_time = mAnimateTimer.getElapsedTimeF32();
 
 	if (mAnimating && display_time < ANIMATION_TIME)
@@ -498,7 +523,7 @@ void LLNotifyBox::draw()
 		F32 voffset = (1.f - fraction) * height;
 		if (mIsTip) voffset *= -1.f;
 		LLUI::translate(0.f, voffset, 0.f);
-		
+
 		drawBackground();
 
 		LLPanel::draw();
@@ -507,10 +532,10 @@ void LLNotifyBox::draw()
 	}
 	else
 	{
-		if(mAnimating)
+		if (mAnimating)
 		{
 			mAnimating = FALSE;
-			if(!mIsTip) 
+			if (!mIsTip) 
 			{
 				// hide everyone behind me once I'm done animating
 				gNotifyBoxView->showOnly(this);
@@ -529,35 +554,67 @@ void LLNotifyBox::drawBackground() const
 		gGL.getTexUnit(0)->bind(imagep->getImage());
 		// set proper background color depending on whether notify box is a caution or not
 		LLColor4 color = mIsCaution? gColors.getColor("NotifyCautionBoxColor") : gColors.getColor("NotifyBoxColor");
-		if(gFocusMgr.childHasKeyboardFocus( this ))
+		if (gFocusMgr.childHasKeyboardFocus(this))
 		{
 			const S32 focus_width = 2;
 			color = gColors.getColor("FloaterFocusBorderColor");
 			gGL.color4fv(color.mV);
-			gl_segmented_rect_2d_tex(-focus_width, getRect().getHeight() + focus_width, 
-									getRect().getWidth() + focus_width, -focus_width,
-									imagep->getTextureWidth(), imagep->getTextureHeight(),
-									16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);
+			gl_segmented_rect_2d_tex(-focus_width,
+									 getRect().getHeight() + focus_width,
+									 getRect().getWidth() + focus_width,
+									 -focus_width,
+									 imagep->getTextureWidth(),
+									 imagep->getTextureHeight(),
+									 16,
+									 mIsTip ? ROUNDED_RECT_TOP :
+											  ROUNDED_RECT_BOTTOM);
 			color = gColors.getColor("ColorDropShadow");
 			gGL.color4fv(color.mV);
-			gl_segmented_rect_2d_tex(0, getRect().getHeight(), getRect().getWidth(), 0, imagep->getTextureWidth(), imagep->getTextureHeight(), 16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);
+			gl_segmented_rect_2d_tex(0,
+									 getRect().getHeight(),
+									 getRect().getWidth(),
+									 0,
+									 imagep->getTextureWidth(),
+									 imagep->getTextureHeight(),
+									 16,
+									 mIsTip ? ROUNDED_RECT_TOP :
+											  ROUNDED_RECT_BOTTOM);
 
-			if( mIsCaution )
+			if (mIsCaution)
+			{
 				color = gColors.getColor("NotifyCautionBoxColor");
+			}
 			else
+			{
 				color = gColors.getColor("NotifyBoxColor");
+			}
 
 			gGL.color4fv(color.mV);
-			gl_segmented_rect_2d_tex(1, getRect().getHeight()-1, getRect().getWidth()-1, 1, imagep->getTextureWidth(), imagep->getTextureHeight(), 16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);
+			gl_segmented_rect_2d_tex(1,
+									 getRect().getHeight() - 1,
+									 getRect().getWidth() - 1,
+									 1,
+									 imagep->getTextureWidth(),
+									 imagep->getTextureHeight(),
+									 16,
+									 mIsTip ? ROUNDED_RECT_TOP :
+											  ROUNDED_RECT_BOTTOM);
 		}
 		else
 		{
 			gGL.color4fv(color.mV);
-			gl_segmented_rect_2d_tex(0, getRect().getHeight(), getRect().getWidth(), 0, imagep->getTextureWidth(), imagep->getTextureHeight(), 16, mIsTip ? ROUNDED_RECT_TOP : ROUNDED_RECT_BOTTOM);
+			gl_segmented_rect_2d_tex(0,
+									 getRect().getHeight(),
+									 getRect().getWidth(),
+									 0,
+									 imagep->getTextureWidth(),
+									 imagep->getTextureHeight(),
+									 16,
+									 mIsTip ? ROUNDED_RECT_TOP :
+											  ROUNDED_RECT_BOTTOM);
 		}
 	}
 }
-
 
 void LLNotifyBox::close()
 {
@@ -569,10 +626,10 @@ void LLNotifyBox::close()
 	}
 
 	die();
-	if(!isTipTmp)
+	if (!isTipTmp)
 	{
 		LLNotifyBox * front = gNotifyBoxView->getFirstNontipBox();
-		if(front)
+		if (front)
 		{
 			gNotifyBoxView->showOnly(front);
 			// we're assuming that close is only called by user action (for non-tips),
@@ -595,7 +652,6 @@ void LLNotifyBox::format(std::string& msg, const LLStringUtil::format_map_t& arg
 	LLStringUtil::format(msg, targs);
 }
 
-
 /*virtual*/
 BOOL LLNotifyBox::tick()
 {
@@ -609,7 +665,7 @@ BOOL LLNotifyBox::tick()
 void LLNotifyBox::setVisible(BOOL visible)
 {
 	// properly set the status of the next button
-	if(visible && !mIsTip)
+	if (visible && !mIsTip)
 	{
 		mNextBtn->setVisible(sNotifyBoxCount > 1);
 		mNextBtn->setEnabled(sNotifyBoxCount > 1);
@@ -621,7 +677,7 @@ void LLNotifyBox::moveToBack(bool getfocus)
 {
 	// Move this dialog to the back.
 	gNotifyBoxView->sendChildToBack(this);
-	if(!mIsTip && mNextBtn)
+	if (!mIsTip && mNextBtn)
 	{
 		mNextBtn->setVisible(FALSE);
 
@@ -647,9 +703,8 @@ void LLNotifyBox::moveToBack(bool getfocus)
 	}
 }
 
-
 // static
-LLRect LLNotifyBox::getNotifyRect(S32 num_options, BOOL layout_script_dialog, BOOL is_caution)
+LLRect LLNotifyBox::getNotifyRect(S32 num_options, bool script_dialog, bool is_caution)
 {
 	S32 notify_height = gSavedSettings.getS32("NotifyBoxHeight");
 	if (is_caution)
@@ -661,7 +716,6 @@ LLRect LLNotifyBox::getNotifyRect(S32 num_options, BOOL layout_script_dialog, BO
 		notify_height = gSavedSettings.getS32("PermissionsCautionNotifyBoxHeight");
 	}
 	const S32 NOTIFY_WIDTH = gSavedSettings.getS32("NotifyBoxWidth");
-
 	const S32 TOP = gNotifyBoxView->getRect().getHeight();
 	const S32 RIGHT = gNotifyBoxView->getRect().getWidth();
 	const S32 LEFT = RIGHT - NOTIFY_WIDTH;
@@ -671,17 +725,17 @@ LLRect LLNotifyBox::getNotifyRect(S32 num_options, BOOL layout_script_dialog, BO
 		num_options = 1;
 	}
 
-	// Add two "blank" option spaces.
-	if (layout_script_dialog)
+	// Add one "blank" option space.
+	if (script_dialog)
 	{
-		num_options += 2;
+		num_options += 1;
 	}
 
-	S32 additional_lines = (num_options-1) / 3;
+	S32 additional_lines = (num_options - 1) / 3;
 
 	notify_height += additional_lines * (BTN_HEIGHT + VPAD);
 
-	return LLRect(LEFT, TOP, RIGHT, TOP-notify_height);
+	return LLRect(LEFT, TOP, RIGHT, TOP - notify_height);
 }
 
 // static
@@ -705,32 +759,36 @@ LLRect LLNotifyBox::getNotifyTipRect(const std::string &utf8message)
 	{
 		line_count++;
 
-		for (end=start; *end != 0 && *end != '\n'; end++)
-			;
+		for (end = start; *end != 0 && *end != '\n'; end++)
+		{
+		}
 
-		if( *end == 0 )
+		if (*end == 0)
 		{
 			end = wchars + message_len;
 			done = TRUE;
 		}
-		
-		S32 remaining = end - start;
-		while( remaining )
-		{
-			S32 drawn = sFont->maxDrawableChars( start, (F32)text_area_width, remaining, TRUE );
 
-			if( 0 == drawn )
+		S32 remaining = end - start;
+		while (remaining)
+		{
+			S32 drawn = sFont->maxDrawableChars(start, (F32)text_area_width,
+												remaining, TRUE);
+
+			if (0 == drawn)
 			{
-				drawn = 1;  // Draw at least one character, even if it doesn't all fit. (avoids an infinite loop)
+				 // Draw at least one character, even if it doesn't all fit
+				// (avoids an infinite loop).
+				drawn = 1;
 			}
 
 			total_drawn += drawn; 
 			start += drawn;
 			remaining -= drawn;
-			
-			if( total_drawn < message_len )
+
+			if (total_drawn < message_len)
 			{
-				if( (wchars[ total_drawn ] != '\n') )
+				if (wchars[total_drawn] != '\n')
 				{
 					// wrap because line was too long
 					line_count++;
@@ -745,12 +803,13 @@ LLRect LLNotifyBox::getNotifyTipRect(const std::string &utf8message)
 		total_drawn++;	// for '\n'
 		end++;
 		start = end;
-	} while( !done );
+	}
+	while (!done);
 
 	const S32 MIN_NOTIFY_HEIGHT = 72;
 	const S32 MAX_NOTIFY_HEIGHT = 600;
-	S32 notify_height = llceil((F32) (line_count+1) * sFont->getLineHeight());
-	if(gOverlayBar)
+	S32 notify_height = llceil((F32)(line_count + 1) * sFont->getLineHeight());
+	if (gOverlayBar)
 	{
 		notify_height += gOverlayBar->getRect().getHeight();
 	}
@@ -767,9 +826,8 @@ LLRect LLNotifyBox::getNotifyTipRect(const std::string &utf8message)
 	const S32 LEFT = RIGHT - NOTIFY_WIDTH;
 
 	// Make sure it goes slightly offscreen
-	return LLRect(LEFT, notify_height-1, RIGHT, -1);
+	return LLRect(LEFT, notify_height - 1, RIGHT, -1);
 }
-
 
 // static
 void LLNotifyBox::onClickButton(void* data)
@@ -790,7 +848,6 @@ void LLNotifyBox::onClickButton(void* data)
 	self->mNotification->respond(response);
 }
 
-
 // static
 void LLNotifyBox::onClickNext(void* data)
 {
@@ -798,9 +855,11 @@ void LLNotifyBox::onClickNext(void* data)
 	self->moveToBack(true);
 }
 
-
-LLNotifyBoxView::LLNotifyBoxView(const std::string& name, const LLRect& rect, BOOL mouse_opaque, U32 follows)
-	: LLUICtrl(name,rect,mouse_opaque,NULL,NULL,follows) 
+LLNotifyBoxView::LLNotifyBoxView(const std::string& name,
+								 const LLRect& rect,
+								 BOOL mouse_opaque,
+								 U32 follows)
+:	LLUICtrl(name, rect, mouse_opaque, NULL, NULL, follows)
 {
 }
 
@@ -808,18 +867,17 @@ LLNotifyBox * LLNotifyBoxView::getFirstNontipBox() const
 {
 	// *TODO: Don't make assumptions like this!
 	// assumes every child is a notify box
-	for(child_list_const_iter_t iter = getChildList()->begin();
-			iter != getChildList()->end();
-			iter++)
+	for (child_list_const_iter_t iter = getChildList()->begin();
+		 iter != getChildList()->end(); iter++)
 	{
 		// hack! *TODO: Integrate llnotify and llgroupnotify
-		if(isGroupNotifyBox(*iter))
+		if (isGroupNotifyBox(*iter))
 		{
 			continue;
 		}
-		
+
 		LLNotifyBox* box = (LLNotifyBox*)(*iter);
-		if(!box->isTip() && !box->isDead())
+		if (!box->isTip() && !box->isDead())
 		{
 			return box;
 		}
@@ -829,27 +887,26 @@ LLNotifyBox * LLNotifyBoxView::getFirstNontipBox() const
 
 void LLNotifyBoxView::showOnly(LLView * view)
 {
-	if(view) 
+	if (view) 
 	{
 		// assumes that the argument is actually a child
 		LLNotifyBox * shown = dynamic_cast<LLNotifyBox*>(view);
-		if(!shown)
+		if (!shown)
 		{
-			return ;
+			return;
 		}
 
 		// make every other notification invisible
-		for(child_list_const_iter_t iter = getChildList()->begin();
-			iter != getChildList()->end();
-			iter++)
+		for (child_list_const_iter_t iter = getChildList()->begin();
+			 iter != getChildList()->end(); iter++)
 		{
-			if(isGroupNotifyBox(*iter))
+			if (isGroupNotifyBox(*iter))
 			{
 				continue;
 			}
 
 			LLNotifyBox * box = (LLNotifyBox*)(*iter);
-			if(box != view && box->getVisible() && !box->isTip())
+			if (box != view && box->getVisible() && !box->isTip())
 			{
 				box->setVisible(FALSE);
 			}
@@ -864,17 +921,16 @@ void LLNotifyBoxView::purgeMessagesMatching(const Matcher& matcher)
 	// Make a *copy* of the child list to iterate over 
 	// since we'll be removing items from the real list as we go.
 	LLView::child_list_t notification_queue(*getChildList());
-	for(LLView::child_list_iter_t iter = notification_queue.begin();
-		iter != notification_queue.end();
-		iter++)
+	for (LLView::child_list_iter_t iter = notification_queue.begin();
+		 iter != notification_queue.end(); iter++)
 	{
-		if(isGroupNotifyBox(*iter))
+		if (isGroupNotifyBox(*iter))
 		{
 			continue;
 		}
 
 		LLNotifyBox* notification = (LLNotifyBox*)*iter;
-		if(matcher.matches(notification->getNotification()))
+		if (matcher.matches(notification->getNotification()))
 		{
 			removeChild(notification);
 		}
@@ -883,11 +939,5 @@ void LLNotifyBoxView::purgeMessagesMatching(const Matcher& matcher)
 
 bool LLNotifyBoxView::isGroupNotifyBox(const LLView* view) const
 {
-	if (view->getName() == "groupnotify")
-	{
-		return TRUE ;
-	}
-
-	return FALSE ;
+	return view->getName() == "groupnotify";
 }
-

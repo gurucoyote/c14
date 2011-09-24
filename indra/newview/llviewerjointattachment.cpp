@@ -180,7 +180,7 @@ BOOL LLViewerJointAttachment::addObject(LLViewerObject* object)
 //MK
 		was_empty = false;
 //mk
-		llinfos << "(same object re-attached)" << llendl;
+		llinfos << "Same object re-attached: " << object->getID() << llendl;
 		removeObject(object);
 		// Pass through anyway to let setupDrawable()
 		// re-connect object to the joint correctly
@@ -190,7 +190,8 @@ BOOL LLViewerJointAttachment::addObject(LLViewerObject* object)
 	// Request detach, and kill the object in the meantime.
 	if (getAttachedObject(object->getAttachmentItemID()))
 	{
-		llinfos << "(same object re-attached)" << llendl;
+		llinfos << "Same inventory object re-attached, detaching spurious instance: "
+				<< object->getAttachmentItemID() << llendl;
 		object->markDead();
 
 		// If this happens to be attached to self, then detach.

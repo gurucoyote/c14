@@ -38,8 +38,9 @@
 
 // library includes
 #include "llframetimer.h"
-#include "llmenugl.h"
+#include "llfontgl.h"
 #include "llparcel.h"
+#include "llnotifications.h"
 #include "llrect.h"
 #include "llresmgr.h"
 #include "lltextbox.h"
@@ -57,18 +58,17 @@
 #include "llfloaterregioninfo.h"
 #include "llfloaterscriptdebug.h"
 #include "llhudicon.h"
-#include "llnotify.h"
 #include "llstatgraph.h"
+#include "llviewercontrol.h"
+#include "llviewermenu.h"	// for gMenuBarView
 #include "llviewerparceloverlay.h"
+#include "llviewerparcelmgr.h"
 #include "llviewerregion.h"
 #include "llviewerstats.h"
-#include "llviewerwindow.h"
-#include "llviewermenu.h"	// for gMenuBarView
-#include "llviewerparcelmgr.h"
 #include "llviewerthrottle.h"
-#include "llviewercontrol.h"
-#include "llvoavatar.h"
+#include "llviewerwindow.h"
 #include "llvoiceclient.h"	// for gVoiceClient
+#include "llvoavatar.h"
 #include "llworld.h"
 
 //

@@ -36,13 +36,11 @@
 
 #include "llbutton.h"
 #include "llcheckboxctrl.h"
-#include "llfocusmgr.h"
 #include "lliconctrl.h"
 #include "lllineeditor.h"
-#include "llnotify.h"
+#include "llnotifications.h"
 #include "llscrolllistctrl.h"
 #include "lltabcontainer.h"
-#include "lltextbox.h"
 #include "lltexteditor.h"
 #include "roles_constants.h"
 

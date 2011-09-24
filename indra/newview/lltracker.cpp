@@ -83,22 +83,21 @@ LLTracker::LLTracker()
 	mTrackingLocationType(LOCATION_NOTHING),
 	mHUDArrowCenterX(0),
 	mHUDArrowCenterY(0),
-	mToolTip( "" ),
+	mToolTip(""),
 	mTrackedLandmarkName(""),
 	mHasReachedLandmark(FALSE),
 	mHasLandmarkPosition(FALSE),
 	mLandmarkHasBeenVisited(FALSE),
-	mTrackedLocationName( "" ),
+	mTrackedLocationName(""),
 	mIsTrackingLocation(FALSE),
 	mHasReachedLocation(FALSE)
-{ }
-
+{
+}
 
 LLTracker::~LLTracker()
 { 
 	purgeBeaconText();
 }
-
 
 // static
 void LLTracker::stopTracking(void* userdata)
@@ -106,7 +105,6 @@ void LLTracker::stopTracking(void* userdata)
 	BOOL clear_ui = ((BOOL)(intptr_t)userdata);
 	instance()->stopTrackingAll(clear_ui);
 }
-
 
 // static virtual
 void LLTracker::drawHUDArrow()
@@ -116,7 +114,7 @@ void LLTracker::drawHUDArrow()
 	// Draw dot for autopilot target
 	if (gAgent.getAutoPilot())
 	{
-		instance()->drawMarker( gAgent.getAutoPilotTargetGlobal(), gTrackColor );
+		instance()->drawMarker(gAgent.getAutoPilotTargetGlobal(), gTrackColor);
 		return;
 	}
 	*/
@@ -124,14 +122,14 @@ void LLTracker::drawHUDArrow()
 	{ 
 	case TRACKING_AVATAR:
 		// Tracked avatar
-		if(LLAvatarTracker::instance().haveTrackingInfo())
+		if (LLAvatarTracker::instance().haveTrackingInfo())
 		{
-			instance()->drawMarker( LLAvatarTracker::instance().getGlobalPos(), gTrackColor );
+			instance()->drawMarker(LLAvatarTracker::instance().getGlobalPos(), gTrackColor);
 		} 
 		break;
 
 	case TRACKING_LANDMARK:
-		instance()->drawMarker( getTrackedPositionGlobal(), gTrackColor );
+		instance()->drawMarker(getTrackedPositionGlobal(), gTrackColor);
 		break;
 
 	case TRACKING_LOCATION:
@@ -143,14 +141,13 @@ void LLTracker::drawHUDArrow()
 				+ 0.1f * (LLWorld::getInstance()->resolveLandHeightGlobal(getTrackedPositionGlobal()) + 1.5f);
 #endif
 		instance()->mTrackedPositionGlobal.mdV[VZ] = llclamp((F32)instance()->mTrackedPositionGlobal.mdV[VZ], LLWorld::getInstance()->resolveLandHeightGlobal(getTrackedPositionGlobal()) + 1.5f, (F32)instance()->getTrackedPositionGlobal().mdV[VZ]);
-		instance()->drawMarker( getTrackedPositionGlobal(), gTrackColor );
+		instance()->drawMarker(getTrackedPositionGlobal(), gTrackColor);
 		break;
 
 	default:
 		break;
 	}
 }
-
 
 // static 
 void LLTracker::render3D()
@@ -168,7 +165,7 @@ void LLTracker::render3D()
 //mk
 
 	// Arbitary location beacon
-	if( instance()->mIsTrackingLocation )
+	if (instance()->mIsTrackingLocation)
  	{
 		if (!instance()->mBeaconText)
 		{
@@ -186,13 +183,13 @@ void LLTracker::render3D()
 		}
 		else
 		{
-			renderBeacon( instance()->mTrackedPositionGlobal, gTrackColor, 
-					  	instance()->mBeaconText, instance()->mTrackedLocationName );
+			renderBeacon(instance()->mTrackedPositionGlobal, gTrackColor, 
+					  	instance()->mBeaconText, instance()->mTrackedLocationName);
 		}
 	}
 
 	// Landmark beacon
-	else if( !instance()->mTrackedLandmarkAssetID.isNull() )
+	else if (!instance()->mTrackedLandmarkAssetID.isNull())
 	{
 		if (!instance()->mBeaconText)
 		{
@@ -204,23 +201,23 @@ void LLTracker::render3D()
 		{
 			F32 dist = gFloaterWorldMap->getDistanceToDestination(instance()->mTrackedPositionGlobal, 1.0f);
 
-			if (   !instance()->mLandmarkHasBeenVisited
-				&& dist < DESTINATION_VISITED_RADIUS )
+			if (!instance()->mLandmarkHasBeenVisited
+				&& dist < DESTINATION_VISITED_RADIUS)
 			{
 				// its close enough ==> flag as visited
 				instance()->setLandmarkVisited();
 			}
 
-			if (   !instance()->mHasReachedLandmark 
-				&& dist < DESTINATION_REACHED_RADIUS )
+			if (!instance()->mHasReachedLandmark 
+				&& dist < DESTINATION_REACHED_RADIUS)
 			{
 				// its VERY CLOSE ==> automatically stop tracking
 				instance()->stopTrackingLandmark();
 			}
 			else
 			{
-				if (    instance()->mHasReachedLandmark 
-					 && dist > DESTINATION_UNVISITED_RADIUS )
+				if (instance()->mHasReachedLandmark 
+					 && dist > DESTINATION_UNVISITED_RADIUS)
 				{
 					// this is so that landmark beacons don't immediately 
 					// disappear when they're created only a few meters 
@@ -228,8 +225,8 @@ void LLTracker::render3D()
 					// and back again
 					instance()->mHasReachedLandmark = FALSE;
 				}
-				renderBeacon( instance()->mTrackedPositionGlobal, gTrackColor, 
-							  instance()->mBeaconText, instance()->mTrackedLandmarkName );
+				renderBeacon(instance()->mTrackedPositionGlobal, gTrackColor, 
+							  instance()->mBeaconText, instance()->mTrackedLandmarkName);
 			}
 		}
 		else
@@ -242,14 +239,14 @@ void LLTracker::render3D()
 	{
 		// Avatar beacon
 		LLAvatarTracker& av_tracker = LLAvatarTracker::instance();
-		if(av_tracker.haveTrackingInfo())
+		if (av_tracker.haveTrackingInfo())
 		{
 			if (!instance()->mBeaconText)
 			{
 				instance()->mBeaconText = (LLHUDText *)LLHUDObject::addHUDObject(LLHUDObject::LL_HUD_TEXT);
 				instance()->mBeaconText->setDoFade(FALSE);
 			}
-			
+
 			F32 dist = gFloaterWorldMap->getDistanceToDestination(instance()->mTrackedPositionGlobal, 0.0f);
 			if (dist < DESTINATION_REACHED_RADIUS)
 			{
@@ -257,31 +254,31 @@ void LLTracker::render3D()
 			}
 			else
 			{
-				renderBeacon( av_tracker.getGlobalPos(), gTrackColor, 
-						  	instance()->mBeaconText, av_tracker.getName() );
+				renderBeacon(av_tracker.getGlobalPos(), gTrackColor, 
+						  	instance()->mBeaconText, av_tracker.getName());
 			}
 		}
 		else
 		{
 			BOOL stop_tracking = FALSE;
 			const LLUUID& avatar_id = av_tracker.getAvatarID();
-			if(avatar_id.isNull())
+			if (avatar_id.isNull())
 			{
 				stop_tracking = TRUE;
 			}
 			else 
 			{
 				const LLRelationship* buddy = av_tracker.getBuddyInfo(avatar_id);
-				if(buddy && !buddy->isOnline() && !gAgent.isGodlike())
+				if (buddy && !buddy->isOnline() && !gAgent.isGodlike())
 				{
 					stop_tracking = TRUE;
 				}
-				if(!buddy && !gAgent.isGodlike())
+				if (!buddy && !gAgent.isGodlike())
 				{
 					stop_tracking = TRUE;
 				}
 			}
-			if(stop_tracking)
+			if (stop_tracking)
 			{
 				instance()->stopTrackingAvatar();
 			}
@@ -289,25 +286,23 @@ void LLTracker::render3D()
 	}
 }
 
-
 // static 
-void LLTracker::trackAvatar( const LLUUID& avatar_id, const std::string& name )
+void LLTracker::trackAvatar(const LLUUID& avatar_id, const std::string& name)
 {
 	instance()->stopTrackingLandmark();
 	instance()->stopTrackingLocation();
-	
-	LLAvatarTracker::instance().track( avatar_id, name );
+
+	LLAvatarTracker::instance().track(avatar_id, name);
 	instance()->mTrackingStatus = TRACKING_AVATAR;
 	instance()->mLabel = name;
 }
 
-
 // static 
-void LLTracker::trackLandmark( const LLUUID& asset_id, const LLUUID& item_id, const std::string& name)
+void LLTracker::trackLandmark(const LLUUID& asset_id, const LLUUID& item_id, const std::string& name)
 {
 	instance()->stopTrackingAvatar();
 	instance()->stopTrackingLocation();
-	
+
  	instance()->mTrackedLandmarkAssetID = asset_id;
  	instance()->mTrackedLandmarkItemID = item_id;
  	instance()->mTrackedLandmarkName = name;
@@ -315,7 +310,6 @@ void LLTracker::trackLandmark( const LLUUID& asset_id, const LLUUID& item_id, co
 	instance()->mTrackingStatus = TRACKING_LANDMARK;
 	instance()->mLabel = name;
 }
-
 
 // static 
 void LLTracker::trackLocation(const LLVector3d& pos_global, const std::string& full_name, const std::string& tooltip, ETrackingLocationType location_type)
@@ -331,7 +325,6 @@ void LLTracker::trackLocation(const LLVector3d& pos_global, const std::string& f
 	instance()->mLabel = full_name;
 	instance()->mToolTip = tooltip;
 }
-
 
 // static 
 BOOL LLTracker::handleMouseDown(S32 x, S32 y)
@@ -360,7 +353,6 @@ BOOL LLTracker::handleMouseDown(S32 x, S32 y)
 	return eat_mouse_click;
 }
 
-
 // static 
 LLVector3d LLTracker::getTrackedPositionGlobal()
 {
@@ -376,7 +368,7 @@ LLVector3d LLTracker::getTrackedPositionGlobal()
 		break;
 	}
 	case TRACKING_LANDMARK:
-		if( instance()->mHasLandmarkPosition )
+		if (instance()->mHasLandmarkPosition)
 		{
 			pos_global = instance()->mTrackedPositionGlobal;
 		}
@@ -390,7 +382,6 @@ LLVector3d LLTracker::getTrackedPositionGlobal()
 	return pos_global;
 }
 
-
 // static
 BOOL LLTracker::hasLandmarkPosition()
 {
@@ -401,7 +392,6 @@ BOOL LLTracker::hasLandmarkPosition()
 	}
 	return instance()->mHasLandmarkPosition;
 }
-
 
 // static
 const std::string& LLTracker::getTrackedLocationName()
@@ -415,10 +405,10 @@ F32 pulse_func(F32 t, F32 z)
 	{
 		return 0.f;
 	}
-	
+
 	t *= 3.14159f;
 	z -= t*64.f - 256.f;
-	
+
 	F32 a = cosf(z*3.14159/512.f)*10.0f;
 	a = llmax(a, 9.9f);
 	a -= 9.9f;
@@ -432,21 +422,21 @@ void draw_shockwave(F32 center_z, F32 t, S32 steps, LLColor4 color)
 	{
 		return;
 	}
-	
+
 	t *= 0.6284f/3.14159f;
-	
-	t -= (F32) (S32) t;	
+
+	t -= (F32) (S32) t;
 
 	t = llmax(t, 0.5f);
 	t -= 0.5f;
 	t *= 2.0f;
-	
+
 	F32 radius = t*16536.f;
-	
+
 	// Inexact, but reasonably fast.
 	F32 delta = F_TWO_PI / steps;
-	F32 sin_delta = sin( delta );
-	F32 cos_delta = cos( delta );
+	F32 sin_delta = sin(delta);
+	F32 cos_delta = cos(delta);
 	F32 x = radius;
 	F32 y = 0.f;
 
@@ -456,14 +446,14 @@ void draw_shockwave(F32 center_z, F32 t, S32 steps, LLColor4 color)
 	gGL.vertex3f(0.f, 0.f, center_z);
 	// make sure circle is complete
 	steps += 1;
-	
+
 	color.mV[3] = (1.f-t*t);
-	
+
 	gGL.color4fv(color.mV);
-	while( steps-- )
+	while(steps--)
 	{
 		// Successive rotations
-		gGL.vertex3f( x, y, center_z );
+		gGL.vertex3f(x, y, center_z);
 		F32 x_new = x * cos_delta - y * sin_delta;
 		y = x * sin_delta +  y * cos_delta;
 		x = x_new;
@@ -471,14 +461,12 @@ void draw_shockwave(F32 center_z, F32 t, S32 steps, LLColor4 color)
 	gGL.end();
 }
 
-
 // static 
 void LLTracker::renderBeacon(LLVector3d pos_global, 
 							 const LLColor4& color, 
 							 LLHUDText* hud_textp, 
-							 const std::string& label )
+							 const std::string& label)
 {
-	sCheesyBeacon = gSavedSettings.getBOOL("CheesyBeacon");
 	LLVector3d to_vec = pos_global - gAgent.getCameraPositionGlobal();
 
 	F32 dist = (F32)to_vec.magVec();
@@ -490,13 +478,13 @@ void LLTracker::renderBeacon(LLVector3d pos_global,
 	}
 	else
 	{
-		color_frac = 1.f - 0.6f*(dist/LLViewerCamera::getInstance()->getFar());
+		color_frac = 1.f - 0.6f * (dist / LLViewerCamera::getInstance()->getFar());
 	}
 
-	LLColor4 fogged_color = color_frac * color + (1 - color_frac)*gSky.getFogColor();
+	LLColor4 fogged_color = color_frac * color + (1 - color_frac) * gSky.getFogColor();
 
 	F32 FADE_DIST = 3.f;
-	fogged_color.mV[3] = llmax(0.2f, llmin(0.5f,(dist-FADE_DIST)/FADE_DIST));
+	fogged_color.mV[3] = llmax(0.2f, llmin(0.5f, (dist - FADE_DIST) / FADE_DIST));
 
 	LLVector3 pos_agent = gAgent.getPosAgentFromGlobal(pos_global);
 
@@ -504,83 +492,81 @@ void LLTracker::renderBeacon(LLVector3d pos_global,
 	gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 	LLGLDisable cull_face(GL_CULL_FACE);
 	LLGLDepthTest gls_depth(GL_TRUE, GL_FALSE);
-	
-	
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 		glTranslatef(pos_agent.mV[0], pos_agent.mV[1], pos_agent.mV[2]);
-		
+
 		draw_shockwave(1024.f, gRenderStartTime.getElapsedTimeF32(), 32, fogged_color);
 
 		gGL.color4fv(fogged_color.mV);
 		const U32 BEACON_VERTS = 256;
 		const F32 step = 1024.0f/BEACON_VERTS;
-		
+
 		LLVector3 x_axis = LLViewerCamera::getInstance()->getLeftAxis();
 		F32 t = gRenderStartTime.getElapsedTimeF32();
 		F32 dr = dist/LLViewerCamera::getInstance()->getFar();
-		
+
 		for (U32 i = 0; i < BEACON_VERTS; i++)
 		{
 			F32 x = x_axis.mV[0];
 			F32 y = x_axis.mV[1];
-			
+
 			F32 z = i * step;
 			F32 z_next = (i+1)*step;
-		
+
 			F32 a = pulse_func(t, z);
 			F32 an = pulse_func(t, z_next);
-			
+
 			LLColor4 c_col = fogged_color + LLColor4(a,a,a,a);
 			LLColor4 col_next = fogged_color + LLColor4(an,an,an,an);
 			LLColor4 col_edge = fogged_color * LLColor4(a,a,a,0.0f);
 			LLColor4 col_edge_next = fogged_color * LLColor4(an,an,an,0.0f);
-			
+
 			a *= 2.f;
 			a += 1.0f+dr;
-			
+
 			an *= 2.f;
 			an += 1.0f+dr;
-		
+
 			gGL.begin(LLRender::TRIANGLE_STRIP);
 			gGL.color4fv(col_edge.mV);
 			gGL.vertex3f(-x*a, -y*a, z);
 			gGL.color4fv(col_edge_next.mV);
 			gGL.vertex3f(-x*an, -y*an, z_next);
-			
+
 			gGL.color4fv(c_col.mV);
 			gGL.vertex3f(0, 0, z);
 			gGL.color4fv(col_next.mV);
 			gGL.vertex3f(0, 0, z_next);
-			
+
 			gGL.color4fv(col_edge.mV);
 			gGL.vertex3f(x*a,y*a,z);
 			gGL.color4fv(col_edge_next.mV);
 			gGL.vertex3f(x*an,y*an,z_next);
-			
+
 			gGL.end();
 		}
-							
-		//gCylinder.render(1000);
+
+	//gCylinder.render(1000);
 	glPopMatrix();
 
 	std::string text;
-	text = llformat( "%.0f m", to_vec.magVec());
+	text = llformat("%.0f m", to_vec.magVec());
 
 	LLWString wstr;
 	wstr += utf8str_to_wstring(label);
 	wstr += '\n';
 	wstr += utf8str_to_wstring(text);
 
-	hud_textp->setFont(LLFontGL::getFontSansSerif());
+	hud_textp->setFont(LLFontGL::getFontSansSerif ());
 	hud_textp->setZCompare(FALSE);
-	hud_textp->setColor(LLColor4(1.f, 1.f, 1.f, llmax(0.2f, llmin(1.f,(dist-FADE_DIST)/FADE_DIST))));
+	hud_textp->setColor(LLColor4(1.f, 1.f, 1.f, llmax(0.2f, llmin(1.f, (dist - FADE_DIST) / FADE_DIST))));
 
 	hud_textp->setString(wstr);
 	hud_textp->setVertAlignment(LLHUDText::ALIGN_VERT_CENTER);
 	hud_textp->setPositionAgent(pos_agent);
 }
-
 
 void LLTracker::stopTrackingAll(BOOL clear_ui)
 {
@@ -601,20 +587,18 @@ void LLTracker::stopTrackingAll(BOOL clear_ui)
 	}
 }
 
-
 void LLTracker::stopTrackingAvatar(BOOL clear_ui)
 {
 	LLAvatarTracker& av_tracker = LLAvatarTracker::instance();
-	if( !av_tracker.getAvatarID().isNull() )
+	if (!av_tracker.getAvatarID().isNull())
 	{
-		av_tracker.untrack( av_tracker.getAvatarID() );
+		av_tracker.untrack(av_tracker.getAvatarID());
 	}
 
 	purgeBeaconText();
 	gFloaterWorldMap->clearAvatarSelection(clear_ui);
 	mTrackingStatus = TRACKING_NOTHING;
 }
-
 
 void LLTracker::stopTrackingLandmark(BOOL clear_ui)
 {
@@ -629,7 +613,6 @@ void LLTracker::stopTrackingLandmark(BOOL clear_ui)
 	gFloaterWorldMap->clearLandmarkSelection(clear_ui);
 	mTrackingStatus = TRACKING_NOTHING;
 }
-
 
 void LLTracker::stopTrackingLocation(BOOL clear_ui)
 {
@@ -659,7 +642,7 @@ void LLTracker::drawMarker(const LLVector3d& pos_global, const LLColor4& color)
 	const BOOL CLAMP = TRUE;
 
 	if (LLViewerCamera::getInstance()->projectPosAgentToScreen(pos_local, screen, CLAMP)
-		|| LLViewerCamera::getInstance()->projectPosAgentToScreenEdge(pos_local, screen) )
+		|| LLViewerCamera::getInstance()->projectPosAgentToScreenEdge(pos_local, screen))
 	{
 		gHUDView->screenPointToLocal(screen.mX, screen.mY, &x, &y);
 
@@ -685,8 +668,8 @@ void LLTracker::drawMarker(const LLVector3d& pos_global, const LLColor4& color)
 			const F32 ARROW_ELLIPSE_RADIUS_Y = HUD_ARROW_SIZE;
 
 			// compute where the arrow should be
-			F32 x_target = (F32)(x + x_center) - (ARROW_ELLIPSE_RADIUS_X * ((F32)x / dist) );	
-			F32 y_target = (F32)(y + y_center) - (ARROW_ELLIPSE_RADIUS_Y * ((F32)y / dist) );
+			F32 x_target = (F32)(x + x_center) - (ARROW_ELLIPSE_RADIUS_X * ((F32)x / dist));
+			F32 y_target = (F32)(y + y_center) - (ARROW_ELLIPSE_RADIUS_Y * ((F32)y / dist));
 
 			// keep the arrow within the window
 			F32 margin = 0.0;
@@ -694,8 +677,8 @@ void LLTracker::drawMarker(const LLVector3d& pos_global, const LLColor4& color)
 			{
 				margin = (F32)(gChatBar->getRect().getHeight());
 			}
-			F32 x_clamped = llclamp( x_target, (F32)half_arrow_size, (F32)(rect.getWidth() - half_arrow_size));
-			F32 y_clamped = llclamp( y_target, (F32)half_arrow_size + margin, (F32)(rect.getHeight() - half_arrow_size));
+			F32 x_clamped = llclamp(x_target, (F32)half_arrow_size, (F32)(rect.getWidth() - half_arrow_size));
+			F32 y_clamped = llclamp(y_target, (F32)half_arrow_size + margin, (F32)(rect.getHeight() - half_arrow_size));
 
 			F32 slope = (F32)(y) / (F32)(x);
 			F32 window_ratio = (F32)(rect.getHeight() - HUD_ARROW_SIZE) / (F32)(rect.getWidth() - HUD_ARROW_SIZE);
@@ -725,7 +708,7 @@ void LLTracker::drawMarker(const LLVector3d& pos_global, const LLColor4& color)
 			y = mHUDArrowCenterY - y_center;
 		}
 
-		F32 angle = atan2( (F32)y, (F32)x );
+		F32 angle = atan2((F32)y, (F32)x);
 
 		gl_draw_scaled_rotated_image(mHUDArrowCenterX - half_arrow_size, 
 									 mHUDArrowCenterY - half_arrow_size, 
@@ -736,15 +719,14 @@ void LLTracker::drawMarker(const LLVector3d& pos_global, const LLColor4& color)
 	}
 }
 
-
 void LLTracker::setLandmarkVisited()
 {
 	// poke the inventory item
 	if (!mTrackedLandmarkItemID.isNull())
 	{
-		LLInventoryItem* i = gInventory.getItem( mTrackedLandmarkItemID );
+		LLInventoryItem* i = gInventory.getItem(mTrackedLandmarkItemID);
 		LLViewerInventoryItem* item = (LLViewerInventoryItem*)i;
-		if (   item 
+		if (item 
 			&& !(item->getFlags()&LLInventoryItem::II_FLAGS_LANDMARK_VISITED))
 		{
 			U32 flags = item->getFlags();
@@ -770,16 +752,15 @@ void LLTracker::setLandmarkVisited()
 	}
 }
 
-
 void LLTracker::cacheLandmarkPosition()
 {
 	// the landmark asset download may have finished, in which case
 	// we'll now be able to figure out where we're trying to go
 	BOOL found_landmark = FALSE;
-	if( mTrackedLandmarkAssetID == LLFloaterWorldMap::getHomeID())
+	if (mTrackedLandmarkAssetID == LLFloaterWorldMap::getHomeID())
 	{
 		LLVector3d pos_global;
-		if ( gAgent.getHomePosGlobal( &mTrackedPositionGlobal ))
+		if (gAgent.getHomePosGlobal(&mTrackedPositionGlobal))
 		{
 			found_landmark = TRUE;
 		}
@@ -793,25 +774,25 @@ void LLTracker::cacheLandmarkPosition()
 	else
 	{
 		LLLandmark* landmark = gLandmarkList.getAsset(mTrackedLandmarkAssetID);
-		if(landmark && landmark->getGlobalPos(mTrackedPositionGlobal))
+		if (landmark && landmark->getGlobalPos(mTrackedPositionGlobal))
 		{
 			found_landmark = TRUE;
 
 			// cache the object's visitation status
 			mLandmarkHasBeenVisited = FALSE;
 			LLInventoryItem* item = gInventory.getItem(mTrackedLandmarkItemID);
-			if (   item 
+			if (item 
 				&& item->getFlags()&LLInventoryItem::II_FLAGS_LANDMARK_VISITED)
 			{
 				mLandmarkHasBeenVisited = TRUE;
 			}
 		}
 	}
-	if ( found_landmark && gFloaterWorldMap )
+	if (found_landmark && gFloaterWorldMap)
 	{
 		mHasReachedLandmark = FALSE;
 		F32 dist = gFloaterWorldMap->getDistanceToDestination(mTrackedPositionGlobal, 1.0f);
-		if ( dist < DESTINATION_UNVISITED_RADIUS )
+		if (dist < DESTINATION_UNVISITED_RADIUS)
 		{
 			mHasReachedLandmark = TRUE;
 		}
@@ -820,13 +801,11 @@ void LLTracker::cacheLandmarkPosition()
 	mHasLandmarkPosition = found_landmark;
 }
 
-
 void LLTracker::purgeBeaconText()
 {
-	if(!mBeaconText.isNull())
+	if (!mBeaconText.isNull())
 	{
 		mBeaconText->markDead();
 		mBeaconText = NULL;
 	}
 }
-

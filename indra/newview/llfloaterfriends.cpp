@@ -54,7 +54,6 @@
 #include "llimview.h"
 #include "llinventorymodel.h"
 #include "llnamelistctrl.h"
-#include "llnotify.h"
 #include "llmenucommands.h"
 #include "llviewercontrol.h"
 #include "llviewermessage.h"

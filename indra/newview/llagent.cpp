@@ -44,6 +44,7 @@
 #include "llcriticaldamp.h"
 #include "llfocusmgr.h"
 #include "llglheaders.h"
+#include "llnotifications.h"
 #include "llparcel.h"
 #include "llpermissions.h"
 #include "llregionhandle.h"
@@ -92,7 +93,6 @@
 #include "llmenugl.h"
 #include "llmorphview.h"
 #include "llmoveview.h"
-#include "llnotify.h"
 #include "llquantize.h"
 #include "llsdutil.h"
 #include "llselectmgr.h"
@@ -318,6 +318,7 @@ LLAgent::LLAgent() :
 	mCameraFOVDefault(DEFAULT_FIELD_OF_VIEW),
 
 	mCameraOffsetDefault(),
+	mCameraFocusOffsetDefault(),
 	mCameraCollidePlane(),
 
 	mCurrentCameraDistance(2.f),		// meters, set in init()
@@ -440,6 +441,7 @@ void LLAgent::init()
 
 	mCameraFocusOffsetTarget = LLVector4(gSavedSettings.getVector3("CameraOffsetBuild"));
 	mCameraOffsetDefault = gSavedSettings.getVector3("CameraOffsetDefault");
+	mCameraFocusOffsetDefault = gSavedSettings.getVector3("FocusOffsetDefault");
 	mCameraCollidePlane.clearVec();
 	mCurrentCameraDistance = mCameraOffsetDefault.magVec() * gSavedSettings.getF32("CameraOffsetScale");
 	mTargetCameraDistance = mCurrentCameraDistance;
@@ -3521,7 +3523,7 @@ LLVector3d LLAgent::calcThirdPersonFocusOffset()
 {
 	// ...offset from avatar
 	LLVector3d focus_offset;
-	focus_offset.setVec(gSavedSettings.getVector3("FocusOffsetDefault"));
+	focus_offset.setVec(mCameraFocusOffsetDefault);
 
 	LLQuaternion agent_rot = mFrameAgent.getQuaternion();
 	if (!mAvatarObject.isNull() && mAvatarObject->getParent())
@@ -3544,6 +3546,35 @@ void LLAgent::setupSitCamera()
 		at_axis.mV[VZ] = 0.f;
 		at_axis.normalize();
 		resetAxes(at_axis * ~parent_rot);
+	}
+}
+
+void LLAgent::setupCameraView(bool reset)
+{
+	static BOOL rear_view = FALSE;
+
+	BOOL new_rear_view = gSavedSettings.getBOOL("CameraFrontView");
+	if (new_rear_view &&
+		(mCameraMode == CAMERA_MODE_CUSTOMIZE_AVATAR ||
+		 mCameraMode == CAMERA_MODE_MOUSELOOK || reset))
+	{
+		gSavedSettings.setBOOL("CameraFrontView", FALSE);
+		new_rear_view = FALSE;
+	}
+	if (new_rear_view)
+	{
+		mCameraFocusOffsetDefault = gSavedSettings.getVector3("FocusOffsetFrontView");
+		mCameraOffsetDefault = gSavedSettings.getVector3("CameraOffsetFrontView");
+	}
+	else
+	{
+		mCameraFocusOffsetDefault = gSavedSettings.getVector3("FocusOffsetDefault");
+		mCameraOffsetDefault = gSavedSettings.getVector3("CameraOffsetDefault");
+	}
+	if (rear_view != new_rear_view)
+	{
+		updateCamera();
+		rear_view = new_rear_view;
 	}
 }
 
@@ -3975,6 +4006,8 @@ void LLAgent::changeCameraToMouselook(BOOL animate)
 	gSavedSettings.setBOOL("ThirdPersonBtnState",	FALSE);
 	gSavedSettings.setBOOL("BuildBtnState",			FALSE);
 
+	setupCameraView(true);	// Reset the view to rear view.
+
 	if (mAvatarObject.notNull())
 	{
 		mAvatarObject->stopMotion(ANIM_AGENT_BODY_NOISE);
@@ -4232,6 +4265,7 @@ void LLAgent::changeCameraToCustomizeAvatar(BOOL avatar_animate, BOOL camera_ani
 
 	if (mCameraMode != CAMERA_MODE_CUSTOMIZE_AVATAR)
 	{
+		setupCameraView(true);	// Reset the view to rear view.
 		mLastCameraMode = mCameraMode;
 		mCameraMode = CAMERA_MODE_CUSTOMIZE_AVATAR;
 		U32 old_flags = mControlFlags;

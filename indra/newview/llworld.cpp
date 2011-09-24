@@ -119,18 +119,22 @@ LLWorld::LLWorld() :
 
 }
 
-
 void LLWorld::destroyClass()
 {
 	gObjectList.destroy();
-	for(region_list_t::iterator region_it = mRegionList.begin(); region_it != mRegionList.end(); )
+	for (region_list_t::iterator region_it = mRegionList.begin(); region_it != mRegionList.end(); )
 	{
 		LLViewerRegion* region_to_delete = *region_it++;
 		removeRegion(region_to_delete->getHost());
 	}
 	LLViewerPartSim::getInstance()->destroyClass();
-}
 
+	mDefaultWaterTexturep = NULL;
+	for (S32 i = 0; i < 8; i++)
+	{
+		mEdgeWaterObjects[i] = NULL;
+	}
+}
 
 LLViewerRegion* LLWorld::addRegion(const U64 &region_handle, const LLHost &host)
 {

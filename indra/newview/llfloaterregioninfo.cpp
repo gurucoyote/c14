@@ -3003,8 +3003,9 @@ bool LLDispatchEstateUpdateInfo::operator()(const LLDispatcher* dispatcher,
 	LLUUID owner_id(strings[1]);
 	regionp->setOwner(owner_id);
 	// Update estate owner name in UI
-	const BOOL is_group = FALSE;
-	gCacheName->get(owner_id, is_group, LLPanelEstateInfo::callbackCacheName);
+	gCacheName->get(owner_id, FALSE,
+					boost::bind(LLPanelEstateInfo::callbackCacheName,
+								_1, _2, _3));
 
 	U32 estate_id = strtoul(strings[2].c_str(), NULL, 10);
 	panel->setEstateID(estate_id);

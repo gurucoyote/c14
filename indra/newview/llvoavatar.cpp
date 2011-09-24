@@ -32,65 +32,64 @@
 
 #include "llviewerprecompiledheaders.h"
 
-#include "llvoavatar.h"
-
 #include <stdio.h>
 #include <ctype.h>
 
+#include "llvoavatar.h"
+
 #include "llaudioengine.h"
 #include "llavatarnamecache.h"
-#include "noise.h"
+#include "lleditingmotion.h"
+#include "llheadrotmotion.h"
+#include "llkeyframefallmotion.h"
+#include "llkeyframestandmotion.h"
+#include "llkeyframewalkmotion.h"
+#include "llquantize.h"
+#include "llregionhandle.h"
+#include "llresmgr.h"
 #include "llsdserialize.h"
+#include "lltargetingmotion.h"
 
-#include "llagent.h" //  Get state values from here
-#include "llviewercontrol.h"
+#include "llagent.h"				// Get state values from here
+#include "llanimstatelabels.h"
 #include "lldrawpoolavatar.h"
 #include "lldriverparam.h"
-#include "lleditingmotion.h"
 #include "llemote.h"
 #include "llfirstuse.h"
-#include "llheadrotmotion.h"
+#include "llgesturemgr.h"			// needed to trigger the voice gesticulations
 #include "llhudeffecttrail.h"
 #include "llhudmanager.h"
 #include "llhudtext.h"
 #include "llinventorybridge.h"
 #include "llinventoryview.h"
-#include "llkeyframefallmotion.h"
-#include "llkeyframestandmotion.h"
-#include "llkeyframewalkmotion.h"
-#include "llmanipscale.h"  // for get_default_max_prim_scale()
+#include "llmanipscale.h"			// for get_default_max_prim_scale()
 #include "llmeshrepository.h"
 #include "llmutelist.h"
-#include "llnotify.h"
 #include "llphysicsmotion.h"
-#include "llquantize.h"
-#include "llregionhandle.h"
-#include "llresmgr.h"
 #include "llselectmgr.h"
+#include "llsky.h"
 #include "llsprite.h"
-#include "llstartup.h"	// for gIsInSecondLife
-#include "lltargetingmotion.h"
+#include "llstartup.h"				// for gIsInSecondLife
 #include "lltexlayer.h"
-#include "lltoolgrab.h"	// for needsRenderBeam
-#include "lltoolmgr.h" // for needsRenderBeam
+#include "lltoolgrab.h"				// for needsRenderBeam
+#include "lltoolmgr.h"				// for needsRenderBeam
 #include "lltoolmorph.h"
 #include "llviewercamera.h"
+#include "llviewercontrol.h"
 #include "llviewergenericmessage.h"
-#include "llviewertexturelist.h"
 #include "llviewermedia.h"
 #include "llviewermenu.h"
 #include "llviewerobjectlist.h"
 #include "llviewerparcelmgr.h"
+#include "llviewershadermgr.h"
 #include "llviewerstats.h"
+#include "llviewertexturelist.h"
+#include "llvoiceclient.h"
+#include "llvoicevisualizer.h"		// Ventrella
 #include "llvovolume.h"
 #include "llworld.h"
+#include "noise.h"
 #include "pipeline.h"
-#include "llviewershadermgr.h"
-#include "llsky.h"
-#include "llanimstatelabels.h"
-#include "llgesturemgr.h" //needed to trigger the voice gesticulations
-#include "llvoiceclient.h"
-#include "llvoicevisualizer.h" // Ventrella
 
 #if LL_MSVC
 // disable boost::lexical_cast warning
@@ -3626,7 +3625,8 @@ void LLVOAvatar::idleUpdateTractorBeam()
 	// No beam for selected far objects when PrivateLookAt is TRUE
 	LLObjectSelectionHandle selection = LLSelectMgr::getInstance()->getSelection();
 	LLViewerObject* object = selection->getFirstObject();
-	if (object && gSavedSettings.getBOOL("PrivateLookAt"))
+	static LLCachedControl<bool> private_look_at(gSavedSettings, "PrivateLookAt");
+	if (object && private_look_at)
 	{
 		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() > 20.0)
 		{
@@ -7455,10 +7455,8 @@ void LLVOAvatar::updateRuthTimer(bool loading)
 
 BOOL LLVOAvatar::isFullyLoaded()
 {
-	if (gSavedSettings.getBOOL("RenderUnloadedAvatar"))
-		return TRUE;
-	else
-		return mFullyLoaded;
+	static LLCachedControl<bool> render_unloaded_avatar(gSavedSettings, "RenderUnloadedAvatar");
+	return render_unloaded_avatar ? TRUE : mFullyLoaded;
 }
 
 //-----------------------------------------------------------------------------

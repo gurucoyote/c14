@@ -1598,6 +1598,21 @@
       <key>Value</key>
       <real>1.0</real>
     </map>
+    <key>CameraOffsetFrontView</key>
+    <map>
+      <key>Comment</key>
+      <string>Initial camera offset from avatar in Front View</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Vector3</string>
+      <key>Value</key>
+      <array>
+        <real>2.2</real>
+        <real>0.0</real>
+        <real>0.0</real>
+      </array>
+    </map>
     <key>CameraPosOnLogout</key>
     <map>
       <key>Comment</key>
@@ -1612,6 +1627,17 @@
         <real>0.0</real>
         <real>0.0</real>
       </array>
+    </map>
+    <key>CameraFrontView</key>
+    <map>
+      <key>Comment</key>
+      <string>Switches the agent camera to front view (volatile setting)</string>
+      <key>Persist</key>
+      <integer>0</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <real>0</real>
     </map>
     <key>CameraPositionSmoothing</key>
     <map>
@@ -5224,6 +5250,21 @@
         <real>1.0</real>
         <real>0.0</real>
         <real>1.0</real>
+      </array>
+    </map>
+    <key>FocusOffsetFrontView</key>
+    <map>
+      <key>Comment</key>
+      <string>Initial focus point offset relative to avatar for the camera preset Front View</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Vector3</string>
+      <key>Value</key>
+      <array>
+        <real>0.0</real>
+        <real>0.0</real>
+        <real>0.0</real>
       </array>
     </map>
     <key>FocusPosOnLogout</key>
@@ -10313,13 +10354,13 @@
     <key>CurlUseMultipleThreads</key>
     <map>
       <key>Comment</key>
-      <string>If TRUE, enables multi-threading for curl multi-requests (requires a restart).</string>
+      <string>If TRUE, enables multi-threading for curl multi-requests (requires a restart). WARNING: may cause crashes under some Windows systems.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
       <string>Boolean</string>
       <key>Value</key>
-      <integer>1</integer>
+      <integer>0</integer>
     </map>
     <key>SafeMode</key>
     <map>

@@ -651,13 +651,14 @@ void display(BOOL rebuild, F32 zoom_factor, int subfield, BOOL for_snapshot)
 		LLDrawable::incrementVisible();
 
 		LLSpatialGroup::sNoDelete = TRUE;
+		static LLCachedControl<bool> use_occlusion(gSavedSettings, "UseOcclusion");
 		LLPipeline::sUseOcclusion = 
 				((!gUseWireframe
 //MK
 				|| (gRRenabled && gAgent.mRRInterface.mContainsDetach))
 //mk
 				&& LLFeatureManager::getInstance()->isFeatureAvailable("UseOcclusion") 
-				&& gSavedSettings.getBOOL("UseOcclusion") 
+				&& use_occlusion
 				&& gGLManager.mHasOcclusionQuery) ? 2 : 0;
 
 		/*if (LLPipeline::sUseOcclusion && LLPipeline::sRenderDeferred)
@@ -1019,7 +1020,9 @@ void render_hud_attachments()
 		hud_cam.setAxes(LLVector3(1,0,0), LLVector3(0,1,0), LLVector3(0,0,1));
 		LLViewerCamera::updateFrustumPlanes(hud_cam, TRUE);
 
-		bool render_particles = gPipeline.hasRenderType(LLPipeline::RENDER_TYPE_PARTICLES) && gSavedSettings.getBOOL("RenderHUDParticles");
+		static LLCachedControl<bool> render_hud_particles(gSavedSettings, "RenderHUDParticles");
+		bool render_particles = gPipeline.hasRenderType(LLPipeline::RENDER_TYPE_PARTICLES) &&
+								render_hud_particles;
 
 		//only render hud objects
 		gPipeline.pushRenderTypeMask();

@@ -75,26 +75,27 @@ extern BOOL gDebugClicks;
 //
 // Methods
 //
-LLToolGrab::LLToolGrab( LLToolComposite* composite )
-:	LLTool( std::string("Grab"), composite ),
-	mMode( GRAB_INACTIVE ),
-	mVerticalDragging( FALSE ),
-	mHasMoved( FALSE ),
+LLToolGrab::LLToolGrab(LLToolComposite* composite)
+:	LLTool(std::string("Grab"), composite),
+	mMode(GRAB_INACTIVE),
+	mVerticalDragging(FALSE),
+	mHasMoved(FALSE),
 	mOutsideSlop(FALSE),
 	mDeselectedThisClick(FALSE),
-	mSpinGrabbing( FALSE ),
+	mSpinGrabbing(FALSE),
 	mSpinRotation(),
 	mHideBuildHighlight(FALSE)
-{ }
+{
+}
 
 LLToolGrab::~LLToolGrab()
-{ }
-
+{
+}
 
 // virtual
 void LLToolGrab::handleSelect()
 {
-	if(gFloaterTools)
+	if (gFloaterTools)
 	{
 		// viewer can crash during startup if we don't check.
 		gFloaterTools->setStatusText("grab");
@@ -105,9 +106,9 @@ void LLToolGrab::handleSelect()
 
 void LLToolGrab::handleDeselect()
 {
-	if( hasMouseCapture() )
+	if (hasMouseCapture())
 	{
-		setMouseCapture( FALSE );
+		setMouseCapture(FALSE);
 	}
 
 }
@@ -131,7 +132,7 @@ BOOL LLToolGrab::handleMouseDown(S32 x, S32 y, MASK mask)
 
 	// call the base class to propogate info to sim
 	LLTool::handleMouseDown(x, y, mask);
-	
+
 	if (!gAgent.leftButtonGrabbed())
 	{
 		// can grab transparent objects (how touch event propagates, scripters rely on this)
@@ -202,13 +203,13 @@ BOOL LLToolGrab::handleObjectHit(const LLPickInfo& info)
 	{
 		if (gGrabTransientTool)
 		{
-			gBasicToolset->selectTool( gGrabTransientTool );
+			gBasicToolset->selectTool(gGrabTransientTool);
 			gGrabTransientTool = NULL;
 		}
 		return TRUE;
 	}
 
-	setMouseCapture( TRUE );
+	setMouseCapture(TRUE);
 
 	// Grabs always start from the root
 	// objectp = (LLViewerObject *)objectp->getRoot();
@@ -239,7 +240,7 @@ BOOL LLToolGrab::handleObjectHit(const LLPickInfo& info)
 		// Don't bail out here, go on and grab so buttons can get
 		// their "touched" event.
 	}
-	else if( !objectp->permMove() )
+	else if (!objectp->permMove())
 	{
 		// if mouse is over a physical object without move permission, show feedback if user tries to move it.
 		mMode = GRAB_LOCKED;
@@ -285,8 +286,8 @@ BOOL LLToolGrab::handleObjectHit(const LLPickInfo& info)
 		LLVector3 local_edit_point = gAgent.getPosAgentFromGlobal(info.mPosGlobal);
 		local_edit_point -= edit_object->getPositionAgent();
 		local_edit_point = local_edit_point * ~edit_object->getRenderRotation();
-		gAgent.setPointAt(POINTAT_TARGET_GRAB, edit_object, local_edit_point );
-		gAgent.setLookAt(LOOKAT_TARGET_SELECT, edit_object, local_edit_point );
+		gAgent.setPointAt(POINTAT_TARGET_GRAB, edit_object, local_edit_point);
+		gAgent.setLookAt(LOOKAT_TARGET_SELECT, edit_object, local_edit_point);
 	}
 
 	// on transient grabs (clicks on world objects), kill the grab immediately
@@ -294,7 +295,7 @@ BOOL LLToolGrab::handleObjectHit(const LLPickInfo& info)
 		&& gGrabTransientTool 
 		&& (mMode == GRAB_NONPHYSICAL || mMode == GRAB_LOCKED))
 	{
-		gBasicToolset->selectTool( gGrabTransientTool );
+		gBasicToolset->selectTool(gGrabTransientTool);
 		gGrabTransientTool = NULL;
 	}
 
@@ -324,13 +325,12 @@ void LLToolGrab::startSpin()
 	LLMessageSystem *msg = gMessageSystem;
 	msg->newMessageFast(_PREHASH_ObjectSpinStart);
 	msg->nextBlockFast(_PREHASH_AgentData);
-	msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID() );
+	msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
 	msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 	msg->nextBlockFast(_PREHASH_ObjectData);
-	msg->addUUIDFast(_PREHASH_ObjectID, mGrabPick.mObjectID );
-	msg->sendMessage( objectp->getRegion()->getHost() );
+	msg->addUUIDFast(_PREHASH_ObjectID, mGrabPick.mObjectID);
+	msg->sendMessage(objectp->getRegion()->getHost());
 }
-
 
 void LLToolGrab::stopSpin()
 {
@@ -343,18 +343,18 @@ void LLToolGrab::stopSpin()
 	}
 
 	LLMessageSystem *msg = gMessageSystem;
-	switch(mMode)
+	switch (mMode)
 	{
 	case GRAB_ACTIVE_CENTER:
 	case GRAB_NONPHYSICAL:
 	case GRAB_LOCKED:
 		msg->newMessageFast(_PREHASH_ObjectSpinStop);
 		msg->nextBlockFast(_PREHASH_AgentData);
-		msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID() );
+		msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
 		msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 		msg->nextBlockFast(_PREHASH_ObjectData);
-		msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID() );
-		msg->sendMessage( objectp->getRegion()->getHost() );
+		msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID());
+		msg->sendMessage(objectp->getRegion()->getHost());
 		break;
 
 	case GRAB_NOOBJECT:
@@ -364,7 +364,6 @@ void LLToolGrab::stopSpin()
 		break;
 	}
 }
-
 
 void LLToolGrab::startGrab()
 {
@@ -412,7 +411,7 @@ void LLToolGrab::startGrab()
 	msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 	msg->nextBlockFast(_PREHASH_ObjectData);
 	msg->addU32Fast(_PREHASH_LocalID, objectp->mLocalID);
-	msg->addVector3Fast(_PREHASH_GrabOffset, grab_offset );
+	msg->addVector3Fast(_PREHASH_GrabOffset, grab_offset);
 	msg->nextBlock("SurfaceInfo");
 	msg->addVector3("UVCoord", LLVector3(mGrabPick.mUVCoords));
 	msg->addVector3("STCoord", LLVector3(mGrabPick.mSTCoords));
@@ -420,7 +419,7 @@ void LLToolGrab::startGrab()
 	msg->addVector3("Position", mGrabPick.mIntersection);
 	msg->addVector3("Normal", mGrabPick.mNormal);
 	msg->addVector3("Binormal", mGrabPick.mBinormal);
-	msg->sendMessage( objectp->getRegion()->getHost());
+	msg->sendMessage(objectp->getRegion()->getHost());
 
 	mGrabOffsetFromCenterInitial = grab_offset;
 	mGrabHiddenOffsetFromCamera = mDragStartFromCamera;
@@ -436,7 +435,6 @@ void LLToolGrab::startGrab()
 	mLastGrabPos = LLVector3(-1.f, -1.f, -1.f);
 }
 
-
 BOOL LLToolGrab::handleHover(S32 x, S32 y, MASK mask)
 {
 	if (!gViewerWindow->getLeftMouseDown())
@@ -447,44 +445,41 @@ BOOL LLToolGrab::handleHover(S32 x, S32 y, MASK mask)
 	}
 
 	// Do the right hover based on mode
-	switch( mMode )
+	switch (mMode)
 	{
 	case GRAB_ACTIVE_CENTER:
-		handleHoverActive( x, y, mask );	// cursor hidden
+		handleHoverActive(x, y, mask);	// cursor hidden
 		break;
-		
+
 	case GRAB_NONPHYSICAL:
 		handleHoverNonPhysical(x, y, mask);
 		break;
 
 	case GRAB_INACTIVE:
-		handleHoverInactive( x, y, mask );  // cursor set here
+		handleHoverInactive(x, y, mask);  // cursor set here
 		break;
 
 	case GRAB_NOOBJECT:
 	case GRAB_LOCKED:
-		handleHoverFailed( x, y, mask );
+		handleHoverFailed(x, y, mask);
 		break;
 
 	}
 
 	mLastMouseX = x;
 	mLastMouseY = y;
-	
+
 	return TRUE;
 }
 
 const F32 GRAB_SENSITIVITY_X = 0.0075f;
 const F32 GRAB_SENSITIVITY_Y = 0.0075f;
 
-
-
-		
 // Dragging.
 void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 {
 	LLViewerObject* objectp = mGrabPick.getObject();
-	if (!objectp || !hasMouseCapture() ) return;
+	if (!objectp || !hasMouseCapture()) return;
 	if (objectp->isDead())
 	{
 		// Bail out of drag because object has been killed
@@ -507,7 +502,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 		// user released ALT key, stop spinning
 		stopSpin();
 	}
-	else if (!mSpinGrabbing && (mask == MASK_SPIN) )
+	else if (!mSpinGrabbing && (mask == MASK_SPIN))
 	{
 		// user pressed ALT key, start spinning
 		startSpin();
@@ -524,7 +519,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 		mDragStartPointGlobal = gViewerWindow->clickPointInWorldGlobal(x, y, objectp);
 		mDragStartFromCamera = mDragStartPointGlobal - gAgent.getCameraPositionGlobal();
 	}
-	else if (!mVerticalDragging && (mask == MASK_VERTICAL) )
+	else if (!mVerticalDragging && (mask == MASK_VERTICAL))
 	{
 		// ...switch to vertical dragging
 		mVerticalDragging = TRUE;
@@ -551,7 +546,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 
 		// mouse has moved outside center
 		mHasMoved = TRUE;
-		
+
 		if (mSpinGrabbing)
 		{
 			//------------------------------------------------------
@@ -560,11 +555,11 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 
 			// x motion maps to rotation around vertical axis
 			LLVector3 up(0.f, 0.f, 1.f);
-			LLQuaternion rotation_around_vertical( dx*RADIANS_PER_PIXEL_X, up );
+			LLQuaternion rotation_around_vertical(dx*RADIANS_PER_PIXEL_X, up);
 
 			// y motion maps to rotation around left axis
 			const LLVector3 &agent_left = LLViewerCamera::getInstance()->getLeftAxis();
-			LLQuaternion rotation_around_left( dy*RADIANS_PER_PIXEL_Y, agent_left );
+			LLQuaternion rotation_around_left(dy*RADIANS_PER_PIXEL_Y, agent_left);
 
 			// compose with current rotation
 			mSpinRotation = mSpinRotation * rotation_around_vertical;
@@ -574,12 +569,12 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 			LLMessageSystem *msg = gMessageSystem;
 			msg->newMessageFast(_PREHASH_ObjectSpinUpdate);
 			msg->nextBlockFast(_PREHASH_AgentData);
-			msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID() );
+			msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
 			msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 			msg->nextBlockFast(_PREHASH_ObjectData);
-			msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID() );
-			msg->addQuatFast(_PREHASH_Rotation, mSpinRotation );
-			msg->sendMessage( objectp->getRegion()->getHost() );
+			msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID());
+			msg->addQuatFast(_PREHASH_Rotation, mSpinRotation);
+			msg->sendMessage(objectp->getRegion()->getHost());
 		}
 		else
 		{
@@ -593,7 +588,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 			x_part.normVec();
 
 			LLVector3d y_part;
-			if( mVerticalDragging )
+			if (mVerticalDragging)
 			{
 				y_part.setVec(LLViewerCamera::getInstance()->getUpAxis());
 				// y_part.setVec(0.f, 0.f, 1.f);
@@ -608,7 +603,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 
 			mGrabHiddenOffsetFromCamera = mGrabHiddenOffsetFromCamera 
 				+ (x_part * (-dx * GRAB_SENSITIVITY_X)) 
-				+ (y_part * ( dy * GRAB_SENSITIVITY_Y));
+				+ (y_part * (dy * GRAB_SENSITIVITY_Y));
 
 
 			// Send the message to the viewer.
@@ -655,9 +650,9 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 			mGrabHiddenOffsetFromCamera = grab_point_global - gAgent.getCameraPositionGlobal();
 
 			// Handle auto-rotation at screen edge.
-			LLVector3 grab_pos_agent = gAgent.getPosAgentFromGlobal( grab_point_global );
+			LLVector3 grab_pos_agent = gAgent.getPosAgentFromGlobal(grab_point_global);
 
-			LLCoordGL grab_center_gl( gViewerWindow->getWindowWidth() / 2, gViewerWindow->getWindowHeight() / 2);
+			LLCoordGL grab_center_gl(gViewerWindow->getWindowWidth() / 2, gViewerWindow->getWindowHeight() / 2);
 			LLViewerCamera::getInstance()->projectPosAgentToScreen(grab_pos_agent, grab_center_gl);
 
 			const S32 ROTATE_H_MARGIN = gViewerWindow->getWindowWidth() / 20;
@@ -692,7 +687,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 				&& (grab_center_gl.mY > 24))
 			{
 				// Transmit update to simulator
-				LLVector3 grab_pos_region = objectp->getRegion()->getPosRegionFromGlobal( grab_point_global );
+				LLVector3 grab_pos_region = objectp->getRegion()->getPosRegionFromGlobal(grab_point_global);
 
 				LLMessageSystem *msg = gMessageSystem;
 				msg->newMessageFast(_PREHASH_ObjectGrabUpdate);
@@ -700,10 +695,10 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 				msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
 				msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 				msg->nextBlockFast(_PREHASH_ObjectData);
-				msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID() );
-				msg->addVector3Fast(_PREHASH_GrabOffsetInitial, mGrabOffsetFromCenterInitial );
-				msg->addVector3Fast(_PREHASH_GrabPosition, grab_pos_region );
-				msg->addU32Fast(_PREHASH_TimeSinceLast, dt_milliseconds );
+				msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID());
+				msg->addVector3Fast(_PREHASH_GrabOffsetInitial, mGrabOffsetFromCenterInitial);
+				msg->addVector3Fast(_PREHASH_GrabPosition, grab_pos_region);
+				msg->addU32Fast(_PREHASH_TimeSinceLast, dt_milliseconds);
 				msg->nextBlock("SurfaceInfo");
 				msg->addVector3("UVCoord", LLVector3(mGrabPick.mUVCoords));
 				msg->addVector3("STCoord", LLVector3(mGrabPick.mSTCoords));
@@ -712,7 +707,7 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 				msg->addVector3("Normal", mGrabPick.mNormal);
 				msg->addVector3("Binormal", mGrabPick.mBinormal);
 
-				msg->sendMessage( objectp->getRegion()->getHost() );
+				msg->sendMessage(objectp->getRegion()->getHost());
 			}
 		}
 
@@ -742,14 +737,14 @@ void LLToolGrab::handleHoverActive(S32 x, S32 y, MASK mask)
 	// HACK to avoid assert: error checking system makes sure that the cursor is set during every handleHover.  This is actually a no-op since the cursor is hidden.
 	gViewerWindow->setCursor(UI_CURSOR_ARROW);  
 
-	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (active) [cursor hidden]" << llendl;		
+	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (active) [cursor hidden]" << llendl;
 }
  
 
 void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 {
 	LLViewerObject* objectp = mGrabPick.getObject();
-	if (!objectp || !hasMouseCapture() ) return;
+	if (!objectp || !hasMouseCapture()) return;
 	if (objectp->isDead())
 	{
 		// Bail out of drag because object has been killed
@@ -770,7 +765,7 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 	// mess of spaghetti.  so here we go:
 
 	LLVector3 grab_pos_region(0,0,0);
-	
+
 	const BOOL SUPPORT_LLDETECTED_GRAB = TRUE;
 	if (SUPPORT_LLDETECTED_GRAB)
 	{
@@ -781,12 +776,12 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 		{
 			mVerticalDragging = FALSE;
 		}
-	
-		else if (!mVerticalDragging && (mask == MASK_VERTICAL) )
+
+		else if (!mVerticalDragging && (mask == MASK_VERTICAL))
 		{
 			mVerticalDragging = TRUE;
 		}
-	
+
 		S32 dx = x - mLastMouseX;
 		S32 dy = y - mLastMouseY;
 
@@ -794,7 +789,7 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 		{
 			mAccumDeltaX += dx;
 			mAccumDeltaY += dy;
-		
+
 			S32 dist_sq = mAccumDeltaX * mAccumDeltaX + mAccumDeltaY * mAccumDeltaY;
 			if (dist_sq > SLOP_DIST_SQ)
 			{
@@ -814,7 +809,7 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 			x_part.normVec();
 
 			LLVector3d y_part;
-			if( mVerticalDragging )
+			if (mVerticalDragging)
 			{
 				y_part.setVec(LLViewerCamera::getInstance()->getUpAxis());
 				// y_part.setVec(0.f, 0.f, 1.f);
@@ -827,30 +822,30 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 				y_part.normVec();
 			}
 
-			mGrabHiddenOffsetFromCamera = mGrabHiddenOffsetFromCamera 
-				+ (x_part * (-dx * GRAB_SENSITIVITY_X)) 
-				+ (y_part * ( dy * GRAB_SENSITIVITY_Y));
+			mGrabHiddenOffsetFromCamera = mGrabHiddenOffsetFromCamera +
+										  x_part * (-dx * GRAB_SENSITIVITY_X) +
+										  y_part * (dy * GRAB_SENSITIVITY_Y);
 
 		}
-		
+
 		// need to return offset from mGrabStartPoint
 		LLVector3d grab_point_global = gAgent.getCameraPositionGlobal() + mGrabHiddenOffsetFromCamera;
-		grab_pos_region = objectp->getRegion()->getPosRegionFromGlobal( grab_point_global );
+		grab_pos_region = objectp->getRegion()->getPosRegionFromGlobal(grab_point_global);
 	}
 
 
 	// only send message if something has changed since last message
-	
+
 	BOOL changed_since_last_update = FALSE;
 
 	// test if touch data needs to be updated
-	if ((pick.mObjectFace != mLastFace) ||
-		(pick.mUVCoords != mLastUVCoords) ||
-		(pick.mSTCoords != mLastSTCoords) ||
-		(pick.mIntersection != mLastIntersection) ||
-		(pick.mNormal != mLastNormal) ||
-		(pick.mBinormal != mLastBinormal) ||
-		(grab_pos_region != mLastGrabPos))
+	if (pick.mObjectFace != mLastFace ||
+		pick.mUVCoords != mLastUVCoords ||
+		pick.mSTCoords != mLastSTCoords ||
+		pick.mIntersection != mLastIntersection ||
+		pick.mNormal != mLastNormal ||
+		pick.mBinormal != mLastBinormal ||
+		grab_pos_region != mLastGrabPos)
 	{
 		changed_since_last_update = TRUE;
 	}
@@ -863,10 +858,10 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 		msg->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
 		msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 		msg->nextBlockFast(_PREHASH_ObjectData);
-		msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID() );
-		msg->addVector3Fast(_PREHASH_GrabOffsetInitial, mGrabOffsetFromCenterInitial );
-		msg->addVector3Fast(_PREHASH_GrabPosition, grab_pos_region );
-		msg->addU32Fast(_PREHASH_TimeSinceLast, dt_milliseconds );
+		msg->addUUIDFast(_PREHASH_ObjectID, objectp->getID());
+		msg->addVector3Fast(_PREHASH_GrabOffsetInitial, mGrabOffsetFromCenterInitial);
+		msg->addVector3Fast(_PREHASH_GrabPosition, grab_pos_region);
+		msg->addU32Fast(_PREHASH_TimeSinceLast, dt_milliseconds);
 		msg->nextBlock("SurfaceInfo");
 		msg->addVector3("UVCoord", LLVector3(pick.mUVCoords));
 		msg->addVector3("STCoord", LLVector3(pick.mSTCoords));
@@ -875,7 +870,7 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 		msg->addVector3("Normal", pick.mNormal);
 		msg->addVector3("Binormal", pick.mBinormal);
 
-		msg->sendMessage( objectp->getRegion()->getHost() );
+		msg->sendMessage(objectp->getRegion()->getHost());
 
 		mLastUVCoords = pick.mUVCoords;
 		mLastSTCoords = pick.mSTCoords;
@@ -885,19 +880,19 @@ void LLToolGrab::handleHoverNonPhysical(S32 x, S32 y, MASK mask)
 		mLastBinormal= pick.mBinormal;
 		mLastGrabPos = grab_pos_region;
 	}
-	
+
 	// update point-at / look-at
 	if (pick.mObjectFace != -1) // if the intersection was on the surface of the obejct
 	{
 		LLVector3 local_edit_point = pick.mIntersection;
 		local_edit_point -= objectp->getPositionAgent();
 		local_edit_point = local_edit_point * ~objectp->getRenderRotation();
-		gAgent.setPointAt(POINTAT_TARGET_GRAB, objectp, local_edit_point );
-		gAgent.setLookAt(LOOKAT_TARGET_SELECT, objectp, local_edit_point );
+		gAgent.setPointAt(POINTAT_TARGET_GRAB, objectp, local_edit_point);
+		gAgent.setLookAt(LOOKAT_TARGET_SELECT, objectp, local_edit_point);
 	}
-	
-	
-	
+
+
+
 	gViewerWindow->setCursor(UI_CURSOR_HAND);  
 }
  
@@ -910,16 +905,17 @@ void LLToolGrab::handleHoverInactive(S32 x, S32 y, MASK mask)
 
 	// Look for cursor against the edge of the screen
 	// Only works in fullscreen
-	if (gSavedSettings.getBOOL("FullScreen"))
+	static LLCachedControl<bool> full_screen(gSavedSettings, "FullScreen");
+	if (full_screen)
 	{
-		if (gAgent.cameraThirdPerson() )
+		if (gAgent.cameraThirdPerson())
 		{
 			if (x == 0)
 			{
 				gAgent.yaw(rotate_angle);
 				//gAgent.setControlFlags(AGENT_CONTROL_YAW_POS);
 			}
-			else if (x == (gViewerWindow->getWindowWidth() - 1) )
+			else if (x == gViewerWindow->getWindowWidth() - 1)
 			{
 				gAgent.yaw(-rotate_angle);
 				//gAgent.setControlFlags(AGENT_CONTROL_YAW_NEG);
@@ -928,36 +924,36 @@ void LLToolGrab::handleHoverInactive(S32 x, S32 y, MASK mask)
 	}
 
 	// JC - TODO - change cursor based on gGrabBtnVertical, gGrabBtnSpin
-	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (inactive-not over editable object)" << llendl;		
+	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (inactive-not over editable object)" << llendl;
 	gViewerWindow->setCursor(UI_CURSOR_TOOLGRAB);
 }
 
 // User is trying to do something that's not allowed.
 void LLToolGrab::handleHoverFailed(S32 x, S32 y, MASK mask)
 {
-	if( GRAB_NOOBJECT == mMode )
+	if (GRAB_NOOBJECT == mMode)
 	{
 		gViewerWindow->setCursor(UI_CURSOR_NO);
-		lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (not on object)" << llendl;		
+		lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (not on object)" << llendl;
 	}
 	else
 	{
 		S32 dist_sq = (x-mGrabPick.mMousePt.mX) * (x-mGrabPick.mMousePt.mX) + (y-mGrabPick.mMousePt.mY) * (y-mGrabPick.mMousePt.mY);
-		if( mOutsideSlop || dist_sq > SLOP_DIST_SQ )
+		if (mOutsideSlop || dist_sq > SLOP_DIST_SQ)
 		{
 			mOutsideSlop = TRUE;
 
-			switch( mMode )
+			switch (mMode)
 			{
 			case GRAB_LOCKED:
 				gViewerWindow->setCursor(UI_CURSOR_GRABLOCKED);
-				lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed, no move permission)" << llendl;		
+				lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed, no move permission)" << llendl;
 				break;
 
-//  Non physical now handled by handleHoverActive - CRO				
+//  Non physical now handled by handleHoverActive - CRO
 //			case GRAB_NONPHYSICAL:
 //				gViewerWindow->setCursor(UI_CURSOR_ARROW);
-//				lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed, nonphysical)" << llendl;		
+//				lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed, nonphysical)" << llendl;
 //				break;
 			default:
 				llassert(0);
@@ -966,29 +962,26 @@ void LLToolGrab::handleHoverFailed(S32 x, S32 y, MASK mask)
 		else
 		{
 			gViewerWindow->setCursor(UI_CURSOR_ARROW);
-			lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed but within slop)" << llendl;		
+			lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolGrab (grab failed but within slop)" << llendl;
 		}
 	}
 }
-
-
-
 
 BOOL LLToolGrab::handleMouseUp(S32 x, S32 y, MASK mask)
 {
 	// call the base class to propogate info to sim
 	LLTool::handleMouseUp(x, y, mask);
 
-	if( hasMouseCapture() )
+	if (hasMouseCapture())
 	{
-		setMouseCapture( FALSE );
+		setMouseCapture(FALSE);
 	}
 	mMode = GRAB_INACTIVE;
 
 	// HACK: Make some grabs temporary
 	if (gGrabTransientTool)
 	{
-		gBasicToolset->selectTool( gGrabTransientTool );
+		gBasicToolset->selectTool(gGrabTransientTool);
 		gGrabTransientTool = NULL;
 	}
 
@@ -999,9 +992,9 @@ BOOL LLToolGrab::handleMouseUp(S32 x, S32 y, MASK mask)
 
 void LLToolGrab::stopEditing()
 {
-	if( hasMouseCapture() )
+	if (hasMouseCapture())
 	{
-		setMouseCapture( FALSE );
+		setMouseCapture(FALSE);
 	}
 }
 
@@ -1014,8 +1007,7 @@ void LLToolGrab::onMouseCaptureLost()
 		return;
 	}
 	// First, fix cursor placement
-	if( !gAgent.cameraMouselook() 
-		&& (GRAB_ACTIVE_CENTER == mMode))
+	if (!gAgent.cameraMouselook() && GRAB_ACTIVE_CENTER == mMode)
 	{
 		if (objectp->isHUDAttachment())
 		{
@@ -1046,8 +1038,10 @@ void LLToolGrab::onMouseCaptureLost()
 
 	stopGrab();
 	if (mSpinGrabbing)
-	stopSpin();
-	
+	{
+		stopSpin();
+	}
+
 	mMode = GRAB_INACTIVE;
 
 	mHideBuildHighlight = FALSE;
@@ -1060,7 +1054,6 @@ void LLToolGrab::onMouseCaptureLost()
 
 	dialog_refresh_all();
 }
-
 
 void LLToolGrab::stopGrab()
 {
@@ -1091,7 +1084,7 @@ void LLToolGrab::stopGrab()
 
 	// Next, send messages to simulator
 	LLMessageSystem *msg = gMessageSystem;
-	switch(mMode)
+	switch (mMode)
 	{
 	case GRAB_ACTIVE_CENTER:
 	case GRAB_NONPHYSICAL:
@@ -1125,12 +1118,13 @@ void LLToolGrab::stopGrab()
 	mHideBuildHighlight = FALSE;
 }
 
-
 void LLToolGrab::draw()
-{ }
+{
+}
 
 void LLToolGrab::render()
-{ }
+{
+}
 
 BOOL LLToolGrab::isEditing()
 {
@@ -1150,7 +1144,7 @@ LLVector3d LLToolGrab::getEditingPointGlobal()
 
 LLVector3d LLToolGrab::getGrabPointGlobal()
 {
-	switch(mMode)
+	switch (mMode)
 	{
 	case GRAB_ACTIVE_CENTER:
 	case GRAB_NONPHYSICAL:

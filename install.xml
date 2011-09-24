@@ -1036,7 +1036,7 @@ anguage Infrstructure (CLI) international standard</string>
             <key>md5sum</key>
             <string>dd508e3feb5ab5346f3e5ddc35b6ba67</string>
             <key>url</key>
-            <uri>>http://sldev.free.fr/libraries/llconvexdecompositionstub-0.3a-darwin-20110819.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/llconvexdecompositionstub-0.3a-darwin-20110819.tar.bz2</uri>
           </map>
           <key>linux</key>
           <map>

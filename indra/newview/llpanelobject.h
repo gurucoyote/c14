@@ -82,8 +82,13 @@ public:
 	static BOOL     onDropSculpt(LLUICtrl* ctrl, LLInventoryItem* item, void* ud);
 	static void     onCommitSculptType(LLUICtrl *ctrl, void* userdata);
 
+	static void     onCommitCopyPaste(LLUICtrl *ctrl, void* userdata);
+	static void 	onClickCopy(void* user_data);
+	static void 	onClickPaste(void* user_data);
+
 protected:
 	void			getState();
+	void			setCopyPasteState();
 
 	void			sendRotation(BOOL btn_down);
 	void			sendScale(BOOL btn_down);
@@ -143,28 +148,35 @@ protected:
 	LLSpinCtrl*		mCtrlPosX;
 	LLSpinCtrl*		mCtrlPosY;
 	LLSpinCtrl*		mCtrlPosZ;
+	LLCheckBoxCtrl*	mCheckCopyPos;
 
 	LLTextBox*		mLabelSize;
 	LLSpinCtrl*		mCtrlScaleX;
 	LLSpinCtrl*		mCtrlScaleY;
 	LLSpinCtrl*		mCtrlScaleZ;
+	LLCheckBoxCtrl*	mCheckCopySize;
 
 	LLTextBox*		mLabelRotation;
 	LLSpinCtrl*		mCtrlRotX;
 	LLSpinCtrl*		mCtrlRotY;
 	LLSpinCtrl*		mCtrlRotZ;
+	LLCheckBoxCtrl*	mCheckCopyRot;
 
-	LLCheckBoxCtrl	*mCheckLock;
-	LLCheckBoxCtrl	*mCheckPhysics;
-	LLCheckBoxCtrl	*mCheckTemporary;
-	LLCheckBoxCtrl	*mCheckPhantom;
-	LLCheckBoxCtrl	*mCheckCastShadows;
+	LLCheckBoxCtrl*	mCheckLock;
+	LLCheckBoxCtrl* mCheckPhysics;
+	LLCheckBoxCtrl*	mCheckTemporary;
+	LLCheckBoxCtrl*	mCheckPhantom;
+	LLCheckBoxCtrl*	mCheckCastShadows;
+	LLCheckBoxCtrl*	mCheckCopyShape;
 
-	LLTextureCtrl   *mCtrlSculptTexture;
-	LLTextBox       *mLabelSculptType;
-	LLComboBox      *mCtrlSculptType;
-	LLCheckBoxCtrl  *mCtrlSculptMirror;
-	LLCheckBoxCtrl  *mCtrlSculptInvert;
+	LLTextureCtrl*	mCtrlSculptTexture;
+	LLTextBox*		mLabelSculptType;
+	LLComboBox*		mCtrlSculptType;
+	LLCheckBoxCtrl*	mCtrlSculptMirror;
+	LLCheckBoxCtrl*	mCtrlSculptInvert;
+
+	LLButton*		mButtonCopy;
+	LLButton*		mButtonPaste;
 
 	LLVector3		mCurEulerDegrees;		// to avoid sending rotation when not changed
 	BOOL			mIsPhysical;			// to avoid sending "physical" when not changed
@@ -178,6 +190,17 @@ protected:
 
 	LLPointer<LLViewerObject> mObject;
 	LLPointer<LLViewerObject> mRootObject;
+
+	// Object clipboard data
+	static bool				sSavedSizeValid;
+	static bool				sSavedPosValid;
+	static bool				sSavedRotValid;
+	static bool				sSavedShapeValid;
+
+	static LLVector3		sSavedSize;
+	static LLVector3		sSavedPos;
+	static LLVector3		sSavedRot;
+	static LLVolumeParams	sSavedShape;
 };
 
 #endif

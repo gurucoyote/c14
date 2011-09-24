@@ -86,7 +86,7 @@ LLFolderDictionary::LLFolderDictionary()
 	addEntry(LLFolderType::FT_LOST_AND_FOUND, 		new FolderEntry("lstndfnd",	TRUE));
 	addEntry(LLFolderType::FT_ANIMATION, 			new FolderEntry("animatn",	TRUE));
 	addEntry(LLFolderType::FT_GESTURE, 				new FolderEntry("gesture",	TRUE));
-	addEntry(LLFolderType::FT_MESH, 				new FolderEntry("mesh",		TRUE));
+	addEntry(LLFolderType::FT_MESH, 				new FolderEntry("mesh",		FALSE));
 #if 0
 	addEntry(LLFolderType::FT_FAVORITE, 			new FolderEntry("favorite",	FALSE));
 

@@ -58,7 +58,8 @@ enum InventoryOfferResponse
 	IOR_ACCEPT,
 	IOR_DECLINE,
 	IOR_MUTE,
-	IOR_BUSY
+	IOR_BUSY,
+	IOR_MUTED
 };
 
 BOOL can_afford_transaction(S32 cost);

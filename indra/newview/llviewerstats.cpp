@@ -33,49 +33,64 @@
 #include "llviewerprecompiledheaders.h"
 
 #include "llviewerstats.h"
-#include "llviewerthrottle.h"
 
-#include "message.h"
-#include "lltimer.h"
-
-#include "llappviewer.h"
-
-#include "pipeline.h" 
-#include "lltexturefetch.h" 
-#include "llviewerobjectlist.h" 
-#include "llviewertexturelist.h" 
-#include "lltexlayer.h"
-#include "llsurface.h"
-#include "llvlmanager.h"
-#include "llagent.h"
-#include "llviewercontrol.h"
-#include "llfloaterdirectory.h"
-#include "llfloatertools.h"
-#include "lldebugview.h"
-#include "llfasttimerview.h"
-#include "llviewerregion.h"
-#include "llvoavatar.h"
-#include "llviewerwindow.h"		// *TODO: remove, only used for width/height
-#include "llworld.h"
-#include "llfeaturemanager.h"
-#include "llviewernetwork.h"
 #if LL_LCD_COMPILE
 #include "lllcd.h"
 #endif
+#include "lltimer.h"
+#include "message.h"
 
+#include "llagent.h"
+#include "llappviewer.h"
+#include "lldebugview.h"
+#include "llfasttimerview.h"
+#include "llfeaturemanager.h"
+#include "llfloaterdirectory.h"
+#include "llfloatertools.h"
+#include "llsurface.h"
+#include "lltexlayer.h"
+#include "lltexturefetch.h" 
+#include "llviewercontrol.h"
+#include "llviewernetwork.h"
+#include "llviewerobjectlist.h" 
+#include "llviewerregion.h"
+#include "llviewertexturelist.h" 
+#include "llviewerthrottle.h"
+#include "llviewerwindow.h"		// *TODO: remove, only used for width/height
+#include "llvlmanager.h"
+#include "llvoavatar.h"
+#include "llworld.h"
+#include "pipeline.h" 
+
+// Globals
+
+U32		gTotalLandIn = 0, gTotalLandOut = 0;
+U32		gTotalWaterIn = 0, gTotalWaterOut = 0;
+
+F32		gAveLandCompression = 0.f, gAveWaterCompression = 0.f;
+F32		gBestLandCompression = 1.f, gBestWaterCompression = 1.f;
+F32		gWorstLandCompression = 0.f, gWorstWaterCompression = 0.f;
+
+U32		gTotalWorldBytes = 0, gTotalObjectBytes = 0, gTotalTextureBytes = 0, gSimPingCount = 0;
+U32		gObjectBits = 0;
+F32		gAvgSimPing = 0.f;
+
+extern U32  gVisCompared;
+extern U32  gVisTested;
+
+std::map<S32,LLFrameTimer> gDebugTimers;
+std::map<S32,std::string> gDebugTimerLabel;
 
 class StatAttributes
 {
 public:
-	StatAttributes(const char* name,
-				   const BOOL enabled,
-				   const BOOL is_timer)
-		: mName(name),
-		  mEnabled(enabled),
-		  mIsTimer(is_timer)
+	StatAttributes(const char* name, const BOOL enabled, const BOOL is_timer)
+	:	mName(name),
+		mEnabled(enabled),
+		mIsTimer(is_timer)
 	{
 	}
-	
+
 	std::string mName;
 	BOOL mEnabled;
 	BOOL mIsTimer;
@@ -199,25 +214,23 @@ const StatAttributes STAT_INFO[LLViewerStats::ST_COUNT] =
 	StatAttributes("Texture Bakes", FALSE, FALSE),
 	// ST_TEX_REBAKES
 	StatAttributes("Texture Rebakes", FALSE, FALSE),
-
 	// ST_LOGITECH_KEYBOARD
 	StatAttributes("Logitech LCD", FALSE, FALSE)
-
 };
 
 LLViewerStats::LLViewerStats()
-	: mPacketsLostPercentStat(64),
-	  mLastTimeDiff(0.0)
+:	mPacketsLostPercentStat(64),
+	mLastTimeDiff(0.0)
 {
 	for (S32 i = 0; i < ST_COUNT; i++)
 	{
 		mStats[i] = 0.0;
 	}
-	
+
 	if (LLTimer::knownBadTimer())
 	{
 		mStats[ST_HAS_BAD_TIMER] = 1.0;
-	}	
+	}
 }
 
 LLViewerStats::~LLViewerStats()
@@ -238,7 +251,6 @@ void LLViewerStats::resetStats()
 	LLViewerStats::getInstance()->mFPSStat.reset();
 	LLViewerStats::getInstance()->mTexturePacketsStat.reset();
 }
-
 
 F64 LLViewerStats::getStat(EStatType type) const
 {
@@ -263,17 +275,17 @@ void LLViewerStats::updateFrameStats(const F64 time_diff)
 	{
 		incStat(LLViewerStats::ST_LOSS_05_SECONDS, time_diff);
 	}
-	
+
 	if (mSimFPS.getCurrent() < 20.f && mSimFPS.getCurrent() > 0.f)
 	{
 		incStat(LLViewerStats::ST_SIM_FPS_20_SECONDS, time_diff);
 	}
-	
+
 	if (mSimPhysicsFPS.getCurrent() < 20.f && mSimPhysicsFPS.getCurrent() > 0.f)
 	{
 		incStat(LLViewerStats::ST_PHYS_FPS_20_SECONDS, time_diff);
 	}
-		
+
 	if (time_diff >= 0.5)
 	{
 		incStat(LLViewerStats::ST_FPS_2_SECONDS, time_diff);
@@ -293,13 +305,13 @@ void LLViewerStats::updateFrameStats(const F64 time_diff)
 		setStat(LLViewerStats::ST_FPS_DROP_50_RATIO,
 				(getStat(LLViewerStats::ST_FPS_DROP_50_RATIO) * (F64)(gFrameCount - 1) + 
 				 (time_diff >= 2.0 * mLastTimeDiff ? 1.0 : 0.0)) / gFrameCount);
-			
+
 
 		// old stats that were never really used
 		setStat(LLViewerStats::ST_FRAMETIME_JITTER,
 				(getStat(LLViewerStats::ST_FRAMETIME_JITTER) * (gFrameCount - 1) + 
 				 fabs(mLastTimeDiff - time_diff) / mLastTimeDiff) / gFrameCount);
-			
+
 		F32 average_frametime = gRenderStartTime.getElapsedTimeF32() / (F32)gFrameCount;
 		setStat(LLViewerStats::ST_FRAMETIME_SLEW,
 				(getStat(LLViewerStats::ST_FRAMETIME_SLEW) * (gFrameCount - 1) + 
@@ -310,17 +322,15 @@ void LLViewerStats::updateFrameStats(const F64 time_diff)
 		setStat(LLViewerStats::ST_DELTA_BANDWIDTH, delta_bandwidth / 1024.f);
 
 		setStat(LLViewerStats::ST_MAX_BANDWIDTH, max_bandwidth / 1024.f);
-		
 	}
-	
-	mLastTimeDiff = time_diff;
 
+	mLastTimeDiff = time_diff;
 }
 
 void LLViewerStats::addToMessage(LLSD &body) const
 {
 	LLSD &misc = body["misc"];
-	
+
 	for (S32 i = 0; i < ST_COUNT; i++)
 	{
 		if (STAT_INFO[i].mEnabled)
@@ -333,31 +343,17 @@ void LLViewerStats::addToMessage(LLSD &body) const
 	}
 }
 
-// static
-// const std::string LLViewerStats::statTypeToText(EStatType type)
-// {
-// 	if (type >= 0 && type < ST_COUNT)
-// 	{
-// 		return STAT_INFO[type].mName;
-// 	}
-// 	else
-// 	{
-// 		return "Unknown statistic";
-// 	}
-// }
-
 // *NOTE:Mani The following methods used to exist in viewer.cpp
 // Moving them here, but not merging them into LLViewerStats yet.
 void reset_statistics()
 {
 	if (LLSurface::sTextureUpdateTime)
 	{
-		LLSurface::sTexelsUpdatedPerSecStat.addValue(0.001f*(LLSurface::sTexelsUpdated / LLSurface::sTextureUpdateTime));
+		LLSurface::sTexelsUpdatedPerSecStat.addValue(0.001f * (LLSurface::sTexelsUpdated / LLSurface::sTextureUpdateTime));
 		LLSurface::sTexelsUpdated = 0;
 		LLSurface::sTextureUpdateTime = 0.f;
 	}
 }
-
 
 void output_statistics(void*)
 {
@@ -386,12 +382,12 @@ void output_statistics(void*)
 		MEM_POOL_INFO pool_info;
 		MEM_POOL_STATUS pool_status;
 		U32 pool_num = 0;
-		for(pool_status = MemPoolFirst( &pool_info, 1 ); 
-			pool_status != MEM_POOL_END; 
-			pool_status = MemPoolNext( &pool_info, 1 ) )
+		for (pool_status = MemPoolFirst(&pool_info, 1); 
+			 pool_status != MEM_POOL_END; 
+			 pool_status = MemPoolNext(&pool_info, 1))
 		{
 			llinfos << "Pool #" << pool_num << llendl;
-			if( MEM_POOL_OK != pool_status )
+			if (MEM_POOL_OK != pool_status)
 			{
 				llwarns << "Pool not ok" << llendl;
 				continue;
@@ -404,8 +400,8 @@ void output_statistics(void*)
 			U32 pool_count = MemPoolCount(pool_info.pool);
 			llinfos << "Blocks " << pool_count << llendl;
 
-			U32 pool_size = MemPoolSize( pool_info.pool );
-			if( pool_size == MEM_ERROR_RET )
+			U32 pool_size = MemPoolSize(pool_info.pool);
+			if (pool_size == MEM_ERROR_RET)
 			{
 				llinfos << "MemPoolSize() failed (" << pool_num << ")" << llendl;
 			}
@@ -416,7 +412,7 @@ void output_statistics(void*)
 
 			total_pool_size += pool_size;
 
-			if( !MemPoolLock( pool_info.pool ) )
+			if (!MemPoolLock(pool_info.pool))
 			{
 				llinfos << "MemPoolLock failed (" << pool_num << ") " << llendl;
 				continue;
@@ -425,24 +421,23 @@ void output_statistics(void*)
 			U32 used_size = 0; 
 			MEM_POOL_ENTRY entry;
 			entry.entry = NULL;
-			while( MemPoolWalk( pool_info.pool, &entry ) == MEM_POOL_OK )
+			while (MemPoolWalk(pool_info.pool, &entry) == MEM_POOL_OK)
 			{
-				if( entry.isInUse )
+				if (entry.isInUse)
 				{
 					used_size += entry.size;
 				}
 			}
 
-			MemPoolUnlock( pool_info.pool );
+			MemPoolUnlock(pool_info.pool);
 
 			llinfos << "MemPool Used " << used_size/1024 << "K" << llendl;
 			total_used_size += used_size;
 			pool_num++;
 		}
-		
+
 		llinfos << "Total Pool Size " << total_pool_size/1024 << "K" << llendl;
 		llinfos << "Total Used Size " << total_used_size/1024 << "K" << llendl;
-
 	}
 #endif
 
@@ -460,7 +455,6 @@ void output_statistics(void*)
 	llinfos << "Object counts:" << llendl;
 	S32 i;
 	S32 obj_counts[256];
-//	S32 app_angles[256];
 	for (i = 0; i < 256; i++)
 	{
 		obj_counts[i] = 0;
@@ -482,27 +476,6 @@ void output_statistics(void*)
 	}
 }
 
-
-U32		gTotalLandIn = 0, gTotalLandOut = 0;
-U32		gTotalWaterIn = 0, gTotalWaterOut = 0;
-
-F32		gAveLandCompression = 0.f, gAveWaterCompression = 0.f;
-F32		gBestLandCompression = 1.f, gBestWaterCompression = 1.f;
-F32		gWorstLandCompression = 0.f, gWorstWaterCompression = 0.f;
-
-
-
-U32		gTotalWorldBytes = 0, gTotalObjectBytes = 0, gTotalTextureBytes = 0, gSimPingCount = 0;
-U32		gObjectBits = 0;
-F32		gAvgSimPing = 0.f;
-
-
-extern U32  gVisCompared;
-extern U32  gVisTested;
-
-std::map<S32,LLFrameTimer> gDebugTimers;
-std::map<S32,std::string> gDebugTimerLabel;
-
 void init_statistics()
 {
 	// Label debug timers
@@ -511,6 +484,8 @@ void init_statistics()
 
 void update_statistics(U32 frame_count)
 {
+	LLViewerStats* viewer_stats = LLViewerStats::getInstance();
+
 	gTotalWorldBytes += gVLManager.getTotalBytes();
 	gTotalObjectBytes += gObjectBits / 8;
 
@@ -519,53 +494,52 @@ void update_statistics(U32 frame_count)
 	{
 		if (gAgent.getCameraMode() == CAMERA_MODE_MOUSELOOK)
 		{
-			LLViewerStats::getInstance()->incStat(LLViewerStats::ST_MOUSELOOK_SECONDS, gFrameIntervalSeconds);
+			viewer_stats->incStat(LLViewerStats::ST_MOUSELOOK_SECONDS, gFrameIntervalSeconds);
 		}
 		else if (gAgent.getCameraMode() == CAMERA_MODE_CUSTOMIZE_AVATAR)
 		{
-			LLViewerStats::getInstance()->incStat(LLViewerStats::ST_AVATAR_EDIT_SECONDS, gFrameIntervalSeconds);
+			viewer_stats->incStat(LLViewerStats::ST_AVATAR_EDIT_SECONDS, gFrameIntervalSeconds);
 		}
 		else if (gFloaterTools && gFloaterTools->getVisible())
 		{
-			LLViewerStats::getInstance()->incStat(LLViewerStats::ST_TOOLBOX_SECONDS, gFrameIntervalSeconds);
+			viewer_stats->incStat(LLViewerStats::ST_TOOLBOX_SECONDS, gFrameIntervalSeconds);
 		}
 	}
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_ENABLE_VBO, (F64)gSavedSettings.getBOOL("RenderVBOEnable"));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_LIGHTING_DETAIL, (F64)gSavedSettings.getS32("RenderLightingDetail"));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_DRAW_DIST, (F64)gSavedSettings.getF32("RenderFarClip"));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_CHAT_BUBBLES, (F64)gSavedSettings.getBOOL("UseChatBubbles"));
-#if 0 // 1.9.2
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_SHADER_OBJECTS, (F64)gSavedSettings.getS32("VertexShaderLevelObject"));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_SHADER_AVATAR, (F64)gSavedSettings.getBOOL("VertexShaderLevelAvatar"));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_SHADER_ENVIRONMENT, (F64)gSavedSettings.getBOOL("VertexShaderLevelEnvironment"));
-#endif
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_FRAME_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_FRAME));
+	static LLCachedControl<bool> render_vbo_enable(gSavedSettings, "RenderVBOEnable");
+	viewer_stats->setStat(LLViewerStats::ST_ENABLE_VBO, (F64)render_vbo_enable);
+	static LLCachedControl<S32> render_lighting_detail(gSavedSettings, "RenderLightingDetail");
+	viewer_stats->setStat(LLViewerStats::ST_LIGHTING_DETAIL, (F64)render_lighting_detail);
+	static LLCachedControl<F32> render_far_clip(gSavedSettings, "RenderFarClip");
+	viewer_stats->setStat(LLViewerStats::ST_DRAW_DIST, (F64)render_far_clip);
+	static LLCachedControl<bool> use_chat_bubbles(gSavedSettings, "UseChatBubbles");
+	viewer_stats->setStat(LLViewerStats::ST_CHAT_BUBBLES, (F64)use_chat_bubbles);
+	viewer_stats->setStat(LLViewerStats::ST_FRAME_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_FRAME));
 	F64 idle_secs = gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_IDLE);
 	F64 network_secs = gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_NETWORK);
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_UPDATE_SECS, idle_secs - network_secs);
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_NETWORK_SECS, network_secs);
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_IMAGE_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_IMAGE_UPDATE));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_REBUILD_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_STATESORT ));
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_RENDER_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_RENDER_GEOMETRY));
-		
+	viewer_stats->setStat(LLViewerStats::ST_UPDATE_SECS, idle_secs - network_secs);
+	viewer_stats->setStat(LLViewerStats::ST_NETWORK_SECS, network_secs);
+	viewer_stats->setStat(LLViewerStats::ST_IMAGE_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_IMAGE_UPDATE));
+	viewer_stats->setStat(LLViewerStats::ST_REBUILD_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_STATESORT));
+	viewer_stats->setStat(LLViewerStats::ST_RENDER_SECS, gDebugView->mFastTimerView->getTime(LLFastTimer::FTM_RENDER_GEOMETRY));
+
 	LLCircuitData *cdp = gMessageSystem->mCircuitInfo.findCircuit(gAgent.getRegion()->getHost());
 	if (cdp)
 	{
-		LLViewerStats::getInstance()->mSimPingStat.addValue(cdp->getPingDelay());
-		gAvgSimPing = ((gAvgSimPing * (F32)gSimPingCount) + (F32)(cdp->getPingDelay())) / ((F32)gSimPingCount + 1);
+		viewer_stats->mSimPingStat.addValue(cdp->getPingDelay());
+		gAvgSimPing = (gAvgSimPing * (F32)gSimPingCount + (F32)cdp->getPingDelay()) / ((F32)gSimPingCount + 1);
 		gSimPingCount++;
 	}
 	else
 	{
-		LLViewerStats::getInstance()->mSimPingStat.addValue(10000);
+		viewer_stats->mSimPingStat.addValue(10000);
 	}
 
-	LLViewerStats::getInstance()->mFPSStat.addValue(1);
+	viewer_stats->mFPSStat.addValue(1);
 	F32 layer_bits = (F32)(gVLManager.getLandBits() + gVLManager.getWindBits() + gVLManager.getCloudBits());
-	LLViewerStats::getInstance()->mLayersKBitStat.addValue(layer_bits/1024.f);
-	LLViewerStats::getInstance()->mObjectKBitStat.addValue(gObjectBits/1024.f);
-	LLViewerStats::getInstance()->mVFSPendingOperations.addValue(LLVFile::getVFSThread()->getPending());
-	LLViewerStats::getInstance()->mAssetKBitStat.addValue(gTransferManager.getTransferBitsIn(LLTCT_ASSET)/1024.f);
+	viewer_stats->mLayersKBitStat.addValue(layer_bits / 1024.f);
+	viewer_stats->mObjectKBitStat.addValue(gObjectBits / 1024.f);
+	viewer_stats->mVFSPendingOperations.addValue(LLVFile::getVFSThread()->getPending());
+	viewer_stats->mAssetKBitStat.addValue(gTransferManager.getTransferBitsIn(LLTCT_ASSET) / 1024.f);
 	gTransferManager.resetTransferBitsIn(LLTCT_ASSET);
 
 	if (LLAppViewer::getTextureFetch()->getNumRequests() == 0)
@@ -576,7 +550,7 @@ void update_statistics(U32 frame_count)
 	{
 		gDebugTimers[0].unpause();
 	}
-	
+
 	{
 		static F32 visible_avatar_frames = 0.f;
 		static F32 avg_visible_avatars = 0;
@@ -586,15 +560,14 @@ void update_statistics(U32 frame_count)
 			visible_avatar_frames = 1.f;
 			avg_visible_avatars = (avg_visible_avatars * (F32)(visible_avatar_frames - 1.f) + visible_avatars) / visible_avatar_frames;
 		}
-		LLViewerStats::getInstance()->setStat(LLViewerStats::ST_VISIBLE_AVATARS, (F64)avg_visible_avatars);
+		viewer_stats->setStat(LLViewerStats::ST_VISIBLE_AVATARS, (F64)avg_visible_avatars);
 	}
 	LLWorld::getInstance()->updateNetStats();
 	LLWorld::getInstance()->requestCacheMisses();
-	
+
 	// Reset all of these values.
 	gVLManager.resetBitCounts();
 	gObjectBits = 0;
-//	gDecodedBits = 0;
 
 	// Only update texture stats ones per second so that they are less noisy
 	{
@@ -602,8 +575,8 @@ void update_statistics(U32 frame_count)
 		static LLFrameTimer texture_stats_timer;
 		if (texture_stats_timer.getElapsedTimeF32() >= texture_stats_freq)
 		{
-			LLViewerStats::getInstance()->mTextureKBitStat.addValue(LLViewerTextureList::sTextureBits/1024.f);
-			LLViewerStats::getInstance()->mTexturePacketsStat.addValue(LLViewerTextureList::sTexturePackets);
+			viewer_stats->mTextureKBitStat.addValue(LLViewerTextureList::sTextureBits/1024.f);
+			viewer_stats->mTexturePacketsStat.addValue(LLViewerTextureList::sTexturePackets);
 			gTotalTextureBytes += LLViewerTextureList::sTextureBits / 8;
 			LLViewerTextureList::sTextureBits = 0;
 			LLViewerTextureList::sTexturePackets = 0;
@@ -613,9 +586,9 @@ void update_statistics(U32 frame_count)
 
 #if LL_LCD_COMPILE
 	bool LCDenabled = gLcdScreen->Enabled();
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_LOGITECH_LCD, LCDenabled);
+	viewer_stats->setStat(LLViewerStats::ST_LOGITECH_LCD, LCDenabled);
 #else
-	LLViewerStats::getInstance()->setStat(LLViewerStats::ST_LOGITECH_LCD, false);
+	viewer_stats->setStat(LLViewerStats::ST_LOGITECH_LCD, false);
 #endif
 }
 
@@ -661,15 +634,16 @@ void send_stats()
 	LLSD body;
 	std::string url = gAgent.getRegion()->getCapability("ViewerStats");
 
-	if (url.empty()) {
+	if (url.empty())
+	{
 		llwarns << "Could not get ViewerStats capability" << llendl;
 		return;
 	}
-	
+
 	body["session_id"] = gAgentSessionID;
-	
+
 	LLSD &agent = body["agent"];
-	
+
 	time_t ltime;
 	time(&ltime);
 	F32 run_time = F32(LLFrameTimer::getElapsedSeconds());
@@ -681,7 +655,7 @@ void send_stats()
 	// SEND_STATS_PERIOD seconds as the point at which these statistics become
 	// valid.  Data warehouse uses a 0 value here to easily discard these
 	// records with non-useful FPS values etc.
-	if (run_time < (SEND_STATS_PERIOD / 2))
+	if (run_time < SEND_STATS_PERIOD / 2)
 	{
 		agent["run_time"] = 0.0f;
 	}
@@ -695,7 +669,7 @@ void send_stats()
 	agent["version"] = gCurrentVersion;
 	std::string language = LLUI::getLanguage();
 	agent["language"] = language;
-	
+
 	agent["sim_fps"] = ((F32) gFrameCount - gSimFrames) /
 		(F32) (gRenderStartTime.getElapsedTimeF32() - gSimLastTime);
 
@@ -709,7 +683,7 @@ void send_stats()
 	agent["mem_use"] = LLMemory::getCurrentRSS() / 1024.0;
 
 	LLSD &system = body["system"];
-	
+
 	system["ram"] = (S32) gSysMemory.getPhysicalMemoryKB();
 	system["os"] = LLAppViewer::instance()->getOSInfo().getOSStringSimple();
 	system["cpu"] = gSysCPU.getCPUString();
@@ -742,9 +716,9 @@ void send_stats()
 	in["compressed_packets"] = (S32) gMessageSystem->mCompressedPacketsIn;
 	in["savings"] = (gMessageSystem->mUncompressedBytesIn -
 					 gMessageSystem->mCompressedBytesIn) / 1024.0;
-	
+
 	LLSD &out = body["stats"]["net"]["out"];
-	
+
 	out["kbytes"] = gMessageSystem->mTotalBytesOut / 1024.0;
 	out["packets"] = (S32) gMessageSystem->mPacketsOut;
 	out["compressed_packets"] = (S32) gMessageSystem->mCompressedPacketsOut;
@@ -773,11 +747,6 @@ void send_stats()
 	S32 window_height = gViewerWindow->getWindowDisplayHeight();
 	S32 window_size = (window_width * window_height) / 1024;
 	misc["string_1"] = llformat("%d", window_size);
-	// misc["string_2"] = 
-// 	misc["int_1"] = LLFloaterDirectory::sOldSearchCount; // Steve: 1.18.6
-// 	misc["int_2"] = LLFloaterDirectory::sNewSearchCount; // Steve: 1.18.6
-// 	misc["int_1"] = LLSD::Integer(gSavedSettings.getU32("RenderQualityPerformance")); // Steve: 1.21
-// 	misc["int_2"] = LLSD::Integer(gFrameStalls); // Steve: 1.21
 
 	F32 unbaked_time = LLVOAvatar::sUnbakedTime * 1000.f / gFrameTimeSeconds;
 	misc["int_1"] = LLSD::Integer(unbaked_time); // Steve: 1.22
@@ -786,8 +755,7 @@ void send_stats()
 
 	llinfos << "Misc Stats: int_1: " << misc["int_1"] << " int_2: " << misc["int_2"] << llendl;
 	llinfos << "Misc Stats: string_1: " << misc["string_1"] << " string_2: " << misc["string_2"] << llendl;
-	
+
 	LLViewerStats::getInstance()->addToMessage(body);
 	LLHTTPClient::post(url, body, new ViewerStatsResponder());
 }
-

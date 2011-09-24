@@ -36,35 +36,29 @@
 #include "linden_common.h"
 
 #include "llaudioengine.h"
-#include "llstreamingaudio.h"
 
-#include "llerror.h"
-#include "llmath.h"
-
-#include "sound_ids.h"  // temporary hack for min/max distances
-
-#include "llvfs.h"
-#include "lldir.h"
 #include "llaudiodecodemgr.h"
 #include "llassetstorage.h"
+#include "lldir.h"
+#include "llerror.h"
+#include "llmath.h"
+#include "llstreamingaudio.h"
+#include "llvfs.h"
+#include "sound_ids.h"  // temporary hack for min/max distances
 
-
-// necessary for grabbing sounds from sim (implemented in viewer)	
+// necessary for grabbing sounds from sim (implemented in viewer)
 extern void request_sound(const LLUUID &sound_guid);
 
 LLAudioEngine* gAudiop = NULL;
-
 
 //
 // LLAudioEngine implementation
 //
 
-
 LLAudioEngine::LLAudioEngine()
 {
 	setDefaults();
 }
-
 
 LLAudioEngine::~LLAudioEngine()
 {
@@ -118,14 +112,13 @@ void LLAudioEngine::setDefaults()
 		mSecondaryGain[i] = 1.0f;
 }
 
-
 bool LLAudioEngine::init(const S32 num_channels, void* userdata)
 {
 	setDefaults();
 
 	mNumChannels = num_channels;
 	mUserData = userdata;
-	
+
 	allocateListener();
 
 	// Initialize the decode manager
@@ -135,7 +128,6 @@ bool LLAudioEngine::init(const S32 num_channels, void* userdata)
 
 	return true;
 }
-
 
 void LLAudioEngine::shutdown()
 {
@@ -153,14 +145,12 @@ void LLAudioEngine::shutdown()
 		delete iter_src->second;
 	}
 
-
 	// Clean up audio data
 	data_map::iterator iter_data;
 	for (iter_data = mAllData.begin(); iter_data != mAllData.end(); iter_data++)
 	{
 		delete iter_data->second;
 	}
-
 
 	// Clean up channels
 	S32 i;
@@ -178,14 +168,12 @@ void LLAudioEngine::shutdown()
 	}
 }
 
-
 // virtual
 void LLAudioEngine::startInternetStream(const std::string& url)
 {
 	if (mStreamingAudioImpl)
 		mStreamingAudioImpl->start(url);
 }
-
 
 // virtual
 void LLAudioEngine::stopInternetStream()
@@ -217,7 +205,6 @@ int LLAudioEngine::isInternetStreamPlaying()
 	return 0; // Stopped
 }
 
-
 // virtual
 void LLAudioEngine::setInternetStreamGain(F32 vol)
 {
@@ -232,7 +219,6 @@ std::string LLAudioEngine::getInternetStreamURL()
 		return mStreamingAudioImpl->getURL();
 	else return std::string();
 }
-
 
 void LLAudioEngine::updateChannels()
 {
@@ -255,7 +241,7 @@ void LLAudioEngine::idle(F32 max_decode_time)
 	{
 		max_decode_time = default_max_decode_time;
 	}
-	
+
 	// "Update" all of our audio sources, clean up dead ones.
 	// Primarily does position updating, cleanup of unused audio sources.
 	// Also does regeneration of the current priority of each audio source.
@@ -336,7 +322,6 @@ void LLAudioEngine::idle(F32 max_decode_time)
 		}
 	}
 
-	
 	// Do this BEFORE we update the channels
 	// Update the channels to sync up with any changes that the source made,
 	// such as changing what sound was playing.
@@ -423,7 +408,7 @@ void LLAudioEngine::idle(F32 max_decode_time)
 	// Update the channels to sync up with any changes that the source made,
 	// such as changing what sound was playing.
 	updateChannels();
-	
+
 	// Hack!  For now, just use a global sync master;
 	LLAudioSource *sync_masterp = NULL;
 	LLAudioChannel *master_channelp = NULL;
@@ -482,7 +467,7 @@ void LLAudioEngine::idle(F32 max_decode_time)
 
 	// Sync up everything that the audio engine needs done.
 	commitDeferredChanges();
-	
+
 	// Flush unused buffers that are stale enough
 	for (i = 0; i < MAX_BUFFERS; i++)
 	{
@@ -498,7 +483,6 @@ void LLAudioEngine::idle(F32 max_decode_time)
 		}
 	}
 
-
 	// Clear all of the looped flags for the channels
 	for (i = 0; i < MAX_CHANNELS; i++)
 	{
@@ -510,7 +494,7 @@ void LLAudioEngine::idle(F32 max_decode_time)
 
 	// Decode audio files
 	gAudioDecodeMgrp->processQueue(max_decode_time);
-	
+
 	// Call this every frame, just in case we somehow
 	// missed picking it up in all the places that can add
 	// or request new data.
@@ -518,8 +502,6 @@ void LLAudioEngine::idle(F32 max_decode_time)
 
 	updateInternetStream();
 }
-
-
 
 bool LLAudioEngine::updateBufferForData(LLAudioData *adp, const LLUUID &audio_uuid)
 {
@@ -543,7 +525,7 @@ bool LLAudioEngine::updateBufferForData(LLAudioData *adp, const LLUUID &audio_uu
 		{
 			if (audio_uuid.notNull())
 			{
-				gAudioDecodeMgrp->addDecodeRequest(audio_uuid);
+				return gAudioDecodeMgrp->addDecodeRequest(audio_uuid) == TRUE;
 			}
 		}
 		else
@@ -553,7 +535,6 @@ bool LLAudioEngine::updateBufferForData(LLAudioData *adp, const LLUUID &audio_uu
 	}
 	return true;
 }
-
 
 void LLAudioEngine::enableWind(bool enable)
 {
@@ -573,7 +554,6 @@ void LLAudioEngine::enableWind(bool enable)
 	}
 }
 
-
 LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 {
 	static clock_t last_info = 0;
@@ -588,7 +568,6 @@ LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 			return mBuffers[i];
 		}
 	}
-
 
 	// Grab the oldest unused buffer
 	F32 max_age = -1.f;
@@ -619,7 +598,8 @@ LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 		else if (!spamming)
 		{
 			// ... but warn us *once* when the buffer freeing frequency is abnormal.
-			llwarns << "Excessive buffer freeing frequency, info messages throttled." << llendl;
+			LL_WARNS("Audio") << "Excessive buffer freeing frequency, info messages throttled."
+							  << LL_ENDL;
 			spamming = true;
 		}
 		mBuffers[buffer_id]->mAudioDatap->mBufferp = NULL;
@@ -629,7 +609,6 @@ LLAudioBuffer * LLAudioEngine::getFreeBuffer()
 	}
 	return NULL;
 }
-
 
 LLAudioChannel * LLAudioEngine::getFreeChannel(const F32 priority)
 {
@@ -685,7 +664,6 @@ LLAudioChannel * LLAudioEngine::getFreeChannel(const F32 priority)
 	return min_channelp;
 }
 
-
 void LLAudioEngine::cleanupBuffer(LLAudioBuffer *bufferp)
 {
 	S32 i;
@@ -699,30 +677,30 @@ void LLAudioEngine::cleanupBuffer(LLAudioBuffer *bufferp)
 	}
 }
 
-
 bool LLAudioEngine::preloadSound(const LLUUID &uuid)
 {
-	gAudiop->getAudioData(uuid);	// We don't care about the return value, this is just to make sure
-									// that we have an entry, which will mean that the audio engine knows about this
+	gAudiop->getAudioData(uuid);	// We don't care about the return value,
+									// this is just to make sure that we have
+									// an entry, which will mean that the audio
+									// engine knows about this
 
 	if (gAudioDecodeMgrp->addDecodeRequest(uuid))
 	{
-		// This means that we do have a local copy, and we're working on decoding it.
+		// This means that we do have a local copy, and we're working on
+		// decoding it.
 		return true;
 	}
 
 	// At some point we need to have the audio/asset system check the static VFS
 	// before it goes off and fetches stuff from the server.
-	//llwarns << "Used internal preload for non-local sound" << llendl;
+	LL_DEBUGS("Audio") << "Used internal preload for non-local sound" << LL_ENDL;
 	return false;
 }
-
 
 bool LLAudioEngine::isWindEnabled()
 {
 	return mEnableWind;
 }
-
 
 void LLAudioEngine::setMuted(bool muted)
 {
@@ -752,7 +730,7 @@ F32 LLAudioEngine::getMasterGain()
 void LLAudioEngine::setSecondaryGain(S32 type, F32 gain)
 {
 	llassert(type < LLAudioEngine::AUDIO_TYPE_COUNT);
-	
+
 	mSecondaryGain[type] = gain;
 }
 
@@ -774,11 +752,10 @@ void LLAudioEngine::setMaxWindGain(F32 gain)
 	mMaxWindGain = gain;
 }
 
-
 F64 LLAudioEngine::mapWindVecToGain(LLVector3 wind_vec)
 {
 	F64 gain = 0.0;
-	
+
 	gain = wind_vec.magVec();
 
 	if (gain)
@@ -792,7 +769,6 @@ F64 LLAudioEngine::mapWindVecToGain(LLVector3 wind_vec)
 
 	return (gain);
 } 
-
 
 F64 LLAudioEngine::mapWindVecToPitch(LLVector3 wind_vec)
 {
@@ -808,7 +784,7 @@ F64 LLAudioEngine::mapWindVecToPitch(LLVector3 wind_vec)
 	theta = acos(norm_wind * listen_right);
 
 	// put it on 0, 1
-	theta /= F_PI;					
+	theta /= F_PI;
 
 	// put it on [0, 0.5, 0]
 	if (theta > 0.5) theta = 1.0-theta;
@@ -816,7 +792,6 @@ F64 LLAudioEngine::mapWindVecToPitch(LLVector3 wind_vec)
 
 	return (theta);
 }
-
 
 F64 LLAudioEngine::mapWindVecToPan(LLVector3 wind_vec)
 {
@@ -833,14 +808,16 @@ F64 LLAudioEngine::mapWindVecToPan(LLVector3 wind_vec)
 	theta = acos(norm_wind * listen_right);
 
 	// put it on 0, 1
-	theta /= F_PI;					
+	theta /= F_PI;
 
 	return (theta);
 }
 
-
-void LLAudioEngine::triggerSound(const LLUUID &audio_uuid, const LLUUID& owner_id, const F32 gain,
-								 const S32 type, const LLVector3d &pos_global)
+void LLAudioEngine::triggerSound(const LLUUID &audio_uuid,
+								 const LLUUID& owner_id,
+								 const F32 gain,
+								 const S32 type,
+								 const LLVector3d &pos_global)
 {
 	// Create a new source (since this can't be associated with an existing source.
 	//llinfos << "Localized: " << audio_uuid << llendl;
@@ -872,12 +849,10 @@ void LLAudioEngine::triggerSound(const LLUUID &audio_uuid, const LLUUID& owner_i
 	asp->play(audio_uuid);
 }
 
-
 void LLAudioEngine::setListenerPos(LLVector3 aVec)
 {
 	mListenerp->setPosition(aVec);  
 }
-
 
 LLVector3 LLAudioEngine::getListenerPos()
 {
@@ -891,30 +866,26 @@ LLVector3 LLAudioEngine::getListenerPos()
 	}
 }
 
-
 void LLAudioEngine::setListenerVelocity(LLVector3 aVec)
 {
 	mListenerp->setVelocity(aVec);  
 }
 
-
 void LLAudioEngine::translateListener(LLVector3 aVec)
 {
-	mListenerp->translate(aVec);	
+	mListenerp->translate(aVec);
 }
-
 
 void LLAudioEngine::orientListener(LLVector3 up, LLVector3 at)
 {
 	mListenerp->orient(up, at);  
 }
 
-
-void LLAudioEngine::setListener(LLVector3 pos, LLVector3 vel, LLVector3 up, LLVector3 at)
+void LLAudioEngine::setListener(LLVector3 pos, LLVector3 vel, LLVector3 up,
+								LLVector3 at)
 {
 	mListenerp->set(pos,vel,up,at);  
 }
-
 
 void LLAudioEngine::setDopplerFactor(F32 factor)
 {
@@ -923,7 +894,6 @@ void LLAudioEngine::setDopplerFactor(F32 factor)
 		mListenerp->setDopplerFactor(factor);  
 	}
 }
-
 
 F32 LLAudioEngine::getDopplerFactor()
 {
@@ -937,7 +907,6 @@ F32 LLAudioEngine::getDopplerFactor()
 	}
 }
 
-
 void LLAudioEngine::setRolloffFactor(F32 factor)
 {
 	if (mListenerp)
@@ -945,7 +914,6 @@ void LLAudioEngine::setRolloffFactor(F32 factor)
 		mListenerp->setRolloffFactor(factor);  
 	}
 }
-
 
 F32 LLAudioEngine::getRolloffFactor()
 {
@@ -959,12 +927,10 @@ F32 LLAudioEngine::getRolloffFactor()
 	}
 }
 
-
 void LLAudioEngine::commitDeferredChanges()
 {
 	mListenerp->commitDeferredChanges();  
 }
-
 
 LLAudioSource * LLAudioEngine::findAudioSource(const LLUUID &source_id)
 {
@@ -980,7 +946,6 @@ LLAudioSource * LLAudioEngine::findAudioSource(const LLUUID &source_id)
 		return iter->second;
 	}
 }
-
 
 LLAudioData * LLAudioEngine::getAudioData(const LLUUID &audio_uuid)
 {
@@ -1004,20 +969,18 @@ void LLAudioEngine::addAudioSource(LLAudioSource *asp)
 	mAllSources[asp->getID()] = asp;
 }
 
-
 void LLAudioEngine::cleanupAudioSource(LLAudioSource *asp)
 {
 	source_map::iterator iter;
 	iter = mAllSources.find(asp->getID());
 	if (iter == mAllSources.end())
 	{
-		llwarns << "Cleaning up unknown audio source!" << llendl;
+		LL_WARNS("Audio") << "Cleaning up unknown audio source!" << LL_ENDL;
 		return;
 	}
 	delete asp;
 	mAllSources.erase(iter);
 }
-
 
 bool LLAudioEngine::hasDecodedFile(const LLUUID &uuid)
 {
@@ -1028,11 +991,13 @@ bool LLAudioEngine::hasDecodedFile(const LLUUID &uuid)
 	bool ui_sound = isUISound(uuid);
 	if (ui_sound)
 	{
-		wav_path = gDirUtilp->getExpandedFilename(LL_PATH_SKINS, "default", "sounds", uuid_str) + ".dsf";
+		wav_path = gDirUtilp->getExpandedFilename(LL_PATH_SKINS, "default",
+												  "sounds", uuid_str) + ".dsf";
 	}
 	if (!ui_sound || !gDirUtilp->fileExists(wav_path))
 	{
-		wav_path = gDirUtilp->getExpandedFilename(LL_PATH_CACHE, uuid_str) + ".dsf";
+		wav_path = gDirUtilp->getExpandedFilename(LL_PATH_CACHE,
+												  uuid_str) + ".dsf";
 	}
 
 	if (gDirUtilp->fileExists(wav_path))
@@ -1045,13 +1010,11 @@ bool LLAudioEngine::hasDecodedFile(const LLUUID &uuid)
 	}
 }
 
-
 bool LLAudioEngine::hasLocalFile(const LLUUID &uuid)
 {
 	// See if it's in the VFS.
 	return gVFS->getExists(uuid, LLAssetType::AT_SOUND);
 }
-
 
 void LLAudioEngine::startNextTransfer()
 {
@@ -1167,8 +1130,8 @@ void LLAudioEngine::startNextTransfer()
 				continue;
 			}
 
-
-			for (data_iter = asp->mPreloadMap.begin(); data_iter != asp->mPreloadMap.end(); data_iter++)
+			for (data_iter = asp->mPreloadMap.begin();
+				 data_iter != asp->mPreloadMap.end(); data_iter++)
 			{
 				LLAudioData *adp = data_iter->second;
 				if (!adp)
@@ -1190,7 +1153,8 @@ void LLAudioEngine::startNextTransfer()
 	{
 		max_pri = -1.f;
 		source_map::iterator source_iter;
-		for (source_iter = mAllSources.begin(); source_iter != mAllSources.end(); source_iter++)
+		for (source_iter = mAllSources.begin();
+			 source_iter != mAllSources.end(); source_iter++)
 		{
 			asp = source_iter->second;
 			if (!asp)
@@ -1219,7 +1183,8 @@ void LLAudioEngine::startNextTransfer()
 				continue;
 			}
 
-			for (data_iter = asp->mPreloadMap.begin(); data_iter != asp->mPreloadMap.end(); data_iter++)
+			for (data_iter = asp->mPreloadMap.begin();
+				 data_iter != asp->mPreloadMap.end(); data_iter++)
 			{
 				LLAudioData *adp = data_iter->second;
 				if (!adp)
@@ -1239,7 +1204,7 @@ void LLAudioEngine::startNextTransfer()
 
 	if (asset_id.notNull())
 	{
-		llinfos << "Getting asset data for: " << asset_id << llendl;
+		LL_DEBUGS("Audio") << "Getting asset data for: " << asset_id << LL_ENDL;
 		gAudiop->mCurrentTransfer = asset_id;
 		gAudiop->mCurrentTransferTimer.reset();
 		gAssetStorage->getAssetData(asset_id, LLAssetType::AT_SOUND,
@@ -1247,17 +1212,18 @@ void LLAudioEngine::startNextTransfer()
 	}
 	else
 	{
-		//llinfos << "No pending transfers?" << llendl;
+		LL_DEBUGS("Audio") << "No pending transfers ?" << LL_ENDL;
 	}
 }
-
 
 // static
 void LLAudioEngine::assetCallback(LLVFS *vfs, const LLUUID &uuid, LLAssetType::EType type, void *user_data, S32 result_code, LLExtStat ext_status)
 {
 	if (result_code)
 	{
-		llinfos << "Boom, error in audio file transfer: " << LLAssetStorage::getErrorString( result_code ) << " (" << result_code << ")" << llendl;
+		LL_WARNS("Audio") << "Boom, error in audio file transfer: "
+						  << LLAssetStorage::getErrorString(result_code)
+						  << " (" << result_code << ")" << LL_ENDL;
 		// Need to mark data as bad to avoid constant rerequests.
 		LLAudioData *adp = gAudiop->getAudioData(uuid);
 		if (adp)
@@ -1273,7 +1239,8 @@ void LLAudioEngine::assetCallback(LLVFS *vfs, const LLUUID &uuid, LLAssetType::E
 		if (!adp)
         {
 			// Should never happen
-			llwarns << "Got asset callback without audio data for " << uuid << llendl;
+			LL_WARNS("Audio") << "Got asset callback without audio data for "
+							  << uuid << LL_ENDL;
         }
 		else
 		{
@@ -1286,11 +1253,9 @@ void LLAudioEngine::assetCallback(LLVFS *vfs, const LLUUID &uuid, LLAssetType::E
 	gAudiop->startNextTransfer();
 }
 
-
 //
 // LLAudioSource implementation
 //
-
 
 LLAudioSource::LLAudioSource(const LLUUID& id, const LLUUID& owner_id, const F32 gain, const S32 type)
 :	mID(id),
@@ -1311,7 +1276,6 @@ LLAudioSource::LLAudioSource(const LLUUID& id, const LLUUID& owner_id, const F32
 {
 }
 
-
 LLAudioSource::~LLAudioSource()
 {
 	if (mChannelp)
@@ -1322,7 +1286,6 @@ LLAudioSource::~LLAudioSource()
 	}
 }
 
-
 void LLAudioSource::setChannel(LLAudioChannel *channelp)
 {
 	if (channelp == mChannelp)
@@ -1332,7 +1295,6 @@ void LLAudioSource::setChannel(LLAudioChannel *channelp)
 
 	mChannelp = channelp;
 }
-
 
 void LLAudioSource::update()
 {
@@ -1345,7 +1307,7 @@ void LLAudioSource::update()
 			if (getCurrentData()->load())
 			{
 				play(getCurrentData()->getID());
-			}			
+			}
 		}
 	}
 }
@@ -1378,11 +1340,11 @@ bool LLAudioSource::setupChannel()
 
 	if (!adp->getBuffer())
 	{
-		// We're not ready to play back the sound yet, so don't try and allocate a channel for it.
-		//llwarns << "Aborting, no buffer" << llendl;
+		// We're not ready to play back the sound yet, so don't try and
+		// allocate a channel for it.
+		LL_DEBUGS("Audio") << "Aborting, no buffer" << LL_ENDL;
 		return false;
 	}
-
 
 	if (!mChannelp)
 	{
@@ -1397,14 +1359,13 @@ bool LLAudioSource::setupChannel()
 		// Ugh, we don't have any free channels.
 		// Now we have to reprioritize.
 		// For now, just don't play the sound.
-		//llwarns << "Aborting, no free channels" << llendl;
+		LL_DEBUGS("Audio") << "Aborting, no free channels" << LL_ENDL;
 		return false;
 	}
 
 	mChannelp->setSource(this);
 	return true;
 }
-
 
 bool LLAudioSource::play(const LLUUID &audio_uuid)
 {
@@ -1457,7 +1418,6 @@ bool LLAudioSource::play(const LLUUID &audio_uuid)
 	getChannel()->play();
 	return true;
 }
-
 
 bool LLAudioSource::isDone() const
 {
@@ -1522,7 +1482,6 @@ bool LLAudioSource::isDone() const
 
 	return false;
 }
-
 
 void LLAudioSource::addAudioData(LLAudioData *adp, const bool set_current)
 {
@@ -1591,7 +1550,6 @@ void LLAudioSource::addAudioData(LLAudioData *adp, const bool set_current)
 	}
 }
 
-
 bool LLAudioSource::hasPendingPreloads() const
 {
 	// Check to see if we've got any preloads on deck for this source
@@ -1610,7 +1568,6 @@ bool LLAudioSource::hasPendingPreloads() const
 
 	return false;
 }
-
 
 LLAudioData * LLAudioSource::getCurrentData()
 {
@@ -1632,23 +1589,18 @@ LLAudioBuffer * LLAudioSource::getCurrentBuffer()
 	return mCurrentDatap->getBuffer();
 }
 
-
-
-
 //
 // LLAudioChannel implementation
 //
 
-
-LLAudioChannel::LLAudioChannel() :
-	mCurrentSourcep(NULL),
+LLAudioChannel::LLAudioChannel()
+:	mCurrentSourcep(NULL),
 	mCurrentBufferp(NULL),
 	mLoopedThisFrame(false),
 	mWaiting(false),
 	mSecondaryGain(1.0f)
 {
 }
-
 
 LLAudioChannel::~LLAudioChannel()
 {
@@ -1660,7 +1612,6 @@ LLAudioChannel::~LLAudioChannel()
 	}
 	mCurrentBufferp = NULL;
 }
-
 
 void LLAudioChannel::setSource(LLAudioSource *sourcep)
 {
@@ -1684,11 +1635,9 @@ void LLAudioChannel::setSource(LLAudioSource *sourcep)
 
 	mCurrentSourcep = sourcep;
 
-
 	updateBuffer();
 	update3DPosition();
 }
-
 
 bool LLAudioChannel::updateBuffer()
 {
@@ -1700,7 +1649,7 @@ bool LLAudioChannel::updateBuffer()
 	}
 
 	// Initialize the channel's gain setting for this sound.
-	if(gAudiop)
+	if (gAudiop)
 	{
 		setSecondaryGain(gAudiop->getSecondaryGain(mCurrentSourcep->getType()));
 	}
@@ -1739,16 +1688,12 @@ bool LLAudioChannel::updateBuffer()
 	return true;
 }
 
-
-
-
 //
 // LLAudioData implementation
 //
 
-
-LLAudioData::LLAudioData(const LLUUID &uuid) :
-	mID(uuid),
+LLAudioData::LLAudioData(const LLUUID &uuid)
+:	mID(uuid),
 	mBufferp(NULL),
 	mHasLocalData(false),
 	mHasDecodedData(false),
@@ -1759,7 +1704,7 @@ LLAudioData::LLAudioData(const LLUUID &uuid) :
 		// This is a null sound.
 		return;
 	}
-	
+
 	if (gAudiop && gAudiop->hasDecodedFile(uuid))
 	{
 		// Already have a decoded version, don't need to decode it.
@@ -1772,7 +1717,6 @@ LLAudioData::LLAudioData(const LLUUID &uuid) :
 	}
 }
 
-
 bool LLAudioData::load()
 {
 	static clock_t last_info = 0;
@@ -1784,7 +1728,7 @@ bool LLAudioData::load()
 		llinfos << "Already have a buffer for this sound, don't bother loading!" << llendl;
 		return true;
 	}
-	
+
 	mBufferp = gAudiop->getFreeBuffer();
 	if (!mBufferp)
 	{
@@ -1822,5 +1766,3 @@ bool LLAudioData::load()
 	mBufferp->mAudioDatap = this;
 	return true;
 }
-
-

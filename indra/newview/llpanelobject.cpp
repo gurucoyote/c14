@@ -76,6 +76,17 @@
 #include "llworld.h"
 #include "pipeline.h"
 
+// Static variables for the object clipboard
+bool LLPanelObject::sSavedSizeValid		= false;
+bool LLPanelObject::sSavedPosValid		= false;
+bool LLPanelObject::sSavedRotValid		= false;
+bool LLPanelObject::sSavedShapeValid	= false;
+
+LLVector3 LLPanelObject::sSavedSize;
+LLVector3 LLPanelObject::sSavedPos;
+LLVector3 LLPanelObject::sSavedRot;
+LLVolumeParams LLPanelObject::sSavedShape;
+
 //
 // Constants
 //
@@ -108,6 +119,11 @@ BOOL LLPanelObject::postBuild()
 	// Top
 	//--------------------------------------------------------
 
+	mButtonCopy = getChild<LLButton>("copy");
+	childSetAction("copy", onClickCopy, this);
+	mButtonPaste = getChild<LLButton>("paste");
+	childSetAction("paste", onClickPaste, this);
+
 	// Lock checkbox
 	mCheckLock = getChild<LLCheckBoxCtrl>("checkbox locked");
 	childSetCommitCallback("checkbox locked", onCommitLock, this);
@@ -132,19 +148,19 @@ BOOL LLPanelObject::postBuild()
 	childSetCommitCallback("Pos Y", onCommitPosition, this);
 	mCtrlPosZ = getChild<LLSpinCtrl>("Pos Z");
 	childSetCommitCallback("Pos Z", onCommitPosition, this);
+	mCheckCopyPos = getChild<LLCheckBoxCtrl>("paste_position");
+	childSetCommitCallback("paste_position", onCommitCopyPaste, this);
 
 	// Scale
 	mLabelSize = getChild<LLTextBox>("label size");
 	mCtrlScaleX = getChild<LLSpinCtrl>("Scale X");
 	childSetCommitCallback("Scale X", onCommitScale, this);
-
-	// Scale Y
 	mCtrlScaleY = getChild<LLSpinCtrl>("Scale Y");
 	childSetCommitCallback("Scale Y", onCommitScale, this);
-
-	// Scale Z
 	mCtrlScaleZ = getChild<LLSpinCtrl>("Scale Z");
 	childSetCommitCallback("Scale Z", onCommitScale, this);
+	mCheckCopySize = getChild<LLCheckBoxCtrl>("paste_size");
+	childSetCommitCallback("paste_size", onCommitCopyPaste, this);
 
 	// Rotation
 	mLabelRotation = getChild<LLTextBox>("label rotation");
@@ -154,8 +170,13 @@ BOOL LLPanelObject::postBuild()
 	childSetCommitCallback("Rot Y", onCommitRotation, this);
 	mCtrlRotZ = getChild<LLSpinCtrl>("Rot Z");
 	childSetCommitCallback("Rot Z", onCommitRotation, this);
+	mCheckCopyRot = getChild<LLCheckBoxCtrl>("paste_rotation");
+	childSetCommitCallback("paste_rotation", onCommitCopyPaste, this);
 
 	//--------------------------------------------------------
+
+	mCheckCopyShape = getChild<LLCheckBoxCtrl>("paste_shape");
+	childSetCommitCallback("paste_shape", onCommitCopyPaste, this);
 
 	// Base Type
 	mLabelBaseType = getChild<LLTextBox>("label basetype");
@@ -361,7 +382,7 @@ void LLPanelObject::getState()
 
 //MK
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	if (gRRenabled && (gAgent.mRRInterface.contains ("sittp") ||
+	if (gRRenabled && (gAgent.mRRInterface.contains("sittp") ||
 					   gAgent.mRRInterface.mContainsUnsit))
 	{
 		// don't allow modification if sitting on this object and avatar
@@ -393,6 +414,7 @@ void LLPanelObject::getState()
 	mCtrlPosX->setEnabled(enable_move);
 	mCtrlPosY->setEnabled(enable_move);
 	mCtrlPosZ->setEnabled(enable_move);
+	mCheckCopyPos->setEnabled(enable_move);
 
 	if (enable_scale)
 	{
@@ -412,6 +434,7 @@ void LLPanelObject::getState()
 	mCtrlScaleX->setEnabled(enable_scale);
 	mCtrlScaleY->setEnabled(enable_scale);
 	mCtrlScaleZ->setEnabled(enable_scale);
+	mCheckCopySize->setEnabled(enable_scale);
 
 	LLQuaternion object_rot = objectp->getRotationEdit();
 	object_rot.getEulerAngles(&(mCurEulerDegrees.mV[VX]), &(mCurEulerDegrees.mV[VY]), &(mCurEulerDegrees.mV[VZ]));
@@ -437,6 +460,7 @@ void LLPanelObject::getState()
 	mCtrlRotX->setEnabled(enable_rotate);
 	mCtrlRotY->setEnabled(enable_rotate);
 	mCtrlRotZ->setEnabled(enable_rotate);
+	mCheckCopyRot->setEnabled(enable_rotate);
 
 	BOOL owners_identical;
 	LLUUID owner_id;
@@ -454,11 +478,13 @@ void LLPanelObject::getState()
 	{
 		childSetVisible("edit_object", TRUE);
 		childSetEnabled("edit_object", TRUE);
+		mCheckCopyShape->setVisible(true);
 	}
 	else
 	{
 		childSetVisible("select_single", TRUE);
 		childSetEnabled("select_single", TRUE);
+		mCheckCopyShape->setVisible(false);
 	}
 	// Lock checkbox - only modifiable if you own the object.
 	BOOL self_owned = (gAgent.getID() == owner_id);
@@ -999,6 +1025,8 @@ void LLPanelObject::getState()
 	mLabelRevolutions->setEnabled(enabled);
 	mSpinRevolutions->setEnabled(enabled);
 
+	mCheckCopyShape->setEnabled(enabled && mCheckCopyShape->getVisible());
+
 	// Update field visibility
 	mLabelCut->setVisible(cut_visible);
 	mSpinCutBegin->setVisible(cut_visible);
@@ -1034,7 +1062,7 @@ void LLPanelObject::getState()
 
 	mLabelTaper->setVisible(taper_visible);
 	mSpinTaperX->setVisible(taper_visible);
-	mSpinTaperY		->setVisible(taper_visible);
+	mSpinTaperY->setVisible(taper_visible);
 
 	mLabelRadiusOffset->setVisible(radius_offset_visible);
 	mSpinRadiusOffset->setVisible(radius_offset_visible);
@@ -1094,8 +1122,46 @@ void LLPanelObject::getState()
 
 	//----------------------------------------------------------------------------
 
+	if (selected_item == MI_SCULPT)
+	{
+		mCheckCopyShape->setVisible(false);
+	}
+	setCopyPasteState();
+
 	mObject = objectp;
 	mRootObject = root_objectp;
+}
+
+void LLPanelObject::setCopyPasteState()
+{
+	bool shape_enabled	= mCheckCopyShape->getVisible() &&
+						  mCheckCopyShape->getEnabled();
+	bool size_enabled	= mCheckCopySize->getVisible() &&
+						  mCheckCopySize->getEnabled();
+	bool pos_enabled	= mCheckCopyPos->getVisible() &&
+						  mCheckCopyPos->getEnabled();
+	bool rot_enabled	= mCheckCopyRot->getVisible() &&
+						  mCheckCopyRot->getEnabled();
+
+	mButtonCopy->setEnabled(shape_enabled || size_enabled ||
+							pos_enabled || rot_enabled);
+
+	bool shape_checked	= shape_enabled && mCheckCopyShape->get();
+	bool size_checked	= size_enabled && mCheckCopySize->get();
+	bool pos_checked	= pos_enabled && mCheckCopyPos->get();
+	bool rot_checked	= rot_enabled && mCheckCopyRot->get();
+
+	bool can_paste = (shape_checked && sSavedShapeValid) ||
+					 (size_checked && sSavedSizeValid) ||
+					 (pos_checked && sSavedPosValid) ||
+					 (rot_checked && sSavedRotValid);
+
+	if (!sSavedShapeValid && shape_checked)	can_paste = false;
+	if (!sSavedSizeValid && size_checked)	can_paste = false;
+	if (!sSavedPosValid && pos_checked)		can_paste = false;
+	if (!sSavedRotValid && rot_checked)		can_paste = false;
+
+	mButtonPaste->setEnabled(can_paste);
 }
 
 // static
@@ -1751,59 +1817,59 @@ void LLPanelObject::draw()
 
 	if (tool == LLToolCompTranslate::getInstance())
 	{
-		mCtrlPosX	->setLabelColor(red);
-		mCtrlPosY	->setLabelColor(green);
-		mCtrlPosZ	->setLabelColor(blue);
+		mCtrlPosX->setLabelColor(red);
+		mCtrlPosY->setLabelColor(green);
+		mCtrlPosZ->setLabelColor(blue);
 
-		mCtrlScaleX	->setLabelColor(white);
-		mCtrlScaleY	->setLabelColor(white);
-		mCtrlScaleZ	->setLabelColor(white);
+		mCtrlScaleX->setLabelColor(white);
+		mCtrlScaleY->setLabelColor(white);
+		mCtrlScaleZ->setLabelColor(white);
 
-		mCtrlRotX	->setLabelColor(white);
-		mCtrlRotY	->setLabelColor(white);
-		mCtrlRotZ	->setLabelColor(white);
+		mCtrlRotX->setLabelColor(white);
+		mCtrlRotY->setLabelColor(white);
+		mCtrlRotZ->setLabelColor(white);
 	}
 	else if (tool == LLToolCompScale::getInstance())
 	{
-		mCtrlPosX	->setLabelColor(white);
-		mCtrlPosY	->setLabelColor(white);
-		mCtrlPosZ	->setLabelColor(white);
+		mCtrlPosX->setLabelColor(white);
+		mCtrlPosY->setLabelColor(white);
+		mCtrlPosZ->setLabelColor(white);
 
-		mCtrlScaleX	->setLabelColor(red);
-		mCtrlScaleY	->setLabelColor(green);
-		mCtrlScaleZ	->setLabelColor(blue);
+		mCtrlScaleX->setLabelColor(red);
+		mCtrlScaleY->setLabelColor(green);
+		mCtrlScaleZ->setLabelColor(blue);
 
-		mCtrlRotX	->setLabelColor(white);
-		mCtrlRotY	->setLabelColor(white);
-		mCtrlRotZ	->setLabelColor(white);
+		mCtrlRotX->setLabelColor(white);
+		mCtrlRotY->setLabelColor(white);
+		mCtrlRotZ->setLabelColor(white);
 	}
 	else if (tool == LLToolCompRotate::getInstance())
 	{
-		mCtrlPosX	->setLabelColor(white);
-		mCtrlPosY	->setLabelColor(white);
-		mCtrlPosZ	->setLabelColor(white);
+		mCtrlPosX->setLabelColor(white);
+		mCtrlPosY->setLabelColor(white);
+		mCtrlPosZ->setLabelColor(white);
 
-		mCtrlScaleX	->setLabelColor(white);
-		mCtrlScaleY	->setLabelColor(white);
-		mCtrlScaleZ	->setLabelColor(white);
+		mCtrlScaleX->setLabelColor(white);
+		mCtrlScaleY->setLabelColor(white);
+		mCtrlScaleZ->setLabelColor(white);
 
-		mCtrlRotX	->setLabelColor(red);
-		mCtrlRotY	->setLabelColor(green);
-		mCtrlRotZ	->setLabelColor(blue);
+		mCtrlRotX->setLabelColor(red);
+		mCtrlRotY->setLabelColor(green);
+		mCtrlRotZ->setLabelColor(blue);
 	}
 	else
 	{
-		mCtrlPosX	->setLabelColor(white);
-		mCtrlPosY	->setLabelColor(white);
-		mCtrlPosZ	->setLabelColor(white);
+		mCtrlPosX->setLabelColor(white);
+		mCtrlPosY->setLabelColor(white);
+		mCtrlPosZ->setLabelColor(white);
 
-		mCtrlScaleX	->setLabelColor(white);
-		mCtrlScaleY	->setLabelColor(white);
-		mCtrlScaleZ	->setLabelColor(white);
+		mCtrlScaleX->setLabelColor(white);
+		mCtrlScaleY->setLabelColor(white);
+		mCtrlScaleZ->setLabelColor(white);
 
-		mCtrlRotX	->setLabelColor(white);
-		mCtrlRotY	->setLabelColor(white);
-		mCtrlRotZ	->setLabelColor(white);
+		mCtrlRotX->setLabelColor(white);
+		mCtrlRotY->setLabelColor(white);
+		mCtrlRotZ->setLabelColor(white);
 	}
 
 	LLPanel::draw();
@@ -1972,4 +2038,104 @@ void LLPanelObject::onCommitSculptType(LLUICtrl *ctrl, void* userdata)
 {
 	LLPanelObject* self = (LLPanelObject*) userdata;
 	self->sendSculpt();
+}
+
+// static
+void LLPanelObject::onCommitCopyPaste(LLUICtrl *ctrl, void* userdata)
+{
+	LLPanelObject* self = (LLPanelObject*)userdata;
+	self->setCopyPasteState();
+}
+
+// static
+void LLPanelObject::onClickCopy(void* user_data)
+{
+	LLPanelObject* self = (LLPanelObject*)user_data;
+
+	if (self->mCheckCopySize->getVisible() && self->mCheckCopySize->getEnabled())
+	{
+		self->sSavedSize = LLVector3(self->mCtrlScaleX->get(),
+									 self->mCtrlScaleY->get(),
+									 self->mCtrlScaleZ->get());
+		sSavedSizeValid = true;
+	}
+	else
+	{
+		sSavedSizeValid = false;
+	}
+
+	if (self->mCheckCopyPos->getVisible() && self->mCheckCopyPos->getEnabled())
+	{
+		self->sSavedPos = LLVector3(self->mCtrlPosX->get(),
+									self->mCtrlPosY->get(),
+									self->mCtrlPosZ->get());
+		sSavedPosValid = true;
+	}
+	else
+	{
+		sSavedPosValid = false;
+	}
+
+	if (self->mCheckCopyRot->getVisible() && self->mCheckCopyRot->getEnabled())
+	{
+		self->sSavedRot = LLVector3(self->mCtrlRotX->get(),
+									self->mCtrlRotY->get(),
+									self->mCtrlRotZ->get());
+		sSavedRotValid = true;
+	}
+	else
+	{
+		sSavedRotValid = false;
+	}
+
+	if (self->mCheckCopyShape->getVisible() && self->mCheckCopyShape->getEnabled())
+	{
+		self->getVolumeParams(sSavedShape);
+		sSavedShapeValid = true;
+	}
+	else
+	{
+		sSavedShapeValid = false;
+	}
+
+	self->setCopyPasteState();
+}
+
+// static
+void LLPanelObject::onClickPaste(void* user_data)
+{
+	LLPanelObject* self = (LLPanelObject*)user_data;
+
+	if (sSavedSizeValid && self->mCheckCopySize->getVisible() &&
+		self->mCheckCopySize->getEnabled() && self->mCheckCopySize->get())
+	{
+		self->mCtrlScaleX->set(sSavedSize.mV[VX]);
+		self->mCtrlScaleY->set(sSavedSize.mV[VY]);
+		self->mCtrlScaleZ->set(sSavedSize.mV[VZ]);
+		self->sendScale(FALSE);
+	}
+
+	if (sSavedPosValid && self->mCheckCopyPos->getVisible() &&
+		self->mCheckCopyPos->getEnabled() && self->mCheckCopyPos->get())
+	{
+		self->mCtrlPosX->set(sSavedPos.mV[VX]);
+		self->mCtrlPosY->set(sSavedPos.mV[VY]);
+		self->mCtrlPosZ->set(sSavedPos.mV[VZ]);
+		self->sendPosition(FALSE);
+	}
+
+	if (sSavedRotValid && self->mCheckCopyRot->getVisible() &&
+		self->mCheckCopyRot->getEnabled() && self->mCheckCopyRot->get())
+	{
+		self->mCtrlRotX->set(sSavedRot.mV[VX]);
+		self->mCtrlRotY->set(sSavedRot.mV[VY]);
+		self->mCtrlRotZ->set(sSavedRot.mV[VZ]);
+		self->sendRotation(FALSE);
+	}
+
+	if (sSavedShapeValid && self->mCheckCopyShape->getVisible() &&
+		self->mCheckCopyShape->getEnabled() && self->mCheckCopyShape->get())
+	{
+		self->mObject->updateVolume(sSavedShape);
+	}
 }

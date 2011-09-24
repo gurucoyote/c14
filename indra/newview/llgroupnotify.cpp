@@ -51,6 +51,7 @@
 
 #include "llglheaders.h"
 #include "llagent.h"
+
 // Globals
 //LLView* gGroupNotifyBoxView = NULL;
 

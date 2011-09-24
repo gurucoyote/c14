@@ -68,7 +68,8 @@ static void CFStringRefToLLString(CFStringRef stringRef, std::string &llString, 
 {
 	if (stringRef)
 	{
-		long	bufferSize = CFStringGetLength(stringRef) + 1;
+		long stringSize = CFStringGetLength(stringRef) + 1;
+		long bufferSize = CFStringGetMaximumSizeForEncoding(stringSize, kCFStringEncodingUTF8);
 		char* buffer = new char[bufferSize];
 		memset(buffer, 0, bufferSize);
 		if (CFStringGetCString(stringRef, buffer, bufferSize, kCFStringEncodingUTF8))
@@ -85,7 +86,7 @@ static void CFURLRefToLLString(CFURLRef urlRef, std::string &llString, bool rele
 {
 	if (urlRef)
 	{
-		CFURLRef	absoluteURLRef = CFURLCopyAbsoluteURL(urlRef);
+		CFURLRef absoluteURLRef = CFURLCopyAbsoluteURL(urlRef);
 		if (absoluteURLRef)
 		{
 			CFStringRef	stringRef = CFURLCopyFileSystemPath(absoluteURLRef, kCFURLPOSIXPathStyle);
@@ -221,7 +222,7 @@ U32 LLDir_Mac::countFilesInDir(const std::string &dirname, const std::string &ma
 	tmp_str = dirname;
 	tmp_str += mask;
 	
-	if(glob(tmp_str.c_str(), GLOB_NOSORT, NULL, &g) == 0)
+	if (glob(tmp_str.c_str(), GLOB_NOSORT, NULL, &g) == 0)
 	{
 		file_count = g.gl_pathc;
 
@@ -239,7 +240,7 @@ BOOL LLDir_Mac::getNextFileInDir(const std::string &dirname, const std::string &
 	BOOL result = FALSE;
 	fname = "";
 	
-	if(!(dirname == mCurrentDir))
+	if (!(dirname == mCurrentDir))
 	{
 		// different dir specified, close old search
 		mCurrentDirIndex = -1;
@@ -251,11 +252,11 @@ BOOL LLDir_Mac::getNextFileInDir(const std::string &dirname, const std::string &
 	tmp_str = dirname;
 	tmp_str += mask;
 
-	if(glob(tmp_str.c_str(), GLOB_NOSORT, NULL, &g) == 0)
+	if (glob(tmp_str.c_str(), GLOB_NOSORT, NULL, &g) == 0)
 	{
-		if(g.gl_pathc > 0)
+		if (g.gl_pathc > 0)
 		{
-			if(g.gl_pathc != mCurrentDirCount)
+			if (g.gl_pathc != mCurrentDirCount)
 			{
 				// Number of matches has changed since the last search, meaning a file has been added or deleted.
 				// Reset the index.
@@ -371,8 +372,6 @@ std::string LLDir_Mac::getCurPath()
 	return tmp_str;
 }
 
-
-
 BOOL LLDir_Mac::fileExists(const std::string &filename) const
 {
 	struct stat stat_data;
@@ -389,18 +388,16 @@ BOOL LLDir_Mac::fileExists(const std::string &filename) const
 	}
 }
 
-
 /*virtual*/ std::string LLDir_Mac::getLLPluginLauncher()
 {
 	return gDirUtilp->getAppRODataDir() + gDirUtilp->getDirDelimiter() +
-		"SLPlugin";
+		   "SLPlugin.app/Contents/MacOS/SLPlugin";
 }
 
 /*virtual*/ std::string LLDir_Mac::getLLPluginFilename(std::string base_name)
 {
 	return gDirUtilp->getLLPluginDir() + gDirUtilp->getDirDelimiter() +
-		base_name + ".dylib";
+		   base_name + ".dylib";
 }
-
 
 #endif // LL_DARWIN

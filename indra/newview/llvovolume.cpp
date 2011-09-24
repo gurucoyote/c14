@@ -1034,11 +1034,7 @@ BOOL LLVOVolume::setVolume(const LLVolumeParams &params_in, const S32 detail, bo
 		// if it's a mesh
 		if ((volume_params.getSculptType() & LL_SCULPT_TYPE_MASK) == LL_SCULPT_TYPE_MESH)
 		{	//meshes might not have all LODs, get the force detail to best existing LOD
-
 			LLUUID mesh_id = volume_params.getSculptID();
-
-			//profile and path params don't matter for meshes
-			volume_params.setType(LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE);
 
 			lod = gMeshRepo.getActualMeshLOD(volume_params, lod);
 			if (lod == -1)
@@ -1101,7 +1097,7 @@ BOOL LLVOVolume::setVolume(const LLVolumeParams &params_in, const S32 detail, bo
 			// if it's a mesh
 			if ((volume_params.getSculptType() & LL_SCULPT_TYPE_MASK) == LL_SCULPT_TYPE_MESH)
 			{
-				if (getVolume()->getNumVolumeFaces() == 0 || getVolume()->isTetrahedron())
+				if (!getVolume()->isMeshAssetLoaded())
 				{ 
 					//load request not yet issued, request pipeline load this mesh
 					LLUUID asset_id = volume_params.getSculptID();
@@ -3184,7 +3180,7 @@ U32 LLVOVolume::getHighLODTriangleCount()
 	else if (isMesh())
 	{
 		LLVolume* ref = LLPrimitive::getVolumeManager()->refVolume(volume->getParams(), 3);
-		if (ref->isTetrahedron() || ref->getNumVolumeFaces() == 0)
+		if (!ref->isMeshAssetLoaded() || ref->getNumVolumeFaces() == 0)
 		{
 			gMeshRepo.loadMesh(this, volume->getParams(), LLModel::LOD_HIGH);
 		}
@@ -3979,8 +3975,9 @@ void LLVolumeGeometryManager::rebuildGeom(LLSpatialGroup* group)
 		LLVOVolume* vobj = drawablep->getVOVolume();
 		llassert_always(vobj);
 
-		if (vobj->getVolume() && vobj->getVolume()->isTetrahedron() ||
-			(vobj->isMesh() && !gMeshRepo.meshRezEnabled()))
+		if (vobj->isMesh() &&
+			(!gMeshRepo.meshRezEnabled() ||
+			 !vobj->getVolume() || !vobj->getVolume()->isMeshAssetLoaded()))
 		{
 			continue;
 		}

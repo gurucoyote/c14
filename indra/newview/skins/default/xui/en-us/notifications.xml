@@ -2872,6 +2872,23 @@ Sorry, you cannot mute a Linden.
 
   <notification
    icon="alertmodal.tga"
+   name="MuteOwnObject"
+   type="alertmodal">
+Sorry, you cannot mute an object you own.
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="MutedObjectOfferDeclined"
+   type="notifytip">
+Declined an inventory offer from muted object/agent '[NAME]'.
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
    name="CannotStartAuctionAlreadyForSale"
    type="alertmodal">
 You cannot start an auction on a parcel which is already set for sale.  Disable the land sale if you are sure you want to start an auction.
@@ -5133,6 +5150,7 @@ Please try again later.
   </notification>
 
   <notification
+   duration="15"
    icon="notifytip.tga"
    name="DisplayNameUpdate"
    type="notifytip">
@@ -6250,8 +6268,30 @@ Grant this request?
 [MESSAGE]
     <form name="form">
       <button
+       index="-2"
+       name="client_side_mute"
+       text="Mute"/>
+      <button
        index="-1"
-       name="Ignore"
+       name="client_side_ignore"
+       text="Ignore"/>
+    </form>
+  </notification>
+
+  <notification
+   icon="notify.tga"
+   name="ScriptDialogOurs"
+   type="notify">
+Your &apos;[TITLE]&apos;
+[MESSAGE]
+    <form name="form">
+      <button
+       index="-2"
+       name="client_side_mute"
+       text="Mute"/>
+      <button
+       index="-1"
+       name="client_side_ignore"
        text="Ignore"/>
     </form>
   </notification>
@@ -6265,12 +6305,39 @@ Grant this request?
     <form name="form">
       <input name="message" />
       <button
+       index="-2"
+       name="client_side_mute"
+       text="Mute"/>
+      <button
        index="-1"
-       name="Ignore"
+       name="client_side_ignore"
        text="Ignore"/>
       <button
        index="0"
-       name="Send"
+       name="client_side_send"
+       text="Send"/>
+    </form>
+  </notification>
+
+  <notification
+   icon="notify.tga"
+   name="ScriptTextBoxOurs"
+   type="notify">
+Your &apos;[TITLE]&apos;
+[MESSAGE]
+    <form name="form">
+      <input name="message" />
+      <button
+       index="-2"
+       name="client_side_mute"
+       text="Mute"/>
+      <button
+       index="-1"
+       name="client_side_ignore"
+       text="Ignore"/>
+      <button
+       index="0"
+       name="client_side_send"
        text="Send"/>
     </form>
   </notification>

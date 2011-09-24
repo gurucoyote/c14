@@ -579,7 +579,7 @@
 		<panel border="true" bottom="-383" follows="left|top|right|bottom" height="367"
 		     label="Object" left="1" mouse_opaque="false" name="Object" width="270">
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom="-20" drop_shadow_visible="true" follows="left|top"
+			     bottom="-16" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="10"
 			     mouse_opaque="true" name="select_single" v_pad="0" width="252">
 				Select only one primitive to edit parameters.
@@ -587,29 +587,34 @@
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom_delta="0" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left_delta="0"
-			     mouse_opaque="true" name="edit_object" v_pad="0" width="252">
+			     mouse_opaque="true" name="edit_object" v_pad="0" width="135">
 				Edit object parameters:
 			</text>
-			<check_box bottom_delta="-26" follows="left|top" font="SansSerifSmall" height="16"
+			<check_box bottom_delta="-6" follows="left|top" font="SansSerifSmall" height="16"
+			     initial_value="false" label="Paste Shape" left="150" mouse_opaque="true"
+			     name="paste_shape"
+			     tool_tip="If checked and on 'Paste' action, causes the shape parameters to be set to the last copied ones."
+			     width="100" />
+			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Locked" left="8" mouse_opaque="true"
 			     name="checkbox locked"
 			     tool_tip="Prevents object from being moved or deleted. Frequently useful during building to avoid unintended edits."
 			     width="123" />
-			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			<check_box bottom_delta="-16" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Physical" left="8" mouse_opaque="true"
 			     name="Physical Checkbox Ctrl"
 			     tool_tip="Allows object to be pushed and affected by gravity" width="123" />
-			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			<check_box bottom_delta="-16" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Temporary" left="8" mouse_opaque="true"
 			     name="Temporary Checkbox Ctrl"
 			     tool_tip="Causes object to be deleted 1 minute after creation." width="123" />
-			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			<check_box bottom_delta="-16" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Phantom" left="8" mouse_opaque="true"
 			     name="Phantom Checkbox Ctrl"
 			     tool_tip="Causes object to not collide with other objects or avatars"
 			     width="123" />
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom_delta="-14" drop_shadow_visible="true" follows="left|top"
+			     bottom_delta="-12" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="10"
 			     mouse_opaque="true" name="label position" v_pad="0" width="121">
 				Position (meters)
@@ -626,8 +631,13 @@
 			     increment="0.01" initial_val="0" label="Z" label_width="10" left="10"
 			     max_val="4096" min_val="0" mouse_opaque="true" name="Pos Z"
 			     text_enabled_color="0, 67, 132, 255" width="87" />
+			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			     initial_value="false" label="Paste Pos." left="3" mouse_opaque="true"
+			     name="paste_position"
+			     tool_tip="If checked and on 'Paste' action, causes the position coordinates to be set to the last copied ones."
+			     width="123" />
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom_delta="-16" drop_shadow_visible="true" follows="left|top"
+			     bottom_delta="-12" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="10"
 			     mouse_opaque="true" name="label size" v_pad="0" width="121">
 				Size (meters)
@@ -644,8 +654,13 @@
 			     increment="0.01" initial_val="0" label="Z" label_width="10" left="10"
 			     max_val="256" min_val="0.01" mouse_opaque="true" name="Scale Z"
 			     text_enabled_color="1, 1, 1, 1" width="87" />
+			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			     initial_value="false" label="Paste Size" left="3" mouse_opaque="true"
+			     name="paste_size"
+			     tool_tip="If checked and on 'Paste' action, causes the size dimensions to be set to the last copied ones."
+			     width="123" />
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom_delta="-16" drop_shadow_visible="true" follows="left|top"
+			     bottom_delta="-12" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="10"
 			     mouse_opaque="true" name="label rotation" v_pad="0" width="121">
 				Rotation (degrees)
@@ -662,8 +677,19 @@
 			     increment="1" initial_val="0" label="Z" label_width="10" left="10"
 			     max_val="9999" min_val="-9999" mouse_opaque="true" name="Rot Z"
 			     text_enabled_color="1, 1, 1, 1" width="87" />
+			<check_box bottom_delta="-18" follows="left|top" font="SansSerifSmall" height="16"
+			     initial_value="false" label="Paste Rot." left="3" mouse_opaque="true"
+			     name="paste_rotation"
+			     tool_tip="If checked and on 'Paste' action, causes the rotation angles to be set to the last copied ones."
+			     width="123" />
+			<button name="copy" label="Copy" font="SansSerifSmall" halign="center" mouse_opaque="true"
+			 tool_tip="Copy all the parameters of this primitive to the object clipboard."
+			 bottom_delta="-16" left="6" height="14" width="50" follows="left|top"/>
+			<button name="paste" label="Paste" font="SansSerifSmall" halign="center" mouse_opaque="true"
+			 tool_tip="Paste the selected (with 'Paste ...' check boxes) parameters from the object clipboard."
+			 bottom_delta="0" left_delta="55" height="14" width="50" follows="left|top"/>
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom="-36" drop_shadow_visible="true" follows="left|top"
+			     bottom="-32" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="121"
 			     mouse_opaque="true" name="label basetype" v_pad="0" width="141">
 				Building Block Type

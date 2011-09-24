@@ -1215,6 +1215,7 @@ bool LLOfferInfo::inventory_offer_callback(const LLSD& notification, const LLSD&
 		//Busy falls through to decline.  Says to make busy message.
 		busy = TRUE;
 	case IOR_MUTE:
+	case IOR_MUTED:
 		// MUTE falls through to decline
 	case IOR_DECLINE:
 		// DECLINE. The math for the dialog works, because the decline
@@ -1229,14 +1230,12 @@ bool LLOfferInfo::inventory_offer_callback(const LLSD& notification, const LLSD&
 		// send the message
 		msg->sendReliable(mHost);
 
-		log_message = "You decline " + mDesc + " from " + mFromName + ".";
-		chat.mText = log_message;
-		LLMuteList* ml = LLMuteList::getInstance();
-		if (ml && ml->isMuted(mFromID) && !ml->isLinden(mFromName))  // muting for SL-42269
+		if (button != IOR_MUTED)
 		{
-			chat.mMuted = TRUE;
+			log_message = "You decline " + mDesc + " from " + mFromName + ".";
+			chat.mText = log_message;
+			LLFloaterChat::addChatHistory(chat);
 		}
-		LLFloaterChat::addChatHistory(chat);
 
 		// If it's from an agent, we have to fetch the item to throw
 		// it away. If it's from a task or group, just denying the 
@@ -1257,7 +1256,6 @@ bool LLOfferInfo::inventory_offer_callback(const LLSD& notification, const LLSD&
 			{
 				opener = discard_agent_offer;
 			}
-
 		}
 		if (busy &&	!mFromGroup && !mFromObject)
 		{
@@ -1347,7 +1345,23 @@ void inventory_offer_handler(LLOfferInfo* info, BOOL from_task)
 	// Just curtail the offer here.
 	if (muted)
 	{
-		info->forceResponse(IOR_DECLINE);	// Not IOR_MUTE, since this would mute agents owning an object we muted...
+		static clock_t last_log = 0;
+		static clock_t last_notification = 0;
+		// Do not spam with such messages...
+		if (clock() - last_log > 5 * CLOCKS_PER_SEC)
+		{
+			LL_INFOS("Messaging") << "Declining inventory offer from muted object/agent: "
+								  << info->mFromName << LL_ENDL;
+			last_log = clock();
+		}
+		if (clock() - last_notification > 30 * CLOCKS_PER_SEC)
+		{
+			LLSD args;
+			args["NAME"] = info->mFromName;
+			LLNotifications::instance().add("MutedObjectOfferDeclined", args);
+			last_notification = clock();
+		}
+		info->forceResponse(IOR_MUTED);	// Not IOR_MUTE, since this would auto-mute agents owning an object we muted...
 		return;
 	}
 
@@ -1586,7 +1600,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 
 		// Note: don't put the message in the IM history, even though was sent
 		// via the IM mechanism.
-		LLNotifications::instance().add("SystemMessageTip",args);
+		LLNotifications::instance().add("SystemMessageTip", args);
 		break;
 
 	case IM_NOTHING_SPECIAL: 
@@ -2046,11 +2060,26 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 //mk
 			info->mDesc = message;
 			info->mHost = msg->getSender();
-			//if (((is_busy && !is_owned_by_me) || is_muted))
 			if (is_muted)
 			{
+				static clock_t last_log = 0;
+				static clock_t last_notification = 0;
+				// Do not spam with such messages...
+				if (clock() - last_log > 5 * CLOCKS_PER_SEC)
+				{
+					LL_INFOS("Messaging") << "Declining inventory offer from muted object/agent: "
+										  << info->mFromName << LL_ENDL;
+					last_log = clock();
+				}
+				if (clock() - last_notification > 30 * CLOCKS_PER_SEC)
+				{
+					LLSD args;
+					args["NAME"] = info->mFromName;
+					LLNotifications::instance().add("MutedObjectOfferDeclined", args);
+					last_notification = clock();
+				}
 				// Same as closing window
-				info->forceResponse(IOR_DECLINE);
+				info->forceResponse(IOR_MUTED);
 			}
 			else
 			{
@@ -5967,8 +5996,28 @@ bool callback_script_dialog(const LLSD& notification, const LLSD& response)
 	LLNotificationForm form(notification["form"]);
 	std::string button = LLNotification::getSelectedOptionName(response);
 	S32 button_idx = LLNotification::getSelectedOption(notification, response);
-	// Didn't click "Ignore"
-	if (button_idx != -1)
+	if (button_idx == -2)		// Clicked "Mute"
+	{
+		LLUUID object_id = notification["payload"]["object_id"].asUUID();
+		LLViewerObject* vobj = gObjectList.findObject(object_id);
+		if (vobj && vobj->permYouOwner())
+		{
+			// Do not apply to objects we own
+			LLNotifications::instance().add("MuteOwnObject");
+		}
+		else
+		{
+			std::string object_name = notification["payload"]["object_name"].asString();
+			LLMute mute(object_id, object_name, LLMute::OBJECT);
+			LLMuteList* ml = LLMuteList::getInstance();
+			if (ml && ml->add(mute))
+			{
+				LLFloaterMute::showInstance();
+				LLFloaterMute::getInstance()->selectMute(object_id);
+			}
+		}
+	}
+	else if (button_idx != -1)	// Didn't click "Ignore"
 	{
 		if (notification["payload"].has("textbox"))
 		{
@@ -5990,7 +6039,9 @@ bool callback_script_dialog(const LLSD& notification, const LLSD& response)
 	return false;
 }
 static LLNotificationFunctorRegistration callback_script_dialog_reg_1("ScriptDialog", callback_script_dialog);
-static LLNotificationFunctorRegistration callback_script_dialog_reg_2("ScriptTextBox", callback_script_dialog);
+static LLNotificationFunctorRegistration callback_script_dialog_reg_2("ScriptDialogOurs", callback_script_dialog);
+static LLNotificationFunctorRegistration callback_script_dialog_reg_3("ScriptTextBox", callback_script_dialog);
+static LLNotificationFunctorRegistration callback_script_dialog_reg_4("ScriptTextBoxOurs", callback_script_dialog);
 
 void process_script_dialog(LLMessageSystem* msg, void**)
 {
@@ -5999,7 +6050,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	std::string message; 
 	std::string first_name;
 	std::string last_name;
-	std::string title;
+	std::string object_name;
 
 	S32 chat_channel;
 
@@ -6012,7 +6063,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	msg->getUUID("Data", "ObjectID", object_id);
 	msg->getString("Data", "FirstName", first_name);
 	msg->getString("Data", "LastName", last_name);
-	msg->getString("Data", "ObjectName", title);
+	msg->getString("Data", "ObjectName", object_name);
 	msg->getString("Data", "Message", message);
 	msg->getS32("Data", "ChatChannel", chat_channel);
 	// Get the owner id if it is part of the message (new ScriptDialog message)
@@ -6034,10 +6085,11 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	// residents.
 	LLMuteList* ml = LLMuteList::getInstance();
 	LLViewerObject* vobj = gObjectList.findObject(object_id);
-	if (ml && !(vobj && vobj->permYouOwner())) // Do not apply to objects we own
+	bool is_ours = (vobj && vobj->permYouOwner());
+	if (ml && !is_ours) // Do not apply to objects we own
 	{
 		// Check for mutes by object id and by name
-		BOOL muted = ml->isMuted(object_id, title);
+		BOOL muted = ml->isMuted(object_id, object_name);
 
 		// Check for mutes by owner
 		if (!muted)
@@ -6057,7 +6109,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 				else
 				{
 					muted = ml->isMuted(LLUUID::null, first_name + " " + last_name,
-									0, LLMute::AGENT);
+										0, LLMute::AGENT);
 				}
 			}
 		}
@@ -6068,9 +6120,9 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 			// Do not spam the log with such messages...
 			if (clock() - last_warning > 5 * CLOCKS_PER_SEC)
 			{
-				llwarns << "Muting scripted object dialog(s) from: "
-						<< first_name << " " << last_name << "'s "
-						<< title << llendl;
+				LL_INFOS("Messaging") << "Muting scripted object dialog(s) from: "
+									  << first_name << " " << last_name << "'s "
+									  << object_name << LL_ENDL;
 				last_warning = clock();
 			}
 			return;
@@ -6080,6 +6132,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	payload["sender"] = msg->getSender().getIPandPort();
 	payload["object_id"] = object_id;
 	payload["chat_channel"] = chat_channel;
+	payload["object_name"] = object_name;
 
 	// build up custom form
 	S32 button_count = msg->getNumberOfBlocks("Buttons");
@@ -6116,7 +6169,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	}
 
 	LLSD args;
-	args["TITLE"] = title;
+	args["TITLE"] = object_name;
 	args["MESSAGE"] = message;
 
 	std::string name;
@@ -6142,16 +6195,19 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	}
 	args["NAME"] = name;
 
+	std::string dialog;
 	if (is_text_box)
 	{
 		args["DEFAULT"] = default_text;
 		payload["textbox"] = "true";
-		LLNotifications::instance().add("ScriptTextBox", args, payload);
+		dialog = is_ours ? "ScriptTextBoxOurs" : "ScriptTextBox";
+		LLNotifications::instance().add(dialog, args, payload);
 	}
 	else
 	{
+		dialog = is_ours ? "ScriptDialogOurs" : "ScriptDialog";
 		LLNotifications::instance().add(
-			LLNotification::Params("ScriptDialog").substitutions(args).payload(payload).form_elements(form.asLLSD()));
+			LLNotification::Params(dialog).substitutions(args).payload(payload).form_elements(form.asLLSD()));
 	}
 }
 
@@ -6189,9 +6245,15 @@ void callback_load_url_name(const LLUUID& id, const std::string& full_name, bool
 			if (ml &&
 				ml->isMuted(id, full_name, 0, is_group ? LLMute::GROUP : LLMute::AGENT))
 			{
-				LL_INFOS("Messaging") << "Ignoring load_url from muted owner "
-									  << full_name << LL_ENDL;
-				continue;
+				static clock_t last_warning = 0;
+				// Do not spam the log with such messages...
+				if (clock() - last_warning > 5 * CLOCKS_PER_SEC)
+				{
+					LL_INFOS("Messaging") << "Ignoring load_url from muted owner "
+										  << full_name << LL_ENDL;
+					last_warning = clock();
+					continue;
+				}
 			}
 
 			std::string owner_name;
@@ -6249,7 +6311,13 @@ void process_load_url(LLMessageSystem* msg, void**)
 	LLMuteList* ml = LLMuteList::getInstance();
 	if (ml && (ml->isMuted(object_id, object_name) || ml->isMuted(owner_id)))
 	{
-		LL_INFOS("Messaging") << "Ignoring load_url from muted object/owner." << LL_ENDL;
+		static clock_t last_warning = 0;
+		// Do not spam the log with such messages...
+		if (clock() - last_warning > 5 * CLOCKS_PER_SEC)
+		{
+			LL_INFOS("Messaging") << "Ignoring load_url from muted object/owner." << LL_ENDL;
+			last_warning = clock();
+		}
 		return;
 	}
 

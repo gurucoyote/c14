@@ -44,6 +44,7 @@
 #include "llhttpclient.h"
 #include "llimage.h"
 #include "lllfsthread.h"
+#include "llnotifications.h"
 #include "llsdserialize.h"
 #include "llsdutil_math.h"
 #include "lltransactiontypes.h"
@@ -59,7 +60,6 @@
 #include "llfloaternamedesc.h"
 #include "llfloatersnapshot.h"
 #include "llinventorymodel.h"	// gInventory
-#include "llnotify.h"
 #include "llresourcedata.h"
 #include "llselectmgr.h"
 #include "llstartup.h"			// gIsInSecondLife
@@ -136,10 +136,6 @@ public:
 			gMessageSystem->nextBlockFast(_PREHASH_MoneyData);
 			gMessageSystem->addUUIDFast(_PREHASH_TransactionID, LLUUID::null );
 			gAgent.sendReliableMessage();
-
-//			LLStringUtil::format_map_t args;
-//			args["[AMOUNT]"] = llformat("%d",LLGlobalEconomy::Singleton::getInstance()->getPriceUpload());
-//			LLNotifyBox::showXml("UploadPayment", args);
 		}
 
 		// Actually add the upload to viewer inventory
@@ -350,7 +346,7 @@ void LLObjectBackup::updateImportNumbers()
 	sstr << " Objects " << mCurObject << "/" << mObjects << "\n";
 	ctrl->setValue(LLSD("Text") = sstr.str());
 
-	sstr << " Rez "<< mRezCount << "/" << mPrims;
+	sstr << " Rez " << mRezCount << "/" << mPrims;
 	ctrl->setValue(LLSD("Text") = sstr.str());
 
 	sstr << " Build " << mCurPrim << "/" << mPrims;

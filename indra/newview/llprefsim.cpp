@@ -35,15 +35,14 @@
 
 #include "llprefsim.h"
 
-#include "llagent.h"
 #include "llavatarconstants.h"
-#include "llcheckboxctrl.h"
-#include "lldirpicker.h"
-#include "llnotify.h"
+#include "llnotifications.h"
 #include "llpanel.h"
-#include "llstring.h"
 #include "lltexteditor.h"
 #include "lluictrlfactory.h"
+
+#include "llagent.h"
+#include "lldirpicker.h"
 #include "llviewercontrol.h"
 #include "llviewernetwork.h"
 

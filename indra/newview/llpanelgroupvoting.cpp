@@ -36,22 +36,20 @@
 
 #ifdef GROUP_VOTING
 
-#include "lllineeditor.h"
+#include "llbutton.h"
+#include "llnotifications.h"
+#include "llradiogroup.h"
+#include "llscrolllistctrl.h"
+#include "llspinctrl.h"
 #include "lltextbox.h"
 #include "lltexteditor.h"
-#include "llscrolllistctrl.h"
-#include "llradiogroup.h"
-#include "llspinctrl.h"
-#include "llnamelistctrl.h"
-#include "llbutton.h"
-#include "llnotify.h"
 #include "roles_constants.h"
 
 #include "llagent.h"
 #include "llfocusmgr.h"
 #include "llviewercontrol.h"
-#include "llviewerwindow.h"
 #include "llviewerregion.h"
+#include "llviewerwindow.h"
 
 class LLPanelGroupVoting::impl
 {

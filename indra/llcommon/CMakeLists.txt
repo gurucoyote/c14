@@ -237,10 +237,15 @@ target_link_libraries(
 
 if (DARWIN)
     # Don't embed a full path in the library's install name
-    set_target_properties(
-        llcommon
-        PROPERTIES
-        BUILD_WITH_INSTALL_RPATH 1
-        INSTALL_NAME_DIR "@executable_path/../Resources"
-      )
+
+#    set_target_properties(
+#        llcommon
+#        PROPERTIES
+#        BUILD_WITH_INSTALL_RPATH 1
+#        INSTALL_NAME_DIR "@executable_path/../Resources"
+#      )
+
+    include(CMakeFindFrameworks)
+    find_library(CARBON_LIBRARY Carbon)
+    target_link_libraries(llcommon ${CARBON_LIBRARY})
 endif (DARWIN)

@@ -25,7 +25,7 @@ if (WINDOWS)
         optimized libboost_filesystem-vc80-mt-1_39
         optimized libboost_system-vc80-mt-1_39
         )
-else (WINDOWS)
+elseif (LINUX)
     set(LLPRIMITIVE_LIBRARIES 
         llprimitive
         collada14dom
@@ -34,5 +34,15 @@ else (WINDOWS)
        	pcrecpp
         pcre
         boost_system-gcc41-mt-1_39
+        )
+elseif (DARWIN)
+    set(LLPRIMITIVE_LIBRARIES 
+        llprimitive
+        collada14dom
+        minizip
+        xml2
+       	pcrecpp
+        pcre
+        boost_system-xgcc40-mt-1_39
         )
 endif (WINDOWS)

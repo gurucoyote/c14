@@ -113,17 +113,17 @@ private:
 	bool			mPersist;
 	bool			mHideFromSettingsEditor;
 	std::vector<LLSD> mValues;
-	
+
 	commit_signal_t mCommitSignal;
 	validate_signal_t mValidateSignal;
-	
+
 public:
 	LLControlVariable(const std::string& name, eControlType type,
 					  LLSD initial, const std::string& comment,
 					  bool persist = true, bool hidefromsettingseditor = false);
 
 	virtual ~LLControlVariable();
-	
+
 	const std::string& getName() const { return mName; }
 	const std::string& getComment() const { return mComment; }
 
@@ -190,7 +190,7 @@ T convert_from_llsd(const LLSD& sd, eControlType type, const std::string& contro
 class LLControlGroup : public LLInstanceTracker<LLControlGroup, std::string>
 {
 protected:
-	typedef std::map<std::string, LLPointer<LLControlVariable> > ctrl_name_table_t;
+	typedef std::map<std::string, LLControlVariablePtr> ctrl_name_table_t;
 	ctrl_name_table_t mNameTable;
 	std::set<std::string> mWarnings;
 	std::string mTypeString[TYPE_COUNT];
@@ -202,7 +202,7 @@ public:
 	LLControlGroup(const std::string& name);
 	~LLControlGroup();
 	void cleanup();
-	
+
 	typedef LLInstanceTracker<LLControlGroup, std::string>::instance_iter instance_iter;
 
 	LLControlVariablePtr getControl(const std::string& name);
@@ -213,7 +213,7 @@ public:
 		virtual void apply(const std::string& name, LLControlVariable* control) = 0;
 	};
 	void applyToAll(ApplyFunctor* func);
-	
+
 	BOOL declareControl(const std::string& name, eControlType type, const LLSD initial_val, const std::string& comment, BOOL persist, BOOL hidefromsettingseditor = FALSE);
 	BOOL declareU32(const std::string& name, U32 initial_val, const std::string& comment, BOOL persist = TRUE);
 	BOOL declareS32(const std::string& name, S32 initial_val, const std::string& comment, BOOL persist = TRUE);
@@ -227,14 +227,14 @@ public:
 	BOOL declareColor4U(const std::string& name, const LLColor4U &initial_val, const std::string& comment, BOOL persist = TRUE);
 	BOOL declareColor3(const std::string& name, const LLColor3 &initial_val, const std::string& comment, BOOL persist = TRUE);
 	BOOL declareLLSD(const std::string& name, const LLSD &initial_val, const std::string& comment, BOOL persist = TRUE);
-	
+
 	std::string 	getString(const std::string& name);
 	std::string	getText(const std::string& name);
 	BOOL		getBOOL(const std::string& name);
 	S32			getS32(const std::string& name);
 	F32			getF32(const std::string& name);
 	U32			getU32(const std::string& name);
-	
+
 	LLWString	getWString(const std::string& name);
 	LLVector3	getVector3(const std::string& name);
 	LLVector3d	getVector3d(const std::string& name);
@@ -254,7 +254,7 @@ public:
 		LLSD value;
 		eControlType type = TYPE_COUNT;
 
-		if (control)		
+		if (control)
 		{
 			value = control->get();
 			type = control->type();
@@ -284,7 +284,7 @@ public:
 	template<typename T> void set(const std::string& name, const T& val)
 	{
 		LLControlVariable* control = getControl(name);
-	
+
 		if (control && control->isType(get_control_type<T>()))
 		{
 			control->set(convert_to_llsd(val));
@@ -294,7 +294,7 @@ public:
 			llwarns << "Invalid control " << name << llendl;
 		}
 	}
-	
+
 	BOOL    controlExists(const std::string& name);
 
 	// Returns number of controls loaded, 0 if failed
@@ -306,7 +306,7 @@ public:
 	void resetToDefaults();
 
 	// Ignorable Warnings
-	
+
 	// Add a config variable to be reset on resetWarnings()
 	void addWarning(const std::string& name);
 	BOOL getWarning(const std::string& name);
@@ -328,14 +328,14 @@ class LLControlCache : public LLRefCount, public LLInstanceTracker<LLControlCach
 public:
 	// This constructor will declare a control if it doesn't exist in the contol group
 	LLControlCache(LLControlGroup& group,
-					const std::string& name, 
-					const T& default_value, 
-					const std::string& comment)
+				   const std::string& name, 
+				   const T& default_value, 
+				   const std::string& comment)
 	:	LLInstanceTracker<LLControlCache<T>, std::string >(name)
 	{
-		if(!group.controlExists(name))
+		if (!group.controlExists(name))
 		{
-			if(!declareTypedControl(group, name, default_value, comment))
+			if (!declareTypedControl(group, name, default_value, comment))
 			{
 				llerrs << "The control could not be created!!!" << llendl;
 			}
@@ -345,10 +345,10 @@ public:
 	}
 
 	LLControlCache(LLControlGroup& group,
-					const std::string& name)
+				   const std::string& name)
 	:	LLInstanceTracker<LLControlCache<T>, std::string >(name)
 	{
-		if(!group.controlExists(name))
+		if (!group.controlExists(name))
 		{
 			llerrs << "Control named " << name << "not found." << llendl;
 		}
@@ -361,7 +361,7 @@ public:
 	}
 
 	const T& getValue() const { return mCachedValue; }
-	
+
 private:
 	void bindToControl(LLControlGroup& group, const std::string& name)
 	{
@@ -375,14 +375,14 @@ private:
 		mType = controlp->type();
 	}
 	bool declareTypedControl(LLControlGroup& group,
-							const std::string& name, 
+							 const std::string& name, 
 							 const T& default_value,
 							 const std::string& comment)
 	{
 		LLSD init_value;
 		eControlType type = get_control_type<T>();
 		init_value = convert_to_llsd(default_value);
-		if(type < TYPE_COUNT)
+		if (type < TYPE_COUNT)
 		{
 			group.declareControl(name, type, init_value, comment, FALSE);
 			return true;

@@ -249,7 +249,6 @@ BOOL	LLFloaterTools::postBuild()
 	mCheckSelectIndividual = getChild<LLCheckBoxCtrl>("checkbox edit linked parts");
 	childSetValue("checkbox edit linked parts",(BOOL)gSavedSettings.getBOOL("EditLinkedParts"));
 	childSetCommitCallback("checkbox edit linked parts",commit_select_component,this);
-	childSetValue("checkbox snap to grid",(BOOL)gSavedSettings.getBOOL("SnapEnabled"));
 	mBtnGridOptions = getChild<LLButton>("Grid Options");
 	childSetAction("Grid Options", onClickGridOptions, this);
 	mCheckStretchUniform = getChild<LLCheckBoxCtrl>("checkbox uniform");

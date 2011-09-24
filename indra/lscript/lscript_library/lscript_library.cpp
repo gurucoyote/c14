@@ -327,7 +327,7 @@ void LLScriptLibrary::init()
 
 	addFunction(10.f, 0.2f, dummy_func, "llSetRemoteScriptAccessPin", NULL, "i");
 	addFunction(10.f, 3.f, dummy_func, "llRemoteLoadScriptPin", NULL, "ksiii");
-	
+
 	addFunction(10.f, 1.f, dummy_func, "llOpenRemoteDataChannel", NULL, NULL);
 	addFunction(10.f, 3.f, dummy_func, "llSendRemoteData", "k", "ksis");
 	addFunction(10.f, 3.f, dummy_func, "llRemoteDataReply", NULL, "kksi");
@@ -343,7 +343,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llLog", "f", "f");
 	addFunction(10.f, 0.f, dummy_func, "llGetAnimationList", "l", "k");
 	addFunction(10.f, 2.f, dummy_func, "llSetParcelMusicURL", NULL, "s");
-	
+
 	addFunction(10.f, 0.f, dummy_func, "llGetRootPosition", "v", NULL);
 	addFunction(10.f, 0.f, dummy_func, "llGetRootRotation", "q", NULL);
 
@@ -362,7 +362,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.0f, dummy_func, "llBase64ToInteger", "i", "s");
 	addFunction(10.f, 0.f, dummy_func, "llGetGMTclock", "f", "");
 	addFunction(10.f, 10.f, dummy_func, "llGetSimulatorHostname", "s", "");
-	
+
 	addFunction(10.f, 0.2f, dummy_func, "llSetLocalRot", NULL, "q");
 
 	addFunction(10.f, 0.f, dummy_func, "llParseStringKeepNulls", "l", "sll");
@@ -385,12 +385,12 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 2.f, dummy_func, "llParcelMediaQuery", "l", "l");
 
 	addFunction(10.f, 1.f, dummy_func, "llModPow", "i", "iii");
-	
+
 	addFunction(10.f, 0.f, dummy_func, "llGetInventoryType", "i", "s");
 	addFunction(10.f, 0.f, dummy_func, "llSetPayPrice", NULL, "il");
 	addFunction(10.f, 0.f, dummy_func, "llGetCameraPos", "v", "");
 	addFunction(10.f, 0.f, dummy_func, "llGetCameraRot", "q", "");
-	
+
 	addFunction(10.f, 20.f, dummy_func, "llSetPrimURL", NULL, "s");
 	addFunction(10.f, 20.f, dummy_func, "llRefreshPrimURL", NULL, "");
 	addFunction(10.f, 0.f, dummy_func, "llEscapeURL", "s", "s");
@@ -403,7 +403,7 @@ void LLScriptLibrary::init()
 
 	addFunction(10.f, 0.f, dummy_func, "llSetCameraParams", NULL, "l");
 	addFunction(10.f, 0.f, dummy_func, "llClearCameraParams", NULL, NULL);
-	
+
 	addFunction(10.f, 0.f, dummy_func, "llListStatistics", "f", "il");
 	addFunction(10.f, 0.f, dummy_func, "llGetUnixTime", "i", NULL);
 	addFunction(10.f, 0.f, dummy_func, "llGetParcelFlags", "i", "v");
@@ -425,7 +425,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.2f, dummy_func, "llSetLinkPrimitiveParams", NULL, "il");
 	addFunction(10.f, 0.2f, dummy_func, "llSetLinkTexture", NULL, "isi");
 
-	
+
 	addFunction(10.f, 0.f, dummy_func, "llStringTrim", "s", "si");
 	addFunction(10.f, 0.f, dummy_func, "llRegionSay", NULL, "is");
 	addFunction(10.f, 0.f, dummy_func, "llGetObjectDetails", "l", "kl");
@@ -489,11 +489,17 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llSetLinkMedia", "i", "iil");
 	addFunction(10.f, 0.f, dummy_func, "llGetLinkMedia", "l", "iil");
 	addFunction(10.f, 0.f, dummy_func, "llClearLinkMedia", "i", "ii");
-	addFunction(10.f, 0.f, dummy_func, "llSetLinkCamera", NULL, "ivv");	
-	addFunction(10.f, 0.f, dummy_func, "llSetContentType", NULL, "ki");	
+	addFunction(10.f, 0.f, dummy_func, "llSetLinkCamera", NULL, "ivv");
+	addFunction(10.f, 0.f, dummy_func, "llSetContentType", NULL, "ki");
 	addFunction(10.f, 0.f, dummy_func, "llLinkSitTarget", NULL, "ivq");
 	addFunction(10.f, 0.f, dummy_func, "llAvatarOnLinkSitTarget", "k", "i");
-	addFunction(10.f, 0.f, dummy_func, "llSetVelocity", NULL, "vi");	
+	addFunction(10.f, 0.f, dummy_func, "llSetVelocity", NULL, "vi");
+
+	// Server v11.09.09.240509 new functions:
+	addFunction(10.f, 0.f, dummy_func, "llCastRay", "l", "vvl");
+	addFunction(10.f, 0.f, dummy_func, "llGetMassMKS", "f", NULL);
+	addFunction(10.f, 0.f, dummy_func, "llSetPhysicsMaterial", NULL, "iffff");
+	addFunction(10.f, 0.f, dummy_func, "llGetPhysicsMaterial", "l", NULL);
 }
 
 LLScriptLibraryFunction::LLScriptLibraryFunction(F32 eu, F32 st, void (*exec_func)(LLScriptLibData *, LLScriptLibData *, const LLUUID &), const char *name, const char *ret_type, const char *args, BOOL god_only)
@@ -522,7 +528,7 @@ void LLScriptLibrary::assignExec(const char *name, void (*exec_func)(LLScriptLib
 			return;
 		}
 	}
-	
+
 	llerrs << "Unknown LSL function in assignExec: " << name << llendl;
 }
 
@@ -602,6 +608,5 @@ void LLScriptLibData::print_separator(std::ostream& ostr, BOOL b_prepend_sep, ch
 		}
 	}
 }
-
 
 LLScriptLibrary gScriptLibrary;

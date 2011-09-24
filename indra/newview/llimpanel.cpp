@@ -35,21 +35,26 @@
 #include "llimpanel.h"
 
 #include "indra_constants.h"
+#include "llbutton.h"
+#include "llchat.h"
+#include "llerror.h"
 #include "llfocusmgr.h"
 #include "llfontgl.h"
+#include "llhttpclient.h"
+#include "llkeyboard.h"
+#include "lllineeditor.h"
+#include "llnotifications.h"
 #include "llrect.h"
-#include "llerror.h"
+#include "llresmgr.h"
 #include "llstring.h"
-#include "message.h"
+#include "lltabcontainer.h"
 #include "lltextbox.h"
+#include "lluictrlfactory.h"
+#include "message.h"
 
 #include "llagent.h"
-#include "llbutton.h"
 #include "llcallingcard.h"
-#include "llchat.h"
 #include "llconsole.h"
-#include "llfloater.h"
-#include "llfloatergroupinfo.h"
 #include "llimview.h"
 #include "llinventory.h"
 #include "llinventorymodel.h"
@@ -57,22 +62,16 @@
 #include "llfloateractivespeakers.h"
 #include "llfloateravatarinfo.h"
 #include "llfloaterchat.h"
-#include "llkeyboard.h"
-#include "lllineeditor.h"
-#include "llnotify.h"
-#include "llresmgr.h"
-#include "lltabcontainer.h"
+#include "llfloatergroupinfo.h"
+#include "lllogchat.h"
+#include "llmutelist.h"
+#include "llstylemap.h"
 #include "llviewertexteditor.h"
 #include "llviewermessage.h"
 #include "llviewerstats.h"
 #include "llviewercontrol.h"
-#include "lluictrlfactory.h"
 #include "llviewerwindow.h"
-#include "lllogchat.h"
 #include "llweb.h"
-#include "llhttpclient.h"
-#include "llmutelist.h"
-#include "llstylemap.h"
 
 //
 // Constants
@@ -404,19 +403,9 @@ void LLVoiceChannel::handleStatusChange(EStatusType type)
 	switch(type)
 	{
 	case STATUS_LOGIN_RETRY:
-		//mLoginNotificationHandle = LLNotifyBox::showXml("VoiceLoginRetry")->getHandle();
 		LLNotifications::instance().add("VoiceLoginRetry");
 		break;
 	case STATUS_LOGGED_IN:
-		//if (!mLoginNotificationHandle.isDead())
-		//{
-		//	LLNotifyBox* notifyp = (LLNotifyBox*)mLoginNotificationHandle.get();
-		//	if (notifyp)
-		//	{
-		//		notifyp->close();
-		//	}
-		//	mLoginNotificationHandle.markDead();
-		//}
 		break;
 	case STATUS_LEFT_CHANNEL:
 		if (callStarted() && !mIgnoreNextSessionLeave && !sSuspended)

@@ -35,10 +35,12 @@
 #include "llfloatercamera.h"
 
 // Library includes
-#include "lluictrlfactory.h"
+#include "llcheckboxctrl.h"
 #include "llspinctrl.h"
+#include "lluictrlfactory.h"
 
 // Viewer includes
+#include "llagent.h"
 #include "lljoystickbutton.h"
 #include "llviewercontrol.h"
 
@@ -53,15 +55,15 @@ LLFloaterCamera::LLFloaterCamera(const LLSD& val)
 :	LLFloater("camera floater") // uses "FloaterCameraRect3a"
 {
 	setIsChrome(TRUE);
-	
+
 	// For now, only used for size and tooltip strings
 	const BOOL DONT_OPEN = FALSE;
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_camera.xml", NULL, DONT_OPEN);
-	
+
 	S32 top = getRect().getHeight();
 	S32 bottom = 0;
 	S32 left = 4;
-	
+
 	const S32 ROTATE_WIDTH = 64;
 	mRotate = new LLJoystickCameraRotate(std::string("cam rotate stick"), 
 										 LLRect( left, top, left + ROTATE_WIDTH, bottom ),
@@ -72,9 +74,9 @@ LLFloaterCamera::LLFloaterCamera(const LLSD& val)
 	mRotate->setToolTip( getString("rotate_tooltip") );
 	mRotate->setSoundFlags(MOUSE_DOWN | MOUSE_UP);
 	addChild(mRotate);
-	
+
 	left += ROTATE_WIDTH;
-	
+
 	const S32 ZOOM_WIDTH = 16;
 	mZoom = new LLJoystickCameraZoom( 
 									 std::string("zoom"),
@@ -87,9 +89,9 @@ LLFloaterCamera::LLFloaterCamera(const LLSD& val)
 	mZoom->setToolTip( getString("zoom_tooltip") );
 	mZoom->setSoundFlags(MOUSE_DOWN | MOUSE_UP);
 	addChild(mZoom);
-	
+
 	left += ZOOM_WIDTH;
-	
+
 	const S32 TRACK_WIDTH = 64;
 	mTrack = new LLJoystickCameraTrack(std::string("cam track stick"), 
 									   LLRect( left, top, left + TRACK_WIDTH, bottom ),
@@ -108,7 +110,7 @@ LLFloaterCamera::LLFloaterCamera(const LLSD& val)
 void LLFloaterCamera::onOpen()
 {
 	LLFloater::onOpen();
-	
+
 	gSavedSettings.setBOOL("ShowCameraControls", TRUE);
 }
 
@@ -116,9 +118,24 @@ void LLFloaterCamera::onOpen()
 void LLFloaterCamera::onClose(bool app_quitting)
 {
 	LLFloater::onClose(app_quitting);
-	
+
 	if (!app_quitting)
 	{
 		gSavedSettings.setBOOL("ShowCameraControls", FALSE);
 	}
+}
+
+// virtual
+void LLFloaterCamera::draw()
+{
+	static ECameraMode mode = CAMERA_MODE_THIRD_PERSON;
+	ECameraMode current_mode = gAgent.getCameraMode();
+	if (current_mode != mode)
+	{
+		mode = current_mode;
+		childSetEnabled("front_view", mode != CAMERA_MODE_MOUSELOOK &&
+									  mode != CAMERA_MODE_CUSTOMIZE_AVATAR);
+	}
+
+	LLFloater::draw();
 }

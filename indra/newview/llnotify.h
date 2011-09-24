@@ -44,8 +44,8 @@ class LLNotifyBoxTemplate;
 class LLTextEditor;
 
 // NotifyBox - for notifications that require a response from the user.  
-class LLNotifyBox : 
-	public LLPanel, 
+class LLNotifyBox
+:	public LLPanel, 
 	public LLEventTimer,
 	public LLInitClass<LLNotifyBox>,
 	public LLInstanceTracker<LLNotifyBox, LLUUID>
@@ -57,24 +57,25 @@ public:
 	static void initClass();
 	static void destroyClass();
 
-	BOOL isTip() const { return mIsTip; }
-	BOOL isCaution() const { return mIsCaution; }
+	BOOL isTip() const							{ return mIsTip; }
+	BOOL isCaution() const						{ return mIsCaution; }
 	/*virtual*/ void setVisible(BOOL visible);
-	void stopAnimation() { mAnimating = FALSE; }
+	void stopAnimation()						{ mAnimating = FALSE; }
 
 	void close();
 
-	LLNotificationPtr getNotification() const { return mNotification; }
+	LLNotificationPtr getNotification() const	{ return mNotification; }
 
 	static void format(std::string& msg, const LLStringUtil::format_map_t& args);
 
 protected:
-	LLNotifyBox(LLNotificationPtr notification, BOOL layout_script_dialog);
+	LLNotifyBox(LLNotificationPtr notification, bool script_dialog, bool is_ours);
 
 	/*virtual*/ ~LLNotifyBox();
 
-	LLButton* addButton(std::string const &name, const std::string& label, BOOL is_option, BOOL is_default);
-	
+	LLButton* addButton(std::string const &name, const std::string& label,
+						BOOL is_option, BOOL is_default);
+
 	/*virtual*/ BOOL handleMouseUp(S32 x, S32 y, MASK mask);
 	/*virtual*/ BOOL handleRightMouseDown(S32 x, S32 y, MASK mask);
 
@@ -86,7 +87,7 @@ protected:
 
 	// Returns the rect, relative to gNotifyView, where this
 	// notify box should be placed.
-	static LLRect getNotifyRect(S32 num_options, BOOL layout_script_dialog, BOOL is_caution);
+	static LLRect getNotifyRect(S32 num_options, bool layout_script_dialog, bool is_caution);
 	static LLRect getNotifyTipRect(const std::string &message);
 
 	// internal handler for button being clicked
@@ -94,8 +95,6 @@ protected:
 
 	// for "next" button
 	static void onClickNext(void* data);
-
-	//static LLNotifyBox* findExistingNotify(LLPointer<LLNotifyBoxTemplate> notify_template, const LLString::format_map_t& args);
 
 private:
 	static bool onNotification(const LLSD& notify);
@@ -120,9 +119,10 @@ protected:
 
 	S32 mNumOptions;
 	S32 mNumButtons;
-	BOOL mAddedDefaultBtn;
+	bool mAddedDefaultBtn;
 
-	BOOL mLayoutScriptDialog;
+	bool mLayoutScriptDialog;
+	bool mIsFromOurObject;
 
 	// Used for callbacks
 	struct InstanceAndS32
@@ -150,7 +150,7 @@ public:
 	class Matcher
 	{
 	public: 
-		Matcher(){}
+		Matcher() {}
 		virtual ~Matcher() {}
 		virtual BOOL matches(const LLNotificationPtr) const = 0;
 	};
