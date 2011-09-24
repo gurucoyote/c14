@@ -920,14 +920,11 @@ void LLPanelLogin::loadLoginPage()
 	std::string version = llformat("%d.%d.%d (%d)",
 						LL_VERSION_MAJOR, LL_VERSION_MINOR, LL_VERSION_PATCH, LL_VERSION_BUILD);
 
-	char* curl_channel = curl_escape(gSavedSettings.getString("VersionChannelName").c_str(), 0);
-	char* curl_version = curl_escape(version.c_str(), 0);
+	std::string curl_channel = CurlHelper::escape(gSavedSettings.getString("VersionChannelName"));
+	std::string curl_version = CurlHelper::escape(version);
 
 //	oStr << "&channel=" << curl_channel;
 //	oStr << "&version=" << curl_version;
-
-	curl_free(curl_channel);
-	curl_free(curl_version);
 
 	// Grid
 	std::string label = vl->getGridLabel();
@@ -943,9 +940,8 @@ void LLPanelLogin::loadLoginPage()
 			label = "agni";
 		}
 	}
-	char* curl_grid = curl_escape(label.c_str(), 0);
+	std::string curl_grid = CurlHelper::escape(label);
 	oStr << "&grid=" << curl_grid;
-	curl_free(curl_grid);
 
 	gViewerWindow->setMenuBackgroundColor(false, !vl->isInProductionGrid());
 	vl->setMenuColor();

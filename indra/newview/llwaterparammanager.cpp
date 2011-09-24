@@ -143,10 +143,7 @@ void LLWaterParamManager::loadAllPresets(const std::string& file_name)
 void LLWaterParamManager::loadPreset(const std::string & name,bool propagate)
 {
 	// bugfix for SL-46920: preventing filenames that break stuff.
-	char * curl_str = curl_escape(name.c_str(), name.size());
-	std::string escaped_filename(curl_str);
-	curl_free(curl_str);
-	curl_str = NULL;
+	std::string escaped_filename(CurlHelper::escape(name));
 
 	escaped_filename += ".xml";
 
