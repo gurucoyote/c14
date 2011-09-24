@@ -30,7 +30,7 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_EVENTTIMER_H					
+#ifndef LL_EVENTTIMER_H
 #define LL_EVENTTIMER_H
 
 // This class should be declared like in v2 viewers (V1_IMPLEMENTATION = 0)
@@ -64,7 +64,7 @@ public:
 	LLEventTimer(F32 period);	// period is the amount of time between each call to tick() in seconds
 	LLEventTimer(const LLDate& time);
 	virtual ~LLEventTimer();
-	
+
 	//function to be called at the supplied frequency
 	// Normally return FALSE; TRUE will delete the timer after the function returns.
 	virtual BOOL tick() = 0;

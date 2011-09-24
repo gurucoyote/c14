@@ -34,38 +34,14 @@
 
 #include "llfloatermute.h"
 
-#include "llfontgl.h"
-#include "llrect.h"
-#include "llerror.h"
-#include "llstring.h"
-#include "message.h"
+#include "llcheckboxctrl.h"
+#include "llfocusmgr.h"
+#include "llscrolllistctrl.h"
+#include "lluictrlfactory.h"
 
-// project include
 #include "llagent.h"
 #include "llfloateravatarpicker.h"
-#include "llbutton.h"
-#include "lllineeditor.h"
 #include "llmutelist.h"
-#include "llresizehandle.h"
-#include "llscrolllistctrl.h"
-#include "lltextbox.h"
-#include "llviewertexteditor.h"
-#include "llviewerwindow.h"
-#include "lluictrlfactory.h"
-#include "llfocusmgr.h"
-
-//
-// Constants
-//
-const std::string FLOATER_TITLE = "Muted Residents & Objects";
-const F32 INSTANT_MSG_SIZE = 8.0f;
-const LLColor4 INSTANT_MSG_COLOR(1, 1, 1, 1);
-const LLColor4 MUTED_MSG_COLOR(0.5f, 0.5f, 0.5f, 1.f);
-
-const S32 LINE = 16;
-const S32 LEFT = 2;
-const S32 VPAD = 4;
-const S32 HPAD = 4;
 
 //-----------------------------------------------------------------------------
 // LLFloaterMuteObjectUI()
@@ -76,8 +52,7 @@ class LLFloaterMuteObjectUI : public LLFloater
 public:
 	typedef void(*callback_t)(const std::string&, void*);
 
-	static LLFloaterMuteObjectUI* show(callback_t callback,
-					   void* userdata);
+	static LLFloaterMuteObjectUI* show(callback_t callback, void* userdata);
 	virtual BOOL postBuild();
 
 protected:
@@ -90,8 +65,7 @@ private:
 	static void onBtnOk(void *data);
 	static void onBtnCancel(void *data);
 
-	void (*mCallback)(const std::string& objectName, 
-			  void* userdata);
+	void (*mCallback)(const std::string& objectName, void* userdata);
 	void* mCallbackUserData;
 
 	static LLFloaterMuteObjectUI* sInstance;
@@ -100,9 +74,9 @@ private:
 LLFloaterMuteObjectUI* LLFloaterMuteObjectUI::sInstance = NULL;
 
 LLFloaterMuteObjectUI::LLFloaterMuteObjectUI()
-	: LLFloater(std::string("Mute object by name")),
-	  mCallback(NULL),
-	  mCallbackUserData(NULL)
+:	LLFloater(std::string("Mute object by name")),
+	mCallback(NULL),
+	mCallbackUserData(NULL)
 {
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_mute_object.xml", NULL);
 }
@@ -110,12 +84,12 @@ LLFloaterMuteObjectUI::LLFloaterMuteObjectUI()
 // Destroys the object
 LLFloaterMuteObjectUI::~LLFloaterMuteObjectUI()
 {
-	gFocusMgr.releaseFocusIfNeeded( this );
+	gFocusMgr.releaseFocusIfNeeded(this);
 	sInstance = NULL;
 }
 
 LLFloaterMuteObjectUI* LLFloaterMuteObjectUI::show(callback_t callback,
-						   void* userdata)
+												   void* userdata)
 {
 	const bool firstInstantiation = (sInstance == NULL);
 	if (firstInstantiation)
@@ -149,7 +123,7 @@ void LLFloaterMuteObjectUI::onBtnOk(void* userdata)
 	if (self->mCallback)
 	{
 		const std::string& text = self->childGetValue("object_name").asString();
-		self->mCallback(text,self->mCallbackUserData);
+		self->mCallback(text, self->mCallbackUserData);
 	}
 	self->close();
 }
@@ -186,15 +160,14 @@ BOOL LLFloaterMuteObjectUI::handleKeyHere(KEY key, MASK mask)
 // LLFloaterMute()
 //-----------------------------------------------------------------------------
 LLFloaterMute::LLFloaterMute(const LLSD& seed)
-:	LLFloater(std::string("mute floater"), std::string("FloaterMuteRect3"), FLOATER_TITLE, 
-			  RESIZE_YES, 220, 140, DRAG_ON_TOP, MINIMIZE_YES, CLOSE_YES)
+:	LLFloater(std::string("mute floater"))
 {
-
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_mute.xml", NULL, FALSE);
 }
 
 // LLMuteListObserver callback interface implementation.
-/* virtual */ void LLFloaterMute::onChange()
+// virtual
+void LLFloaterMute::onChange()
 {
 	refreshMuteList();
 }
@@ -205,15 +178,22 @@ BOOL LLFloaterMute::postBuild()
 	if (!ml) return FALSE;
 
 	childSetCommitCallback("mutes", onSelectName, this);
-	childSetAction("Mute resident...", onClickPick, this);
-	childSetAction("Mute object by name...", onClickMuteByName, this);
-	childSetAction("Unmute", onClickRemove, this);
+	childSetAction("update_mutes", onClickUpdateMutes, this);
+	childSetAction("mute_resident", onClickPick, this);
+	childSetAction("mute_by_name", onClickMuteByName, this);
+	childSetAction("unmute", onClickRemove, this);
+
+	childSetCommitCallback("mute_all", onMuteAllToggled, this);
+	childSetCommitCallback("mute_chat", onMuteTypeToggled, this);
+	childSetCommitCallback("mute_voice", onMuteTypeToggled, this);
+	childSetCommitCallback("mute_sounds", onMuteTypeToggled, this);
+	childSetCommitCallback("mute_particles", onMuteTypeToggled, this);
 
 	mMuteList = getChild<LLScrollListCtrl>("mutes");
 	mMuteList->setCommitOnSelectionChange(TRUE);
 
 	ml->addObserver(this);
-	
+
 	refreshMuteList();
 
 	return TRUE;
@@ -237,8 +217,8 @@ void LLFloaterMute::refreshMuteList()
 	std::vector<LLMute>::iterator it;
 	for (it = mutes.begin(); it != mutes.end(); ++it)
 	{
-		std::string display_name = it->getNameAndType();
-		mMuteList->addStringUUIDItem(display_name, it->mID);
+		std::string name_and_type = it->getNameAndType();
+		mMuteList->addStringUUIDItem(name_and_type, it->mID);
 	}
 
 	updateButtons();
@@ -255,15 +235,58 @@ void LLFloaterMute::selectMute(const LLUUID& mute_id)
 //-----------------------------------------------------------------------------
 void LLFloaterMute::updateButtons()
 {
-	if (mMuteList->getFirstSelected())
+	bool selected = (mMuteList->getFirstSelected() != NULL); // Entry selected
+	bool enabled = selected;
+	bool mute_all = false;
+	U32 flags = 0;
+
+	if (selected)
 	{
-		childSetEnabled("Unmute", TRUE);
+		LLUUID id = mMuteList->getStringUUIDSelectedItem();
+		std::vector<LLMute> mutes = LLMuteList::getInstance()->getMutes();
+		std::vector<LLMute>::iterator it;
+		for (it = mutes.begin(); it != mutes.end(); it++)
+		{
+			if (it->mID == id)
+			{
+				break;
+			}
+		}
+		if (it == mutes.end())
+		{
+			// Shoud never happen...
+			enabled = false;
+		}
+		else
+		{
+			enabled = it->mType == LLMute::AGENT;
+			mute_all = it->mFlags == 0;
+			if (!mute_all && enabled)
+			{
+				flags = ~(it->mFlags);
+			}
+		}
 	}
-	else
-	{
-		childSetEnabled("Unmute", FALSE);
-	}
+
+	childSetEnabled("update_mutes", false);	// Mutes are up to date
+	childSetEnabled("unmute", selected);
+
+	childSetEnabled("mute_all", enabled && !mute_all);
+	childSetEnabled("mute_chat", enabled);
+	childSetEnabled("mute_voice", enabled);
+	childSetEnabled("mute_sounds", enabled);
+	childSetEnabled("mute_particles", enabled);
+
+	childSetValue("mute_all", mute_all);
+	childSetValue("mute_chat", (flags & LLMute::flagTextChat) != 0);
+	childSetValue("mute_voice", (flags & LLMute::flagVoiceChat) != 0);
+	childSetValue("mute_sounds", (flags & LLMute::flagObjectSounds) != 0);
+	childSetValue("mute_particles", (flags & LLMute::flagParticles) != 0);
 }
+
+//
+// Static functions
+//
 
 //-----------------------------------------------------------------------------
 // onSelectName()
@@ -285,14 +308,13 @@ void LLFloaterMute::onClickRemove(void *data)
 	std::string name = floater->mMuteList->getSelectedItemLabel();
 	LLUUID id = floater->mMuteList->getStringUUIDSelectedItem();
 	LLMute mute(id);
-	mute.setFromDisplayName(name);
-	// now mute.mName has the suffix trimmed off
-	
+	mute.setFromDisplayName(name); // now mute.mName has the suffix trimmed off
+
 	S32 last_selected = floater->mMuteList->getFirstSelectedIndex();
 	if (LLMuteList::getInstance()->remove(mute))
 	{
 		// Above removals may rebuild this dialog.
-		
+
 		if (last_selected == floater->mMuteList->getItemCount())
 		{
 			// we were on the last item, so select the last item again
@@ -315,7 +337,10 @@ void LLFloaterMute::onClickPick(void *data)
 	LLFloaterMute* floaterp = (LLFloaterMute*)data;
 	const BOOL allow_multiple = FALSE;
 	const BOOL close_on_select = TRUE;
-	LLFloaterAvatarPicker* picker = LLFloaterAvatarPicker::show(onPickUser, data, allow_multiple, close_on_select);
+	LLFloaterAvatarPicker* picker = LLFloaterAvatarPicker::show(onPickUser,
+																data,
+																allow_multiple,
+																close_on_select);
 	floaterp->addDependentFloater(picker);
 }
 
@@ -333,7 +358,6 @@ void LLFloaterMute::onPickUser(const std::vector<std::string>& names, const std:
 	floaterp->updateButtons();
 }
 
-
 void LLFloaterMute::onClickMuteByName(void* data)
 {
 	LLFloaterMuteObjectUI* picker = LLFloaterMuteObjectUI::show(callbackMuteByName,data);
@@ -348,9 +372,79 @@ void LLFloaterMute::callbackMuteByName(const std::string& text, void* data)
 	if (text.empty()) return;
 
 	LLMute mute(LLUUID::null, text, LLMute::BY_NAME);
-	BOOL success = LLMuteList::getInstance()->add(mute);
-	if (!success)
+	LLMuteList::getInstance()->add(mute);
+}
+
+void LLFloaterMute::onMuteAllToggled(LLUICtrl* ctrl, void* data)
+{
+	LLFloaterMute* self  = (LLFloaterMute*)data;
+	if (self)
 	{
-		LLNotifications::instance().add("MuteByNameFailed");
+		self->childSetValue("mute_chat", FALSE);
+		self->childSetValue("mute_voice", FALSE);
+		self->childSetValue("mute_sounds", FALSE);
+		self->childSetValue("mute_particles", FALSE);
+		self->childSetEnabled("update_mutes", true);
 	}
+}
+
+void LLFloaterMute::onMuteTypeToggled(LLUICtrl* ctrl, void* data)
+{
+	LLFloaterMute* self  = (LLFloaterMute*)data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+	if (check->get())
+	{
+		self->childSetValue("mute_all", FALSE);
+		self->childSetEnabled("mute_all", true);
+	}
+	else
+	{
+		BOOL enabled = !(self->childGetValue("mute_chat") ||
+						 self->childGetValue("mute_voice") ||
+						 self->childGetValue("mute_sounds") ||
+						 self->childGetValue("mute_particles"));
+		self->childSetValue("mute_all", enabled);
+		self->childSetEnabled("mute_all", !enabled);
+	}
+	self->childSetEnabled("update_mutes", true);
+}
+
+void LLFloaterMute::onClickUpdateMutes(void *data)
+{
+	LLFloaterMute* self = (LLFloaterMute*)data;
+
+	std::string name = self->mMuteList->getSelectedItemLabel();
+	LLUUID id = self->mMuteList->getStringUUIDSelectedItem();
+	LLMute mute(id);
+	mute.setFromDisplayName(name); // now mute.mName has the suffix trimmed off
+
+	U32 flags = 0;
+	if (!self->childGetValue("mute_all"))
+	{
+		if (self->childGetValue("mute_chat"))
+		{
+			flags |= LLMute::flagTextChat;
+		}
+		if (self->childGetValue("mute_voice"))
+		{
+			flags |= LLMute::flagVoiceChat;
+		}
+		if (self->childGetValue("mute_sounds"))
+		{
+			flags |= LLMute::flagObjectSounds;
+		}
+		if (self->childGetValue("mute_particles"))
+		{
+			flags |= LLMute::flagParticles;
+		}
+	}
+
+	// Refresh the mute entry by removing the mute then re-adding it.
+	S32 last_selected = self->mMuteList->getFirstSelectedIndex();
+	LLMuteList::getInstance()->remove(mute);
+	LLMuteList::getInstance()->add(mute, flags);
+	self->mMuteList->selectNthItem(last_selected);
+
+	self->updateButtons();
 }

@@ -16,22 +16,23 @@ include_directories(
     )
 
 set(llcommon_SOURCE_FILES
-	imageids.cpp
-	indra_constants.cpp
+    imageids.cpp
+    indra_constants.cpp
     llapp.cpp
     llapr.cpp
+    llaprpool.cpp
     llassettype.cpp
     llavatarname.cpp
     llbase32.cpp
     llbase64.cpp
     llcommon.cpp
-	llcommonutils.cpp
+    llcommonutils.cpp
     llcrc.cpp
     llcriticaldamp.cpp
     llcursortypes.cpp
     lldate.cpp
     lldependencies.cpp
-	lldictionary.cpp
+    lldictionary.cpp
     llerror.cpp
     llerrorthread.cpp
     llevent.cpp
@@ -68,6 +69,7 @@ set(llcommon_SOURCE_FILES
     llsdserialize_xml.cpp
     llsdutil.cpp
     llsecondlifeurls.cpp
+    llsingleton.cpp
     llstat.cpp
     llstreamtools.cpp
     llstring.cpp
@@ -97,6 +99,7 @@ set(llcommon_HEADER_FILES
     llagentconstants.h
     llapp.h
     llapr.h
+    llaprpool.h
     llassettype.h
     llassoclist.h
     llavatarconstants.h
@@ -107,7 +110,7 @@ set(llcommon_HEADER_FILES
     llchat.h
     llclickaction.h
     llcommon.h
-	llcommonutils.h
+    llcommonutils.h
     llcrc.h
     llcriticaldamp.h
     llcursortypes.h
@@ -117,7 +120,7 @@ set(llcommon_HEADER_FILES
     lldefs.h
     lldependencies.h
     lldepthstack.h
-	lldictionary.h
+    lldictionary.h
     lldlinked.h
     lldqueueptr.h
     llendianswizzle.h
@@ -173,6 +176,7 @@ set(llcommon_HEADER_FILES
     llrefcount.h
     llrun.h
     llsafehandle.h
+    llscopedvolatileaprpool.h
     llsd.h
     llsdserialize.h
     llsdserialize_xml.h
@@ -237,13 +241,12 @@ target_link_libraries(
 
 if (DARWIN)
     # Don't embed a full path in the library's install name
-
-#    set_target_properties(
-#        llcommon
-#        PROPERTIES
-#        BUILD_WITH_INSTALL_RPATH 1
-#        INSTALL_NAME_DIR "@executable_path/../Resources"
-#      )
+    set_target_properties(
+        llcommon
+        PROPERTIES
+        BUILD_WITH_INSTALL_RPATH 1
+        INSTALL_NAME_DIR "@executable_path/../Resources"
+      )
 
     include(CMakeFindFrameworks)
     find_library(CARBON_LIBRARY Carbon)

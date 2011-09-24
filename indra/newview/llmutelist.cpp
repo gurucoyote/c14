@@ -48,9 +48,9 @@
 
 #include "llviewerprecompiledheaders.h"
 
-#include "llmutelist.h"
-
 #include <boost/tokenizer.hpp>
+
+#include "llmutelist.h"
 
 #include "llcachename.h"
 #include "llcrc.h"
@@ -66,9 +66,10 @@
 #include "llfloaterchat.h"
 #include "llimpanel.h"
 #include "llimview.h"
-#include "llviewerobjectlist.h"
 #include "llviewergenericmessage.h"	// for gGenericDispatcher
+#include "llviewerobjectlist.h"
 #include "llviewerwindow.h"
+#include "llvoavatar.h"
 #include "llworld.h"				//for particle system banning
 
 namespace 
@@ -110,6 +111,11 @@ static LLDispatchEmptyMuteList sDispatchEmptyMuteList;
 //-----------------------------------------------------------------------------
 // LLMute()
 //-----------------------------------------------------------------------------
+char LLMute::CHAT_SUFFIX[] = " (chat)";
+char LLMute::VOICE_SUFFIX[] = " (voice)";
+char LLMute::PARTICLES_SUFFIX[] = " (particles)";
+char LLMute::SOUNDS_SUFFIX[] = " (sounds)";
+
 char LLMute::BY_NAME_SUFFIX[] = " (by name)";
 char LLMute::AGENT_SUFFIX[] = " (resident)";
 char LLMute::OBJECT_SUFFIX[] = " (object)";
@@ -161,6 +167,25 @@ std::string LLMute::getNameAndType() const
 		case GROUP:
 			name_with_suffix += GROUP_SUFFIX;
 			break;
+	}
+	if (mFlags != 0)
+	{
+		if (~mFlags & flagTextChat)
+		{
+			name_with_suffix += CHAT_SUFFIX;
+		}
+		if (~mFlags & flagVoiceChat)
+		{
+			name_with_suffix += VOICE_SUFFIX;
+		}
+		if (~mFlags & flagParticles)
+		{
+			name_with_suffix += PARTICLES_SUFFIX;
+		}
+		if (~mFlags & flagObjectSounds)
+		{
+			name_with_suffix += SOUNDS_SUFFIX;
+		}
 	}
 	return name_with_suffix;
 }
@@ -224,8 +249,8 @@ LLMuteList* LLMuteList::getInstance()
 //-----------------------------------------------------------------------------
 // LLMuteList()
 //-----------------------------------------------------------------------------
-LLMuteList::LLMuteList() :
-	mIsLoaded(FALSE),
+LLMuteList::LLMuteList()
+:	mIsLoaded(FALSE),
 	mUserVolumesLoaded(FALSE)
 {
 	gGenericDispatcher.addHandler("emptymutelist", &sDispatchEmptyMuteList);
@@ -308,10 +333,24 @@ BOOL LLMuteList::add(const LLMute& mute, U32 flags)
 		return FALSE;
 	}
 
-	// Can't mute self.
-	if (mute.mType == LLMute::AGENT && mute.mID == gAgent.getID())
+	if (mute.mID.notNull())
 	{
-		return FALSE;
+		LLViewerObject* vobj = gObjectList.findObject(mute.mID);
+		if (mute.mID == gAgent.getID())
+		{
+			if (flags != LLMute::flagVoiceChat)
+			{
+				// Can't mute self.
+				LLNotifications::instance().add("MuteSelf");
+				return FALSE;
+			}
+		}
+		else if (vobj && vobj->permYouOwner())
+		{
+			// Can't mute our own objects
+			LLNotifications::instance().add("MuteOwnObject");
+			return FALSE;
+		}
 	}
 
 	if (mute.mType == LLMute::BY_NAME)
@@ -330,6 +369,18 @@ BOOL LLMuteList::add(const LLMute& mute, U32 flags)
 			return FALSE;
 		}
 
+		LLVOAvatar* avatarp = gAgent.getAvatarObject();
+		std::string name;
+		name.assign(avatarp->getNVPair("FirstName")->getString());
+		name.append(" ");
+		name.append(avatarp->getNVPair("LastName")->getString());
+		if (mute.mName ==  name)
+		{
+			// Can't mute self.
+			LLNotifications::instance().add("MuteSelf");
+			return FALSE;
+		}
+
 		std::pair<string_set_t::iterator, bool> result = mLegacyMutes.insert(mute.mName);
 		if (result.second)
 		{
@@ -341,6 +392,7 @@ BOOL LLMuteList::add(const LLMute& mute, U32 flags)
 		else
 		{
 			// was duplicate
+			LLNotifications::instance().add("MuteByNameFailed");
 			return FALSE;
 		}
 	}
@@ -367,8 +419,12 @@ BOOL LLMuteList::add(const LLMute& mute, U32 flags)
 
 		if (flags)
 		{
-			// The user passed some combination of flags.  Make sure those flag bits are turned off (i.e. those properties will be muted).
-			localmute.mFlags &= (~flags);
+			// The user passed some combination of flags.
+			// Make sure those flag bits are turned off (i.e. those properties
+			// will be muted) and that mFlags will not be 0 (0 = full mute,
+			// including things not covered by flags such as script dialogs,
+			// inventory offers, avatar rendering, etc...).
+			localmute.mFlags = ~LLMute::flagAll | (localmute.mFlags & ~flags);
 		}
 		else
 		{
@@ -623,20 +679,17 @@ BOOL LLMuteList::loadFromFile(const std::string& filename)
 	char id_buffer[MAX_STRING];		/*Flawfinder: ignore*/
 	char name_buffer[MAX_STRING];		/*Flawfinder: ignore*/
 	char buffer[MAX_STRING];		/*Flawfinder: ignore*/
-	while (!feof(fp) 
-		   && fgets(buffer, MAX_STRING, fp))
+	while (!feof(fp) && fgets(buffer, MAX_STRING, fp))
 	{
 		id_buffer[0] = '\0';
 		name_buffer[0] = '\0';
 		S32 type = 0;
 		U32 flags = 0;
-		sscanf(	/* Flawfinder: ignore */
-			buffer, " %d %254s %254[^|]| %u\n", &type, id_buffer, name_buffer,
-			&flags);
+		sscanf(buffer, " %d %254s %254[^|]| %u\n", &type, id_buffer,
+			   name_buffer, &flags);	/* Flawfinder: ignore */
 		LLUUID id = LLUUID(id_buffer);
 		LLMute mute(id, std::string(name_buffer), (LLMute::EType)type, flags);
-		if (mute.mID.isNull()
-			|| mute.mType == LLMute::BY_NAME)
+		if (mute.mID.isNull() || mute.mType == LLMute::BY_NAME)
 		{
 			mLegacyMutes.insert(mute.mName);
 		}
@@ -671,14 +724,12 @@ BOOL LLMuteList::saveToFile(const std::string& filename)
 	std::string id_string;
 	LLUUID::null.toString(id_string);
 	for (string_set_t::iterator it = mLegacyMutes.begin();
-		 it != mLegacyMutes.end();
-		 ++it)
+		 it != mLegacyMutes.end(); ++it)
 	{
 		fprintf(fp, "%d %s %s|\n", (S32)LLMute::BY_NAME, id_string.c_str(), it->c_str());
 	}
 	for (mute_set_t::iterator it = mMutes.begin();
-		 it != mMutes.end();
-		 ++it)
+		 it != mMutes.end(); ++it)
 	{
 		it->mID.toString(id_string);
 		const std::string& name = it->mName;
@@ -710,6 +761,14 @@ BOOL LLMuteList::isMuted(const LLUUID& id,
 			{
 				return FALSE;
 			}
+			// If the mute got flags and no flag was passed by the caller,
+			// this item isn't considered muted for this caller (for example
+			// if we muted for chat only, we don't want the avatar to be
+			// considered muted for the rest)
+			if (flags == 0 &&  mute_it->mFlags != 0)
+			{
+				return FALSE;
+			}
 			return TRUE;
 		}
 	}
@@ -722,6 +781,9 @@ BOOL LLMuteList::isMuted(const LLUUID& id,
 	// previously muted by UUID and not by name (legacy mute). This can
 	// be used in some callbacks of llviewermessage.cpp, since not all
 	// callbacks provide both object and avatar UUIDs, for example...
+	// Note that partial mutes (mutes containing flags, such as flagVoiceChat
+	// for example) will not be taken into account (we want to check for
+	// full mutes only, here).
 	if (type != LLMute::COUNT)
 	{
 		std::string name_and_type = name;

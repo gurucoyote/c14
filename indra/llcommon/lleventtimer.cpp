@@ -36,7 +36,6 @@
 
 #include "u64.h"
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 //		LLEventTimer Implementation
@@ -57,7 +56,7 @@ LLEventTimer::LLEventTimer(F32 period)
 }
 
 LLEventTimer::LLEventTimer(const LLDate& time)
-: mEventTimer()
+:	mEventTimer()
 {
 	mPeriod = (F32)(time.secondsSinceEpoch() - LLDate::now().secondsSinceEpoch());
 #if V1_IMPLEMENTATION
@@ -79,45 +78,44 @@ void LLEventTimer::updateClass()
 	std::list<LLEventTimer*> completed_timers;
 
 #if V1_IMPLEMENTATION
-	for (std::list<LLEventTimer*>::iterator iter = sActiveList.begin(); iter != sActiveList.end(); ) 
+	for (std::list<LLEventTimer*>::iterator iter = sActiveList.begin(); iter != sActiveList.end();) 
 	{
 		LLEventTimer* timer = *iter++;
 		F32 et = timer->mEventTimer.getElapsedTimeF32();
-		if (timer->mEventTimer.getStarted() && et > timer->mPeriod) {
+		if (timer->mEventTimer.getStarted() && et > timer->mPeriod)
+		{
 			timer->mEventTimer.reset();
-			if ( timer->tick() )
+			if (timer->tick())
 			{
-				completed_timers.push_back( timer );
+				completed_timers.push_back(timer);
 			}
 		}
 	}
 #else
 	{
 		LLInstanceTrackerScopedGuard guard;
-		for (instance_iter iter = guard.beginInstances(); iter != guard.endInstances(); ) 
+		for (instance_iter iter = guard.beginInstances(); iter != guard.endInstances(); )
 		{
 			LLEventTimer& timer = *iter++;
 			F32 et = timer.mEventTimer.getElapsedTimeF32();
-			if (timer.mEventTimer.getStarted() && et > timer.mPeriod) {
+			if (timer.mEventTimer.getStarted() && et > timer.mPeriod)
+			{
 				timer.mEventTimer.reset();
-				if ( timer.tick() )
+				if (timer.tick())
 				{
-					completed_timers.push_back( &timer );
+					completed_timers.push_back(&timer);
 				}
 			}
 		}
 	}
 #endif
 
-	if ( completed_timers.size() > 0 )
+	if (completed_timers.size() > 0)
 	{
-		for (std::list<LLEventTimer*>::iterator completed_iter = completed_timers.begin(); 
-			 completed_iter != completed_timers.end(); 
-			 completed_iter++ ) 
+		for (std::list<LLEventTimer*>::iterator completed_iter = completed_timers.begin();
+			 completed_iter != completed_timers.end(); completed_iter++)
 		{
 			delete *completed_iter;
 		}
 	}
 }
-
-

@@ -69,8 +69,8 @@ void LLLFSThread::cleanupClass()
 
 //----------------------------------------------------------------------------
 
-LLLFSThread::LLLFSThread(bool threaded) :
-	LLQueuedThread("LFS", threaded),
+LLLFSThread::LLLFSThread(bool threaded)
+:	LLQueuedThread("LFS", threaded),
 	mPriorityCounter(PRIORITY_LOWBITS)
 {
 }
@@ -112,7 +112,7 @@ LLLFSThread::handle_t LLLFSThread::write(const std::string& filename,
 	handle_t handle = generateHandle();
 
 	if (priority == 0) priority = PRIORITY_LOW | priorityCounter();
-	
+
 	Request* req = new Request(this, handle, priority,
 							   FILE_WRITE, filename,
 							   buffer, offset, numbytes,
@@ -123,7 +123,7 @@ LLLFSThread::handle_t LLLFSThread::write(const std::string& filename,
 	{
 		llerrs << "LLLFSThread::read called after LLLFSThread::cleanupClass()" << llendl;
 	}
-	
+
 	return handle;
 }
 
@@ -169,7 +169,7 @@ void LLLFSThread::Request::deleteRequest()
 	if (getStatus() == STATUS_QUEUED)
 	{
 		llerrs << "Attempt to delete a queued LLLFSThread::Request!" << llendl;
-	}	
+	}
 	if (mResponder.notNull())
 	{
 		mResponder->completed(0);
@@ -184,8 +184,7 @@ bool LLLFSThread::Request::processRequest()
 	if (mOperation ==  FILE_READ)
 	{
 		llassert(mOffset >= 0);
-		LLAPRFile infile ;
-		infile.open(mFileName, LL_APR_RB, mThread->getLocalAPRFilePool());
+		LLAPRFile infile(mFileName, LL_APR_RB);
 		if (!infile.getFileHandle())
 		{
 			llwarns << "LLLFS: Unable to read file: " << mFileName << llendl;
@@ -198,9 +197,9 @@ bool LLLFSThread::Request::processRequest()
 		else
 			off = infile.seek(APR_SET, mOffset);
 		llassert_always(off >= 0);
-		mBytesRead = infile.read(mBuffer, mBytes );
+		mBytesRead = infile.read(mBuffer, mBytes);
 		complete = true;
-		infile.close() ;
+		infile.close();
 // 		llinfos << "LLLFSThread::READ:" << mFileName << " Bytes: " << mBytesRead << llendl;
 	}
 	else if (mOperation ==  FILE_WRITE)
@@ -208,8 +207,7 @@ bool LLLFSThread::Request::processRequest()
 		apr_int32_t flags = APR_CREATE|APR_WRITE|APR_BINARY;
 		if (mOffset < 0)
 			flags |= APR_APPEND;
-		LLAPRFile outfile ;
-		outfile.open(mFileName, flags, mThread->getLocalAPRFilePool());
+		LLAPRFile outfile(mFileName, flags);
 		if (!outfile.getFileHandle())
 		{
 			llwarns << "LLLFS: Unable to write file: " << mFileName << llendl;
@@ -226,7 +224,7 @@ bool LLLFSThread::Request::processRequest()
 				return true;
 			}
 		}
-		mBytesRead = outfile.write(mBuffer, mBytes );
+		mBytesRead = outfile.write(mBuffer, mBytes);
 		complete = true;
 
 // 		llinfos << "LLLFSThread::WRITE:" << mFileName << " Bytes: " << mBytesRead << "/" << mBytes << " Offset:" << mOffset << llendl;

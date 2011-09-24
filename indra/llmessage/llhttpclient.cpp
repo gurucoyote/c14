@@ -32,19 +32,19 @@
 
 #include "linden_common.h"
 
+#include <curl/curl.h>
+
 #include "llhttpclient.h"
 
 #include "llassetstorage.h"
-#include "lliopipe.h"
-#include "llurlrequest.h"
 #include "llbufferstream.h"
+#include "lliopipe.h"
+#include "llproxy.h"
 #include "llsdserialize.h"
+#include "lluri.h"
 #include "llvfile.h"
 #include "llvfs.h"
-#include "lluri.h"
-
 #include "message.h"
-#include <curl/curl.h>
 
 const F32 HTTP_REQUEST_EXPIRY_SECS = 60.0f;
 LLURLRequest::SSLCertVerifyCallback LLHTTPClient::mCertVerifyCallback = NULL;
@@ -63,7 +63,7 @@ namespace
 			  mReason("LLURLRequest complete w/no status")
 		{
 		}
-		
+
 		~LLHTTPClientURLAdaptor()
 		{
 		}
@@ -98,7 +98,7 @@ namespace
 		std::string mReason;
 		LLSD mHeaderOutput;
 	};
-	
+
 	class Injector : public LLIOPipe
 	{
 	public:
@@ -145,7 +145,7 @@ namespace
 		const U8* mData;
 		S32 mSize;
 	};
-	
+
 	class FileInjector : public Injector
 	{
 	public:
@@ -172,13 +172,13 @@ namespace
 				eos = true;
 				return STATUS_DONE;
 			}
-			
+
 			return STATUS_ERROR;
 		}
 
 		const std::string mFilename;
 	};
-	
+
 	class VFileInjector : public Injector
 	{
 	public:
@@ -191,7 +191,7 @@ namespace
 			buffer_ptr_t& buffer, bool& eos, LLSD& context, LLPumpIO* pump)
 		{
 			LLBufferStream ostream(channels, buffer.get());
-			
+
 			LLVFile vfile(gVFS, mUUID, mAssetType, LLVFile::READ);
 			S32 fileSize = vfile.getSize();
 			U8* fileBuffer;
@@ -207,7 +207,7 @@ namespace
 		LLAssetType::EType mAssetType;
 	};
 
-	
+
 	LLPumpIO* theClientPump = NULL;
 }
 
@@ -357,7 +357,7 @@ void LLHTTPClient::getHeaderOnly(const std::string& url, ResponderPtr responder,
 void LLHTTPClient::get(const std::string& url, const LLSD& query, ResponderPtr responder, const LLSD& headers, const F32 timeout)
 {
 	LLURI uri;
-	
+
 	uri = LLURI::buildHTTP(url, LLSD::emptyArray(), query);
 	get(uri.asString(), responder, headers, timeout);
 }
@@ -371,7 +371,7 @@ public:
 	static size_t curl_write( void *ptr, size_t size, size_t nmemb, void *user_data)
 	{
 		LLHTTPBuffer* self = (LLHTTPBuffer*)user_data;
-		
+
 		size_t bytes = (size * nmemb);
 		self->mBuffer.append((char*)ptr,bytes);
 		return nmemb;
@@ -382,7 +382,7 @@ public:
 		LLSD content;
 
 		if (mBuffer.empty()) return content;
-		
+
 		std::istringstream istr(mBuffer);
 		LLSDSerialize::fromXML(content, istr);
 		return content;
@@ -415,22 +415,23 @@ private:
 
 	@returns an LLSD map: {status: integer, body: map}
   */
-static LLSD blocking_request(
-	const std::string& url,
-	LLURLRequest::ERequestAction method,
-	const LLSD& body,
-	const LLSD& headers = LLSD(),
-	const F32 timeout = 5
-)
+static LLSD blocking_request(const std::string& url,
+							 LLURLRequest::ERequestAction method,
+							 const LLSD& body,
+							 const LLSD& headers = LLSD(),
+							 const F32 timeout = 5)
 {
 	lldebugs << "blockingRequest of " << url << llendl;
 	char curl_error_buffer[CURL_ERROR_SIZE] = "\0";
 	CURL* curlp = curl_easy_init();
 	LLHTTPBuffer http_buffer;
 	std::string body_str;
-	
+
 	// other request method checks root cert first, we skip?
-	
+
+	// Apply configured proxy settings
+	LLProxy::getInstance()->applyProxySettings(curlp);
+
 	// * Set curl handle options
 	curl_easy_setopt(curlp, CURLOPT_NOSIGNAL, 1);	// don't use SIGALRM for timeouts
 	curl_easy_setopt(curlp, CURLOPT_TIMEOUT, timeout);	// seconds, see warning at top of function.
@@ -438,7 +439,7 @@ static LLSD blocking_request(
 	curl_easy_setopt(curlp, CURLOPT_WRITEDATA, &http_buffer);
 	curl_easy_setopt(curlp, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curlp, CURLOPT_ERRORBUFFER, curl_error_buffer);
-	
+
 	// * Setup headers (don't forget to free them after the call!)
 	curl_slist* headers_list = NULL;
 	if (headers.isMap())
@@ -453,7 +454,7 @@ static LLSD blocking_request(
 			headers_list = curl_slist_append(headers_list, header.str().c_str());
 		}
 	}
-	
+
 	// * Setup specific method / "verb" for the URI (currently only GET and POST supported + poppy)
 	if (method == LLURLRequest::HTTP_GET)
 	{
@@ -476,7 +477,7 @@ static LLSD blocking_request(
 		// limited to django/mod_wsgi.
 		headers_list = curl_slist_append(headers_list, "Expect:");
 	}
-	
+
 	// * Do the action using curl, handle results
 	lldebugs << "HTTP body: " << body_str << llendl;
 	headers_list = curl_slist_append(headers_list, "Accept: application/llsd+xml");
@@ -509,7 +510,7 @@ static LLSD blocking_request(
 		response["body"] = http_buffer.asLLSD();
 		lldebugs << "CURL response: " << http_buffer.asString() << llendl;
 	}
-	
+
 	if(headers_list)
 	{	// free the header list  
 		curl_slist_free_all(headers_list); 

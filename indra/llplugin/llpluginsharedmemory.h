@@ -33,6 +33,8 @@
 #ifndef LL_LLPLUGINSHAREDMEMORY_H
 #define LL_LLPLUGINSHAREDMEMORY_H
 
+#include "llaprpool.h"
+
 class LLPluginSharedMemoryPlatformImpl;
 
 /**
@@ -45,10 +47,10 @@ class LLPluginSharedMemory
 public:
 	LLPluginSharedMemory();
 	~LLPluginSharedMemory();
-	
+
 	// Parent will use create/destroy, child will use attach/detach.
 	// Message transactions will ensure child attaches after parent creates and detaches before parent destroys.
-	
+
    /** 
     * Creates a shared memory segment, with a name which is guaranteed to be unique on the host at the current time. Used by parent.
     * Message transactions will (? TODO:DOC - should? must?) ensure child attaches after parent creates and detaches before parent destroys.
@@ -65,7 +67,7 @@ public:
     * @return True. TODO:DOC - always returns true. Is this the intended behavior?
     */
 	bool destroy(void);
-	
+
    /** 
     * Creates and attaches a name to a shared memory segment. TODO:DOC what's the difference between attach() and create()?
     *
@@ -106,25 +108,23 @@ public:
     * @return Name of shared memory.
     */
 	std::string getName() const { return mName; };
-	
+
 private:
 	bool map(void);
 	bool unmap(void);
 	bool close(void);
 	bool unlink(void);
-	
+
+	LLAPRPool mPool;
 	std::string mName;
 	size_t mSize;
 	void *mMappedAddress;
 	bool mNeedsDestroy;
-	
+
 	LLPluginSharedMemoryPlatformImpl *mImpl;
-	
+
 	static int sSegmentNumber;
 	static std::string createName();
-	
 };
-
-
 
 #endif // LL_LLPLUGINSHAREDMEMORY_H

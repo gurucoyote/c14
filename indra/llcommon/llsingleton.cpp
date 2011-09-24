@@ -1,10 +1,10 @@
 /** 
- * @file llversionviewer.h
- * @brief
+ * @file llsingleton.cpp
+ * @author Brad Kittenbrink
  *
  * $LicenseInfo:firstyear=2002&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2010, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,8 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#include "linden_common.h"
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 1;
-const S32 LL_VERSION_BUILD = 8;
+#include "llsingleton.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
-
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
-
-#endif
+std::map<std::string, void *> * LLSingletonRegistry::sSingletonMap = NULL;

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This quick'n dirty script is used to build the Linux "difference package"
+# This quick'n dirty script is used to build the Linux "overlay package"
 # (overlay package to be installed over Snowglobe v1.4) for the Cool VL Viewer.
 # It can take one option (-k, for "keep") and one parameter (the directory
 # containing the full binaries and files of the freshly built Cool VL Viewer).
@@ -12,15 +12,15 @@
 #    tar xjf Snowglobe-i686-1.26.0.15.tar.bz2
 #  - invoke this script, passing it the name of the extracted viewer directory.
 #    In our example, it should be:
-#	 make_diff_package ~/Snowglobe-i686-1.26.0.15
+#	 make_overlay_package ~/Snowglobe-i686-1.26.0.15
 #
 # Done !  Once the script exits, you should find yourself with a new tarball
 # in the directory where the extracted viewer directory is (in our example, in
 # your home directory). If you wish to keep the intermediate directory used to
-# copy the diff files, use the -k option, like so:
-#    make_diff_package -k ~/Snowglobe-i686-1.26.0.15
+# copy the overlay files, use the -k option, like so:
+#    make_overlay_package -k ~/Snowglobe-i686-1.26.0.15
 # You may also omit the extracted viewer directory path from the command line
-# if you invoke make_diff_package from inside that directory.
+# if you invoke make_overlay_package from inside that directory.
 
 keep="no"
 if [ "$1" == "-k" ] ; then
@@ -53,9 +53,9 @@ if [ "$version" == "" ] ; then
 	exit 1
 fi
 
-tarball="CoolVLViewer-Linux_$arch-$version-diff_files.tar.bz2"
+tarball="CoolVLViewer-Linux_$arch-$version-overlay.tar.bz2"
 
-temp="../DIFF.$$"
+temp="../OVERLAY.$$"
 if [ -d $temp ] ; then
 	echo "ERROR: A directory by my temporary directory name already exists !"
 	exit 1
@@ -68,7 +68,7 @@ if (( $ret != 0 )) ; then
 	exit 1
 fi
 
-echo "Copying the diff files into a temporary directory..."
+echo "Copying the overlay files into a temporary directory..."
 
 mkdir -p $temp/bin
 mkdir -p $temp/bin/llplugin
@@ -185,6 +185,7 @@ cp -a skins/default/xui/en-us/floater_media_browser.xml $temp/skins/default/xui/
 cp -a skins/default/xui/en-us/floater_media_filter.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_mini_map.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_moveview.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_mute.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_new_im.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_new_outfit_dialog.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_object_backup.xml $temp/skins/default/xui/en-us/
@@ -242,7 +243,6 @@ cp -a skins/default/xui/en-us/panel_preferences_input.xml $temp/skins/default/xu
 cp -a skins/default/xui/en-us/panel_preferences_network.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_notifications.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_skins.xml $temp/skins/default/xui/en-us/
-cp -a skins/default/xui/en-us/panel_preferences_web.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_status_bar.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_status_bar2.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_toolbar.xml $temp/skins/default/xui/en-us/

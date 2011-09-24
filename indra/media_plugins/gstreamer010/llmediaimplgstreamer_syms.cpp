@@ -32,14 +32,17 @@
 
 #if LL_GSTREAMER010_ENABLED
 
+#include "linden_common.h"
+
 #include <string>
 
 extern "C" {
 #include <gst/gst.h>
 
-#include "apr_pools.h"
 #include "apr_dso.h"
 }
+
+#include "llaprpool.h"
 
 #include "llmediaimplgstreamertriviallogging.h"
 
@@ -60,13 +63,11 @@ void ll_gst_debug_register_funcptr(GstDebugFuncPtr func, gchar* ptrname)
 }
 
 static bool sSymsGrabbed = false;
-static apr_pool_t *sSymGSTDSOMemoryPool = NULL;
+static LLAPRPool sSymGSTDSOMemoryPool;
 static apr_dso_handle_t *sSymGSTDSOHandleG = NULL;
 static apr_dso_handle_t *sSymGSTDSOHandleV = NULL;
 
-
-bool grab_gst_syms(std::string gst_dso_name,
-		   std::string gst_dso_name_vid)
+bool grab_gst_syms(std::string gst_dso_name, std::string gst_dso_name_vid)
 {
 	if (sSymsGrabbed)
 	{
@@ -82,25 +83,25 @@ bool grab_gst_syms(std::string gst_dso_name,
 #define LL_GST_SYM(REQ, GSTSYM, RTN, ...) do{rv = apr_dso_sym((apr_dso_handle_sym_t*)&ll##GSTSYM, sSymGSTDSOHandle, #GSTSYM); if (rv != APR_SUCCESS) {INFOMSG("Failed to grab symbol: %s", #GSTSYM); if (REQ) sym_error = true;} else DEBUGMSG("grabbed symbol: %s from %p", #GSTSYM, (void*)ll##GSTSYM);}while(0)
 
 	//attempt to load the shared libraries
-	apr_pool_create(&sSymGSTDSOMemoryPool, NULL);
+	sSymGSTDSOMemoryPool.create();
   
-	if ( APR_SUCCESS == (rv = apr_dso_load(&sSymGSTDSOHandle,
-					       gst_dso_name.c_str(),
-					       sSymGSTDSOMemoryPool) ))
+	if (APR_SUCCESS == (rv = apr_dso_load(&sSymGSTDSOHandle,
+										  gst_dso_name.c_str(),
+										  sSymGSTDSOMemoryPool())))
 	{
 		INFOMSG("Found DSO: %s", gst_dso_name.c_str());
 #include "llmediaimplgstreamer_syms_raw.inc"
       
-		if ( sSymGSTDSOHandle )
+		if (sSymGSTDSOHandle)
 		{
 			sSymGSTDSOHandleG = sSymGSTDSOHandle;
 			sSymGSTDSOHandle = NULL;
 		}
       
-		if ( APR_SUCCESS ==
+		if (APR_SUCCESS ==
 		     (rv = apr_dso_load(&sSymGSTDSOHandle,
 					gst_dso_name_vid.c_str(),
-					sSymGSTDSOMemoryPool) ))
+					sSymGSTDSOMemoryPool())))
 		{
 			INFOMSG("Found DSO: %s", gst_dso_name_vid.c_str());
 #include "llmediaimplgstreamer_syms_rawv.inc"
@@ -122,8 +123,8 @@ bool grab_gst_syms(std::string gst_dso_name,
 	{
 		WARNMSG("Failed to find necessary symbols in GStreamer libraries.");
 	}
-	
-	if ( sSymGSTDSOHandle )
+
+	if (sSymGSTDSOHandle)
 	{
 		sSymGSTDSOHandleV = sSymGSTDSOHandle;
 		sSymGSTDSOHandle = NULL;
@@ -134,30 +135,28 @@ bool grab_gst_syms(std::string gst_dso_name,
 	return rtn;
 }
 
-
 void ungrab_gst_syms()
 { 
 	// should be safe to call regardless of whether we've
 	// actually grabbed syms.
 
-	if ( sSymGSTDSOHandleG )
+	if (sSymGSTDSOHandleG)
 	{
 		apr_dso_unload(sSymGSTDSOHandleG);
 		sSymGSTDSOHandleG = NULL;
 	}
-	
-	if ( sSymGSTDSOHandleV )
+
+	if (sSymGSTDSOHandleV)
 	{
 		apr_dso_unload(sSymGSTDSOHandleV);
 		sSymGSTDSOHandleV = NULL;
 	}
-	
-	if ( sSymGSTDSOMemoryPool )
+
+	if (sSymGSTDSOMemoryPool)
 	{
-		apr_pool_destroy(sSymGSTDSOMemoryPool);
-		sSymGSTDSOMemoryPool = NULL;
+		sSymGSTDSOMemoryPool.destroy();
 	}
-	
+
 	// NULL-out all of the symbols we'd grabbed
 #define LL_GST_SYM(REQ, GSTSYM, RTN, ...) do{ll##GSTSYM = NULL;}while(0)
 #include "llmediaimplgstreamer_syms_raw.inc"
@@ -166,6 +165,5 @@ void ungrab_gst_syms()
 
 	sSymsGrabbed = false;
 }
-
 
 #endif // LL_GSTREAMER010_ENABLED

@@ -58,8 +58,8 @@ const LLColor4 INACTIVE_COLOR(0.3f, 0.3f, 0.3f, 0.5f);
 const LLColor4 ACTIVE_COLOR(0.5f, 0.5f, 0.5f, 1.f);
 const F32 TYPING_ANIMATION_FPS = 2.5f;
 
-LLSpeaker::LLSpeaker(const LLUUID& id, const std::string& name, const ESpeakerType type) : 
-	mStatus(LLSpeaker::STATUS_TEXT_ONLY),
+LLSpeaker::LLSpeaker(const LLUUID& id, const std::string& name, const ESpeakerType type)
+:	mStatus(LLSpeaker::STATUS_TEXT_ONLY),
 	mLastSpokeTime(0.f), 
 	mSpeechVolume(0.f), 
 	mHasSpoken(FALSE),
@@ -85,7 +85,7 @@ LLSpeaker::LLSpeaker(const LLUUID& id, const std::string& name, const ESpeakerTy
 	LLMuteList* ml = LLMuteList::getInstance();
 	if (ml)
 	{
-		gVoiceClient->setUserVolume(id, ml->getSavedResidentVolume(id));
+		LLVoiceClient::getInstance()->setUserVolume(id, ml->getSavedResidentVolume(id));
 	}
 
 	mActivityTimer.resetWithExpiry(SPEAKER_TIMEOUT);
@@ -184,7 +184,7 @@ LLFloaterActiveSpeakers::LLFloaterActiveSpeakers(const LLSD& seed) : mPanel(NULL
 	BOOL no_open = FALSE;
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_active_speakers.xml", &getFactoryMap(), no_open);
 	//RN: for now, we poll voice client every frame to get voice amplitude feedback
-	//gVoiceClient->addObserver(this);
+	//LLVoiceClient::getInstance()->addObserver(this);
 	mPanel->refreshSpeakers();
 }
 
@@ -583,7 +583,7 @@ void LLPanelActiveSpeakers::refreshSpeakers()
 	{
 		mMuteVoiceCtrl->setValue(ml && ml->isMuted(selected_id, LLMute::flagVoiceChat));
 		mMuteVoiceCtrl->setEnabled(LLVoiceClient::voiceEnabled()
-									&& gVoiceClient->getVoiceEnabled(selected_id)
+									&& LLVoiceClient::getInstance()->getVoiceEnabled(selected_id)
 									&& selected_id.notNull() 
 									&& selected_id != gAgent.getID() 
 									&& (selected_speakerp.notNull() && (selected_speakerp->mType == LLSpeaker::SPEAKER_AGENT || selected_speakerp->mType == LLSpeaker::SPEAKER_EXTERNAL)));
@@ -598,9 +598,9 @@ void LLPanelActiveSpeakers::refreshSpeakers()
 								&& selected_speakerp->mType != LLSpeaker::SPEAKER_EXTERNAL
 								&& ml && !ml->isLinden(selected_speakerp->mLegacyName));
 	}
-	childSetValue("speaker_volume", gVoiceClient->getUserVolume(selected_id));
+	childSetValue("speaker_volume", LLVoiceClient::getInstance()->getUserVolume(selected_id));
 	childSetEnabled("speaker_volume", LLVoiceClient::voiceEnabled()
-					&& gVoiceClient->getVoiceEnabled(selected_id)
+					&& LLVoiceClient::getInstance()->getVoiceEnabled(selected_id)
 					&& selected_id.notNull() 
 					&& selected_id != gAgent.getID() 
 					&& (selected_speakerp.notNull() && (selected_speakerp->mType == LLSpeaker::SPEAKER_AGENT || selected_speakerp->mType == LLSpeaker::SPEAKER_EXTERNAL)));
@@ -610,7 +610,7 @@ void LLPanelActiveSpeakers::refreshSpeakers()
 		childSetEnabled("moderator_controls_label", selected_id.notNull());
 		childSetEnabled("moderator_allow_voice", selected_id.notNull() &&
 												 mSpeakerMgr->isVoiceActive() &&
-												 gVoiceClient->getVoiceEnabled(selected_id));
+												 LLVoiceClient::getInstance()->getVoiceEnabled(selected_id));
 		childSetEnabled("moderator_allow_text", selected_id.notNull());
 	}
 
@@ -734,7 +734,7 @@ void LLPanelActiveSpeakers::onVolumeChange(LLUICtrl* source, void* user_data)
 	LLUUID speaker_id = panelp->mSpeakerList->getValue().asUUID();
 
 	F32 new_volume = (F32)panelp->childGetValue("speaker_volume").asReal();
-	gVoiceClient->setUserVolume(speaker_id, new_volume); 
+	LLVoiceClient::getInstance()->setUserVolume(speaker_id, new_volume); 
 
 	// store this volume setting for future sessions
 	LLMuteList* ml = LLMuteList::getInstance();
@@ -997,7 +997,7 @@ LLPointer<LLSpeaker> LLSpeakerMgr::setSpeaker(const LLUUID& id, const std::strin
 
 void LLSpeakerMgr::update(BOOL resort_ok)
 {
-	if (!gVoiceClient)
+	if (!LLVoiceClient::instanceExists())
 	{
 		return;
 	}
@@ -1011,7 +1011,7 @@ void LLSpeakerMgr::update(BOOL resort_ok)
 	}
 
 	// update status of all current speakers
-	BOOL voice_channel_active = (!mVoiceChannel && gVoiceClient->inProximalChannel()) || (mVoiceChannel && mVoiceChannel->isActive());
+	BOOL voice_channel_active = (!mVoiceChannel && LLVoiceClient::getInstance()->inProximalChannel()) || (mVoiceChannel && mVoiceChannel->isActive());
 	for (speaker_map_t::iterator speaker_it = mSpeakers.begin(); speaker_it != mSpeakers.end();)
 	{
 		LLUUID speaker_id = speaker_it->first;
@@ -1019,21 +1019,21 @@ void LLSpeakerMgr::update(BOOL resort_ok)
 
 		speaker_map_t::iterator  cur_speaker_it = speaker_it++;
 
-		if (voice_channel_active && gVoiceClient->getVoiceEnabled(speaker_id))
+		if (voice_channel_active && LLVoiceClient::getInstance()->getVoiceEnabled(speaker_id))
 		{
-			speakerp->mSpeechVolume = gVoiceClient->getCurrentPower(speaker_id);
-			BOOL moderator_muted_voice = gVoiceClient->getIsModeratorMuted(speaker_id);
+			speakerp->mSpeechVolume = LLVoiceClient::getInstance()->getCurrentPower(speaker_id);
+			BOOL moderator_muted_voice = LLVoiceClient::getInstance()->getIsModeratorMuted(speaker_id);
 			if (moderator_muted_voice != speakerp->mModeratorMutedVoice)
 			{
 				speakerp->mModeratorMutedVoice = moderator_muted_voice;
 				speakerp->fireEvent(new LLSpeakerVoiceModerationEvent(speakerp));
 			}
 
-			if (gVoiceClient->getOnMuteList(speaker_id) || speakerp->mModeratorMutedVoice)
+			if (LLVoiceClient::getInstance()->getOnMuteList(speaker_id) || speakerp->mModeratorMutedVoice)
 			{
 				speakerp->mStatus = LLSpeaker::STATUS_MUTED;
 			}
-			else if (gVoiceClient->getIsSpeaking(speaker_id))
+			else if (LLVoiceClient::getInstance()->getIsSpeaking(speaker_id))
 			{
 				// reset inactivity expiration
 				if (speakerp->mStatus != LLSpeaker::STATUS_SPEAKING)
@@ -1128,10 +1128,11 @@ void LLSpeakerMgr::update(BOOL resort_ok)
 void LLSpeakerMgr::updateSpeakerList()
 {
 	// are we bound to the currently active voice channel?
-	if ((!mVoiceChannel && gVoiceClient->inProximalChannel()) || (mVoiceChannel && mVoiceChannel->isActive()))
+	if ((!mVoiceChannel && LLVoiceClient::getInstance()->inProximalChannel()) ||
+		(mVoiceChannel && mVoiceChannel->isActive()))
 	{
-		LLVoiceClient::participantMap* participants = gVoiceClient->getParticipantList();
-		if(participants)
+		LLVoiceClient::participantMap* participants = LLVoiceClient::getInstance()->getParticipantList();
+		if (participants)
 		{
 			LLVoiceClient::participantMap::iterator participant_it;
 

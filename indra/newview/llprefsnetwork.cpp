@@ -1,5 +1,5 @@
 /** 
- * @file llpanelnetwork.cpp
+ * @file llprefsnetwork.cpp
  * @brief Network preferences panel
  *
  * $LicenseInfo:firstyear=2001&license=viewergpl$
@@ -32,26 +32,27 @@
 
 #include "llviewerprecompiledheaders.h"
 
-//file include
-#include "llpanelnetwork.h"
-#include "llstartup.h"
+#include "llprefsnetwork.h"
 
-// project includes
 #include "llcheckboxctrl.h"
 #include "llradiogroup.h"
 #include "lldirpicker.h"
+#include "llpluginclassmedia.h"
 #include "lluictrlfactory.h"
+
+#include "llstartup.h"
 #include "llviewercontrol.h"
+#include "llviewermedia.h"
 #include "llviewerwindow.h"
 
-bool LLPanelNetwork::sSocksSettingsChanged;
+bool LLPrefsNetwork::sSocksSettingsChanged;
 
-LLPanelNetwork::LLPanelNetwork()
+LLPrefsNetwork::LLPrefsNetwork()
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_network.xml");
 }
 
-BOOL LLPanelNetwork::postBuild()
+BOOL LLPrefsNetwork::postBuild()
 {
 	BOOL http_fetch_enabled = gSavedSettings.getBOOL("ImagePipelineUseHTTP");
 	childSetValue("http_texture_fetch", http_fetch_enabled);
@@ -63,7 +64,7 @@ BOOL LLPanelNetwork::postBuild()
 	std::string cache_location = gDirUtilp->getExpandedFilename(LL_PATH_CACHE, "");
 	childSetText("cache_location", cache_location);
 		
-	childSetAction("clear_cache", onClickClearCache, this);
+	childSetAction("clear_disk_cache", onClickClearDiskCache, this);
 	childSetAction("set_cache", onClickSetCache, this);
 	childSetAction("reset_cache", onClickResetCache, this);
 	
@@ -75,13 +76,34 @@ BOOL LLPanelNetwork::postBuild()
 	childSetValue("connection_port_enabled", gSavedSettings.getBOOL("ConnectionPortEnabled"));
 	childSetValue("connection_port", (F32)gSavedSettings.getU32("ConnectionPort"));
 
+	// Browser settings
+	childSetAction("clear_browser_cache", onClickClearBrowserCache, this);
+	childSetAction("clear_cookies", onClickClearCookies, this);
+	childSetCommitCallback("web_proxy_enabled", onCommitWebProxyEnabled, this);
+
+	std::string value = gSavedSettings.getBOOL("UseExternalBrowser") ? "external" : "internal";
+	childSetValue("use_external_browser", value);
+
+	childSetValue("cookies_enabled", gSavedSettings.getBOOL("CookiesEnabled"));
+	childSetValue("javascript_enabled", gSavedSettings.getBOOL("BrowserJavascriptEnabled"));
+	childSetValue("plugins_enabled", gSavedSettings.getBOOL("BrowserPluginsEnabled"));
+
+	// Web Proxy settings
+	childSetValue("web_proxy_enabled", gSavedSettings.getBOOL("BrowserProxyEnabled"));
+	childSetValue("web_proxy_editor", gSavedSettings.getString("BrowserProxyAddress"));
+	childSetValue("web_proxy_port", gSavedSettings.getS32("BrowserProxyPort"));
+
+	childSetEnabled("proxy_text_label", gSavedSettings.getBOOL("BrowserProxyEnabled"));
+	childSetEnabled("web_proxy_editor", gSavedSettings.getBOOL("BrowserProxyEnabled"));
+	childSetEnabled("web_proxy_port", gSavedSettings.getBOOL("BrowserProxyEnabled"));
+	childSetEnabled("Web", gSavedSettings.getBOOL("BrowserProxyEnabled"));
+
 	// Socks 5 proxy settings, commit callbacks
 	childSetCommitCallback("socks5_proxy_enabled", onCommitSocks5ProxyEnabled, this);
 	childSetCommitCallback("socks5_auth", onSocksAuthChanged, this);
 
 	//Socks 5 proxy settings, saved data
 	childSetValue("socks5_proxy_enabled",   gSavedSettings.getBOOL("Socks5ProxyEnabled"));
-	childSetValue("socks5_http_proxy_type", gSavedSettings.getString("Socks5HttpProxyType"));
 
 	childSetValue("socks5_proxy_host",     gSavedSettings.getString("Socks5ProxyHost"));
 	childSetValue("socks5_proxy_port",     (F32)gSavedSettings.getU32("Socks5ProxyPort"));
@@ -89,26 +111,38 @@ BOOL LLPanelNetwork::postBuild()
 	childSetValue("socks5_proxy_password", gSavedSettings.getString("Socks5Password"));
 	childSetValue("socks5_auth", gSavedSettings.getString("Socks5AuthType"));
 
+	// Other HTTP connections proxy setting
+	childSetValue("http_proxy_type", gSavedSettings.getString("HttpProxyType"));
+
 	// Socks 5 proxy settings, check if settings modified callbacks
-	childSetCommitCallback("socks5_proxy_host", onSocksSettingsModified,this);
-	childSetCommitCallback("socks5_proxy_port", onSocksSettingsModified,this);
-	childSetCommitCallback("socks5_proxy_username", onSocksSettingsModified,this);
-	childSetCommitCallback("socks5_proxy_password", onSocksSettingsModified,this);
+	childSetCommitCallback("socks5_proxy_host", onSocksSettingsModified, this);
+	childSetCommitCallback("socks5_proxy_port", onSocksSettingsModified, this);
+	childSetCommitCallback("socks5_proxy_username", onSocksSettingsModified, this);
+	childSetCommitCallback("socks5_proxy_password", onSocksSettingsModified, this);
 	
 	// Socks 5 settings, Set all controls and labels enabled state
-	updateProxyEnabled(this, gSavedSettings.getBOOL("Socks5ProxyEnabled"), gSavedSettings.getString("Socks5AuthType"));
+	updateProxyEnabled(this, gSavedSettings.getBOOL("Socks5ProxyEnabled"),
+					   gSavedSettings.getString("Socks5AuthType"));
 
 	sSocksSettingsChanged = false;
 
 	return TRUE;
 }
 
-LLPanelNetwork::~LLPanelNetwork()
+LLPrefsNetwork::~LLPrefsNetwork()
 {
 	// Children all cleaned up by default view destructor.
 }
 
-void LLPanelNetwork::apply()
+void sendMediaSettings()
+{
+	LLViewerMedia::setCookiesEnabled(gSavedSettings.getBOOL("CookiesEnabled"));
+	LLViewerMedia::setProxyConfig(gSavedSettings.getBOOL("BrowserProxyEnabled"),
+								  gSavedSettings.getString("BrowserProxyAddress"),
+								  gSavedSettings.getS32("BrowserProxyPort"));
+}
+
+void LLPrefsNetwork::apply()
 {
 	gSavedSettings.setBOOL("ImagePipelineUseHTTP", childGetValue("http_texture_fetch"));
 	gSavedSettings.setS32("TextureMaxHTTPRequests", childGetValue("max_http_requests").asInteger());
@@ -116,7 +150,7 @@ void LLPanelNetwork::apply()
 	U32 cache_size = (U32)childGetValue("cache_size").asInteger();
 	if (gSavedSettings.getU32("CacheSize") != cache_size)
 	{
-		onClickClearCache(this);
+		onClickClearDiskCache(this);
 		gSavedSettings.setU32("CacheSize", cache_size);
 	}
 	gSavedSettings.setF32("ThrottleBandwidthKBPS", childGetValue("max_bandwidth").asReal());
@@ -124,7 +158,6 @@ void LLPanelNetwork::apply()
 	gSavedSettings.setU32("ConnectionPort", childGetValue("connection_port").asInteger());
 
 	gSavedSettings.setBOOL("Socks5ProxyEnabled", childGetValue("socks5_proxy_enabled"));		
-	gSavedSettings.setString("Socks5HttpProxyType", childGetValue("socks5_http_proxy_type"));
 	gSavedSettings.setString("Socks5ProxyHost", childGetValue("socks5_proxy_host"));
 	gSavedSettings.setU32("Socks5ProxyPort", childGetValue("socks5_proxy_port").asInteger());
 
@@ -132,28 +165,37 @@ void LLPanelNetwork::apply()
 	gSavedSettings.setString("Socks5Username", childGetValue("socks5_proxy_username"));
 	gSavedSettings.setString("Socks5Password", childGetValue("socks5_proxy_password"));
 
-	if (sSocksSettingsChanged)
+	gSavedSettings.setBOOL("CookiesEnabled", childGetValue("cookies_enabled"));
+	gSavedSettings.setBOOL("BrowserJavascriptEnabled", childGetValue("javascript_enabled"));
+	gSavedSettings.setBOOL("BrowserPluginsEnabled", childGetValue("plugins_enabled"));
+	gSavedSettings.setBOOL("BrowserProxyEnabled", childGetValue("web_proxy_enabled"));
+	gSavedSettings.setString("BrowserProxyAddress", childGetValue("web_proxy_editor"));
+	gSavedSettings.setS32("BrowserProxyPort", childGetValue("web_proxy_port"));
+
+	gSavedSettings.setString("HttpProxyType", childGetValue("http_proxy_type"));
+
+	bool value = childGetValue("use_external_browser").asString() == "external" ? true : false;
+	gSavedSettings.setBOOL("UseExternalBrowser", value);
+
+	sendMediaSettings();
+
+	if (sSocksSettingsChanged &&
+		LLStartUp::getStartupState() != STATE_LOGIN_WAIT)
 	{
-		if (LLStartUp::getStartupState() != STATE_LOGIN_WAIT)
-		{
-			LLNotifications::instance().add("ProxyNeedRestart");
-		}
-		else
-		{
-			// Mark the socks class that it needs to update its connection
-			LLSocks::getInstance()->updated();
-		}
+		LLNotifications::instance().add("ProxyNeedRestart");
+		sSocksSettingsChanged = false;
 	}
 }
 
-void LLPanelNetwork::cancel()
+void LLPrefsNetwork::cancel()
 {
+	sendMediaSettings();
 }
 
 // static
-void LLPanelNetwork::onHttpTextureFetchToggled(LLUICtrl* ctrl, void* data)
+void LLPrefsNetwork::onHttpTextureFetchToggled(LLUICtrl* ctrl, void* data)
 {
-	LLPanelNetwork* self = (LLPanelNetwork*)data;
+	LLPrefsNetwork* self = (LLPrefsNetwork*)data;
 	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
 	if (self && check)
 	{
@@ -162,7 +204,7 @@ void LLPanelNetwork::onHttpTextureFetchToggled(LLUICtrl* ctrl, void* data)
 }
 
 // static
-void LLPanelNetwork::onClickClearCache(void*)
+void LLPrefsNetwork::onClickClearDiskCache(void*)
 {
 	// flag client cache for clearing next time the client runs
 	gSavedSettings.setBOOL("PurgeCacheOnNextStartup", TRUE);
@@ -170,9 +212,9 @@ void LLPanelNetwork::onClickClearCache(void*)
 }
 
 // static
-void LLPanelNetwork::onClickSetCache(void* user_data)
+void LLPrefsNetwork::onClickSetCache(void* user_data)
 {
-	LLPanelNetwork* self = (LLPanelNetwork*)user_data;
+	LLPrefsNetwork* self = (LLPrefsNetwork*)user_data;
 
 	std::string cur_name(gSavedSettings.getString("CacheLocation"));
 	std::string proposed_name(cur_name);
@@ -198,9 +240,9 @@ void LLPanelNetwork::onClickSetCache(void* user_data)
 }
 
 // static
-void LLPanelNetwork::onClickResetCache(void* user_data)
+void LLPrefsNetwork::onClickResetCache(void* user_data)
 {
- 	LLPanelNetwork* self = (LLPanelNetwork*)user_data;
+ 	LLPrefsNetwork* self = (LLPrefsNetwork*)user_data;
 	if (!gSavedSettings.getString("CacheLocation").empty())
 	{
 		gSavedSettings.setString("NewCacheLocation", "");
@@ -211,9 +253,9 @@ void LLPanelNetwork::onClickResetCache(void* user_data)
 }
 
 // static
-void LLPanelNetwork::onCommitPort(LLUICtrl* ctrl, void* data)
+void LLPrefsNetwork::onCommitPort(LLUICtrl* ctrl, void* data)
 {
-  LLPanelNetwork* self = (LLPanelNetwork*)data;
+  LLPrefsNetwork* self = (LLPrefsNetwork*)data;
   LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
 
   if (!self || !check) return;
@@ -222,9 +264,9 @@ void LLPanelNetwork::onCommitPort(LLUICtrl* ctrl, void* data)
 }
 
 // static
-void LLPanelNetwork::onCommitSocks5ProxyEnabled(LLUICtrl* ctrl, void* data)
+void LLPrefsNetwork::onCommitSocks5ProxyEnabled(LLUICtrl* ctrl, void* data)
 {
-	LLPanelNetwork* self  = (LLPanelNetwork*)data;
+	LLPrefsNetwork* self  = (LLPrefsNetwork*)data;
 	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
 
 	if (!self || !check) return;
@@ -235,25 +277,25 @@ void LLPanelNetwork::onCommitSocks5ProxyEnabled(LLUICtrl* ctrl, void* data)
 }
 
 // static
-void LLPanelNetwork::onSocksSettingsModified(LLUICtrl* ctrl, void* data)
+void LLPrefsNetwork::onSocksSettingsModified(LLUICtrl* ctrl, void* data)
 {
 	sSocksSettingsChanged = true;
 }
 
 // static
-void LLPanelNetwork::onSocksAuthChanged(LLUICtrl* ctrl, void* data)
+void LLPrefsNetwork::onSocksAuthChanged(LLUICtrl* ctrl, void* data)
 {
 	LLRadioGroup* radio  = static_cast<LLRadioGroup*>(ctrl);
-	LLPanelNetwork* self = static_cast<LLPanelNetwork*>(data);
+	LLPrefsNetwork* self = static_cast<LLPrefsNetwork*>(data);
 
 	sSocksSettingsChanged = true;
 
 	std::string selection = radio->getValue().asString();
-	updateProxyEnabled(self, true, selection);
+	updateProxyEnabled(self, self->childGetValue("socks5_proxy_enabled"), selection);
 }
 
 // static
-void LLPanelNetwork::updateProxyEnabled(LLPanelNetwork * self, bool enabled, std::string authtype)
+void LLPrefsNetwork::updateProxyEnabled(LLPrefsNetwork * self, bool enabled, std::string authtype)
 {
 	// Manage all the enable/disable of the socks5 options from this single function
 	// to avoid code duplication
@@ -263,18 +305,17 @@ void LLPanelNetwork::updateProxyEnabled(LLPanelNetwork * self, bool enabled, std
 	self->childSetEnabled("socks5_proxy_host",  enabled);
 	self->childSetEnabled("socks5_host_label",  enabled);
 	self->childSetEnabled("socks5_proxy_port",  enabled);
-	self->childSetEnabled("socks5_auth_label",  enabled);
 	self->childSetEnabled("socks5_auth",        enabled);
 
-	// disable the web option if the web proxy has not been configured
-	// this is still not ideal as apply or ok is needed for this to be saved to the preferences
-	self->childSetEnabled("Web", gSavedSettings.getBOOL("BrowserProxyEnabled"));
-
+	if (!enabled && self->childGetValue("http_proxy_type").asString() == "Socks")
+	{
+		self->childSetValue("http_proxy_type", "None");
+	}
 	self->childSetEnabled("Socks", enabled);
 
 	// Hide the auth specific lables if authtype is none or
 	// we are not enabled.
-	if ((authtype.compare("None") == 0) || (enabled == false))
+	if (!enabled || authtype.compare("None") == 0)
 	{
 		self->childSetEnabled("socks5_username_label", false);
 		self->childSetEnabled("socks5_password_label", false);
@@ -284,11 +325,65 @@ void LLPanelNetwork::updateProxyEnabled(LLPanelNetwork * self, bool enabled, std
 
 	// Only show the username and password boxes if we are enabled
 	// and authtype is username pasword.
-	if ((authtype.compare("UserPass") == 0) && (enabled == true))
+	if (enabled && authtype.compare("UserPass") == 0)
 	{
 		self->childSetEnabled("socks5_username_label", true);
 		self->childSetEnabled("socks5_password_label", true);
 		self->childSetEnabled("socks5_proxy_username", true);
 		self->childSetEnabled("socks5_proxy_password", true);
+	}
+}
+
+// static
+void LLPrefsNetwork::onClickClearBrowserCache(void*)
+{
+	LLNotifications::instance().add("ConfirmClearBrowserCache", LLSD(), LLSD(),
+									callback_clear_browser_cache);
+}
+
+//static
+bool LLPrefsNetwork::callback_clear_browser_cache(const LLSD& notification, const LLSD& response)
+{
+	S32 option = LLNotification::getSelectedOption(notification, response);
+	if (option == 0) // YES
+	{
+		LLViewerMedia::clearAllCaches();
+	}
+	return false;
+}
+
+// static
+void LLPrefsNetwork::onClickClearCookies(void*)
+{
+	LLNotifications::instance().add("ConfirmClearCookies", LLSD(), LLSD(),
+									callback_clear_cookies);
+}
+
+//static
+bool LLPrefsNetwork::callback_clear_cookies(const LLSD& notification, const LLSD& response)
+{
+	S32 option = LLNotification::getSelectedOption(notification, response);
+	if (option == 0) // YES
+	{
+		LLViewerMedia::clearAllCookies();
+	}
+	return false;
+}
+
+// static
+void LLPrefsNetwork::onCommitWebProxyEnabled(LLUICtrl* ctrl, void* data)
+{
+	LLPrefsNetwork* self = (LLPrefsNetwork*)data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enabled = check->get();
+	self->childSetEnabled("web_proxy_editor", enabled);
+	self->childSetEnabled("web_proxy_port", enabled);
+	self->childSetEnabled("proxy_text_label", enabled);
+	self->childSetEnabled("Web", enabled);
+	if (!enabled && self->childGetValue("http_proxy_type").asString() == "Web")
+	{
+		self->childSetValue("http_proxy_type", "None");
 	}
 }

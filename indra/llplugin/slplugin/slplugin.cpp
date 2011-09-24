@@ -178,8 +178,6 @@ int APIENTRY WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 int main(int argc, char **argv)
 #endif
 {
-	ll_init_apr();
-
 	// Set up llerror logging
 	{
 		LLError::initForApplication(".");
@@ -265,7 +263,7 @@ int main(int argc, char **argv)
 #if LL_DARWIN
 	EventTargetRef event_target = GetEventDispatcherTarget();
 #endif
-	while(!plugin->isDone())
+	while (!plugin->isDone())
 	{
 #if LL_DARWIN
 		createAutoReleasePool();
@@ -394,8 +392,6 @@ int main(int argc, char **argv)
 	}
 
 	delete plugin;
-
-	ll_cleanup_apr();
 
 	return 0;
 }

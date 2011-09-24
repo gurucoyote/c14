@@ -1492,7 +1492,7 @@ BOOL LLFace::getGeometryVolume(const LLVolume& volume,
 		LLVector4a src;
 
 		U32 vec[4];
-		vec[0] = vec[1] = vec[2] = vec[3] = color.mAll;
+		vec[0] = vec[1] = vec[2] = vec[3] = color.asRGBA();
 
 		src.loadua((F32*) vec);
 
@@ -1656,7 +1656,7 @@ BOOL LLFace::calcPixelArea(F32& cos_angle_to_view_dir, F32& radius)
 	}
 #endif
 
-	if (dist < mBoundingSphereRadius || dist < 10.0f) //camera is very close
+	if (dist < mBoundingSphereRadius /*|| dist < 10.0f*/) //camera is very close
 	{
 		cos_angle_to_view_dir = 1.0f;
 		mImportanceToCamera = 1.0f;

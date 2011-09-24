@@ -302,14 +302,12 @@ set(viewer_SOURCE_FILES
     llpanellogin.cpp
     llpanelmorph.cpp
     llpanelmediahud.cpp
-    llpanelnetwork.cpp
     llpanelobject.cpp
     llpanelpermissions.cpp
     llpanelpick.cpp
     llpanelplace.cpp
     llpanelskins.cpp
     llpanelvolume.cpp
-    llpanelweb.cpp
     llparcelselection.cpp
     llpatchvertexarray.cpp
 	llphysicsmotion.cpp
@@ -321,6 +319,7 @@ set(viewer_SOURCE_FILES
     llprefsgeneral.cpp
     llprefsim.cpp
     llprefsinput.cpp
+    llprefsnetwork.cpp
     llprefsnotifications.cpp
     llprefsvoice.cpp
     llpreviewanim.cpp
@@ -737,14 +736,12 @@ set(viewer_HEADER_FILES
     llpanellogin.h
     llpanelmorph.h
     llpanelmediahud.h
-    llpanelnetwork.h
     llpanelobject.h
     llpanelpermissions.h
     llpanelpick.h
     llpanelplace.h
     llpanelskins.h
     llpanelvolume.h
-    llpanelweb.h
     llparcelselection.h
     llpatchvertexarray.h
 	llphysicsmotion.h
@@ -756,6 +753,7 @@ set(viewer_HEADER_FILES
     llprefsgeneral.h
     llprefsim.h
     llprefsinput.h
+    llprefsnetwork.h
     llprefsnotifications.h
     llprefsvoice.h
     llpreview.h

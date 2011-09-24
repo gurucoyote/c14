@@ -46,9 +46,8 @@ class LLMessageSystem;
 class LLPanelAudioPrefs;
 class LLPanelDisplay;
 class LLPanelLCD;
-class LLPanelNetwork;
+class LLPrefsNetwork;
 class LLPanelSkins;
-class LLPanelWeb;
 class LLPrefsChat;
 class HBPrefsCool;
 class LLPrefsGeneral;
@@ -81,11 +80,10 @@ private:
 	LLTabContainer			*mTabContainer;
 	LLPanelAudioPrefs		*mAudioPanel;
 	LLPanelDisplay	        *mDisplayPanel;
-	LLPrefsGeneral	        *mPrefsGeneral;
 	LLPanelLCD				*mLCDPanel;
-	LLPanelNetwork	        *mNetworkPanel;
 	LLPanelSkins			*mSkinsPanel;
-	LLPanelWeb				*mWebPanel;
+	LLPrefsGeneral	        *mPrefsGeneral;
+	LLPrefsNetwork	        *mPrefsNetwork;
 	LLPrefsChat				*mPrefsChat;
 	LLPrefsVoice			*mPrefsVoice;
 	LLPrefsIM				*mPrefsIM;
@@ -118,14 +116,14 @@ protected:
 	/*virtual*/ void		onClose(bool app_quitting);
 
 	LLButton*	mAboutBtn;
-	LLButton	*mOKBtn;
-	LLButton	*mCancelBtn;
-	LLButton	*mApplyBtn;
+	LLButton*	mOKBtn;
+	LLButton*	mCancelBtn;
+	LLButton*	mApplyBtn;
 
-	static void		onClickAbout(void*);
-	static void		onBtnOK(void*);
-	static void		onBtnCancel(void*);
-	static void		onBtnApply(void*);
+	static void	onClickAbout(void*);
+	static void	onBtnOK(void*);
+	static void	onBtnCancel(void*);
+	static void	onBtnApply(void*);
 
 	static LLFloaterPreference* sInstance;
 };

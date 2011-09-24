@@ -89,9 +89,9 @@ std::string LLPluginSharedMemory::createName(void)
 #else // LL_WINDOWS
 	newname << getpid();
 #endif // LL_WINDOWS
-		
+
 	newname << "_" << sSegmentNumber++;
-	
+
 	return newname.str();
 }
 
@@ -104,9 +104,9 @@ class LLPluginSharedMemoryPlatformImpl
 public:
 	LLPluginSharedMemoryPlatformImpl();
 	~LLPluginSharedMemoryPlatformImpl();
-	
+
 #if USE_APR_SHARED_MEMORY
-	apr_shm_t* mAprSharedMemory;	
+	apr_shm_t* mAprSharedMemory;
 #elif USE_SHM_OPEN_SHARED_MEMORY
 	int mSharedMemoryFD;
 #elif USE_WIN32_SHARED_MEMORY
@@ -132,13 +132,13 @@ LLPluginSharedMemory::LLPluginSharedMemory()
  */
 LLPluginSharedMemory::~LLPluginSharedMemory()
 {
-	if(mNeedsDestroy)
+	if (mNeedsDestroy)
 		destroy();
 	else
 		detach();
-		
+
 	unlink();
-	
+
 	delete mImpl;
 }
 
@@ -152,17 +152,17 @@ LLPluginSharedMemoryPlatformImpl::LLPluginSharedMemoryPlatformImpl()
 
 LLPluginSharedMemoryPlatformImpl::~LLPluginSharedMemoryPlatformImpl()
 {
-	
+
 }
 
 bool LLPluginSharedMemory::map(void)
 {
 	mMappedAddress = apr_shm_baseaddr_get(mImpl->mAprSharedMemory);
-	if(mMappedAddress == NULL)
+	if (mMappedAddress == NULL)
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -184,37 +184,37 @@ bool LLPluginSharedMemory::unlink(void)
 	return true;
 }
 
-
 bool LLPluginSharedMemory::create(size_t size)
 {
 	mName = APR_SHARED_MEMORY_PREFIX_STRING;
 	mName += createName();
 	mSize = size;
-	
-	apr_status_t status = apr_shm_create( &(mImpl->mAprSharedMemory), mSize, mName.c_str(), gAPRPoolp );
-	
-	if(ll_apr_warn_status(status))
+
+	mPool.create();
+	apr_status_t status = apr_shm_create(&(mImpl->mAprSharedMemory), mSize, mName.c_str(), mPool());
+
+	if (ll_apr_warn_status(status))
 	{
 		return false;
 	}
 
 	mNeedsDestroy = true;
-	
+
 	return map();
 }
 
 bool LLPluginSharedMemory::destroy(void)
 {
-	if(mImpl->mAprSharedMemory)
+	if (mImpl->mAprSharedMemory)
 	{
 		apr_status_t status = apr_shm_destroy(mImpl->mAprSharedMemory);
-		if(ll_apr_warn_status(status))
+		if (ll_apr_warn_status(status))
 		{
 			// TODO: Is this a fatal error?  I think not...
 		}
 		mImpl->mAprSharedMemory = NULL;
 	}
-	
+	mPool.destroy();
 	return true;
 }
 
@@ -222,10 +222,11 @@ bool LLPluginSharedMemory::attach(const std::string &name, size_t size)
 {
 	mName = name;
 	mSize = size;
-	
-	apr_status_t status = apr_shm_attach( &(mImpl->mAprSharedMemory), mName.c_str(), gAPRPoolp );
-	
-	if(ll_apr_warn_status(status))
+
+	mPool.create();
+	apr_status_t status = apr_shm_attach(&(mImpl->mAprSharedMemory), mName.c_str(), mPool());
+
+	if (ll_apr_warn_status(status))
 	{
 		return false;
 	}
@@ -233,22 +234,20 @@ bool LLPluginSharedMemory::attach(const std::string &name, size_t size)
 	return map();
 }
 
-
 bool LLPluginSharedMemory::detach(void)
 {
-	if(mImpl->mAprSharedMemory)
+	if (mImpl->mAprSharedMemory)
 	{
 		apr_status_t status = apr_shm_detach(mImpl->mAprSharedMemory);
-		if(ll_apr_warn_status(status))
+		if (ll_apr_warn_status(status))
 		{
 			// TODO: Is this a fatal error?  I think not...
 		}
 		mImpl->mAprSharedMemory = NULL;
 	}
-	
+	mPool.destroy();
 	return true;
 }
-
 
 #elif USE_SHM_OPEN_SHARED_MEMORY
 // MARK: shm_open/mmap implementation
@@ -265,11 +264,11 @@ LLPluginSharedMemoryPlatformImpl::~LLPluginSharedMemoryPlatformImpl()
 bool LLPluginSharedMemory::map(void)
 {
 	mMappedAddress = ::mmap(NULL, mSize, PROT_READ | PROT_WRITE, MAP_SHARED, mImpl->mSharedMemoryFD, 0);
-	if(mMappedAddress == NULL)
+	if (mMappedAddress == NULL)
 	{
 		return false;
 	}
-	
+
 	LL_DEBUGS("Plugin") << "memory mapped at " << mMappedAddress << LL_ENDL;
 
 	return true;
@@ -277,14 +276,14 @@ bool LLPluginSharedMemory::map(void)
 
 bool LLPluginSharedMemory::unmap(void)
 {
-	if(mMappedAddress != NULL)
+	if (mMappedAddress != NULL)
 	{
 		LL_DEBUGS("Plugin") << "calling munmap(" << mMappedAddress << ", " << mSize << ")" << LL_ENDL;
-		if(::munmap(mMappedAddress, mSize) == -1)	
+		if (::munmap(mMappedAddress, mSize) == -1)
 		{
 			// TODO: Is this a fatal error?  I think not...
 		}
-		
+
 		mMappedAddress = NULL;
 	}
 
@@ -293,14 +292,14 @@ bool LLPluginSharedMemory::unmap(void)
 
 bool LLPluginSharedMemory::close(void)
 {
-	if(mImpl->mSharedMemoryFD != -1)
+	if (mImpl->mSharedMemoryFD != -1)
 	{
 		LL_DEBUGS("Plugin") << "calling close(" << mImpl->mSharedMemoryFD << ")" << LL_ENDL;
-		if(::close(mImpl->mSharedMemoryFD) == -1)
+		if (::close(mImpl->mSharedMemoryFD) == -1)
 		{
 			// TODO: Is this a fatal error?  I think not...
 		}
-		
+
 		mImpl->mSharedMemoryFD = -1;
 	}
 	return true;
@@ -308,14 +307,14 @@ bool LLPluginSharedMemory::close(void)
 
 bool LLPluginSharedMemory::unlink(void)
 {
-	if(!mName.empty())
+	if (!mName.empty())
 	{
-		if(::shm_unlink(mName.c_str()) == -1)
+		if (::shm_unlink(mName.c_str()) == -1)
 		{
 			return false;
 		}
 	}
-		
+
 	return true;
 }
 
@@ -325,32 +324,32 @@ bool LLPluginSharedMemory::create(size_t size)
 	mName = SHM_OPEN_SHARED_MEMORY_PREFIX_STRING;
 	mName += createName();
 	mSize = size;
-	
+
 	// Preemptive unlink, just in case something didn't get cleaned up.
 	unlink();
 
 	mImpl->mSharedMemoryFD = ::shm_open(mName.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-	if(mImpl->mSharedMemoryFD == -1)
+	if (mImpl->mSharedMemoryFD == -1)
 	{
 		return false;
 	}
-	
+
 	mNeedsDestroy = true;
-	
-	if(::ftruncate(mImpl->mSharedMemoryFD, mSize) == -1)
+
+	if (::ftruncate(mImpl->mSharedMemoryFD, mSize) == -1)
 	{
 		return false;
 	}
-	
-	
+
+
 	return map();
 }
 
 bool LLPluginSharedMemory::destroy(void)
 {
 	unmap();
-	close();	
-	
+	close();
+
 	return true;
 }
 
@@ -361,21 +360,21 @@ bool LLPluginSharedMemory::attach(const std::string &name, size_t size)
 	mSize = size;
 
 	mImpl->mSharedMemoryFD = ::shm_open(mName.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
-	if(mImpl->mSharedMemoryFD == -1)
+	if (mImpl->mSharedMemoryFD == -1)
 	{
 		return false;
 	}
-	
+
 	// unlink here so the segment will be cleaned up automatically after the last close.
 	unlink();
-	
+
 	return map();
 }
 
 bool LLPluginSharedMemory::detach(void)
 {
 	unmap();
-	close();	
+	close();
 	return true;
 }
 
@@ -391,7 +390,7 @@ LLPluginSharedMemoryPlatformImpl::LLPluginSharedMemoryPlatformImpl()
 
 LLPluginSharedMemoryPlatformImpl::~LLPluginSharedMemoryPlatformImpl()
 {
-	
+
 }
 
 bool LLPluginSharedMemory::map(void)
@@ -402,13 +401,13 @@ bool LLPluginSharedMemory::map(void)
 		0,                   
 		0,                   
 		mSize);
-		
-	if(mMappedAddress == NULL)
+
+	if (mMappedAddress == NULL)
 	{
 		LL_WARNS("Plugin") << "MapViewOfFile failed: " << GetLastError() << LL_ENDL;
 		return false;
 	}
-	
+
 	LL_DEBUGS("Plugin") << "memory mapped at " << mMappedAddress << LL_ENDL;
 
 	return true;
@@ -416,9 +415,9 @@ bool LLPluginSharedMemory::map(void)
 
 bool LLPluginSharedMemory::unmap(void)
 {
-	if(mMappedAddress != NULL)
+	if (mMappedAddress != NULL)
 	{
-		UnmapViewOfFile(mMappedAddress);	
+		UnmapViewOfFile(mMappedAddress);
 		mMappedAddress = NULL;
 	}
 
@@ -427,12 +426,12 @@ bool LLPluginSharedMemory::unmap(void)
 
 bool LLPluginSharedMemory::close(void)
 {
-	if(mImpl->mMapFile != NULL)
+	if (mImpl->mMapFile != NULL)
 	{
 		CloseHandle(mImpl->mMapFile);
 		mImpl->mMapFile = NULL;
 	}
-	
+
 	return true;
 }
 
@@ -457,14 +456,14 @@ bool LLPluginSharedMemory::create(size_t size)
                  mSize,						// buffer size  
                  mName.c_str());			// name of mapping object
 
-	if(mImpl->mMapFile == NULL)
+	if (mImpl->mMapFile == NULL)
 	{
 		LL_WARNS("Plugin") << "CreateFileMapping failed: " << GetLastError() << LL_ENDL;
 		return false;
 	}
 
 	mNeedsDestroy = true;
-		
+
 	return map();
 }
 
@@ -484,13 +483,13 @@ bool LLPluginSharedMemory::attach(const std::string &name, size_t size)
 				FILE_MAP_ALL_ACCESS,		// read/write access
 				FALSE,						// do not inherit the name
 				mName.c_str());				// name of mapping object
-	
-	if(mImpl->mMapFile == NULL)
+
+	if (mImpl->mMapFile == NULL)
 	{
 		LL_WARNS("Plugin") << "OpenFileMapping failed: " << GetLastError() << LL_ENDL;
 		return false;
 	}
-		
+
 	return map();
 }
 
@@ -500,7 +499,5 @@ bool LLPluginSharedMemory::detach(void)
 	close();
 	return true;
 }
-
-
 
 #endif

@@ -34,10 +34,10 @@
 
 #include "llplugininstance.h"
 
-#include "llapr.h"
+#include "llthread.h"			// Needed for LLThread::tldata().mRootPool
 
 #if LL_WINDOWS
-#include "direct.h"	// needed for _chdir()
+#include "direct.h"				// needed for _chdir()
 #endif
 
 /** Virtual destructor. */
@@ -55,7 +55,8 @@ const char *LLPluginInstance::PLUGIN_INIT_FUNCTION_NAME = "LLPluginInitEntryPoin
  *
  * @param[in] owner Plugin instance. TODO:DOC is this a good description of what "owner" is?
  */
-LLPluginInstance::LLPluginInstance(LLPluginInstanceMessageListener *owner) :
+LLPluginInstance::LLPluginInstance(LLPluginInstanceMessageListener *owner)
+:	mDSOHandlePool(LLThread::tldata().mRootPool),
 	mDSOHandle(NULL),
 	mPluginUserData(NULL),
 	mPluginSendMessageFunction(NULL)
@@ -68,7 +69,7 @@ LLPluginInstance::LLPluginInstance(LLPluginInstanceMessageListener *owner) :
  */
 LLPluginInstance::~LLPluginInstance()
 {
-	if(mDSOHandle != NULL)
+	if (mDSOHandle != NULL)
 	{
 		apr_dso_unload(mDSOHandle);
 		mDSOHandle = NULL;
@@ -84,7 +85,7 @@ LLPluginInstance::~LLPluginInstance()
 int LLPluginInstance::load(const std::string& plugin_dir, std::string &plugin_file)
 {
 	pluginInitFunction init_function = NULL;
-	
+
 	if ( plugin_dir.length() )
 	{
 #if LL_WINDOWS
@@ -95,44 +96,44 @@ int LLPluginInstance::load(const std::string& plugin_dir, std::string &plugin_fi
 		// plugin shell process and not the viewer.
 		// Changing back to the previous directory is not necessary since the plugin shell
 		// quits once the plugin exits.
-		_chdir( plugin_dir.c_str() );	
+		_chdir( plugin_dir.c_str() );
 #endif
 	};
 
 	int result = apr_dso_load(&mDSOHandle,
 					  plugin_file.c_str(),
-					  gAPRPoolp);
-	if(result != APR_SUCCESS)
+					  mDSOHandlePool());
+	if (result != APR_SUCCESS)
 	{
 		char buf[1024];
 		apr_dso_error(mDSOHandle, buf, sizeof(buf));
 
 		LL_WARNS("Plugin") << "apr_dso_load of " << plugin_file << " failed with error " << result << " , additional info string: " << buf << LL_ENDL;
-		
+
 	}
-	
-	if(result == APR_SUCCESS)
+
+	if (result == APR_SUCCESS)
 	{
 		result = apr_dso_sym((apr_dso_handle_sym_t*)&init_function,
 						 mDSOHandle,
 						 PLUGIN_INIT_FUNCTION_NAME);
 
-		if(result != APR_SUCCESS)
+		if (result != APR_SUCCESS)
 		{
 			LL_WARNS("Plugin") << "apr_dso_sym failed with error " << result << LL_ENDL;
 		}
 	}
-	
-	if(result == APR_SUCCESS)
+
+	if (result == APR_SUCCESS)
 	{
 		result = init_function(staticReceiveMessage, (void*)this, &mPluginSendMessageFunction, &mPluginUserData);
 
-		if(result != APR_SUCCESS)
+		if (result != APR_SUCCESS)
 		{
 			LL_WARNS("Plugin") << "call to init function failed with error " << result << LL_ENDL;
 		}
 	}
-	
+
 	return (int)result;
 }
 
@@ -143,7 +144,7 @@ int LLPluginInstance::load(const std::string& plugin_dir, std::string &plugin_fi
  */
 void LLPluginInstance::sendMessage(const std::string &message)
 {
-	if(mPluginSendMessageFunction)
+	if (mPluginSendMessageFunction)
 	{
 		LL_DEBUGS("Plugin") << "sending message to plugin: \"" << message << "\"" << LL_ENDL;
 		mPluginSendMessageFunction(message.c_str(), &mPluginUserData);
@@ -178,13 +179,13 @@ void LLPluginInstance::staticReceiveMessage(const char *message_string, void **u
  */
 void LLPluginInstance::receiveMessage(const char *message_string)
 {
-	if(mOwner)
+	if (mOwner)
 	{
-		LL_DEBUGS("Plugin") << "processing incoming message: \"" << message_string << "\"" << LL_ENDL;		
+		LL_DEBUGS("Plugin") << "processing incoming message: \"" << message_string << "\"" << LL_ENDL;
 		mOwner->receivePluginMessage(message_string);
 	}
 	else
 	{
-		LL_WARNS("Plugin") << "dropping incoming message: \"" << message_string << "\"" << LL_ENDL;		
-	}	
+		LL_WARNS("Plugin") << "dropping incoming message: \"" << message_string << "\"" << LL_ENDL;
+	}
 }

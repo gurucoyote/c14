@@ -38,9 +38,10 @@
 #include <sys/stat.h>
 
 #include "indra_constants.h"
-#include "message.h"
+#include "llproxy.h"
 #include "llvfile.h"
 #include "llvfs.h"
+#include "message.h"
 
 #ifdef LL_STANDALONE
 # include <zlib.h>
@@ -124,7 +125,7 @@ LLHTTPAssetRequest::LLHTTPAssetRequest(LLHTTPAssetStorage *asp,
 						LLAssetStorage::ERequestType rt,
 						const std::string& url, 
 						CURLM *curl_multi)
-	: LLAssetRequest(uuid, type),
+:	LLAssetRequest(uuid, type),
 	mZInitialized(false)
 {
 	memset(&mZStream, 0, sizeof(mZStream)); // we'll initialize this later, but for now zero the whole C-style struct to avoid debug/coverity noise
@@ -236,6 +237,10 @@ void LLHTTPAssetRequest::setupCurlHandle()
 {
 	// *NOTE: Similar code exists in mapserver/llcurlutil.cpp  JC
 	mCurlHandle = curl_easy_init();
+
+	// Apply proxy settings if configured to do so
+	LLProxy::getInstance()->applyProxySettings(mCurlHandle);
+
 	curl_easy_setopt(mCurlHandle, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(mCurlHandle, CURLOPT_NOPROGRESS, 1);
 	curl_easy_setopt(mCurlHandle, CURLOPT_URL, mURLBuffer.c_str());
@@ -374,8 +379,10 @@ size_t LLHTTPAssetRequest::readCompressedData(void* data, size_t size)
 }
 
 //static
-size_t LLHTTPAssetRequest::curlCompressedUploadCallback(
-		void *data, size_t size, size_t nmemb, void *user_data)
+size_t LLHTTPAssetRequest::curlCompressedUploadCallback(void *data,
+														size_t size,
+														size_t nmemb,
+														void *user_data)
 {
 	size_t num_read = 0;
 
@@ -669,7 +676,7 @@ bool LLHTTPAssetStorage::deletePendingRequest(LLAssetStorage::ERequestType rt,
 					LLAssetRequest* pending_req = *result;
 					pending->remove(pending_req);
 
-					if (!pending_req->mIsUserWaiting)				//A user is waiting on this request.  Toss it.
+					if (!pending_req->mIsUserWaiting)	//A user is waiting on this request.  Toss it.
 					{
 						pending->push_back(pending_req);
 					}

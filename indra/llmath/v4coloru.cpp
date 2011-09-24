@@ -32,18 +32,14 @@
 
 #include "linden_common.h"
 
-//#include "v3coloru.h"
 #include "v4coloru.h"
-#include "v4color.h"
-//#include "vmath.h"
-#include "llmath.h"
 
 // LLColor4U
 LLColor4U LLColor4U::white(255, 255, 255, 255);
-LLColor4U LLColor4U::black(  0,   0,   0, 255);
-LLColor4U LLColor4U::red  (255,   0,   0, 255);
-LLColor4U LLColor4U::green(  0, 255,   0, 255);
-LLColor4U LLColor4U::blue (  0,   0, 255, 255);
+LLColor4U LLColor4U::black(0, 0, 0, 255);
+LLColor4U LLColor4U::red  (255, 0, 0, 255);
+LLColor4U LLColor4U::green(0, 255, 0, 255);
+LLColor4U LLColor4U::blue (0, 0, 255, 255);
 
 // conversion
 /* inlined to fix gcc compile link error
@@ -55,7 +51,6 @@ LLColor4U::operator LLColor4()
 
 // Constructors
 
-
 /*
 LLColor4U::LLColor4U(const LLColor3 &vec)
 {
@@ -66,10 +61,7 @@ LLColor4U::LLColor4U(const LLColor3 &vec)
 }
 */
 
-
 // Clear and Assignment Functions
-
-
 
 // LLColor4U Operators
 
@@ -86,41 +78,87 @@ LLColor4U LLColor4U::operator=(const LLColor3 &a)
 }
 */
 
-
 std::ostream& operator<<(std::ostream& s, const LLColor4U &a) 
 {
-	s << "{ " << (S32)a.mV[VX] << ", " << (S32)a.mV[VY] << ", " << (S32)a.mV[VZ] << ", " << (S32)a.mV[VW] << " }";
+	s << "{ " << (S32)a.mV[VX] << ", " << (S32)a.mV[VY] << ", " << (S32)a.mV[VZ]
+	  << ", " << (S32)a.mV[VW] << " }";
 	return s;
 }
 
 // static
 BOOL LLColor4U::parseColor4U(const std::string& buf, LLColor4U* value)
 {
-	if( buf.empty() || value == NULL)
+	if (buf.empty() || value == NULL)
 	{
 		return FALSE;
 	}
 
 	U32 v[4];
-	S32 count = sscanf( buf.c_str(), "%u, %u, %u, %u", v + 0, v + 1, v + 2, v + 3 );
-	if (1 == count )
+	S32 count = sscanf(buf.c_str(), "%u, %u, %u, %u", v + 0, v + 1, v + 2, v + 3);
+	if (1 == count)
 	{
 		// try this format
-		count = sscanf( buf.c_str(), "%u %u %u %u", v + 0, v + 1, v + 2, v + 3 );
+		count = sscanf(buf.c_str(), "%u %u %u %u", v + 0, v + 1, v + 2, v + 3);
 	}
-	if( 4 != count )
+	if (4 != count)
 	{
 		return FALSE;
 	}
 
-	for( S32 i = 0; i < 4; i++ )
+	for (S32 i = 0; i < 4; i++)
 	{
-		if( v[i] > U8_MAX )
+		if (v[i] > U8_MAX)
 		{
 			return FALSE;
 		}
 	}
 
-	value->set( U8(v[0]), U8(v[1]), U8(v[2]), U8(v[3]) );
+	value->set(U8(v[0]), U8(v[1]), U8(v[2]), U8(v[3]));
 	return TRUE;
+}
+
+#if LL_MSVC && _M_X64
+# define LL_X86_64 1
+#elif LL_GNUC && (defined(__amd64__) || defined(__x86_64__))
+# define LL_X86_64 1
+#else
+# define LL_X86_64 0
+#endif
+
+U32 LLColor4U::asRGBA() const
+{
+#if LL_X86_64
+	U32 rgba(0);
+
+	// Little endian: values are swapped in memory. The original code access
+	// the array like a U32, so we need to swap here
+	rgba |= mV[3];
+	rgba <<= 8;
+	rgba |= mV[2];
+	rgba <<= 8;
+	rgba |= mV[1];
+	rgba <<= 8;
+	rgba |= mV[0];
+
+	return rgba;
+#else
+	return mAll;
+#endif
+}
+
+void LLColor4U::fromRGBA(U32 rgba)
+{
+#if LL_X86_64
+	// Little endian: values are swapped in memory. The original code access
+	// the array like a U32, so we need to swap here
+	mV[0] = rgba & 0xFF;
+	rgba >>= 8;
+	mV[1] = rgba & 0xFF;
+	rgba >>= 8;
+	mV[2] = rgba & 0xFF;
+	rgba >>= 8;
+	mV[3] = rgba & 0xFF;
+#else
+	mAll = rgba;
+#endif
 }

@@ -36,11 +36,11 @@
 
 #include <queue>
 
-#include "llpacketbuffer.h"
 #include "llhost.h"
-#include "net.h"
+#include "llpacketbuffer.h"
+#include "llproxy.h"
 #include "llthrottle.h"
-
+#include "net.h"
 
 class LLPacketRing
 {
@@ -64,8 +64,8 @@ public:
 	inline LLHost getLastSender();
 	inline LLHost getLastReceivingInterface();
 
-	S32 getAndResetActualInBits()				{ S32 bits = mActualBitsIn; mActualBitsIn = 0; return bits;}
-	S32 getAndResetActualOutBits()				{ S32 bits = mActualBitsOut; mActualBitsOut = 0; return bits;}
+	S32 getAndResetActualInBits()	{ S32 bits = mActualBitsIn; mActualBitsIn = 0; return bits;}
+	S32 getAndResetActualOutBits()	{ S32 bits = mActualBitsOut; mActualBitsOut = 0; return bits;}
 protected:
 	BOOL mUseInThrottle;
 	BOOL mUseOutThrottle;
@@ -89,8 +89,8 @@ protected:
 	LLHost mLastSender;
 	LLHost mLastReceivingIF;
 
-	BOOL doSendPacket(int h_socket, const char * send_buffer, S32 buf_size, LLHost host);
-	U8	 mProxyWrappedSendBuffer[NET_BUFFER_SIZE];
+private:
+	BOOL sendPacketImpl(int h_socket, const char * send_buffer, S32 buf_size, LLHost host);
 };
 
 

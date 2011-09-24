@@ -109,7 +109,9 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 			bool is_script_dialog = (notification->getName() == "ScriptDialog" ||
 									 notification->getName() == "ScriptDialogOurs");
 			bool is_ours = (notification->getName() == "ScriptDialogOurs" ||
-							notification->getName() == "ScriptTextBoxOurs");
+							notification->getName() == "ScriptTextBoxOurs" ||
+							notification->getName() == "LoadWebPageOurs" ||
+							notification->getName() == "ObjectGiveItemOurs");
 			LLNotifyBox* notify_box = new LLNotifyBox(notification,
 													  is_script_dialog,
 													  is_ours);
@@ -390,7 +392,8 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 
 		if (sNotifyBoxCount <= 0)
 		{
-			llwarns << "A notification was mishandled. sNotifyBoxCount = " << sNotifyBoxCount << llendl;
+			llwarns << "A notification was mishandled. sNotifyBoxCount = "
+					<< sNotifyBoxCount << llendl;
 		}
 
 		// If this is the only notify box, don't show the next button
@@ -450,9 +453,10 @@ LLButton* LLNotifyBox::addButton(const std::string& name, const std::string& lab
 	btn = new LLButton(name, btn_rect, "", onClickButton, userdata);
 	btn->setLabel(label);
 	btn->setFont(font);
-	if (mIsFromOurObject && button_index == 0)
+	if (mIsFromOurObject && name == "client_side_mute")
 	{
 		btn->setEnabled(false);	// disable the Mute button for our scripted objects
+		btn->setVisible(false);	// hide it too
 	}
 
 	if (mIsCaution)

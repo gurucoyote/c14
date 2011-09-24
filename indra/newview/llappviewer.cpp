@@ -30,7 +30,6 @@
  * $/LicenseInfo$
  */
 
-
 #include "llviewerprecompiledheaders.h"
 #include "llappviewer.h"
 #include "llprimitive.h"
@@ -99,26 +98,30 @@
 #include "llimageworker.h"
 
 // The files below handle dependencies from cleanup.
-#include "llkeyframemotion.h"
-#include "llworldmap.h"
-#include "llhudmanager.h"
-#include "lltoolmgr.h"
 #include "llassetstorage.h"
-#include "llpolymesh.h"
-#include "llcachename.h"
 #include "llaudioengine.h"
+#include "llcachename.h"
+#include "llkeyframemotion.h"
+#include "llpostprocess.h"
+#include "llproxy.h"
 #include "llstreamingaudio.h"
-#include "llviewermenu.h"
-#include "llselectmgr.h"
-#include "lltrans.h"
 #include "lluitrans.h"
+
+#include "llhudmanager.h"
+#include "llpolymesh.h"
+#include "llselectmgr.h"
+#include "lltoolmgr.h"
 #include "lltracker.h"
+#include "lltrans.h"
+#include "llviewermenu.h"
 #include "llviewermenufile.h"
 #include "llviewerparcelmgr.h"
-#include "llworldmapview.h"
-#include "llpostprocess.h"
-#include "llwlparammanager.h"
 #include "llwaterparammanager.h"
+#include "llwlparammanager.h"
+#include "llworldmap.h"
+#include "llworldmapview.h"
+
+// ----------- //
 
 #include "lldebugview.h"
 #include "llconsole.h"
@@ -895,7 +898,7 @@ bool LLAppViewer::mainLoop()
 	//-------------------------------------------
 
 	// Create IO Pump to use for HTTP Requests.
-	gServicePump = new LLPumpIO(gAPRPoolp);
+	gServicePump = new LLPumpIO;
 	LLHTTPClient::setPump(*gServicePump);
 	LLCurl::setCAFile(gDirUtilp->getCAFile());
 	
@@ -1269,11 +1272,14 @@ bool LLAppViewer::cleanup()
 	gMeshRepo.shutdown();
 
 	// Must clean up texture references before viewer window is destroyed.
-	LLHUDManager::getInstance()->updateEffects();
-	LLHUDObject::updateAll();
-	LLHUDManager::getInstance()->cleanupEffects();
-	LLHUDObject::cleanupHUDObjects();
-	llinfos << "HUD Objects cleaned up" << llendflush;
+	if	(LLHUDManager::instanceExists())
+	{
+		LLHUDManager::getInstance()->updateEffects();
+		LLHUDObject::updateAll();
+		LLHUDManager::getInstance()->cleanupEffects();
+		LLHUDObject::cleanupHUDObjects();
+		llinfos << "HUD Objects cleaned up" << llendflush;
+	}
 
 	LLKeyframeDataCache::clear();
 	
@@ -1285,7 +1291,10 @@ bool LLAppViewer::cleanup()
 	// Note: this is where gWorldMap used to be deleted.
 
 	// Note: this is where gHUDManager used to be deleted.
-	LLHUDManager::getInstance()->shutdownClass();
+	if (LLHUDManager::instanceExists())
+	{
+		LLHUDManager::getInstance()->shutdownClass();
+	}
 
 	delete gAssetStorage;
 	gAssetStorage = NULL;
@@ -1599,6 +1608,9 @@ bool LLAppViewer::cleanup()
 		LLWeb::loadURLExternal(gLaunchFileOnQuit, false);
 		llinfos << "File launched." << llendflush;
 	}
+
+	llinfos << "Cleaning up LLProxy." << llendl;
+	LLProxy::cleanupClass();
 
     llinfos << "Goodbye" << llendflush;
 
@@ -2598,8 +2610,7 @@ void LLAppViewer::handleViewerCrash()
 		else crash_file_name = gDirUtilp->getExpandedFilename(LL_PATH_LOGS,ERROR_MARKER_FILE_NAME);
 		LL_INFOS("AppInit") << "Creating crash marker file " << crash_file_name << LL_ENDL;
 		
-		LLAPRFile crash_file;
-		crash_file.open(crash_file_name, LL_APR_W);
+		LLAPRFile crash_file(crash_file_name, LL_APR_W);
 		if (crash_file.getFileHandle())
 		{
 			LL_INFOS("AppInit") << "Created crash marker file " << crash_file_name << LL_ENDL;
@@ -2629,7 +2640,10 @@ void LLAppViewer::handleViewerCrash()
 		gMessageSystem->stopLogging();
 	}
 
-	LLWorld::getInstance()->getInfo(gDebugInfo);
+	if (LLWorld::instanceExists())
+	{
+		LLWorld::getInstance()->getInfo(gDebugInfo);
+	}
 
 	// Close the debug file
 	pApp->writeDebugInfo();
@@ -2667,11 +2681,10 @@ bool LLAppViewer::anotherInstanceRunning()
 	LL_DEBUGS("MarkerFile") << "Checking marker file for lock..." << LL_ENDL;
 
 	//Freeze case checks
-	if (LLAPRFile::isExist(marker_file, NULL, LL_APR_RB))
+	if (LLAPRFile::isExist(marker_file, LL_APR_RB))
 	{
 		// File exists, try opening with write permissions
-		LLAPRFile outfile ;
-		outfile.open(marker_file, LL_APR_WB);
+		LLAPRFile outfile(marker_file, LL_APR_WB);
 		apr_file_t* fMarker = outfile.getFileHandle(); 
 		if (!fMarker)
 		{
@@ -2710,18 +2723,18 @@ void LLAppViewer::initMarkerFile()
 	std::string llerror_marker_file = gDirUtilp->getExpandedFilename(LL_PATH_LOGS, LLERROR_MARKER_FILE_NAME);
 	std::string error_marker_file = gDirUtilp->getExpandedFilename(LL_PATH_LOGS, ERROR_MARKER_FILE_NAME);
 
-	if (LLAPRFile::isExist(mMarkerFileName, NULL, LL_APR_RB) && !anotherInstanceRunning())
+	if (LLAPRFile::isExist(mMarkerFileName, LL_APR_RB) && !anotherInstanceRunning())
 	{
 		gLastExecEvent = LAST_EXEC_FROZE;
 		LL_INFOS("MarkerFile") << "Exec marker found: program froze on previous execution" << LL_ENDL;
 	}
-	if (LLAPRFile::isExist(logout_marker_file, NULL, LL_APR_RB))
+	if (LLAPRFile::isExist(logout_marker_file, LL_APR_RB))
 	{
 		gLastExecEvent = LAST_EXEC_LOGOUT_FROZE;
 		LL_INFOS("MarkerFile") << "Last exec LLError crashed, setting LastExecEvent to " << gLastExecEvent << LL_ENDL;
 		LLAPRFile::remove(logout_marker_file);
 	}
-	if (LLAPRFile::isExist(llerror_marker_file, NULL, LL_APR_RB))
+	if (LLAPRFile::isExist(llerror_marker_file, LL_APR_RB))
 	{
 		if (gLastExecEvent == LAST_EXEC_LOGOUT_FROZE)
 		{
@@ -2734,7 +2747,7 @@ void LLAppViewer::initMarkerFile()
 		LL_INFOS("MarkerFile") << "Last exec LLError crashed, setting LastExecEvent to " << gLastExecEvent << LL_ENDL;
 		LLAPRFile::remove(llerror_marker_file);
 	}
-	if (LLAPRFile::isExist(error_marker_file, NULL, LL_APR_RB))
+	if (LLAPRFile::isExist(error_marker_file, LL_APR_RB))
 	{
 		if (gLastExecEvent == LAST_EXEC_LOGOUT_FROZE)
 		{
@@ -2756,7 +2769,7 @@ void LLAppViewer::initMarkerFile()
 	
 	// Create the marker file for this execution & lock it
 	apr_status_t s;
-	s = mMarkerFile.open(mMarkerFileName, LL_APR_W, TRUE);
+	s = mMarkerFile.open(mMarkerFileName, LL_APR_W, LLAPRFile::long_lived);
 
 	if (s == APR_SUCCESS && mMarkerFile.getFileHandle())
 	{
@@ -3863,7 +3876,6 @@ void LLAppViewer::sendLogoutRequest()
 {
 	if (!mLogoutRequestSent)
 	{
-
 		if (!gSavedSettings.getBOOL("OpenGridProtocol")) // OGPX : if not OGP mode, then tell sim bye
 		{
 		LLMessageSystem* msg = gMessageSystem;
@@ -3889,15 +3901,17 @@ void LLAppViewer::sendLogoutRequest()
 		gLogoutMaxTime = LOGOUT_REQUEST_TIME;
 		mLogoutRequestSent = TRUE;
 		
-		gVoiceClient->leaveChannel();
+		if (LLVoiceClient::instanceExists())
+		{
+			LLVoiceClient::getInstance()->leaveChannel();
+		}
 
 		//Set internal status variables and marker files
 		gLogoutInProgress = TRUE;
 		mLogoutMarkerFileName = gDirUtilp->getExpandedFilename(LL_PATH_LOGS,LOGOUT_MARKER_FILE_NAME);
 		
-		LLAPRFile outfile ;
-		outfile.open(mLogoutMarkerFileName, LL_APR_W);
-		mLogoutMarkerFile =  outfile.getFileHandle() ;
+		LLAPRFile outfile(mLogoutMarkerFileName, LL_APR_W);
+		mLogoutMarkerFile =  outfile.getFileHandle();
 		if (mLogoutMarkerFile)
 		{
 			LL_INFOS("MarkerFile") << "Created logout marker file " << mLogoutMarkerFileName << LL_ENDL;
@@ -4161,7 +4175,10 @@ void LLAppViewer::disconnectViewer()
 
 	// This is where we used to call gObjectList.destroy() and then delete gWorldp.
 	// Now we just ask the LLWorld singleton to cleanly shut down.
-	LLWorld::getInstance()->destroyClass();
+	if (LLWorld::instanceExists())
+	{
+		LLWorld::getInstance()->destroyClass();
+	}
 
 	// call all self-registered classes
 	LLDestroyClassList::instance().fireCallbacks();

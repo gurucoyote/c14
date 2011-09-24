@@ -967,7 +967,7 @@ void inventory_offer_mute_callback(const LLUUID& blocked_id,
 	if (ml && ml->add(mute))
 	{
 		LLFloaterMute::showInstance();
-		LLFloaterMute::getInstance()->selectMute(blocked_id);
+		LLFloaterMute::getInstance()->selectMute(mute.mID);
 	}
 
 	// purge the message queue of any previously queued inventory offers from the same source.
@@ -978,6 +978,7 @@ void inventory_offer_mute_callback(const LLUUID& blocked_id,
 		BOOL matches(const LLNotificationPtr notification) const
 		{
 			if (notification->getName() == "ObjectGiveItem" 
+				|| notification->getName() == "ObjectGiveItemOurs"
 				|| notification->getName() == "ObjectGiveItemUnknownUser"
 				|| notification->getName() == "UserGiveItem")
 			{
@@ -1421,7 +1422,18 @@ void inventory_offer_handler(LLOfferInfo* info, BOOL from_task)
 
 	if (from_task)
 	{
-		p.name = name_found ? "ObjectGiveItem" : "ObjectGiveItemUnknownUser";
+		if (info->mFromID == gAgent.getID())
+		{
+			p.name = "ObjectGiveItemOurs";
+		}
+		else if (name_found)
+		{
+			p.name = "ObjectGiveItem";
+		}
+		else
+		{
+			p.name = "ObjectGiveItemUnknownUser";
+		}
 	}
 	else
 	{
@@ -5999,22 +6011,13 @@ bool callback_script_dialog(const LLSD& notification, const LLSD& response)
 	if (button_idx == -2)		// Clicked "Mute"
 	{
 		LLUUID object_id = notification["payload"]["object_id"].asUUID();
-		LLViewerObject* vobj = gObjectList.findObject(object_id);
-		if (vobj && vobj->permYouOwner())
+		std::string object_name = notification["payload"]["object_name"].asString();
+		LLMute mute(object_id, object_name, LLMute::OBJECT);
+		LLMuteList* ml = LLMuteList::getInstance();
+		if (ml && ml->add(mute))
 		{
-			// Do not apply to objects we own
-			LLNotifications::instance().add("MuteOwnObject");
-		}
-		else
-		{
-			std::string object_name = notification["payload"]["object_name"].asString();
-			LLMute mute(object_id, object_name, LLMute::OBJECT);
-			LLMuteList* ml = LLMuteList::getInstance();
-			if (ml && ml->add(mute))
-			{
-				LLFloaterMute::showInstance();
-				LLFloaterMute::getInstance()->selectMute(object_id);
-			}
+			LLFloaterMute::showInstance();
+			LLFloaterMute::getInstance()->selectMute(mute.mID);
 		}
 	}
 	else if (button_idx != -1)	// Didn't click "Ignore"
@@ -6219,14 +6222,27 @@ bool callback_load_url(const LLSD& notification, const LLSD& response)
 {
 	S32 option = LLNotification::getSelectedOption(notification, response);
 
-	if (0 == option)
+	if (option == 0)	// Goto page
 	{
 		LLWeb::loadURL(notification["payload"]["url"].asString());
+	}
+	else if (option == 2)	// Mute
+	{
+		LLUUID id = notification["payload"]["object_id"].asUUID();
+		std::string name = notification["payload"]["object_name"].asString();
+		LLMute mute(id, name, LLMute::OBJECT);
+		LLMuteList* ml = LLMuteList::getInstance();
+		if (ml && ml->add(mute))
+		{
+			LLFloaterMute::showInstance();
+			LLFloaterMute::getInstance()->selectMute(mute.mID);
+		}
 	}
 
 	return false;
 }
-static LLNotificationFunctorRegistration callback_load_url_reg("LoadWebPage", callback_load_url);
+static LLNotificationFunctorRegistration callback_load_url_reg1("LoadWebPage", callback_load_url);
+static LLNotificationFunctorRegistration callback_load_url_reg2("LoadWebPageOurs", callback_load_url);
 
 // We've got the name of the person who owns the object hurling the url.
 // Display confirmation dialog.
@@ -6272,7 +6288,8 @@ void callback_load_url_name(const LLUUID& id, const std::string& full_name, bool
 			args["OBJECTNAME"] = load_url_info["object_name"].asString();
 			args["NAME"] = owner_name;
 
-			LLNotifications::instance().add("LoadWebPage", args, load_url_info);
+			std::string dialog = id == gAgent.getID() ? "LoadWebPageOurs" : "LoadWebPage";
+			LLNotifications::instance().add(dialog, args, load_url_info);
 		}
 		else
 		{

@@ -731,6 +731,8 @@ void LLVOVolume::updateTextureVirtualSize(bool forced)
 	const S32 num_faces = mDrawable->getNumFaces();
 	F32 min_vsize = 999999999.f, max_vsize = 0.f;
 	LLViewerCamera* camera = LLViewerCamera::getInstance();
+	BOOL is_ours = permYouOwner();
+	LLVOAvatar* avatar = getAvatar();
 	for (S32 i = 0; i < num_faces; i++)
 	{
 		LLFace* face = mDrawable->getFace(i);
@@ -756,7 +758,7 @@ void LLVOVolume::updateTextureVirtualSize(bool forced)
 			if (isAttachment())
 			{
 				// Rez attachments faster and at full details !
-				if (permYouOwner())
+				if (is_ours)
 				{
 					// Our attachments must really rez fast and fully:
 					// we shouldn't have to zoom on them to get the textures
@@ -765,14 +767,15 @@ void LLVOVolume::updateTextureVirtualSize(bool forced)
 					// ... and don't discard our attachments textures
 					imagep->dontDiscard();
 				}
-				else
+				else if (avatar && !avatar->isImpostor())
 				{
 					// Others' can get their texture discarded to avoid filling
 					// up the video buffers in crowded areas...
 					static LLCachedControl<bool> boost_texture(gSavedSettings, "TextureBoostAttachments");
 					static LLCachedControl<S32> min_vsize_sqrt(gSavedSettings, "TextureMinAttachmentsVSize");
-					const F32 HIGH_BIAS = 1.5f;
-					if (boost_texture && LLViewerTexture::sDesiredDiscardBias < HIGH_BIAS)
+					static LLCachedControl<F32> texture_boost_bias_thresold(gSavedSettings, "TextureBoostBiasThreshold");
+					F32 high_bias = llclamp((F32)texture_boost_bias_thresold, 0.0f, 1.5f);
+					if (boost_texture && LLViewerTexture::sDesiredDiscardBias <= high_bias)
 					{
 						// As long as the current bias is not too high (i.e. we
 						// are not using too much memory), and provided that

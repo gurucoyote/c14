@@ -747,8 +747,6 @@ static	std::string nameFromsipURI(const std::string &uri);
 		void notifyFriendObservers();
 };
 
-extern LLVoiceClient *gVoiceClient;
-
 #endif //LL_VOICE_CLIENT_H
 
 

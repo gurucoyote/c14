@@ -33,18 +33,17 @@
 #ifndef LL_LLFLOATERMUTE_H
 #define LL_LLFLOATERMUTE_H
 
-#include "llfloater.h"
-#include "llmutelist.h"
 #include <vector>
 
-class LLButton;
-class LLLineEditor;
-class LLMessageSystem;
+#include "llfloater.h"
+
+#include "llmutelist.h"
+
 class LLUUID;
 class LLScrollListCtrl;
 
 class LLFloaterMute
-	:	public LLFloater, public LLMuteListObserver, public LLFloaterSingleton<LLFloaterMute>
+:	public LLFloater, public LLMuteListObserver, public LLFloaterSingleton<LLFloaterMute>
 {
 public:
 	LLFloaterMute(const LLSD& seed);
@@ -65,16 +64,20 @@ public:
 
 private:
 	// UI callbacks
-	static void onClickRemove(void *data);
-	static void onClickPick(void *data);
-	static void onSelectName(LLUICtrl* caller, void *data);
-	static void onPickUser(const std::vector<std::string>& names, const std::vector<LLUUID>& ids, void* user_data);
+	static void onClickUpdateMutes(void* data);
+	static void onClickRemove(void* data);
+	static void onClickPick(void* data);
+	static void onSelectName(LLUICtrl* caller, void* data);
+	static void onPickUser(const std::vector<std::string>& names,
+						   const std::vector<LLUUID>& ids,
+						   void* user_data);
 	static void onClickMuteByName(void*);
-	static void callbackMuteByName(const std::string& text, void*);
+	static void callbackMuteByName(const std::string& text, void* data);
+	static void onMuteAllToggled(LLUICtrl* ctrl, void* data);
+	static void onMuteTypeToggled(LLUICtrl* ctrl, void* data);
 
 private:
-	LLScrollListCtrl*			mMuteList;
+	LLScrollListCtrl* mMuteList;
 };
-
 
 #endif

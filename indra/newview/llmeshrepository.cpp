@@ -204,7 +204,7 @@ public:
 	LLVolumeParams mMeshParams;
 
 	LLMeshHeaderResponder(const LLVolumeParams& mesh_params)
-		: mMeshParams(mesh_params)
+	:	mMeshParams(mesh_params)
 	{
 	}
 
@@ -454,12 +454,12 @@ public:
 };
 
 LLMeshRepoThread::LLMeshRepoThread()
-: LLThread("mesh repo", NULL) 
+:	LLThread("mesh repo") 
 { 
 	mWaiting = false;
-	mMutex = new LLMutex(NULL);
-	mHeaderMutex = new LLMutex(NULL);
-	mSignal = new LLCondition(NULL);
+	mMutex = new LLMutex();
+	mHeaderMutex = new LLMutex();
+	mSignal = new LLCondition();
 }
 
 LLMeshRepoThread::~LLMeshRepoThread()
@@ -1210,7 +1210,7 @@ LLMeshUploadThread::LLMeshUploadThread(LLMeshUploadThread::instance_list& data,
 	mUploadTextures = upload_textures;
 	mUploadSkin = upload_skin;
 	mUploadJoints = upload_joints;
-	mMutex = new LLMutex(NULL);
+	mMutex = new LLMutex();
 	mCurlRequest = NULL;
 	mPendingUploads = 0;
 	mFinished = false;
@@ -2037,15 +2037,15 @@ void LLMeshHeaderResponder::completedRaw(U32 status, const std::string& reason,
 }
 
 LLMeshRepository::LLMeshRepository()
-: mMeshMutex(NULL),
-  mMeshThreadCount(0),
-  mThread(NULL)
+:	mMeshMutex(NULL),
+	mMeshThreadCount(0),
+	mThread(NULL)
 {
 }
 
 void LLMeshRepository::init()
 {
-	mMeshMutex = new LLMutex(NULL);
+	mMeshMutex = new LLMutex();
 
 	LLConvexDecomposition::getInstance()->initSystem();
 
@@ -2268,15 +2268,14 @@ void LLMeshRepository::notifyLoadedMeshes()
 				}
 			}
 
-			on_new_single_inventory_upload_complete(
-										asset_type,
-										inventory_type,
-										data.mPostData["asset_type"].asString(),
-										data.mPostData["folder_id"].asUUID(),
-										data.mPostData["name"],
-										data.mPostData["description"],
-										data.mResponse,
-										data.mResponse["upload_price"]);
+			on_new_single_inventory_upload_complete(asset_type,
+													inventory_type,
+													data.mPostData["asset_type"].asString(),
+													data.mPostData["folder_id"].asUUID(),
+													data.mPostData["name"],
+													data.mPostData["description"],
+													data.mResponse,
+													data.mResponse["upload_price"]);
 
 			mInventoryQ.pop();
 		}
@@ -2869,8 +2868,8 @@ LLPhysicsDecomp::LLPhysicsDecomp()
 	mQuitting = false;
 	mDone = false;
 
-	mSignal = new LLCondition(NULL);
-	mMutex = new LLMutex(NULL);
+	mSignal = new LLCondition();
+	mMutex = new LLMutex();
 }
 
 LLPhysicsDecomp::~LLPhysicsDecomp()

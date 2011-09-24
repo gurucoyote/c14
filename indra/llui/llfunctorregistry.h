@@ -109,7 +109,7 @@ public:
 		}
 		else
 		{
-			llwarns << "tried to find '" << name << "' in LLFunctorRegistry, but it wasn't there." << llendl;
+			//llwarns << "tried to find '" << name << "' in LLFunctorRegistry, but it wasn't there." << llendl;
 			return mMap[LOGFUNCTOR];
 		}
 	}

@@ -35,12 +35,12 @@
 #include "llxmlrpctransaction.h"
 
 #include "llcurl.h"
+
+#include "llappviewer.h"
 #include "llviewercontrol.h"
 
 // Have to include these last to avoid queue redefinition!
 #include <xmlrpc-epi/xmlrpc.h>
-
-#include "llappviewer.h"
 
 LLXMLRPCValue LLXMLRPCValue::operator[](const char* id) const
 {
@@ -81,7 +81,6 @@ LLXMLRPCValue LLXMLRPCValue::createStruct()
 {
 	return LLXMLRPCValue(XMLRPC_CreateVector(NULL, xmlrpc_vector_struct));
 }
-
 
 void LLXMLRPCValue::append(LLXMLRPCValue& v)
 {
@@ -146,7 +145,6 @@ XMLRPC_VALUE LLXMLRPCValue::getValue() const
 	return mV;
 }
 
-
 class LLXMLRPCTransaction::Impl
 {
 public:
@@ -198,14 +196,14 @@ LLXMLRPCTransaction::Impl::Impl(const std::string& uri,
 	init(request, useGzip);
 }
 
-
 LLXMLRPCTransaction::Impl::Impl(const std::string& uri,
-		const std::string& method, LLXMLRPCValue params, bool useGzip)
-	: mCurlRequest(0),
-	  mStatus(LLXMLRPCTransaction::StatusNotStarted),
-	  mURI(uri),
-	  mRequestText(0), 
-	  mResponse(0)
+								const std::string& method,
+								LLXMLRPCValue params, bool useGzip)
+:	mCurlRequest(0),
+	mStatus(LLXMLRPCTransaction::StatusNotStarted),
+	mURI(uri),
+	mRequestText(0), 
+	mResponse(0)
 {
 	XMLRPC_REQUEST request = XMLRPC_RequestNew();
 	XMLRPC_RequestSetMethodName(request, method.c_str());
@@ -215,9 +213,6 @@ LLXMLRPCTransaction::Impl::Impl(const std::string& uri,
 	init(request, useGzip);
 }
 
-
-
-
 void LLXMLRPCTransaction::Impl::init(XMLRPC_REQUEST request, bool useGzip)
 {
 	if (!mCurlRequest)
@@ -225,24 +220,6 @@ void LLXMLRPCTransaction::Impl::init(XMLRPC_REQUEST request, bool useGzip)
 		mCurlRequest = new LLCurlEasyRequest();
 	}
 	
-	if (LLSocks::getInstance()->isHttpProxyEnabled())
-	{
-		std::string address = LLSocks::getInstance()->getHTTPProxy().getIPString();
-		U16 port = LLSocks::getInstance()->getHTTPProxy().getPort();
-		mCurlRequest->setoptString(CURLOPT_PROXY, address.c_str());
-		mCurlRequest->setopt(CURLOPT_PROXYPORT, port);
-		if (LLSocks::getInstance()->getHttpProxyType() == LLPROXY_SOCKS)
-		{
-			mCurlRequest->setopt(CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
-			if(LLSocks::getInstance()->getSelectedAuthMethod()==METHOD_PASSWORD)
-				mCurlRequest->setoptString(CURLOPT_PROXYUSERPWD,LLSocks::getInstance()->getProxyUserPwd());
-		}
-		else
-		{
-			mCurlRequest->setopt(CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
-		}
-	}
-
 //	mCurlRequest->setopt(CURLOPT_VERBOSE, 1); // usefull for debugging
 	mCurlRequest->setopt(CURLOPT_NOSIGNAL, 1);
 	mCurlRequest->setWriteCallback(&curlDownloadCallback, (void*)this);

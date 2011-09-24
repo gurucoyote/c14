@@ -59,6 +59,7 @@ set(llmessage_SOURCE_FILES
     llpacketbuffer.cpp
     llpacketring.cpp
     llpartdata.cpp
+    llproxy.cpp
     llpumpio.cpp
     llregionpresenceverifier.cpp
     llsdappservices.cpp
@@ -98,7 +99,6 @@ set(llmessage_SOURCE_FILES
     patch_code.cpp
     patch_dct.cpp
     patch_idct.cpp
-    llsocks5.cpp
     sound_ids.cpp
     )
 
@@ -155,6 +155,7 @@ set(llmessage_HEADER_FILES
     llpacketbuffer.h
     llpacketring.h
     llpartdata.h
+    llproxy.h
     llpumpio.h
     llqueryflags.h
     llregionflags.h
@@ -200,7 +201,6 @@ set(llmessage_HEADER_FILES
     patch_code.h
     patch_dct.h
     sound_ids.h
-    llsocks5.h
     )
 
 set_source_files_properties(${llmessage_HEADER_FILES}

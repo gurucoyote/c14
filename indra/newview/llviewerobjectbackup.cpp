@@ -1235,8 +1235,7 @@ void LLObjectBackup::uploadNextAsset()
 	uuid = tid.makeAssetID(gAgent.getSecureSessionID());
 
 	S32 file_size;
-	LLAPRFile outfile;
-	outfile.open(filename, LL_APR_RB, NULL, &file_size);
+	LLAPRFile outfile(filename, LL_APR_RB, &file_size);
 	if (outfile.getFileHandle())
 	{
 		const S32 buf_size = 65536;	
@@ -1257,6 +1256,7 @@ void LLObjectBackup::uploadNextAsset()
 	}
 
 	 myupload_new_resource(tid, LLAssetType::AT_TEXTURE, struid, struid, 0,
-		LLFolderType::FT_TEXTURE, LLInventoryType::defaultForAssetType(LLAssetType::AT_TEXTURE),
-		0x0, "Uploaded texture", NULL, NULL);
+						   LLFolderType::FT_TEXTURE,
+						   LLInventoryType::defaultForAssetType(LLAssetType::AT_TEXTURE),
+						   0x0, "Uploaded texture", NULL, NULL);
 }

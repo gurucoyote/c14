@@ -924,6 +924,61 @@ The new skin will appear after you restart the viewer.
 
   <notification
    icon="alertmodal.tga"
+   name="SOCKS_UNKNOWN_STATUS"
+   type="alertmodal">
+Unknown proxy error with server "[HOST]:[PORT]".
+	<tag>fail</tag>
+   <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+  
+  <notification
+   icon="alertmodal.tga"
+   name="SOCKS_INVALID_HOST"
+   type="alertmodal">
+Invalid SOCKS proxy address or port "[HOST]:[PORT]".
+	<tag>fail</tag>
+   <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+  
+  <notification
+   icon="alertmodal.tga"
+   name="SOCKS_BAD_CREDS"
+   type="alertmodal">
+Invalid SOCKS 5 username or password.
+	<tag>fail</tag>
+   <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+  
+  <notification
+   icon="alertmodal.tga"
+   name="PROXY_INVALID_HTTP_HOST"
+   type="alertmodal">
+   Invalid HTTP proxy address or port "[HOST]:[PORT]".
+	<tag>fail</tag>
+   <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="PROXY_INVALID_SOCKS_HOST"
+   type="alertmodal">
+Invalid SOCKS proxy address or port "[HOST]:[PORT]".
+	<tag>fail</tag>
+   <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
    name="GoToAuctionPage"
    type="alertmodal">
 Go to the web page to see auction details or make a bid?
@@ -2875,6 +2930,16 @@ Sorry, you cannot mute a Linden.
    name="MuteOwnObject"
    type="alertmodal">
 Sorry, you cannot mute an object you own.
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="MuteSelf"
+   type="alertmodal">
+Sorry, you cannot mute yourself.
     <usetemplate
      name="okbutton"
      yestext="OK"/>
@@ -5949,7 +6014,28 @@ An object named [OBJECTFROMNAME] owned by [NAME] has given you a [OBJECTTYPE] na
        text="Discard"/>
       <button
        index="2"
-       name="Mute"
+       name="client_side_mute"
+       text="Mute"/>
+    </form>
+  </notification>
+
+  <notification
+   icon="notify.tga"
+   name="ObjectGiveItemOurs"
+   type="notify">
+Your object named [OBJECTFROMNAME] has given you a [OBJECTTYPE] named [OBJECTNAME].
+    <form name="form">
+      <button
+       index="0"
+       name="Keep"
+       text="Keep"/>
+      <button
+       index="1"
+       name="Discard"
+       text="Discard"/>
+      <button
+       index="2"
+       name="client_side_mute"
        text="Mute"/>
     </form>
   </notification>
@@ -6184,6 +6270,35 @@ From object: [OBJECTNAME], owner: [NAME]?
        index="1"
        name="Cancel"
        text="Cancel"/>
+      <button
+       index="2"
+       name="client_side_mute"
+       text="Mute"/>
+    </form>
+  </notification>
+
+  <notification
+   icon="notify.tga"
+   name="LoadWebPageOurs"
+   type="notify">
+Load web page [URL]?
+
+[MESSAGE]
+
+From object: [OBJECTNAME], owned by you?
+    <form name="form">
+      <button
+       index="0"
+       name="Gotopage"
+       text="Go to page"/>
+      <button
+       index="1"
+       name="Cancel"
+       text="Cancel"/>
+      <button
+       index="2"
+       name="client_side_mute"
+       text="Mute"/>
     </form>
   </notification>
 
@@ -6227,7 +6342,7 @@ Is this OK?
        text="No"/>
       <button
        index="2"
-       name="Mute"
+       name="client_side_mute"
        text="Mute"/>
     </form>
   </notification>

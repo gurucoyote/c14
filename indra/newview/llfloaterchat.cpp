@@ -387,9 +387,11 @@ void LLFloaterChat::onClickMute(void *data)
 
 	LLMute mute(id);
 	mute.setFromDisplayName(name);
-	ml->add(mute);
-	
-	LLFloaterMute::showInstance();
+	if (ml->add(mute))
+	{
+		LLFloaterMute::showInstance();
+		LLFloaterMute::getInstance()->selectMute(mute.mID);
+	}
 }
 
 //static

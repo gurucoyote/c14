@@ -1,5 +1,5 @@
 /** 
- * @file llpanelnetwork.h
+ * @file llprefsnetwork.h
  * @brief Network preferences panel
  *
  * $LicenseInfo:firstyear=2001&license=viewergpl$
@@ -30,16 +30,16 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLPANELNETWORK_H
-#define LL_LLPANELNETWORK_H
+#ifndef LL_LLPREFSNETWORK_H
+#define LL_LLPREFSNETWORK_H
 
 #include "llpanel.h"
 
-class LLPanelNetwork : public LLPanel
+class LLPrefsNetwork : public LLPanel
 {
 public:
-	LLPanelNetwork();
-	~LLPanelNetwork();
+	LLPrefsNetwork();
+	~LLPrefsNetwork();
 
 	BOOL postBuild();
 
@@ -48,7 +48,7 @@ public:
 
 private:
 	static void onHttpTextureFetchToggled(LLUICtrl* ctrl, void* data);
-	static void onClickClearCache(void*);
+	static void onClickClearDiskCache(void*);
 	static void onClickSetCache(void*);
 	static void onClickResetCache(void*);
 	static void onCommitPort(LLUICtrl* ctrl, void*);
@@ -56,10 +56,15 @@ private:
 	static void onClickTestProxy(void* user_data);
 	static void onSocksSettingsModified(LLUICtrl* ctrl, void* data);
 	static void onSocksAuthChanged(LLUICtrl* ctrl, void* data);
-	static void updateProxyEnabled(LLPanelNetwork * self, bool enabled, std::string authtype);
+	static void updateProxyEnabled(LLPrefsNetwork * self, bool enabled, std::string authtype);
+
+	static void onClickClearBrowserCache(void*);
+	static void onClickClearCookies(void*);
+	static bool callback_clear_browser_cache(const LLSD& notification, const LLSD& response);
+	static bool callback_clear_cookies(const LLSD& notification, const LLSD& response);
+	static void onCommitWebProxyEnabled(LLUICtrl* ctrl, void* data);
 	
 	static bool sSocksSettingsChanged;
-
 };
 
 #endif

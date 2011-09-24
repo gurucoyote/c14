@@ -810,15 +810,19 @@ void init_client_menu(LLMenuGL* menu)
 
 	sub_menu = new LLMenuGL("HUD Info");
 	{
-		sub_menu->append(new LLMenuItemCheckGL("Velocity", 
+		sub_menu->append(new LLMenuItemCheckGL("Show Velocity Info", 
 												&toggle_visibility,
 												NULL,
 												&get_visibility,
 												(void*)gVelocityBar));
 
-		sub_menu->append(new LLMenuItemToggleGL("Camera",	&gDisplayCameraPos ) );
-		sub_menu->append(new LLMenuItemToggleGL("Wind", 	&gDisplayWindInfo) );
-		sub_menu->append(new LLMenuItemToggleGL("FOV",  	&gDisplayFOV ) );
+		sub_menu->append(new LLMenuItemToggleGL("Show Camera Info", &gDisplayCameraPos));
+		sub_menu->append(new LLMenuItemToggleGL("Show Wind Info", &gDisplayWindInfo));
+		sub_menu->append(new LLMenuItemToggleGL("Show FOV Info", &gDisplayFOV));
+		sub_menu->append(new LLMenuItemCheckGL("Show Time", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowTime"));
+		sub_menu->append(new LLMenuItemCheckGL("Show Render Info", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderInfo"));
+		sub_menu->append(new LLMenuItemCheckGL("Show Matrices", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderMatrices"));
+		sub_menu->append(new LLMenuItemCheckGL("Show Color Under Cursor", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowColor"));
 		sub_menu->createJumpKeys();
 	}
 	menu->appendMenu(sub_menu);
@@ -862,11 +866,6 @@ void init_client_menu(LLMenuGL* menu)
 	}
 #endif
 
-	menu->append(new LLMenuItemCallGL("Clear Group Cache", 
-									  LLGroupMgr::debugClearAllGroups));
-
-	menu->append(new LLMenuItemCheckGL("Use Web Map Tiles", menu_toggle_control, NULL, menu_check_control, (void*)"UseWebMapTiles"));
-
 	menu->appendSeparator();
 
 	sub_menu = new LLMenuGL("Rendering");
@@ -908,6 +907,13 @@ void init_client_menu(LLMenuGL* menu)
 		LLMenuGL* sub = NULL;
 		sub = new LLMenuGL("Network");
 
+		sub->append(new LLMenuItemCheckGL("Use Web Map Tiles",
+										  menu_toggle_control,
+										  NULL, menu_check_control,
+										  (void*)"UseWebMapTiles"));
+
+		sub->appendSeparator();
+
 		sub->append(new LLMenuItemCallGL("Enable Message Log",  
 					&handle_viewer_enable_message_log,  NULL));
 		sub->append(new LLMenuItemCallGL("Disable Message Log", 
@@ -936,6 +942,20 @@ void init_client_menu(LLMenuGL* menu)
 		sub->append(new LLMenuItemCallGL("Drop a Packet", &drop_packet, NULL,
 										 NULL, 'L', MASK_ALT | MASK_CONTROL));
 
+		menu->appendMenu(sub);
+		sub->createJumpKeys();
+	}
+	{
+		LLMenuGL* sub = NULL;
+		sub = new LLMenuGL("Caches");
+
+		sub->append(new LLMenuItemCallGL("Clear Group Cache", 
+										 LLGroupMgr::debugClearAllGroups));
+
+		sub->append(new LLMenuItemCheckGL("Time-Sliced Texture Cache Purges",
+										  menu_toggle_control, NULL,
+										  menu_check_control,
+										  (void*)"CachePurgeTimeSliced"));
 		menu->appendMenu(sub);
 		sub->createJumpKeys();
 	}
@@ -1129,11 +1149,6 @@ void init_debug_ui_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemToggleGL("Debug Keys", &LLView::sDebugKeys));
 	menu->append(new LLMenuItemToggleGL("Debug WindowProc", &gDebugWindowProc));
 	menu->append(new LLMenuItemToggleGL("Debug Text Editor Tips", &gDebugTextEditorTips));
-	menu->appendSeparator();
-	menu->append(new LLMenuItemCheckGL("Show Time", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowTime"));
-	menu->append(new LLMenuItemCheckGL("Show Render Info", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderInfo"));
-	menu->append(new LLMenuItemCheckGL("Show Matrices", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderMatrices"));
-	menu->append(new LLMenuItemCheckGL("Show Color Under Cursor", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowColor"));
 	
 	menu->createJumpKeys();
 }
@@ -2358,7 +2373,7 @@ class LLObjectEnableMute : public view_listener_t
 		}
 //mk
 		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
-		bool new_value = (object != NULL);
+		bool new_value = object && !object->permYouOwner();	// Don't mute our objects
 		if (new_value)
 		{
 			LLVOAvatar* avatar = find_avatar_from_object(object); 
@@ -2382,7 +2397,7 @@ class LLObjectMute : public view_listener_t
 	{
 		LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
 		if (!object) return true;
-		
+
 		LLMuteList* ml = LLMuteList::getInstance();
 		if (!ml) return false;
 
@@ -2408,7 +2423,7 @@ class LLObjectMute : public view_listener_t
 				name += " ";
 				name += lastname->getString();
 			}
-			
+
 			type = LLMute::AGENT;
 		}
 		else
@@ -2421,21 +2436,21 @@ class LLObjectMute : public view_listener_t
 			{
 				name = node->mName;
 			}
-			
+
 			type = LLMute::OBJECT;
 		}
-		
+
 		LLMute mute(id, name, type);
 		if (ml->isMuted(mute.mID, mute.mName))
 		{
 			ml->remove(mute);
 		}
-		else
+		else if (ml->add(mute))
 		{
-			ml->add(mute);
 			LLFloaterMute::showInstance();
+			LLFloaterMute::getInstance()->selectMute(mute.mID);
 		}
-		
+
 		return true;
 	}
 };

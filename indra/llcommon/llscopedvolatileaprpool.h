@@ -1,10 +1,10 @@
-/** 
- * @file llpanelweb.h
- * @brief Web browser preferences panel
+/**
+ * @file llscopedvolatileaprpool.h
+ * @brief Implementation of LLScopedVolatileAPRPool
  *
- * $LicenseInfo:firstyear=2005&license=viewergpl$
+ * $LicenseInfo:firstyear=2010&license=viewergpl$
  * 
- * Copyright (c) 2005-2009, Linden Research, Inc.
+ * Copyright (c) 2011, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,28 +30,36 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLPANELWEB_H
-#define LL_LLPANELWEB_H
+#ifndef LL_LLSCOPEDVOLATILEAPRPOOL_H
+#define LL_LLSCOPEDVOLATILEAPRPOOL_H
 
-#include "llpanel.h"
+#include "llthread.h"
 
-class LLPanelWeb : public LLPanel
+/** Scoped volatile memory pool.
+ *
+ * As the LLVolatileAPRPool should never keep allocations very
+ * long, its most common use is for allocations with a lifetime
+ * equal to it's scope.
+ *
+ * This is a convenience class that makes just a little easier to type.
+ */
+
+class LL_COMMON_API LLScopedVolatileAPRPool
 {
-public:
-	LLPanelWeb();
-	~LLPanelWeb();
-
-	BOOL postBuild();
-
-	void apply();
-	void cancel();
-
 private:
-	static void onClickClearCache(void*);
-	static void onClickClearCookies(void*);
-	static bool callback_clear_browser_cache(const LLSD& notification, const LLSD& response);
-	static bool callback_clear_cookies(const LLSD& notification, const LLSD& response);
-	static void onCommitWebProxyEnabled(LLUICtrl* ctrl, void* data);
+	LLVolatileAPRPool& mPool;
+	apr_pool_t* mScopedAPRpool;		// The use of apr_pool_t is OK here.
+
+public:
+	LLScopedVolatileAPRPool()
+	:	mPool(LLThreadLocalData::tldata().mVolatileAPRPool),
+		mScopedAPRpool(mPool.getVolatileAPRPool())	{ }
+
+	~LLScopedVolatileAPRPool()	{ mPool.clearVolatileAPRPool(); }
+
+	//! @attention Only use this to pass the underlaying pointer to a libapr-1
+	// function that requires it.
+	operator apr_pool_t*() const { return mScopedAPRpool; }	// The use of apr_pool_t is OK here.
 };
 
 #endif

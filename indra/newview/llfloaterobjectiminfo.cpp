@@ -182,8 +182,11 @@ void LLFloaterObjectIMInfo::onClickMuteOwner(void* data)
 
 	LLMute::EType mute_type = (self->mOwnerIsGroup) ? LLMute::GROUP : LLMute::AGENT;
 	LLMute mute(self->mOwnerID, self->mOwnerName, mute_type);
-	ml->add(mute);
-	LLFloaterMute::showInstance();
+	if (ml->add(mute))
+	{
+		LLFloaterMute::showInstance();
+		LLFloaterMute::getInstance()->selectMute(mute.mID);
+	}
 	self->close();
 }
 
@@ -196,8 +199,11 @@ void LLFloaterObjectIMInfo::onClickMuteObject(void* data)
 	if (!ml) return;
 
 	LLMute mute(self->mObjectID, self->mObjectName, LLMute::OBJECT);
-	ml->add(mute);
-	LLFloaterMute::showInstance();
+	if (ml->add(mute))
+	{
+		LLFloaterMute::showInstance();
+		LLFloaterMute::getInstance()->selectMute(mute.mID);
+	}
 	self->close();
 }
 
@@ -210,8 +216,10 @@ void LLFloaterObjectIMInfo::onClickMuteByName(void* data)
 	if (!ml) return;
 
 	LLMute mute(LLUUID::null, self->mObjectName, LLMute::BY_NAME);
-	ml->add(mute);
-	LLFloaterMute::showInstance();
+	if (ml->add(mute))
+	{
+		LLFloaterMute::showInstance();
+	}
 	self->close();
 }
 

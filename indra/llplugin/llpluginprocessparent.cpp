@@ -37,6 +37,7 @@
 #include "llpluginmessageclasses.h"
 
 #include "llapr.h"
+#include "llscopedvolatileaprpool.h"
 
 //virtual 
 LLPluginProcessParentOwner::~LLPluginProcessParentOwner()
@@ -46,6 +47,7 @@ LLPluginProcessParentOwner::~LLPluginProcessParentOwner()
 
 bool LLPluginProcessParent::sUseReadThread = false;
 apr_pollset_t *LLPluginProcessParent::sPollSet = NULL;
+LLAPRPool LLPluginProcessParent::sPollSetPool;
 bool LLPluginProcessParent::sPollsetNeedsRebuild = false;
 LLMutex *LLPluginProcessParent::sInstancesMutex;
 std::list<LLPluginProcessParent*> LLPluginProcessParent::sInstances;
@@ -56,14 +58,14 @@ class LLPluginProcessParentPollThread: public LLThread
 {
 public:
 	LLPluginProcessParentPollThread() :
-		LLThread("LLPluginProcessParentPollThread", gAPRPoolp)
+		LLThread("LLPluginProcessParentPollThread")
 	{
 	}
 protected:
 	// Inherited from LLThread
 	/*virtual*/ void run(void)
 	{
-		while(!isQuitting() && LLPluginProcessParent::getUseReadThread())
+		while (!isQuitting() && LLPluginProcessParent::getUseReadThread())
 		{
 			LLPluginProcessParent::poll(0.1f);
 			checkPause();
@@ -81,12 +83,11 @@ protected:
 
 };
 
-LLPluginProcessParent::LLPluginProcessParent(LLPluginProcessParentOwner *owner):
-	mIncomingQueueMutex(gAPRPoolp)
+LLPluginProcessParent::LLPluginProcessParent(LLPluginProcessParentOwner *owner)
 {
 	if (!sInstancesMutex)
 	{
-		sInstancesMutex = new LLMutex(gAPRPoolp);
+		sInstancesMutex = new LLMutex;
 	}
 
 	mOwner = owner;
@@ -99,6 +100,7 @@ LLPluginProcessParent::LLPluginProcessParent(LLPluginProcessParentOwner *owner):
 	mBlocked = false;
 	mPolledInput = false;
 	mPollFD.client_data = NULL;
+	mPollFDPool.create();
 
 	mPluginLaunchTimeout = 60.0f;
 	mPluginLockupTimeout = 15.0f;
@@ -129,7 +131,7 @@ LLPluginProcessParent::~LLPluginProcessParent()
 
 	// Destroy any remaining shared memory regions
 	sharedMemoryRegionsType::iterator iter;
-	while((iter = mSharedMemoryRegions.begin()) != mSharedMemoryRegions.end())
+	while ((iter = mSharedMemoryRegions.begin()) != mSharedMemoryRegions.end())
 	{
 		// destroy the shared memory region
 		iter->second->destroy();
@@ -179,42 +181,27 @@ bool LLPluginProcessParent::accept()
 	bool result = false;
 
 	apr_status_t status = APR_EGENERAL;
-	apr_socket_t *new_socket = NULL;
-
-	status = apr_socket_accept(
-		&new_socket,
-		mListenSocket->getSocket(),
-		gAPRPoolp);
-
+	mSocket = LLSocket::create(status, mListenSocket);
 
 	if (status == APR_SUCCESS)
 	{
 //		llinfos << "SUCCESS" << llendl;
 		// Success.  Create a message pipe on the new socket
 
-		// we MUST create a new pool for the LLSocket, since it will take ownership of it and delete it in its destructor!
-		apr_pool_t* new_pool = NULL;
-		status = apr_pool_create(&new_pool, gAPRPoolp);
-
-		mSocket = LLSocket::create(new_socket, new_pool);
 		new LLPluginMessagePipe(this, mSocket);
 
 		result = true;
 	}
-	else if (APR_STATUS_IS_EAGAIN(status))
-	{
-//		llinfos << "EAGAIN" << llendl;
-
-		// No incoming connections.  This is not an error.
-		status = APR_SUCCESS;
-	}
 	else
 	{
-//		llinfos << "Error:" << llendl;
-		ll_apr_warn_status(status);
-
-		// Some other error.
-		errorState();
+		mSocket.reset();
+		// EAGAIN means "No incoming connections". This is not an error.
+		if (!APR_STATUS_IS_EAGAIN(status))
+		{
+			// Some other error.
+			ll_apr_warn_status(status);
+			errorState();
+		}
 	}
 
 	return result;
@@ -228,7 +215,7 @@ void LLPluginProcessParent::idle(void)
 	{
 		// process queued messages
 		mIncomingQueueMutex.lock();
-		while(!mIncomingQueue.empty())
+		while (!mIncomingQueue.empty())
 		{
 			LLPluginMessage message = mIncomingQueue.front();
 			mIncomingQueue.pop();
@@ -280,10 +267,10 @@ void LLPluginProcessParent::idle(void)
 
 			case STATE_INITIALIZED:
 			{
-
 				apr_status_t status = APR_SUCCESS;
+				LLScopedVolatileAPRPool addr_pool;
 				apr_sockaddr_t* addr = NULL;
-				mListenSocket = LLSocket::create(gAPRPoolp, LLSocket::STREAM_TCP);
+				mListenSocket = LLSocket::create(LLSocket::STREAM_TCP);
 				mBoundPort = 0;
 
 				// This code is based on parts of LLSocket::create() in lliosocket.cpp.
@@ -294,7 +281,7 @@ void LLPluginProcessParent::idle(void)
 					APR_INET,
 					0,	// port 0 = ephemeral ("find me a port")
 					0,
-					gAPRPoolp);
+					addr_pool);
 
 				if (ll_apr_warn_status(status))
 				{
@@ -608,7 +595,7 @@ void LLPluginProcessParent::setMessagePipe(LLPluginMessagePipe *message_pipe)
 	if (message_pipe != NULL)
 	{
 		// Set up the apr_pollfd_t
-		mPollFD.p = gAPRPoolp;
+		mPollFD.p = mPollFDPool();
 		mPollFD.desc_type = APR_POLL_SOCKET;
 		mPollFD.reqevents = APR_POLLIN|APR_POLLERR|APR_POLLHUP;
 		mPollFD.rtnevents = 0;
@@ -655,6 +642,7 @@ void LLPluginProcessParent::updatePollset()
 		// delete the existing pollset.
 		apr_pollset_destroy(sPollSet);
 		sPollSet = NULL;
+		sPollSetPool.destroy();
 	}
 
 	std::list<LLPluginProcessParent*>::iterator iter;
@@ -677,12 +665,14 @@ void LLPluginProcessParent::updatePollset()
 		{
 #ifdef APR_POLLSET_NOCOPY
 			// The pollset doesn't exist yet.  Create it now.
-			apr_status_t status = apr_pollset_create(&sPollSet, count, gAPRPoolp, APR_POLLSET_NOCOPY);
+			sPollSetPool.create();
+			apr_status_t status = apr_pollset_create(&sPollSet, count, sPollSetPool(), APR_POLLSET_NOCOPY);
 			if (status != APR_SUCCESS)
 			{
 #endif // APR_POLLSET_NOCOPY
 				LL_WARNS("PluginPoll") << "Couldn't create pollset.  Falling back to non-pollset mode." << LL_ENDL;
 				sPollSet = NULL;
+				sPollSetPool.destroy();
 #ifdef APR_POLLSET_NOCOPY
 			}
 			else
@@ -690,7 +680,7 @@ void LLPluginProcessParent::updatePollset()
 				LL_DEBUGS("PluginPoll") << "created pollset " << sPollSet << LL_ENDL;
 
 				// Pollset was created, add all instances to it.
-				for(iter = sInstances.begin(); iter != sInstances.end(); iter++)
+				for (iter = sInstances.begin(); iter != sInstances.end(); iter++)
 				{
 					if ((*iter)->mPollFD.client_data)
 					{
@@ -762,7 +752,7 @@ void LLPluginProcessParent::poll(F64 timeout)
 		if (status == APR_SUCCESS)
 		{
 			// One or more of the descriptors signalled.  Call them.
-			for(int i = 0; i < count; i++)
+			for (int i = 0; i < count; i++)
 			{
 				LLPluginProcessParent *self = (LLPluginProcessParent *)(descriptors[i].client_data);
 				// NOTE: the descriptor returned here is actually a COPY of the original (even though we create the pollset with APR_POLLSET_NOCOPY).
@@ -775,7 +765,7 @@ void LLPluginProcessParent::poll(F64 timeout)
 					bool valid = false;
 					{
 						LLMutexLock lock(sInstancesMutex);
-						for(std::list<LLPluginProcessParent*>::iterator iter = sInstances.begin(); iter != sInstances.end(); ++iter)
+						for (std::list<LLPluginProcessParent*>::iterator iter = sInstances.begin(); iter != sInstances.end(); ++iter)
 						{
 							if (*iter == self)
 							{
@@ -912,7 +902,6 @@ void LLPluginProcessParent::receiveMessage(const LLPluginMessage &message)
 				LL_WARNS("Plugin") << "received hello message in wrong state -- bailing out" << LL_ENDL;
 				errorState();
 			}
-
 		}
 		else if (message_name == "load_plugin_response")
 		{
@@ -928,7 +917,7 @@ void LLPluginProcessParent::receiveMessage(const LLPluginMessage &message)
 				// TODO: kill plugin on major mismatches?
 				mMessageClassVersions = message.getValueLLSD("versions");
 				LLSD::map_iterator iter;
-				for(iter = mMessageClassVersions.beginMap(); iter != mMessageClassVersions.endMap(); iter++)
+				for (iter = mMessageClassVersions.beginMap(); iter != mMessageClassVersions.endMap(); iter++)
 				{
 					LL_INFOS("Plugin") << "message class: " << iter->first << " -> version: " << iter->second.asString() << LL_ENDL;
 				}
@@ -952,7 +941,6 @@ void LLPluginProcessParent::receiveMessage(const LLPluginMessage &message)
 			mCPUUsage = message.getValueReal("cpu_usage");
 
 			LL_DEBUGS("Plugin") << "cpu usage reported as " << mCPUUsage << LL_ENDL;
-
 		}
 		else if (message_name == "shm_add_response")
 		{

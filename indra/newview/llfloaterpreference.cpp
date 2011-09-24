@@ -41,151 +41,142 @@
 #include "llfloaterpreference.h"
 
 #include "llbutton.h"
-#include "llcheckboxctrl.h"
 #include "lldir.h"
-#include "llfocusmgr.h"
-#include "llscrollbar.h"
-#include "llspinctrl.h"
+#include "llresizehandle.h"			// for RESIZE_HANDLE_WIDTH
+#include "llscrollbar.h"			// for SCROLLBAR_SIZE
+#include "lluictrlfactory.h"
 #include "message.h"
 
+#include "llagent.h"
 #include "llcommandhandler.h"
 #include "llfloaterabout.h"
-#include "llfloaterpreference.h"
-#include "llpanelnetwork.h"
+#include "llfloaterhardwaresettings.h"
 #include "llpanelaudioprefs.h"
 #include "llpaneldisplay.h"
 #include "llpanellogin.h"
 #include "llpanelLCD.h"
-#include "llpanelweb.h"
 #include "llpanelskins.h"
 #include "llprefschat.h"
 #include "hbprefscool.h"
 #include "llprefsgeneral.h"
 #include "llprefsim.h"
 #include "llprefsinput.h"
+#include "llprefsnetwork.h"
 #include "llprefsnotifications.h"
 #include "llprefsvoice.h"
-#include "llresizehandle.h"
-#include "llresmgr.h"
-#include "llassetstorage.h"
-#include "llagent.h"
 #include "llviewercontrol.h"
 #include "llviewernetwork.h"
-#include "lluictrlfactory.h"
 #include "llviewerwindow.h"
-#include "llkeyboard.h"
-#include "llscrollcontainer.h"
-#include "llfloaterhardwaresettings.h"
 
 const S32 PREF_BORDER = 4;
 const S32 PREF_PAD = 5;
 const S32 PREF_BUTTON_WIDTH = 70;
 const S32 PREF_CATEGORY_WIDTH = 150;
-
 const S32 PREF_FLOATER_MIN_HEIGHT = 2 * SCROLLBAR_SIZE + 2 * LLPANEL_BORDER_WIDTH + 96;
 
 LLFloaterPreference* LLFloaterPreference::sInstance = NULL;
-
 
 class LLPreferencesHandler : public LLCommandHandler
 {
 public:
 	// requires trusted browser
 	LLPreferencesHandler() : LLCommandHandler("preferences", true) { }
-	bool handle(const LLSD& tokens, const LLSD& query_map,
-				LLMediaCtrl* web)
+	bool handle(const LLSD& tokens, const LLSD& query_map, LLMediaCtrl* web)
 	{
 		LLFloaterPreference::show(NULL);
 		return true;
 	}
 };
-
 LLPreferencesHandler gPreferencesHandler;
-
 
 // Must be done at run time, not compile time. JC
 S32 pref_min_width()
 {
-	return  
-	2 * PREF_BORDER + 
-	2 * PREF_BUTTON_WIDTH + 
-	PREF_PAD + RESIZE_HANDLE_WIDTH +
-	PREF_CATEGORY_WIDTH +
-	PREF_PAD;
+	return 2 * PREF_BORDER + 2 * PREF_BUTTON_WIDTH + 2 * PREF_PAD +
+		   RESIZE_HANDLE_WIDTH + PREF_CATEGORY_WIDTH;
 }
 
 S32 pref_min_height()
 {
-	return
-	2 * PREF_BORDER +
-	3*(BTN_HEIGHT + PREF_PAD) +
-	PREF_FLOATER_MIN_HEIGHT;
+	return 2 * PREF_BORDER + 3 * (BTN_HEIGHT + PREF_PAD) + PREF_FLOATER_MIN_HEIGHT;
 }
 
-
-LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container, LLButton * default_btn)
+LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container,
+								   LLButton * default_btn)
 :	mTabContainer(tab_container)
 {
 	mPrefsGeneral = new LLPrefsGeneral();
-	mTabContainer->addTabPanel(mPrefsGeneral->getPanel(), mPrefsGeneral->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsGeneral->getPanel(),
+							   mPrefsGeneral->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsGeneral->getPanel()->setDefaultBtn(default_btn);
 
 	mPrefsInput = new LLPrefsInput();
-	mTabContainer->addTabPanel(mPrefsInput->getPanel(), mPrefsInput->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsInput->getPanel(),
+							   mPrefsInput->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsInput->getPanel()->setDefaultBtn(default_btn);
 
-	mNetworkPanel = new LLPanelNetwork();
-	mTabContainer->addTabPanel(mNetworkPanel, mNetworkPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
-	mNetworkPanel->setDefaultBtn(default_btn);
-
-	mWebPanel = new LLPanelWeb();
-	mTabContainer->addTabPanel(mWebPanel, mWebPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
-	mWebPanel->setDefaultBtn(default_btn);
+	mPrefsNetwork = new LLPrefsNetwork();
+	mTabContainer->addTabPanel(mPrefsNetwork, mPrefsNetwork->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
+	mPrefsNetwork->setDefaultBtn(default_btn);
 
 	mDisplayPanel = new LLPanelDisplay();
-	mTabContainer->addTabPanel(mDisplayPanel, mDisplayPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mDisplayPanel, mDisplayPanel->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mDisplayPanel->setDefaultBtn(default_btn);
 
 	mAudioPanel = new LLPanelAudioPrefs();
-	mTabContainer->addTabPanel(mAudioPanel, mAudioPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mAudioPanel, mAudioPanel->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mAudioPanel->setDefaultBtn(default_btn);
 
 	mPrefsChat = new LLPrefsChat();
-	mTabContainer->addTabPanel(mPrefsChat->getPanel(), mPrefsChat->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsChat->getPanel(),
+							   mPrefsChat->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsChat->getPanel()->setDefaultBtn(default_btn);
 
 	mPrefsIM = new LLPrefsIM();
-	mTabContainer->addTabPanel(mPrefsIM->getPanel(), mPrefsIM->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsIM->getPanel(),
+							   mPrefsIM->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsIM->getPanel()->setDefaultBtn(default_btn);
 
 	mPrefsVoice = new LLPrefsVoice();
-	mTabContainer->addTabPanel(mPrefsVoice, mPrefsVoice->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsVoice, mPrefsVoice->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsVoice->setDefaultBtn(default_btn);
 
 #if LL_LCD_COMPILE
-
-	// only add this option if we actually have a logitech keyboard / speaker set
+	// only add this option if we actually have a logitech keyboard/speaker set
 	if (gLcdScreen->Enabled())
 	{
 		mLCDPanel = new LLPanelLCD();
-		mTabContainer->addTabPanel(mLCDPanel, mLCDPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
+		mTabContainer->addTabPanel(mLCDPanel, mLCDPanel->getLabel(),
+								   FALSE, onTabChanged, mTabContainer);
 		mLCDPanel->setDefaultBtn(default_btn);
 	}
-
 #else
 	mLCDPanel = NULL;
 #endif
 
 	mPrefsNotifications = new LLPrefsNotifications();
-	mTabContainer->addTabPanel(mPrefsNotifications->getPanel(), mPrefsNotifications->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsNotifications->getPanel(),
+							   mPrefsNotifications->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsNotifications->getPanel()->setDefaultBtn(default_btn);
-	
+
 	mSkinsPanel = new LLPanelSkins();
-	mTabContainer->addTabPanel(mSkinsPanel, mSkinsPanel->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mSkinsPanel, mSkinsPanel->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mSkinsPanel->setDefaultBtn(default_btn);
 
 	mPrefsCool = new HBPrefsCool();
-	mTabContainer->addTabPanel(mPrefsCool->getPanel(), mPrefsCool->getPanel()->getLabel(), FALSE, onTabChanged, mTabContainer);
+	mTabContainer->addTabPanel(mPrefsCool->getPanel(),
+							   mPrefsCool->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
 	mPrefsCool->getPanel()->setDefaultBtn(default_btn);
 
 	if (!mTabContainer->selectTab(gSavedSettings.getS32("LastPrefTab")))
@@ -206,17 +197,16 @@ LLPreferenceCore::~LLPreferenceCore()
 		delete mPrefsInput;
 		mPrefsInput = NULL;
 	}
-	if (mNetworkPanel)
+	if (mPrefsNetwork)
 	{
-		delete mNetworkPanel;
-		mNetworkPanel = NULL;
+		delete mPrefsNetwork;
+		mPrefsNetwork = NULL;
 	}
 	if (mDisplayPanel)
 	{
 		delete mDisplayPanel;
 		mDisplayPanel = NULL;
 	}
-
 	if (mAudioPanel)
 	{
 		delete mAudioPanel;
@@ -237,11 +227,6 @@ LLPreferenceCore::~LLPreferenceCore()
 		delete mPrefsNotifications;
 		mPrefsNotifications = NULL;
 	}
-	if (mWebPanel)
-	{
-		delete mWebPanel;
-		mWebPanel = NULL;
-	}
 	if (mSkinsPanel)
 	{
 		delete mSkinsPanel;
@@ -252,15 +237,13 @@ LLPreferenceCore::~LLPreferenceCore()
 		delete mPrefsCool;
 		mPrefsCool = NULL;
 	}
-
 }
-
 
 void LLPreferenceCore::apply()
 {
 	mPrefsGeneral->apply();
 	mPrefsInput->apply();
-	mNetworkPanel->apply();
+	mPrefsNetwork->apply();
 	mDisplayPanel->apply();
 	mAudioPanel->apply();
 	mPrefsChat->apply();
@@ -273,7 +256,6 @@ void LLPreferenceCore::apply()
 	// hardware menu apply
 	LLFloaterHardwareSettings::instance()->apply();
 
-	mWebPanel->apply();
 #if LL_LCD_COMPILE
 	// only add this option if we actually have a logitech keyboard / speaker set
 	if (gLcdScreen->Enabled())
@@ -281,15 +263,13 @@ void LLPreferenceCore::apply()
 		mLCDPanel->apply();
 	}
 #endif
-//	mWebPanel->apply();
 }
-
 
 void LLPreferenceCore::cancel()
 {
 	mPrefsGeneral->cancel();
 	mPrefsInput->cancel();
-	mNetworkPanel->cancel();
+	mPrefsNetwork->cancel();
 	mDisplayPanel->cancel();
 	mAudioPanel->cancel();
 	mPrefsChat->cancel();
@@ -302,7 +282,6 @@ void LLPreferenceCore::cancel()
 	// cancel hardware menu
 	LLFloaterHardwareSettings::instance()->cancel();
 
-	mWebPanel->cancel();
 #if LL_LCD_COMPILE
 	// only add this option if we actually have a logitech keyboard / speaker set
 	if (gLcdScreen->Enabled())
@@ -310,7 +289,6 @@ void LLPreferenceCore::cancel()
 		mLCDPanel->cancel();
 	}
 #endif
-//	mWebPanel->cancel();
 }
 
 // static
@@ -320,7 +298,6 @@ void LLPreferenceCore::onTabChanged(void* user_data, bool from_click)
 
 	gSavedSettings.setS32("LastPrefTab", self->getCurrentPanelIndex());
 }
-
 
 void LLPreferenceCore::setPersonalInfo(const std::string& visibility, bool im_via_email, const std::string& email)
 {
@@ -356,26 +333,23 @@ BOOL LLFloaterPreference::postBuild()
 
 	mAboutBtn = getChild<LLButton>("About...");
 	mAboutBtn->setClickedCallback(onClickAbout, this);
-	
+
 	mApplyBtn = getChild<LLButton>("Apply");
 	mApplyBtn->setClickedCallback(onBtnApply, this);
-		
+
 	mCancelBtn = getChild<LLButton>("Cancel");
 	mCancelBtn->setClickedCallback(onBtnCancel, this);
 
 	mOKBtn = getChild<LLButton>("OK");
 	mOKBtn->setClickedCallback(onBtnOK, this);
-			
-	mPreferenceCore = new LLPreferenceCore(
-		getChild<LLTabContainer>("pref core"),
-		getChild<LLButton>("OK")
-		);
-	
+
+	mPreferenceCore = new LLPreferenceCore(getChild<LLTabContainer>("pref core"),
+										   getChild<LLButton>("OK"));
+
 	sInstance = this;
 
 	return TRUE;
 }
-
 
 LLFloaterPreference::~LLFloaterPreference()
 {
@@ -388,12 +362,10 @@ void LLFloaterPreference::apply()
 	this->mPreferenceCore->apply();
 }
 
-
 void LLFloaterPreference::cancel()
 {
 	this->mPreferenceCore->cancel();
 }
-
 
 // static
 void LLFloaterPreference::show(void*)
@@ -406,7 +378,7 @@ void LLFloaterPreference::show(void*)
 
 	sInstance->open();		/* Flawfinder: ignore */
 
-	if(!gAgent.getID().isNull())
+	if (!gAgent.getID().isNull())
 	{
 		// we're logged in, so we can get this info.
 		gMessageSystem->newMessageFast(_PREHASH_UserInfoRequest);
@@ -419,16 +391,14 @@ void LLFloaterPreference::show(void*)
 	LLPanelLogin::setAlwaysRefresh(true);
 }
 
-
 // static
 void LLFloaterPreference::onClickAbout(void*)
 {
 	LLFloaterAbout::show(NULL);
 }
 
-
 // static 
-void LLFloaterPreference::onBtnOK( void* userdata )
+void LLFloaterPreference::onBtnOK(void* userdata)
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
 	// commit any outstanding text entry
@@ -446,8 +416,8 @@ void LLFloaterPreference::onBtnOK( void* userdata )
 		fp->apply();
 		fp->close(false);
 
-		gSavedSettings.saveToFile( gSavedSettings.getString("ClientSettingsFile"), TRUE );
-		
+		gSavedSettings.saveToFile(gSavedSettings.getString("ClientSettingsFile"), TRUE);
+
 		std::string crash_settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_USER_SETTINGS, CRASH_SETTINGS_FILE);
 		// save all settings, even if equals defaults
 		gCrashSettings.saveToFile(crash_settings_filename, FALSE);
@@ -458,12 +428,11 @@ void LLFloaterPreference::onBtnOK( void* userdata )
 		llinfos << "Can't close preferences!" << llendl;
 	}
 
-	LLPanelLogin::refreshLocation( false );
+	LLPanelLogin::refreshLocation(false);
 }
 
-
 // static 
-void LLFloaterPreference::onBtnApply( void* userdata )
+void LLFloaterPreference::onBtnApply(void* userdata)
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
 	if (fp->hasFocus())
@@ -476,9 +445,8 @@ void LLFloaterPreference::onBtnApply( void* userdata )
 	}
 	fp->apply();
 
-	LLPanelLogin::refreshLocation( false );
+	LLPanelLogin::refreshLocation(false);
 }
-
 
 void LLFloaterPreference::onClose(bool app_quitting)
 {
@@ -487,9 +455,8 @@ void LLFloaterPreference::onClose(bool app_quitting)
 	LLFloater::onClose(app_quitting);
 }
 
-
 // static 
-void LLFloaterPreference::onBtnCancel( void* userdata )
+void LLFloaterPreference::onBtnCancel(void* userdata)
 {
 	LLFloaterPreference *fp =(LLFloaterPreference *)userdata;
 	if (fp->hasFocus())
@@ -503,13 +470,15 @@ void LLFloaterPreference::onBtnCancel( void* userdata )
 	fp->close(); // side effect will also cancel any unsaved changes.
 }
 
-
 // static
-void LLFloaterPreference::updateUserInfo(const std::string& visibility, bool im_via_email, const std::string& email)
+void LLFloaterPreference::updateUserInfo(const std::string& visibility,
+										 bool im_via_email,
+										 const std::string& email)
 {
-	if(sInstance && sInstance->mPreferenceCore)
+	if (sInstance && sInstance->mPreferenceCore)
 	{
-		sInstance->mPreferenceCore->setPersonalInfo(visibility, im_via_email, email);
+		sInstance->mPreferenceCore->setPersonalInfo(visibility, im_via_email,
+													email);
 	}
 }
 

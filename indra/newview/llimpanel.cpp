@@ -334,9 +334,9 @@ LLVoiceChannel::~LLVoiceChannel()
 {
 	// Don't use LLVoiceClient::getInstance() here -- this can get called
 	// during atexit() time and that singleton MAY have already been destroyed.
-	if (gVoiceClient)
+	if (LLVoiceClient::instanceExists())
 	{
-		gVoiceClient->removeObserver(this);
+		LLVoiceClient::getInstance()->removeObserver(this);
 	}
 
 	sVoiceChannelMap.erase(mSessionID);
@@ -602,7 +602,7 @@ void LLVoiceChannel::resume()
 {
 	if (sSuspended)
 	{
-		if (gVoiceClient->voiceEnabled())
+		if (LLVoiceClient::getInstance()->voiceEnabled())
 		{
 			if (sSuspendedVoiceChannel)
 			{
@@ -1194,11 +1194,11 @@ LLFloaterIMPanel::~LLFloaterIMPanel()
 	mSpeakers = NULL;
 
 	// End the text IM session if necessary
-	if (gVoiceClient && mOtherParticipantUUID.notNull())
+	if (LLVoiceClient::instanceExists() && mOtherParticipantUUID.notNull())
 	{
 		if (mDialog == IM_NOTHING_SPECIAL || mDialog == IM_SESSION_P2P_INVITE)
 		{
-			gVoiceClient->endUserIMSession(mOtherParticipantUUID);
+			LLVoiceClient::getInstance()->endUserIMSession(mOtherParticipantUUID);
 		}
 	}
 
@@ -1322,9 +1322,9 @@ void LLFloaterIMPanel::onClickMuteVoice(void* user_data)
 void LLFloaterIMPanel::onVolumeChange(LLUICtrl* source, void* user_data)
 {
 	LLFloaterIMPanel* floaterp = (LLFloaterIMPanel*)user_data;
-	if (floaterp)
+	if (floaterp && LLVoiceClient::instanceExists())
 	{
-		gVoiceClient->setUserVolume(floaterp->mOtherParticipantUUID, (F32)source->getValue().asReal());
+		LLVoiceClient::getInstance()->setUserVolume(floaterp->mOtherParticipantUUID, (F32)source->getValue().asReal());
 	}
 }
 
@@ -1404,11 +1404,11 @@ void LLFloaterIMPanel::draw()
 			mSpeakerPanel->refreshSpeakers();
 		}
 	}
-	else
+	else if (LLVoiceClient::instanceExists())
 	{
 		// refresh volume and mute checkbox
 		childSetVisible("speaker_volume", LLVoiceClient::voiceEnabled() && mVoiceChannel->isActive());
-		childSetValue("speaker_volume", gVoiceClient->getUserVolume(mOtherParticipantUUID));
+		childSetValue("speaker_volume", LLVoiceClient::getInstance()->getUserVolume(mOtherParticipantUUID));
 
 		LLMuteList* ml = LLMuteList::getInstance();
 		childSetValue("mute_btn", ml && ml->isMuted(mOtherParticipantUUID, LLMute::flagVoiceChat));
@@ -1877,11 +1877,12 @@ void deliver_message(const std::string& utf8_text,
 
 	U8 offline = (!info || info->isOnline()) ? IM_ONLINE : IM_OFFLINE;
 
-	if (offline == IM_OFFLINE && LLVoiceClient::getInstance()->isOnlineSIP(other_participant_id))
+	if (offline == IM_OFFLINE && LLVoiceClient::instanceExists() &&
+		LLVoiceClient::getInstance()->isOnlineSIP(other_participant_id))
 	{
 		// User is online through the OOW connector, but not with a regular
 		// viewer. Try to send the message via SLVoice.
-		sent = gVoiceClient->sendTextMessage(other_participant_id, utf8_text);
+		sent = LLVoiceClient::getInstance()->sendTextMessage(other_participant_id, utf8_text);
 	}
 
 	if (!sent)

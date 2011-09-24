@@ -35,6 +35,7 @@
 
 #include "llstring.h"
 #include "llapr.h"
+#include "llaprpool.h"
 
 #include "apr_dso.h"
 
@@ -58,20 +59,20 @@ class LLPluginInstance
 public:
 	LLPluginInstance(LLPluginInstanceMessageListener *owner);
 	virtual ~LLPluginInstance();
-	
+
 	// Load a plugin dll/dylib/so
 	// Returns 0 if successful, APR error code or error code returned from the plugin's init function on failure.
 	int load(const std::string& plugin_dir, std::string &plugin_file);
-	
+
 	// Sends a message to the plugin.
 	void sendMessage(const std::string &message);
-	
+
    // TODO:DOC is this comment obsolete? can't find "send_count" anywhere in indra tree.
 	// send_count is the maximum number of message to process from the send queue.  If negative, it will drain the queue completely.
 	// The receive queue is always drained completely.
 	// Returns the total number of messages processed from both queues.
 	void idle(void);
-	
+
 	/** The signature of the function for sending a message from plugin to plugin loader shell.
     *
 	 * @param[in] message_string Null-terminated C string 
@@ -85,19 +86,20 @@ public:
     * @param[in] plugin_send_function Function for sending from the plugin loader shell to plugin.
     */
 	typedef int (*pluginInitFunction) (sendMessageFunction host_send_func, void *host_user_data, sendMessageFunction *plugin_send_func, void **plugin_user_data);
-	
+
    /** Name of plugin init function */
 	static const char *PLUGIN_INIT_FUNCTION_NAME;
-	
+
 private:
 	static void staticReceiveMessage(const char *message_string, void **user_data);
 	void receiveMessage(const char *message_string);
 
+	LLAPRPool mDSOHandlePool;
 	apr_dso_handle_t *mDSOHandle;
-	
+
 	void *mPluginUserData;
 	sendMessageFunction mPluginSendMessageFunction;
-	
+
 	LLPluginInstanceMessageListener *mOwner;
 };
 

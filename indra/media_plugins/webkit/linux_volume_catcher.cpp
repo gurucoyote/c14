@@ -41,6 +41,7 @@
 
 #include "volume_catcher.h"
 
+#include "llaprpool.h"
 
 extern "C" {
 #include <glib.h>
@@ -51,7 +52,6 @@ extern "C" {
 #include <pulse/subscribe.h>
 #include <pulse/glib-mainloop.h> // There's no special reason why we want the *glib* PA mainloop, but the generic polling implementation seems broken.
 
-#include "apr_pools.h"
 #include "apr_dso.h"
 }
 
@@ -67,7 +67,7 @@ extern "C" {
 #undef LL_PA_SYM
 
 static bool sSymsGrabbed = false;
-static apr_pool_t *sSymPADSOMemoryPool = NULL;
+static LLAPRPool sSymPADSOMemoryPool;
 static apr_dso_handle_t *sSymPADSOHandleG = NULL;
 
 bool grab_pa_syms(std::string pulse_dso_name)
@@ -86,18 +86,18 @@ bool grab_pa_syms(std::string pulse_dso_name)
 #define LL_PA_SYM(REQUIRED, PASYM, RTN, ...) do{rv = apr_dso_sym((apr_dso_handle_sym_t*)&ll##PASYM, sSymPADSOHandle, #PASYM); if (rv != APR_SUCCESS) {INFOMSG("Failed to grab symbol: %s", #PASYM); if (REQUIRED) sym_error = true;} else DEBUGMSG("grabbed symbol: %s from %p", #PASYM, (void*)ll##PASYM);}while(0)
 
 	//attempt to load the shared library
-	apr_pool_create(&sSymPADSOMemoryPool, NULL);
+	sSymPADSOMemoryPool.create();
   
-	if ( APR_SUCCESS == (rv = apr_dso_load(&sSymPADSOHandle,
-					       pulse_dso_name.c_str(),
-					       sSymPADSOMemoryPool) ))
+	if (APR_SUCCESS == (rv = apr_dso_load(&sSymPADSOHandle,
+										  pulse_dso_name.c_str(),
+										  sSymPADSOMemoryPool())))
 	{
 		INFOMSG("Found DSO: %s", pulse_dso_name.c_str());
 
 #include "linux_volume_catcher_pa_syms.inc"
 #include "linux_volume_catcher_paglib_syms.inc"
       
-		if ( sSymPADSOHandle )
+		if (sSymPADSOHandle)
 		{
 			sSymPADSOHandleG = sSymPADSOHandle;
 			sSymPADSOHandle = NULL;
@@ -127,18 +127,14 @@ void ungrab_pa_syms()
 	// should be safe to call regardless of whether we've
 	// actually grabbed syms.
 
-	if ( sSymPADSOHandleG )
+	if (sSymPADSOHandleG)
 	{
 		apr_dso_unload(sSymPADSOHandleG);
 		sSymPADSOHandleG = NULL;
 	}
-	
-	if ( sSymPADSOMemoryPool )
-	{
-		apr_pool_destroy(sSymPADSOMemoryPool);
-		sSymPADSOMemoryPool = NULL;
-	}
-	
+
+	sSymPADSOMemoryPool.destroy();
+
 	// NULL-out all of the symbols we'd grabbed
 #define LL_PA_SYM(REQUIRED, PASYM, RTN, ...) do{ll##PASYM = NULL;}while(0)
 #include "linux_volume_catcher_pa_syms.inc"
@@ -283,7 +279,7 @@ void VolumeCatcherImpl::cleanup()
 void VolumeCatcherImpl::setVolume(F32 volume)
 {
 	mDesiredVolume = volume;
-	
+
 	if (!mGotSyms) return;
 
 	if (mConnected && mPAContext)
@@ -338,7 +334,7 @@ void VolumeCatcherImpl::update_index_volume(U32 index, F32 volume)
 	static pa_cvolume cvol;
 	llpa_cvolume_set(&cvol, mSinkInputNumChannels[index],
 			 llpa_sw_volume_from_linear(volume));
-	
+
 	pa_context *c = mPAContext;
 	uint32_t idx = index;
 	const pa_cvolume *cvolumep = &cvol;
@@ -352,7 +348,6 @@ void VolumeCatcherImpl::update_index_volume(U32 index, F32 volume)
 	}
 }
 
-
 void callback_discovered_sinkinput(pa_context *context, const pa_sink_input_info *sii, int eol, void *userdata)
 {
 	VolumeCatcherImpl *impl = dynamic_cast<VolumeCatcherImpl*>((VolumeCatcherImpl*)userdata);
@@ -362,15 +357,15 @@ void callback_discovered_sinkinput(pa_context *context, const pa_sink_input_info
 	{
 		pa_proplist *proplist = sii->proplist;
 		pid_t sinkpid = atoll(llpa_proplist_gets(proplist, PA_PROP_APPLICATION_PROCESS_ID));
-		
+
 		if (sinkpid == getpid()) // does the discovered sinkinput belong to this process?
 		{
 			bool is_new = (impl->mSinkInputIndices.find(sii->index) ==
 				       impl->mSinkInputIndices.end());
-			
+
 			impl->mSinkInputIndices.insert(sii->index);
 			impl->mSinkInputNumChannels[sii->index] = sii->channel_map.channels;
-			
+
 			if (is_new)
 			{
 				// new!
@@ -389,17 +384,16 @@ void callback_subscription_alert(pa_context *context, pa_subscription_event_type
 	VolumeCatcherImpl *impl = dynamic_cast<VolumeCatcherImpl*>((VolumeCatcherImpl*)userdata);
 	llassert(impl);
 
-	switch (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) {
-        case PA_SUBSCRIPTION_EVENT_SINK_INPUT:
-		if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) ==
-		    PA_SUBSCRIPTION_EVENT_REMOVE)
+	switch (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK)
+	{
+	case PA_SUBSCRIPTION_EVENT_SINK_INPUT:
+		if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE)
 		{
 			// forget this sinkinput, if we were caring about it
 			impl->mSinkInputIndices.erase(index);
 			impl->mSinkInputNumChannels.erase(index);
 		}
-		else if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) ==
-			 PA_SUBSCRIPTION_EVENT_NEW)
+		else if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW)
 		{
 			// ask for more info about this new sinkinput
 			pa_operation *op;
@@ -413,7 +407,7 @@ void callback_subscription_alert(pa_context *context, pa_subscription_event_type
 			// property change on this sinkinput - we don't care.
 		}
 		break;
-		
+
 	default:;
 	}
 }
@@ -422,7 +416,7 @@ void callback_context_state(pa_context *context, void *userdata)
 {
 	VolumeCatcherImpl *impl = dynamic_cast<VolumeCatcherImpl*>((VolumeCatcherImpl*)userdata);
 	llassert(impl);
-	
+
 	switch (llpa_context_get_state(context))
 	{
 	case PA_CONTEXT_READY:

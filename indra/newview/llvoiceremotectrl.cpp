@@ -117,15 +117,15 @@ void LLVoiceRemoteCtrl::draw()
 	if (!mTalkBtn->hasMouseCapture())
 	{
 		// not in push to talk mode, or push to talk is active means I'm talking
-		mTalkBtn->setToggleState(!ptt_currently_enabled || gVoiceClient->getUserPTTState());
+		mTalkBtn->setToggleState(!ptt_currently_enabled || LLVoiceClient::getInstance()->getUserPTTState());
 	}
 	mSpeakersBtn->setToggleState(LLFloaterActiveSpeakers::instanceVisible(LLSD()));
 	mTalkLockBtn->setToggleState(!ptt_currently_enabled);
 
 	std::string talk_blip_image;
-	if (gVoiceClient->getIsSpeaking(gAgent.getID()))
+	if (LLVoiceClient::getInstance()->getIsSpeaking(gAgent.getID()))
 	{
-		F32 voice_power = gVoiceClient->getCurrentPower(gAgent.getID());
+		F32 voice_power = LLVoiceClient::getInstance()->getCurrentPower(gAgent.getID());
 
 		if (voice_power > LLVoiceClient::OVERDRIVEN_POWER_LEVEL)
 		{
@@ -133,7 +133,7 @@ void LLVoiceRemoteCtrl::draw()
 		}
 		else
 		{
-			F32 power = gVoiceClient->getCurrentPower(gAgent.getID());
+			F32 power = LLVoiceClient::getInstance()->getCurrentPower(gAgent.getID());
 			S32 icon_image_idx = llmin(2, llfloor((power / LLVoiceClient::OVERDRIVEN_POWER_LEVEL) * 3.f));
 
 			switch (icon_image_idx)
@@ -228,7 +228,7 @@ void LLVoiceRemoteCtrl::onBtnTalkClicked(void *user_data)
 	// when in toggle mode, clicking talk button turns mic on/off
 	if (gSavedSettings.getBOOL("PushToTalkToggle"))
 	{
-		gVoiceClient->toggleUserPTTState();
+		LLVoiceClient::getInstance()->toggleUserPTTState();
 	}
 }
 
@@ -238,7 +238,7 @@ void LLVoiceRemoteCtrl::onBtnTalkHeld(void *user_data)
 	// when not in toggle mode, holding down talk button turns on mic
 	if (!gSavedSettings.getBOOL("PushToTalkToggle"))
 	{
-		gVoiceClient->setUserPTTState(true);
+		LLVoiceClient::getInstance()->setUserPTTState(true);
 	}
 }
 
@@ -248,7 +248,7 @@ void LLVoiceRemoteCtrl::onBtnTalkReleased(void* user_data)
 	// when not in toggle mode, releasing talk button turns off mic
 	if (!gSavedSettings.getBOOL("PushToTalkToggle"))
 	{
-		gVoiceClient->setUserPTTState(false);
+		LLVoiceClient::getInstance()->setUserPTTState(false);
 	}
 }
 

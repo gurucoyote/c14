@@ -61,6 +61,11 @@ public:
 		flagAll				= 0x0000000F		// Mask of all currently defined flags
 	};
 
+	static char CHAT_SUFFIX[];
+	static char VOICE_SUFFIX[];
+	static char PARTICLES_SUFFIX[];
+	static char SOUNDS_SUFFIX[];
+
 	static char BY_NAME_SUFFIX[];
 	static char AGENT_SUFFIX[];
 	static char OBJECT_SUFFIX[];

@@ -60,14 +60,13 @@
 #include "llhudicon.h"
 #include "llstatgraph.h"
 #include "llviewercontrol.h"
-#include "llviewermenu.h"	// for gMenuBarView
+#include "llviewermenu.h"			// for gMenuBarView
 #include "llviewerparceloverlay.h"
 #include "llviewerparcelmgr.h"
 #include "llviewerregion.h"
 #include "llviewerstats.h"
 #include "llviewerthrottle.h"
 #include "llviewerwindow.h"
-#include "llvoiceclient.h"	// for gVoiceClient
 #include "llvoavatar.h"
 #include "llworld.h"
 

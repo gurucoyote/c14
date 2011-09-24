@@ -1006,7 +1006,7 @@ LLVOAvatar::LLVOAvatar(const LLUUID& id,
 
 	//VTPause();  // VTune
 
-	mVoiceVisualizer->setVoiceEnabled(gVoiceClient->getVoiceEnabled(mID));
+	mVoiceVisualizer->setVoiceEnabled(LLVoiceClient::getInstance()->getVoiceEnabled(mID));
 	mCurrentGesticulationLevel = 0;
 }
 
@@ -2636,7 +2636,8 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 	// store off last frame's root position to be consistent with camera position
 	LLVector3 root_pos_last = mRoot.getWorldPosition();
 	bool detailed_update = updateCharacter(agent);
-	bool voice_enabled = gVoiceClient->getVoiceEnabled(mID) && gVoiceClient->inProximalChannel();
+	bool voice_enabled = LLVoiceClient::getInstance()->getVoiceEnabled(mID) &&
+						 LLVoiceClient::getInstance()->inProximalChannel();
 
 	if (gNoRender)
 	{
@@ -2853,16 +2854,16 @@ void LLVOAvatar::idleUpdateVoiceVisualizer(bool voice_enabled)
 		// Notice the calls to "gAwayTimer.reset()". This resets the timer that determines how long the avatar has been
 		// "away", so that the avatar doesn't lapse into away-mode (and slump over) while the user is still talking. 
 		//-----------------------------------------------------------------------------------------------------------------
-		if (gVoiceClient->getIsSpeaking(mID))
+		if (LLVoiceClient::getInstance()->getIsSpeaking(mID))
 		{
-			if (! mVoiceVisualizer->getCurrentlySpeaking())
+			if (!mVoiceVisualizer->getCurrentlySpeaking())
 			{
 				mVoiceVisualizer->setStartSpeaking();
 
 				//printf("gAwayTimer.reset();\n");
 			}
 
-			mVoiceVisualizer->setSpeakingAmplitude(gVoiceClient->getCurrentPower(mID));
+			mVoiceVisualizer->setSpeakingAmplitude(LLVoiceClient::getInstance()->getCurrentPower(mID));
 
 			if (mIsSelf)
 			{
@@ -3097,7 +3098,8 @@ void LLVOAvatar::idleUpdateAppearanceAnimation()
 void LLVOAvatar::idleUpdateLipSync(bool voice_enabled)
 {
 	// Use the Lipsync_Ooh and Lipsync_Aah morphs for lip sync
-	if (voice_enabled && (gVoiceClient->lipSyncEnabled()) && gVoiceClient->getIsSpeaking(mID))
+	if (voice_enabled && LLVoiceClient::getInstance()->lipSyncEnabled() &&
+		LLVoiceClient::getInstance()->getIsSpeaking(mID))
 	{
 		F32 ooh_morph_amount = 0.0f;
 		F32 aah_morph_amount = 0.0f;
@@ -8981,8 +8983,7 @@ void LLVOAvatar::useBakedTexture(const LLUUID& id)
 void LLVOAvatar::dumpArchetypeXML(void*)
 {
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	LLAPRFile outfile;
-	outfile.open(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER,"new archetype.xml"), LL_APR_WB);
+	LLAPRFile outfile(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER, "new archetype.xml"), LL_APR_WB);
 	apr_file_t* file = outfile.getFileHandle();
 	if (!file)
 	{
@@ -9957,8 +9958,8 @@ void LLVOAvatar::idleUpdateRenderCost()
 
 	attachment_map_t::const_iterator iter;
 	for (iter = mAttachmentPoints.begin(); 
-		iter != mAttachmentPoints.end();
-		++iter)
+		 iter != mAttachmentPoints.end();
+		 ++iter)
 	{
 		LLViewerJointAttachment* attachment = iter->second;
 		for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();

@@ -41,15 +41,13 @@ extern "C" {
 #include <stdio.h>
 #include <gst/gst.h>
 
-#include "apr_pools.h"
 #include "apr_dso.h"
 }
 
-
 extern "C" {
-gboolean llmediaimplgstreamer_bus_callback (GstBus     *bus,
-					    GstMessage *message,
-					    gpointer    data);
+gboolean llmediaimplgstreamer_bus_callback(GstBus *bus,
+										   GstMessage *message,
+										   gpointer data);
 }
 
 #endif // LL_GSTREAMER010_ENABLED
