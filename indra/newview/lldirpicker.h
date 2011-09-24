@@ -63,7 +63,7 @@ class LLDirPicker
 {
 public:
 	// calling this before main() is undefined
-	static LLDirPicker& instance( void ) { return sInstance; }
+	static LLDirPicker& instance(void) { return sInstance; }
 
 	BOOL getDir(std::string* filename);
 	std::string getDirName();
@@ -79,15 +79,16 @@ private:
 		//DIRNAME_BUFFER_SIZE = 65536
 		DIRNAME_BUFFER_SIZE = 65000 
 	};
-	
-	void buildDirname( void );
+
+	void buildDirname(void);
 
 #if LL_DARWIN
 	NavDialogCreationOptions mNavOptions;
 	static pascal void doNavCallbackEvent(NavEventCallbackMessage callBackSelector,
-										 NavCBRecPtr callBackParms, void* callBackUD);
-	OSStatus	doNavChooseDialog();
-	
+										  NavCBRecPtr callBackParms,
+										  void* callBackUD);
+	OSStatus doNavChooseDialog();
+
 #endif
 
 #if LL_LINUX || LL_SOLARIS
@@ -97,10 +98,10 @@ private:
 
 	std::string* mFileName;
 	std::string  mDir;
-	BOOL mLocked;
+	bool mLocked;
 
 	static LLDirPicker sInstance;
-	
+
 public:
 	// don't call these directly please.
 	LLDirPicker();

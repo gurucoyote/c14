@@ -1,10 +1,10 @@
-/** 
- * @file llversionviewer.h
- * @brief
+/**
+ * @file llfloatermodeluploadbase.cpp
+ * @brief LLFloaterUploadModelBase class definition
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2011&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2011, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,37 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#include "llviewerprecompiledheaders.h"
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 1;
-const S32 LL_VERSION_BUILD = 5;
+#include "llfloatermodeluploadbase.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+#include "llnotifications.h"
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
+#include "llagent.h"
+#include "llviewerregion.h"
 
-#endif
+LLFloaterModelUploadBase::LLFloaterModelUploadBase(const LLSD& key)
+:	LLFloater(key),
+	mHasUploadPerm(false)
+{
+}
+
+void LLFloaterModelUploadBase::requestAgentUploadPermissions()
+{
+	std::string capability = "MeshUploadFlag";
+	std::string url = gAgent.getRegion()->getCapability(capability);
+
+	if (!url.empty())
+	{
+		llinfos<< typeid(*this).name() <<"::requestAgentUploadPermissions() requesting for upload model permissions from: "<< url <<llendl;
+		LLHTTPClient::get(url, new LLUploadModelPremissionsResponder(getPermObserverHandle()));
+	}
+	else
+	{
+		LLSD args;
+		args["CAPABILITY"] = capability;
+		LLNotifications::instance().add("RegionCapabilityRequestError", args);
+		// BAP HACK avoid being blocked by broken server side stuff
+		mHasUploadPerm = true;
+	}
+}

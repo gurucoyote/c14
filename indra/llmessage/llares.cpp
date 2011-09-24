@@ -502,7 +502,9 @@ bool LLAres::process(U64 timeout)
 		else if (ARES_GETSOCK_WRITABLE(bitmask, i))
 		{
 			aprFds[nactive].reqevents = APR_POLLOUT | APR_POLLERR;
-		} else {
+		}
+		else
+		{
 			continue;
 		}
 
@@ -552,7 +554,8 @@ bool LLAres::processAll()
 {
 	bool anyProcessed = false, ret;
 
-	do {
+	do
+	{
 		timeval tv;
 
 		ret = ares_timeout(chan_, NULL, &tv) != NULL;
@@ -562,7 +565,8 @@ bool LLAres::processAll()
 			ret = process(tv.tv_sec * 1000000LL + tv.tv_usec);
 			anyProcessed |= ret;
 		}
-	} while (ret);
+	}
+	while (ret);
 
 	return anyProcessed;
 }

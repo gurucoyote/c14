@@ -1269,7 +1269,7 @@ bool LLCurlEasyRequest::getResult(CURLcode* result, LLCurl::TransferInfo* info)
 	// In theory, info_read might return a message with a status other than CURLMSG_DONE
 	// In practice for all messages returned, msg == CURLMSG_DONE
 	// Ignore other messages just in case
-	while(1)
+	while (1)
 	{
 		S32 q;
 		CURLMsg* curlmsg = info_read(&q, info);

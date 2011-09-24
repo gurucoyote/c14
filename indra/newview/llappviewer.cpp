@@ -112,6 +112,7 @@
 #include "lltrans.h"
 #include "lluitrans.h"
 #include "lltracker.h"
+#include "llviewermenufile.h"
 #include "llviewerparcelmgr.h"
 #include "llworldmapview.h"
 #include "llpostprocess.h"
@@ -594,8 +595,11 @@ bool LLAppViewer::init()
 
     // *NOTE:Mani - LLCurl::initClass is not thread safe. 
     // Called before threads are created.
-    LLCurl::initClass();
-
+	bool curl_multi_thread = gSavedSettings.getBOOL("CurlUseMultipleThreads");
+    LLCurl::initClass(curl_multi_thread);
+	LL_INFOS("InitInfo") << "LLCurl initialized in "
+						 << (curl_multi_thread ? "multi" : "mono")
+						 << "-threaded mode." << LL_ENDL;
     initThreads();
 
     writeSystemInfo();
@@ -1040,7 +1044,10 @@ bool LLAppViewer::mainLoop()
 					{
 						pingMainloopTimeout("Main:ServicePump");				
 						LLFastTimer t4(LLFastTimer::FTM_PUMP);
-						gAres->process();
+						{
+							LLFastTimer t5(LLFastTimer::FTM_ARES);
+							gAres->process();
+						}
 						// this pump is necessary to make the login screen show up
 						gServicePump->pump();
 						gServicePump->callback();
@@ -1517,8 +1524,12 @@ bool LLAppViewer::cleanup()
 	sTextureFetch->shutdown();
 	sTextureCache->shutdown();
 	sImageDecodeThread->shutdown();
+
 	sTextureFetch->shutDownTextureCacheThread();
 	sTextureFetch->shutDownImageDecodeThread();
+
+	LLFilePickerThread::cleanupClass();
+
 	delete sTextureCache;
     sTextureCache = NULL;
 	delete sTextureFetch;
@@ -1640,6 +1651,8 @@ bool LLAppViewer::initThreads()
 
 	// Mesh streaming and caching
 	gMeshRepo.init();
+
+	LLFilePickerThread::initClass();
 
 	// *FIX: no error handling here!
 	return true;
@@ -3373,6 +3386,8 @@ void LLAppViewer::idle()
 	LLEventTimer::updateClass();
 	LLCriticalDamp::updateInterpolants();
 	LLMortician::updateClass();
+	LLFilePickerThread::clearDead();  //calls LLFilePickerThread::notify()
+
 	F32 dt_raw = idle_timer.getElapsedTimeAndResetF32();
 
 	// Cap out-of-control frame times
@@ -3962,8 +3977,6 @@ static F32 CheckMessagesMaxTime = CHECK_MESSAGES_DEFAULT_MAX_TIME;
 void LLAppViewer::idleNetwork()
 {
 	pingMainloopTimeout("idleNetwork");
-	LLError::LLCallStacks::clear() ;
-	llpushcallstacks ;
 
 	gObjectList.mNumNewObjects = 0;
 	S32 total_decoded = 0;
@@ -3973,11 +3986,8 @@ void LLAppViewer::idleNetwork()
 	{
 		LLFastTimer t(LLFastTimer::FTM_IDLE_NETWORK); // decode
 		
-		// deal with any queued name requests and replies.
-		gCacheName->processPending();
-		llpushcallstacks ;
 		LLTimer check_message_timer;
-		//  Read all available packets from network 
+		// Read all available packets from network 
 		stop_glerror();
 		const S64 frame_count = gFrameCount;  // U32->S64
 		F32 total_time = 0.0f;
@@ -3990,7 +4000,7 @@ void LLAppViewer::idleNetwork()
 				// server going down, so this is OK.
 				break;
 			}
-			stop_glerror();
+			//stop_glerror();
 
 			total_decoded++;
 			gPacketsIn++;
@@ -4028,7 +4038,7 @@ void LLAppViewer::idleNetwork()
 
 		// we want to clear the control after sending out all necessary agent updates
 		gAgent.resetControlFlags();
-		stop_glerror();
+		//stop_glerror();
 
 		// Decode enqueued messages...
 		S32 remaining_possible_decodes = MESSAGE_MAX_PER_FRAME - total_decoded;
@@ -4044,16 +4054,13 @@ void LLAppViewer::idleNetwork()
 			gPrintMessagesThisFrame = FALSE;
 		}
 	}
-	llpushcallstacks ;
 	gObjectList.mNumNewObjectsStat.addValue(gObjectList.mNumNewObjects);
 
 	// Retransmit unacknowledged packets.
 	gXferManager->retransmitUnackedPackets();
 	gAssetStorage->checkForTimeouts();
-	llpushcallstacks ;
 	gViewerThrottle.updateDynamicThrottle();
 
-	llpushcallstacks ;
 	// Check that the circuit between the viewer and the agent's current
 	// region is still alive
 	LLViewerRegion *agent_region = gAgent.getRegion();
@@ -4061,15 +4068,14 @@ void LLAppViewer::idleNetwork()
 	{
 		LLUUID this_region_id = agent_region->getRegionID();
 		bool this_region_alive = agent_region->isAlive();
-		if ((mAgentRegionLastAlive && !this_region_alive) // newly dead
-		    && (mAgentRegionLastID == this_region_id)) // same region
+		if (mAgentRegionLastAlive && !this_region_alive && // newly dead
+		    mAgentRegionLastID == this_region_id) // same region
 		{
 			forceDisconnect(LLTrans::getString("AgentLostConnection"));
 		}
 		mAgentRegionLastID = this_region_id;
 		mAgentRegionLastAlive = this_region_alive;
 	}
-	llpushcallstacks ;
 }
 
 void LLAppViewer::disconnectViewer()

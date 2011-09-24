@@ -5994,8 +5994,6 @@ static LLNotificationFunctorRegistration callback_script_dialog_reg_2("ScriptTex
 
 void process_script_dialog(LLMessageSystem* msg, void**)
 {
-	S32 i;
-
 	LLSD payload;
 
 	std::string message; 
@@ -6003,14 +6001,25 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	std::string last_name;
 	std::string title;
 
-	LLUUID object_id;
 	S32 chat_channel;
+
+	LLUUID object_id;
+    LLUUID owner_id = LLUUID::null;
+#if 0	// unused for now
+	LLUUID image_id;
+	msg->getUUID("Data", "ImageID", image_id);
+#endif
 	msg->getUUID("Data", "ObjectID", object_id);
 	msg->getString("Data", "FirstName", first_name);
 	msg->getString("Data", "LastName", last_name);
 	msg->getString("Data", "ObjectName", title);
 	msg->getString("Data", "Message", message);
 	msg->getS32("Data", "ChatChannel", chat_channel);
+	// Get the owner id if it is part of the message (new ScriptDialog message)
+	if (gMessageSystem->getNumberOfBlocks("OwnerData") > 0)
+	{
+		msg->getUUID("OwnerData", "OwnerID", owner_id);
+	}
 
 	if (first_name == "(???)")
 	{
@@ -6021,9 +6030,52 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 		last_name.clear();
 	}
 
-	// unused for now
-	LLUUID image_id;
-	msg->getUUID("Data", "ImageID", image_id);
+	// Ignore dialogs coming from muted objects or pertaining to muted
+	// residents.
+	LLMuteList* ml = LLMuteList::getInstance();
+	LLViewerObject* vobj = gObjectList.findObject(object_id);
+	if (ml && !(vobj && vobj->permYouOwner())) // Do not apply to objects we own
+	{
+		// Check for mutes by object id and by name
+		BOOL muted = ml->isMuted(object_id, title);
+
+		// Check for mutes by owner
+		if (!muted)
+		{
+			if (owner_id.notNull())
+			{
+				// Check for mutes by owner id
+				muted = ml->isMuted(owner_id);
+			}
+			else if (!last_name.empty())
+			{
+				// Check for mutes by group or owner name (id is unknown to us).
+				if (first_name.empty())
+				{
+					muted = ml->isMuted(LLUUID::null, last_name, 0, LLMute::GROUP);
+				}
+				else
+				{
+					muted = ml->isMuted(LLUUID::null, first_name + " " + last_name,
+									0, LLMute::AGENT);
+				}
+			}
+		}
+
+		if (muted)
+		{
+			static clock_t last_warning = 0;
+			// Do not spam the log with such messages...
+			if (clock() - last_warning > 5 * CLOCKS_PER_SEC)
+			{
+				llwarns << "Muting scripted object dialog(s) from: "
+						<< first_name << " " << last_name << "'s "
+						<< title << llendl;
+				last_warning = clock();
+			}
+			return;
+		}
+	}
 
 	payload["sender"] = msg->getSender().getIPandPort();
 	payload["object_id"] = object_id;
@@ -6046,7 +6098,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	if (firstbutton == "!!llTextBox!!")
 	{
 		is_text_box = true;
-		for (i = 1; i < button_count; i++)
+		for (S32 i = 1; i < button_count; i++)
 		{
 			std::string tdesc;
 			msg->getString("Buttons", "ButtonLabel", tdesc, i);
@@ -6055,7 +6107,7 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	}
 	else
 	{
-		for (i = 1; i < button_count; i++)
+		for (S32 i = 1; i < button_count; i++)
 		{
 			std::string tdesc;
 			msg->getString("Buttons", "ButtonLabel", tdesc, i);
@@ -6066,42 +6118,6 @@ void process_script_dialog(LLMessageSystem* msg, void**)
 	LLSD args;
 	args["TITLE"] = title;
 	args["MESSAGE"] = message;
-
-	// Ignore dialogs coming from muted objects or pertaining to muted
-	// residents.
-	LLMuteList* ml = LLMuteList::getInstance();
-	LLViewerObject* objectp = gObjectList.findObject(object_id);
-	if (ml && (!objectp || !objectp->permYouOwner()))	// Do not apply to objects we own
-	{
-		// Check for mutes by object id and by name
-		BOOL muted = ml->isMuted(object_id, title);
-		if (!muted && !(first_name.empty() && last_name.empty()))
-		{
-			// Check for mutes by group or owner name (id is unknown to us).
-			if (first_name.empty())
-			{
-				muted = ml->isMuted(LLUUID::null, last_name, 0, LLMute::GROUP);
-			}
-			else
-			{
-				muted = ml->isMuted(LLUUID::null, first_name + " " + last_name,
-									0, LLMute::AGENT);
-			}
-		}
-		if (muted)
-		{
-			static clock_t last_warning = 0;
-			// Do not spam the log with such messages...
-			if (clock() - last_warning > 5 * CLOCKS_PER_SEC)
-			{
-				llwarns << "Muting scripted object dialog(s) from: "
-						<< first_name << " " << last_name << "'s "
-						<< title << llendl;
-				last_warning = clock();
-			}
-			return;
-		}
-	}
 
 	std::string name;
 	if (first_name.empty())

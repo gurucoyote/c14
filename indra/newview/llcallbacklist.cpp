@@ -37,7 +37,6 @@
 // Library includes
 #include "llerror.h"
 
-
 //
 // Globals
 //
@@ -56,7 +55,6 @@ LLCallbackList::~LLCallbackList()
 {
 }
 
-
 void LLCallbackList::addFunction( callback_t func, void *data)
 {
 	if (!func)
@@ -74,7 +72,6 @@ void LLCallbackList::addFunction( callback_t func, void *data)
 	}
 }
 
-
 BOOL LLCallbackList::containsFunction( callback_t func, void *data)
 {
 	callback_pair_t t(func, data);
@@ -88,7 +85,6 @@ BOOL LLCallbackList::containsFunction( callback_t func, void *data)
 		return FALSE;
 	}
 }
-
 
 BOOL LLCallbackList::deleteFunction( callback_t func, void *data)
 {
@@ -105,12 +101,10 @@ BOOL LLCallbackList::deleteFunction( callback_t func, void *data)
 	}
 }
 
-
 void LLCallbackList::deleteAllFunctions()
 {
 	mCallbackList.clear();
 }
-
 
 void LLCallbackList::callFunctions()
 {
@@ -121,6 +115,77 @@ void LLCallbackList::callFunctions()
 	}
 }
 
+// Shim class to allow arbitrary boost::bind
+// expressions to be run as one-time idle callbacks.
+class OnIdleCallbackOneTime
+{
+public:
+	OnIdleCallbackOneTime(nullary_func_t callable)
+	:	mCallable(callable)
+	{
+	}
+
+	static void onIdle(void *data)
+	{
+		gIdleCallbacks.deleteFunction(onIdle, data);
+		OnIdleCallbackOneTime* self = reinterpret_cast<OnIdleCallbackOneTime*>(data);
+		self->call();
+		delete self;
+	}
+
+	void call()
+	{
+		mCallable();
+	}
+
+private:
+	nullary_func_t mCallable;
+};
+
+void doOnIdleOneTime(nullary_func_t callable)
+{
+	OnIdleCallbackOneTime* cb_functor = new OnIdleCallbackOneTime(callable);
+	gIdleCallbacks.addFunction(&OnIdleCallbackOneTime::onIdle,cb_functor);
+}
+
+// Shim class to allow generic boost functions to be run as
+// recurring idle callbacks.  Callable should return true when done,
+// false to continue getting called.
+class OnIdleCallbackRepeating
+{
+public:
+	OnIdleCallbackRepeating(bool_func_t callable)
+	:	mCallable(callable)
+	{
+	}
+
+	// Will keep getting called until the callable returns true.
+	static void onIdle(void *data)
+	{
+		OnIdleCallbackRepeating* self = reinterpret_cast<OnIdleCallbackRepeating*>(data);
+		bool done = self->call();
+		if (done)
+		{
+			gIdleCallbacks.deleteFunction(onIdle, data);
+			delete self;
+		}
+	}
+
+	bool call()
+	{
+		return mCallable();
+	}
+
+private:
+	bool_func_t mCallable;
+};
+
+void doOnIdleRepeating(bool_func_t callable)
+{
+	OnIdleCallbackRepeating* cb_functor = new OnIdleCallbackRepeating(callable);
+	gIdleCallbacks.addFunction(&OnIdleCallbackRepeating::onIdle,cb_functor);
+}
+
 #ifdef _DEBUG
 
 void test1(void *data)
@@ -129,13 +194,11 @@ void test1(void *data)
 	llinfos << "testfunc1 " << *s32_data << llendl;
 }
 
-
 void test2(void *data)
 {
 	S32 *s32_data = (S32 *)data;
 	llinfos << "testfunc2 " << *s32_data << llendl;
 }
-
 
 void
 LLCallbackList::test()

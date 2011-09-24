@@ -115,7 +115,7 @@
 #include "hbfloatergrouptitles.h"
 #include "llfloatergroups.h"
 #include "llfloaterhtmlcurrency.h"
-#include "llfloatermediabrowser.h"			// gViewerHtmlHelp
+#include "llfloatermediabrowser.h"
 #include "llfloaterhtmlsimple.h"
 #include "llfloaterhud.h"
 #include "llfloaterinspect.h"
@@ -913,35 +913,39 @@ void init_client_menu(LLMenuGL* menu)
 		menu->appendMenu(sub_menu);
 	}
 //mk
-{
+	{
 		LLMenuGL* sub = NULL;
 		sub = new LLMenuGL("Network");
 
 		sub->append(new LLMenuItemCallGL("Enable Message Log",  
-			&handle_viewer_enable_message_log,  NULL));
+					&handle_viewer_enable_message_log,  NULL));
 		sub->append(new LLMenuItemCallGL("Disable Message Log", 
-			&handle_viewer_disable_message_log, NULL));
+					&handle_viewer_disable_message_log, NULL));
 
 		sub->appendSeparator();
 
 		sub->append(new LLMenuItemCheckGL("Velocity Interpolate Objects", 
-										  &velocity_interpolate,
-										  NULL, 
+										  &velocity_interpolate, NULL, 
 										  &menu_check_control,
 										  (void*)"VelocityInterpolate"));
 		sub->append(new LLMenuItemCheckGL("Ping Interpolate Object Positions", 
-										  &menu_toggle_control,
-										  NULL, 
+										  &menu_toggle_control, NULL, 
 										  &menu_check_control,
 										  (void*)"PingInterpolate"));
 
 		sub->appendSeparator();
 
-		sub->append(new LLMenuItemCallGL("Drop a Packet", 
-			&drop_packet, NULL, NULL, 
-			'L', MASK_ALT | MASK_CONTROL));
+		sub->append(new LLMenuItemCheckGL("Multi-Threaded Curl (after restart)", 
+										  &menu_toggle_control, NULL, 
+										  &menu_check_control,
+										  (void*)"CurlUseMultipleThreads"));
 
-		menu->appendMenu( sub );
+		sub->appendSeparator();
+
+		sub->append(new LLMenuItemCallGL("Drop a Packet", &drop_packet, NULL,
+										 NULL, 'L', MASK_ALT | MASK_CONTROL));
+
+		menu->appendMenu(sub);
 		sub->createJumpKeys();
 	}
 	{
@@ -8047,7 +8051,7 @@ void handle_load_from_xml(void*)
 
 void handle_web_browser_test(void*)
 {
-	LLWeb::loadURL("http://secondlife.com/app/search/slurls.html");
+	LLFloaterMediaBrowser::showInstance("http://secondlife.com/app/search/slurls.html", true);
 }
 
 void handle_buy_currency_test(void*)

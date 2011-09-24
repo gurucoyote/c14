@@ -1,10 +1,10 @@
-/** 
- * @file llversionviewer.h
- * @brief
+/**
+ * @file llfloatermodeluploadbase.h
+ * @brief LLFloaterUploadModelBase class declaration
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2011&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2011, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,40 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#ifndef LL_LLFLOATERMODELUPLOADBASE_H
+#define LL_LLFLOATERMODELUPLOADBASE_H
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 1;
-const S32 LL_VERSION_BUILD = 5;
+#include "lluploadfloaterobservers.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+class LLFloaterModelUploadBase
+:	public LLFloater,
+	public LLUploadPermissionsObserver,
+	public LLWholeModelFeeObserver,
+	public LLWholeModelUploadObserver
+{
+public:
+	LLFloaterModelUploadBase(const LLSD& key);
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
+	virtual ~LLFloaterModelUploadBase(){};
 
-#endif
+	virtual void setPermissonsErrorStatus(U32 status, const std::string& reason) = 0;
+
+	virtual void onPermissionsReceived(const LLSD& result) = 0;
+
+	virtual void onModelPhysicsFeeReceived(const LLSD& result, std::string upload_url) = 0;
+
+	virtual void setModelPhysicsFeeErrorStatus(U32 status, const std::string& reason) = 0;
+
+	virtual void onModelUploadSuccess() {};
+
+	virtual void onModelUploadFailure() {};
+
+protected:
+	// requests agent's permissions to upload model
+	void requestAgentUploadPermissions();
+
+	std::string mUploadModelUrl;
+	bool mHasUploadPerm;
+};
+
+#endif /* LL_LLFLOATERMODELUPLOADBASE_H */

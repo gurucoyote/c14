@@ -33,17 +33,17 @@
 #include "llviewerprecompiledheaders.h"
 
 #include "lldirpicker.h"
-//#include "llviewermessage.h"
-#include "llworld.h"
-#include "llviewerwindow.h"
-#include "llkeyboard.h"
+
 #include "lldir.h"
 #include "llframetimer.h"
-#include "lltrans.h"
+#include "llkeyboard.h"
 
 #if LL_LINUX || LL_SOLARIS
 # include "llfilepicker.h"
 #endif
+#include "lltrans.h"
+#include "llviewerwindow.h"
+#include "llworld.h"
 
 //
 // Globals
@@ -60,7 +60,9 @@ LLDirPicker LLDirPicker::sInstance;
 //
 #if LL_WINDOWS
 
-LLDirPicker::LLDirPicker() 
+LLDirPicker::LLDirPicker()
+:	mFileName(NULL),
+	mLocked(false)
 {
 }
 
@@ -71,7 +73,7 @@ LLDirPicker::~LLDirPicker()
 
 BOOL LLDirPicker::getDir(std::string* filename)
 {
-	if( mLocked )
+	if (mLocked)
 	{
 		return FALSE;
 	}
@@ -80,34 +82,34 @@ BOOL LLDirPicker::getDir(std::string* filename)
 	// Modal, so pause agent
 	send_agent_pause();
 
-   BROWSEINFO bi;
-   memset(&bi, 0, sizeof(bi));
+	BROWSEINFO bi;
+	memset(&bi, 0, sizeof(bi));
 
-   bi.ulFlags   = BIF_USENEWUI;
-   bi.hwndOwner = (HWND)gViewerWindow->getPlatformWindow();
-   bi.lpszTitle = NULL;
+	bi.ulFlags   = BIF_USENEWUI;
+	bi.hwndOwner = (HWND)gViewerWindow->getPlatformWindow();
+	bi.lpszTitle = NULL;
 
-   ::OleInitialize(NULL);
+	::OleInitialize(NULL);
 
-   LPITEMIDLIST pIDL = ::SHBrowseForFolder(&bi);
+	LPITEMIDLIST pIDL = ::SHBrowseForFolder(&bi);
 
-   if(pIDL != NULL)
-   {
-      WCHAR buffer[_MAX_PATH] = {'\0'};
+	if (pIDL != NULL)
+	{
+	   WCHAR buffer[_MAX_PATH] = { '\0' };
 
-      if(::SHGetPathFromIDList(pIDL, buffer) != 0)
-      {
+	   if (::SHGetPathFromIDList(pIDL, buffer) != 0)
+	   {
 		  	// Set the string value.
 
-   			mDir = utf16str_to_utf8str(llutf16string(buffer));
+				mDir = utf16str_to_utf8str(llutf16string(buffer));
 	         success = TRUE;
-      }
+	   }
 
-      // free the item id list
-      CoTaskMemFree(pIDL);
-   }
+	   // free the item id list
+	   CoTaskMemFree(pIDL);
+	}
 
-   ::OleUninitialize();
+	::OleUninitialize();
 
 	send_agent_resume();
 
@@ -125,6 +127,8 @@ std::string LLDirPicker::getDirName()
 #elif LL_DARWIN
 
 LLDirPicker::LLDirPicker() 
+:	mFileName(NULL),
+	mLocked(false)
 {
 	reset();
 
@@ -145,7 +149,7 @@ LLDirPicker::~LLDirPicker()
 pascal void LLDirPicker::doNavCallbackEvent(NavEventCallbackMessage callBackSelector,
 										 NavCBRecPtr callBackParms, void* callBackUD)
 {
-	switch(callBackSelector)
+	switch (callBackSelector)
 	{
 		case kNavCBStart:
 		{
@@ -154,27 +158,26 @@ pascal void LLDirPicker::doNavCallbackEvent(NavEventCallbackMessage callBackSele
 			OSStatus error = noErr; 
 			AEDesc theLocation = {typeNull, NULL};
 			FSSpec outFSSpec;
-			
+
 			//Convert string to a FSSpec
 			FSRef myFSRef;
-			
+
 			const char* filename=sInstance.mFileName->c_str();
-			
+
 			error = FSPathMakeRef ((UInt8*)filename,	&myFSRef, 	NULL); 
-			
+
 			if (error != noErr) break;
 
 			error = FSGetCatalogInfo (&myFSRef, kFSCatInfoNone, NULL, NULL, &outFSSpec, NULL);
 
 			if (error != noErr) break;
-	
+
 			error = AECreateDesc(typeFSS, &outFSSpec, sizeof(FSSpec), &theLocation);
 
 			if (error != noErr) break;
 
 			error = NavCustomControl(callBackParms->context,
 							kNavCtlSetLocation, (void*)&theLocation);
-
 		}
 	}
 }
@@ -186,7 +189,7 @@ OSStatus	LLDirPicker::doNavChooseDialog()
 	NavReplyRecord	navReply;
 
 	memset(&navReply, 0, sizeof(navReply));
-	
+
 	// NOTE: we are passing the address of a local variable here.  
 	//   This is fine, because the object this call creates will exist for less than the lifetime of this function.
 	//   (It is destroyed by NavDialogDispose() below.)
@@ -207,34 +210,34 @@ OSStatus	LLDirPicker::doNavChooseDialog()
 		NavDialogDispose(navRef);
 
 	if (error == noErr && navReply.validRecord)
-	{	
+	{
 		FSRef		fsRef;
 		AEKeyword	theAEKeyword;
 		DescType	typeCode;
 		Size		actualSize = 0;
 		char		path[LL_MAX_PATH];		 /*Flawfinder: ignore*/
-		
+
 		memset(&fsRef, 0, sizeof(fsRef));
 		error = AEGetNthPtr(&navReply.selection, 1, typeFSRef, &theAEKeyword, &typeCode, &fsRef, sizeof(fsRef), &actualSize);
-		
+
 		if (error == noErr)
 			error = FSRefMakePath(&fsRef, (UInt8*) path, sizeof(path));
-		
+
 		if (error == noErr)
 			mDir = path;
 	}
-	
+
 	return error;
 }
 
 BOOL LLDirPicker::getDir(std::string* filename)
 {
-	if( mLocked ) return FALSE;
+	if (mLocked) return FALSE;
 	BOOL success = FALSE;
 	OSStatus	error = noErr;
-	
+
 	mFileName = filename;
-	
+
 //	mNavOptions.saveFileName 
 
 	// Modal, so pause agent
@@ -261,13 +264,15 @@ std::string LLDirPicker::getDirName()
 
 void LLDirPicker::reset()
 {
-	mLocked = FALSE;
+	mLocked = false;
 	mDir.clear();
 }
 
 #elif LL_LINUX || LL_SOLARIS
 
 LLDirPicker::LLDirPicker() 
+:	mFileName(NULL),
+	mLocked(false)
 {
 	mFilePicker = new LLFilePicker();
 	reset();

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <panel bottom="-550" height="486" left="350" name="Panel Avatar" width="430">
 	<tab_container bottom="-486" height="486" left="0" mouse_opaque="false" name="tab"
-	     tab_min_width="50" tab_position="top" width="419">
+	     tab_min_width="50" tab_position="top" width="430" follows="left|top|right|bottom">
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="2nd Life" left="1" mouse_opaque="true" name="2nd Life" width="418">
+		     label="2nd Life" left="0" mouse_opaque="true" name="2nd Life" width="430">
 			<string name="CaptionTextAcctInfo">
 				[ACCTTYPE]
 [PAYMENTINFO]
@@ -201,14 +201,14 @@
 			     tool_tip="Open customer service tool for this resident" width="66" follows="left|top" />
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="Web" left="1" mouse_opaque="true" name="WebProfile" width="418">
+		     label="Web" left="0" mouse_opaque="true" name="WebProfile" width="430">
 		  <line_editor bevel_style="in" border_style="line"
 			     border_thickness="1" bottom_delta="-18" enabled="false" follows="left|top"
 			     font="SansSerifSmall" height="16" is_unicode="false" left="10"
 			     max_length="254" mouse_opaque="true" name="url_edit"
 			     width="400" />
 			<flyout_button bottom_delta="-22" follows="left|top" font="SansSerifSmall" halign="center"
-			     height="18" label="Load" label_selected="Load" left="10"
+			     height="18" label="Load" label_selected="Load" left="8"
 			     mouse_opaque="true" name="load" enabled="false" 
 			     tool_tip="Load the homepage for this profile with the embedded web browser. Using the fly-out menu (i.e. by clicking the small down arrow), you may also open the URL in a larger, built-in web browser or in your system web browser, and you can browse back to the homepage URL if you browsed away from it." width="80" >
 				<flyout_button_item value="builtin" name="builtin_item">In built-in browser</flyout_button_item>
@@ -220,11 +220,11 @@
 			     mouse_opaque="true" name="web_profile_help" width="18" />
 			<check_box bottom_delta="0" follows="right|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Always load homepages"
-			     left_delta="25" mouse_opaque="true" name="auto_load"
+			     left_delta="35" mouse_opaque="true" name="auto_load"
 			     tool_tip="Automatically load ALL homepages set by residents in their profile without asking first."
 			     width="130" />
 			<flyout_button bottom_delta="0" follows="left|top" font="SansSerifSmall" halign="center"
-			     width="120" height="18" label="SL web profile" label_selected="SL web profile" left_delta="165"
+			     width="120" height="18" label="SL web profile" label_selected="SL web profile" left_delta="162"
 			     mouse_opaque="true" name="sl_web_profile" enabled="false" 
 			     tool_tip="This button loads the SL web-based profile page in the embedded web browser instead of the homepage set by the resident. Using the fly-out menu (i.e. by clicking the small down arrow), you may also open the web profile in a larger, built-in web browser or in your system web browser, and you can browse back to the home URL if you browsed away from it." >
 				<flyout_button_item value="sl_builtin" name="builtin_item">In built-in browser</flyout_button_item>
@@ -240,7 +240,7 @@
 			</string>
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="Interests" left="1" mouse_opaque="true" name="Interests" width="418">
+		     label="Interests" left="0" mouse_opaque="true" name="Interests" width="430">
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom="-36" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="right" height="16" left="4"
@@ -318,7 +318,7 @@
 			     width="330" />
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="Picks" left="1" mouse_opaque="true" name="Picks" width="418">
+		     label="Picks" left="0" mouse_opaque="true" name="Picks" width="430">
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom="-20" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="16" left="114"
@@ -343,8 +343,8 @@
 			</text>
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="Classified" left="1" mouse_opaque="true" name="Classified"
-		     width="418">
+		     label="Classified" left="0" mouse_opaque="true" name="Classified"
+		     width="430">
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom="-20" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="16" left="114"
@@ -369,7 +369,7 @@
 			</text>
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="1st Life" left="1" mouse_opaque="true" name="1st Life" width="418">
+		     label="1st Life" left="0" mouse_opaque="true" name="1st Life" width="430">
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom="-36" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="right" height="16" left="4"
@@ -401,7 +401,7 @@
 			     name="about" width="330" word_wrap="true" />
 		</panel>
 		<panel border="true" bottom="-482" follows="left|top|right|bottom" height="466"
-		     label="My Notes" left="1" mouse_opaque="true" name="My Notes" width="418">
+		     label="My Notes" left="0" mouse_opaque="true" name="My Notes" width="430">
 			<string name="Loading">
 				Loading...
 			</string>

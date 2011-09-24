@@ -59,14 +59,19 @@
 #include <commdlg.h>
 #endif
 
+extern "C"
+{
 // mostly for Linux, possible on others
 #if LL_GTK
 # include "gtk/gtk.h"
 #endif // LL_GTK
+}
 
+#if 0
 // also mostly for Linux, for some X11-specific filepicker usability tweaks
 #if LL_X11
 #include "SDL/SDL_syswm.h"
+#endif
 #endif
 
 class LLFilePicker
@@ -77,7 +82,7 @@ class LLFilePicker
 #endif // LL_GTK
 public:
 	// calling this before main() is undefined
-	static LLFilePicker& instance( void ) { return sInstance; }
+	static LLFilePicker& instance(void) { return sInstance; }
 
 	enum ELoadFilter
 	{
@@ -91,6 +96,8 @@ public:
 		FFLOAD_XML = 6,
 		FFLOAD_SLOBJECT = 7,
 		FFLOAD_RAW = 8,
+		FFLOAD_MODEL = 9,
+		FFLOAD_COLLADA = 10,
 	};
 
 	enum ESaveFilter
@@ -113,9 +120,9 @@ public:
 	};
 
 	// open the dialog. This is a modal operation
-	BOOL getSaveFile( ESaveFilter filter = FFSAVE_ALL, const std::string& filename = LLStringUtil::null );
-	BOOL getOpenFile( ELoadFilter filter = FFLOAD_ALL );
-	BOOL getMultipleOpenFiles( ELoadFilter filter = FFLOAD_ALL );
+	BOOL getSaveFile(ESaveFilter filter = FFSAVE_ALL, const std::string& filename = LLStringUtil::null);
+	BOOL getOpenFile(ELoadFilter filter = FFLOAD_ALL, bool blocking = true);
+	BOOL getMultipleOpenFiles(ELoadFilter filter = FFLOAD_ALL);
 
 	// Get the filename(s) found. getFirstFile() sets the pointer to
 	// the start of the structure and allows the start of iteration.
@@ -137,7 +144,7 @@ public:
 	S32 getFileCount() const { return (S32)mFiles.size(); }
 
 	// See llvfs/lldir.h : getBaseFileName and getDirName to extract base or directory names
-	
+
 	// clear any lists of buffers or whatever, and make sure the file
 	// picker isn't locked.
 	void reset();
@@ -149,7 +156,7 @@ private:
 		//FILENAME_BUFFER_SIZE = 65536
 		FILENAME_BUFFER_SIZE = 65000
 	};
-	
+
 #if LL_WINDOWS
 	OPENFILENAMEW mOFN;				// for open and save dialogs
 	WCHAR mFilesW[FILENAME_BUFFER_SIZE];
@@ -161,7 +168,7 @@ private:
 	NavDialogCreationOptions mNavOptions;
 	std::vector<std::string> mFileVector;
 	UInt32 mFileIndex;
-	
+
 	OSStatus doNavChooseDialog(ELoadFilter filter);
 	OSStatus doNavSaveDialog(ESaveFilter filter, const std::string& filename);
 	void getFilePath(SInt32 index);
@@ -179,11 +186,10 @@ private:
 
 	std::vector<std::string> mFiles;
 	S32 mCurrentFile;
-	BOOL mLocked;
-	BOOL mMultiFile;
+	bool mLocked;
 
 	static LLFilePicker sInstance;
-	
+
 protected:
 #if LL_GTK
         GtkWindow* buildFilePicker(bool is_save, bool is_folder,
@@ -195,5 +201,7 @@ public:
 	LLFilePicker();
 	~LLFilePicker();
 };
+
+const std::string upload_pick(void* data);
 
 #endif

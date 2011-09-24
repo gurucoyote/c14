@@ -1436,6 +1436,17 @@ Unable to upload [FILE] due to the following reason: [REASON]
 Please try again later.
   </notification>
 
+   <notification
+    icon="alertmodal.tga"
+    name="UploadCostConfirmation"
+    type="alertmodal">
+This upload will cost L$[PRICE], do you wish to continue with the upload?
+    <usetemplate
+     name="okcancelbuttons"
+     notext="Cancel"
+     yestext="Upload"/>
+  </notification>
+
   <notification
    icon="alertmodal.tga"
    name="CannotCreateLandmarkNotOwner"
@@ -6668,6 +6679,29 @@ Previous simulator: [OLDVERSION]
    priority="high"
    type="notifytip">
 The URL you clicked cannot be opened from this web browser (browser not trusted for this action).
+  </notification>
+
+  <notification
+    name="MeshUploadError"
+    icon="alert.tga"
+    type="alert">
+    [LABEL] failed to upload: [MESSAGE] [IDENTIFIER] 
+
+See the log file for details.
+  </notification>
+
+   <notification
+    name="MeshUploadPermError"
+    icon="alert.tga"
+    type="alert">
+    Error while requesting mesh upload permissons.
+  </notification>
+
+  <notification
+    name="RegionCapabilityRequestError"
+    icon="alert.tga"
+    type="alert">
+    Could not get region capability &apos;[CAPABILITY]&apos;.
   </notification>
 
   <global name="UnsupportedCPU">

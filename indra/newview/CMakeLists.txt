@@ -178,6 +178,7 @@ set(viewer_SOURCE_FILES
     llfloatermap.cpp
     slfloatermediafilter.cpp
     llfloatermemleak.cpp
+	llfloatermodeluploadbase.cpp
     llfloatermute.cpp
     llfloaternamedesc.cpp
     llfloaternewim.cpp
@@ -382,6 +383,7 @@ set(viewer_SOURCE_FILES
     lltrans.cpp
     lltranslate.cpp
     lluploaddialog.cpp
+	lluploadfloaterobservers.cpp
     llurl.cpp
     llurldispatcher.cpp
     llurlhistory.cpp
@@ -611,6 +613,7 @@ set(viewer_HEADER_FILES
     llfloatermap.h
     slfloatermediafilter.h
     llfloatermemleak.h
+	llfloatermodeluploadbase.h
     llfloatermute.h
     llfloaternamedesc.h
     llfloaternewim.h
@@ -818,6 +821,7 @@ set(viewer_HEADER_FILES
     lltranslate.h
     lluiconstants.h
     lluploaddialog.h
+	lluploadfloaterobservers.h
     llurl.h
     llurldispatcher.h
     llurlhistory.h
