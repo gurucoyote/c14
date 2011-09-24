@@ -1844,6 +1844,17 @@ class LLObjectEnableOpen : public view_listener_t
 	}
 };
 
+class LLViewCheckCameraFrontView : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		ECameraMode mode = gAgent.getCameraMode();
+		bool new_value = mode != CAMERA_MODE_MOUSELOOK &&
+						 mode != CAMERA_MODE_CUSTOMIZE_AVATAR;
+		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
+		return true;
+	}
+};
 
 class LLViewCheckBuildMode : public view_listener_t
 {
@@ -8622,6 +8633,7 @@ void initialize_menus()
 	addMenu(new LLViewEnableLastChatter(), "View.EnableLastChatter");
 	addMenu(new LLViewToggleRadar(), "View.ToggleAvatarList");
 
+	addMenu(new LLViewCheckCameraFrontView(), "View.CheckCameraFrontView");
 	addMenu(new LLViewCheckBuildMode(), "View.CheckBuildMode");
 	addMenu(new LLViewCheckJoystickFlycam(), "View.CheckJoystickFlycam");
 	addMenu(new LLViewCheckShowHoverTips(), "View.CheckShowHoverTips");
