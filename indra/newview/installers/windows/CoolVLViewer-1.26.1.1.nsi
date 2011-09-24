@@ -10,7 +10,7 @@ RequestExecutionLevel admin
 !define VER_MAJOR 1
 !define VER_MINOR 26
 !define VER_MICRO 1
-!define VER_REVISION 0
+!define VER_REVISION 1
 !define VERSION "${VER_MAJOR}.${VER_MINOR}.${VER_MICRO}.${VER_REVISION}"
 !define TMP_DIR "C:\TMP"
 !define BUILD_DIR "${TMP_DIR}\${PROD_NAME}"

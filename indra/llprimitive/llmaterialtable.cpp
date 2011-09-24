@@ -40,16 +40,6 @@
 
 LLMaterialTable LLMaterialTable::basic(1);
 
-// Material UUIDs.
-LLUUID const LL_DEFAULT_STONE_UUID("87c5765b-aa26-43eb-b8c6-c09a1ca6208e");
-LLUUID const LL_DEFAULT_METAL_UUID("6f3c53e9-ba60-4010-8f3e-30f51a762476");
-LLUUID const LL_DEFAULT_GLASS_UUID("b4ba225c-373f-446d-9f7e-6cb7b5cf9b3d");
-LLUUID const LL_DEFAULT_WOOD_UUID("89556747-24cb-43ed-920b-47caed15465f");
-LLUUID const LL_DEFAULT_FLESH_UUID("80736669-e4b9-450e-8890-d5169f988a50");
-LLUUID const LL_DEFAULT_PLASTIC_UUID("304fcb4e-7d33-4339-ba80-76d3d22dc11a");
-LLUUID const LL_DEFAULT_RUBBER_UUID("9fae0bc5-666d-477e-9f70-84e8556ec867");
-LLUUID const LL_DEFAULT_LIGHT_UUID("00000000-0000-0000-0000-000000000000");
-
 /* 
 	Old Havok 1 constants
 
@@ -57,7 +47,7 @@ LLUUID const LL_DEFAULT_LIGHT_UUID("00000000-0000-0000-0000-000000000000");
 // however Havok1's friction dynamics are not very correct, so the effective
 // friction coefficients that result from these numbers are approximately
 // 25-50% too low, more incorrect for the lower values.
-F32 const LLMaterialTable::FRICTION_MIN 	= 0.2f; 	
+F32 const LLMaterialTable::FRICTION_MIN 	= 0.2f; 
 F32 const LLMaterialTable::FRICTION_GLASS 	= 0.2f; 	// borosilicate glass
 F32 const LLMaterialTable::FRICTION_LIGHT 	= 0.2f; 	//
 F32 const LLMaterialTable::FRICTION_METAL 	= 0.3f; 	// steel
@@ -73,7 +63,7 @@ F32 const LLMaterialTable::FRICTION_MAX 	= 0.95f; 	//
 // #if LL_CURRENT_HAVOK_VERSION == LL_HAVOK_VERSION_460
 // Havok4 has more correct friction dynamics, however here we have to use
 // the "incorrect" equivalents for the legacy Havok1 behavior
-F32 const LLMaterialTable::FRICTION_MIN 	= 0.15f; 	
+F32 const LLMaterialTable::FRICTION_MIN 	= 0.15f; 
 F32 const LLMaterialTable::FRICTION_GLASS 	= 0.13f; 	// borosilicate glass
 F32 const LLMaterialTable::FRICTION_LIGHT 	= 0.14f; 	//
 F32 const LLMaterialTable::FRICTION_METAL 	= 0.22f; 	// steel
@@ -86,7 +76,7 @@ F32 const LLMaterialTable::FRICTION_RUBBER 	= 0.67f; 	//
 F32 const LLMaterialTable::FRICTION_MAX 	= 0.71f; 	//
 // #endif
 
-F32 const LLMaterialTable::RESTITUTION_MIN 		= 0.02f; 	
+F32 const LLMaterialTable::RESTITUTION_MIN 		= 0.02f; 
 F32 const LLMaterialTable::RESTITUTION_LAND 	= LLMaterialTable::RESTITUTION_MIN;
 F32 const LLMaterialTable::RESTITUTION_FLESH 	= 0.2f; 	// saltwater
 F32 const LLMaterialTable::RESTITUTION_STONE 	= 0.4f; 	// concrete
@@ -137,10 +127,21 @@ LLMaterialTable::~LLMaterialTable()
 	mMaterialInfoList.clear();
 }
 
+void LLMaterialTable::initTableTransNames(std::map<std::string, std::string> namemap)
+{
+	for (info_list_t::iterator iter = mMaterialInfoList.begin();
+		 iter != mMaterialInfoList.end(); ++iter)
+	{
+		LLMaterialInfo *infop = *iter;
+		std::string name = infop->mName;
+		infop->mName = namemap[name];
+	}
+}
+
 void LLMaterialTable::initBasicTable()
 {
 	// *TODO: Translate
-	add(LL_MCODE_STONE,std::string("Stone"), LL_DEFAULT_STONE_UUID);	
+	add(LL_MCODE_STONE,std::string("Stone"), LL_DEFAULT_STONE_UUID);
 	add(LL_MCODE_METAL,std::string("Metal"), LL_DEFAULT_METAL_UUID);
 	add(LL_MCODE_GLASS,std::string("Glass"), LL_DEFAULT_GLASS_UUID);
 	add(LL_MCODE_WOOD,std::string("Wood"), LL_DEFAULT_WOOD_UUID);
@@ -246,7 +247,7 @@ void LLMaterialTable::initBasicTable()
 
 		addCollisionSound(LL_MCODE_LIGHT, LL_MCODE_LIGHT, SND_PLASTIC_PLASTIC);
 	}
-	
+
 	//  Sliding Sounds
 	mSlidingSoundMatrix = new LLUUID[LL_MCODE_END*LL_MCODE_END];
 	if (mSlidingSoundMatrix)
@@ -364,10 +365,10 @@ BOOL LLMaterialTable::addCollisionSound(U8 mcode, U8 mcode2, const LLUUID &uuid)
 {
 	if (mCollisionSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
-		mCollisionSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;		
+		mCollisionSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;
 		if (mcode != mcode2)
 		{
-			mCollisionSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;		
+			mCollisionSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;
 		}
 	}
 	return TRUE;
@@ -377,10 +378,10 @@ BOOL LLMaterialTable::addSlidingSound(U8 mcode, U8 mcode2, const LLUUID &uuid)
 {
 	if (mSlidingSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
-		mSlidingSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;		
+		mSlidingSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;
 		if (mcode != mcode2)
 		{
-			mSlidingSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;		
+			mSlidingSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;
 		}
 	}
 	return TRUE;
@@ -390,10 +391,10 @@ BOOL LLMaterialTable::addRollingSound(U8 mcode, U8 mcode2, const LLUUID &uuid)
 {
 	if (mRollingSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
-		mRollingSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;		
+		mRollingSoundMatrix[mcode * LL_MCODE_END + mcode2] = uuid;
 		if (mcode != mcode2)
 		{
-			mRollingSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;		
+			mRollingSoundMatrix[mcode2 * LL_MCODE_END + mcode] = uuid;
 		}
 	}
 	return TRUE;
@@ -551,7 +552,7 @@ LLUUID LLMaterialTable::getCollisionSoundUUID(U8 mcode, U8 mcode2)
 {
 	mcode &= LL_MCODE_MASK;
 	mcode2 &= LL_MCODE_MASK;
-	
+
 	//llinfos << "code 1: " << ((U32) mcode) << " code 2:" << ((U32) mcode2) << llendl;
 	if (mCollisionSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
@@ -565,10 +566,10 @@ LLUUID LLMaterialTable::getCollisionSoundUUID(U8 mcode, U8 mcode2)
 }
 
 LLUUID LLMaterialTable::getSlidingSoundUUID(U8 mcode, U8 mcode2)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	mcode2 &= LL_MCODE_MASK;
-	
+
 	if (mSlidingSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
 		return(mSlidingSoundMatrix[mcode * LL_MCODE_END + mcode2]);
@@ -580,10 +581,10 @@ LLUUID LLMaterialTable::getSlidingSoundUUID(U8 mcode, U8 mcode2)
 }
 
 LLUUID LLMaterialTable::getRollingSoundUUID(U8 mcode, U8 mcode2)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	mcode2 &= LL_MCODE_MASK;
-	
+
 	if (mRollingSoundMatrix && (mcode < LL_MCODE_END) && (mcode2 < LL_MCODE_END))
 	{
 		return(mRollingSoundMatrix[mcode * LL_MCODE_END + mcode2]);
@@ -595,35 +596,35 @@ LLUUID LLMaterialTable::getRollingSoundUUID(U8 mcode, U8 mcode2)
 }
 
 LLUUID LLMaterialTable::getGroundCollisionSoundUUID(U8 mcode)
-{	
+{
 	//  Create material appropriate sounds for collisions with the ground 
 	//  For now, simply return a single sound for all materials 
 	return SND_STONE_DIRT_02;
 }
 
 LLUUID LLMaterialTable::getGroundSlidingSoundUUID(U8 mcode)
-{	
+{
 	//  Create material-specific sound for sliding on ground
 	//  For now, just return a single sound 
 	return SND_SLIDE_STONE_STONE_01;
 }
 
 LLUUID LLMaterialTable::getGroundRollingSoundUUID(U8 mcode)
-{	
+{
 	//  Create material-specific sound for rolling on ground
 	//  For now, just return a single sound 
 	return SND_SLIDE_STONE_STONE_01;
 }
 
 LLUUID LLMaterialTable::getCollisionParticleUUID(U8 mcode, U8 mcode2)
-{	
+{
 	//  Returns an appropriate UUID to use as sprite at collision betweeen objects  
 	//  For now, just return a single image 
 	return IMG_SHOT;
 }
 
 LLUUID LLMaterialTable::getGroundCollisionParticleUUID(U8 mcode)
-{	
+{
 	//  Returns an appropriate 
 	//  For now, just return a single sound 
 	return IMG_SMOKE_POOF;
@@ -631,7 +632,7 @@ LLUUID LLMaterialTable::getGroundCollisionParticleUUID(U8 mcode)
 
 
 F32 LLMaterialTable::getDensity(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -647,7 +648,7 @@ F32 LLMaterialTable::getDensity(U8 mcode)
 }
 
 F32 LLMaterialTable::getRestitution(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -663,7 +664,7 @@ F32 LLMaterialTable::getRestitution(U8 mcode)
 }
 
 F32 LLMaterialTable::getFriction(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -679,7 +680,7 @@ F32 LLMaterialTable::getFriction(U8 mcode)
 }
 
 F32 LLMaterialTable::getHPMod(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -695,7 +696,7 @@ F32 LLMaterialTable::getHPMod(U8 mcode)
 }
 
 F32 LLMaterialTable::getDamageMod(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -711,7 +712,7 @@ F32 LLMaterialTable::getDamageMod(U8 mcode)
 }
 
 F32 LLMaterialTable::getEPMod(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)
@@ -727,7 +728,7 @@ F32 LLMaterialTable::getEPMod(U8 mcode)
 }
 
 LLUUID LLMaterialTable::getShatterSoundUUID(U8 mcode)
-{	
+{
 	mcode &= LL_MCODE_MASK;
 	for (info_list_t::iterator iter = mMaterialInfoList.begin();
 		 iter != mMaterialInfoList.end(); ++iter)

@@ -32,18 +32,19 @@
 
 #include "linden_common.h"
 
-#include "material_codes.h"
-#include "llmemtype.h"
-#include "llerror.h"
-#include "message.h"
 #include "llprimitive.h"
+
+#include "lldatapacker.h"
+#include "llerror.h"
+#include "llmemtype.h"
+#include "llvolumemgr.h"
+#include "llsdutil_math.h"
+#include "llstring.h"
 #include "llvolume.h"
 #include "legacy_object_types.h"
+#include "material_codes.h"
+#include "message.h"
 #include "v4coloru.h"
-#include "llvolumemgr.h"
-#include "llstring.h"
-#include "lldatapacker.h"
-#include "llsdutil_math.h"
 
 /**
  * exported constants
@@ -152,7 +153,8 @@ bool LLPrimitive::cleanupVolumeManager()
 
 //===============================================================
 LLPrimitive::LLPrimitive()
-:	mNumTEs(0),
+:	mTextureList(),
+	mNumTEs(0),
 	mMiscFlags(0)
 {
 	mPrimitiveCode = 0;
@@ -168,20 +170,14 @@ LLPrimitive::LLPrimitive()
 
 	mRotation.loadIdentity();
 	mAngularVelocity.setVec(0.f,0.f,0.f);
-	
-	mScale.setVec(1.f,1.f,1.f);
 
-	mTextureList = NULL;
+	mScale.setVec(1.f,1.f,1.f);
 }
 
 //===============================================================
 LLPrimitive::~LLPrimitive()
 {
-	if (mTextureList)
-	{
-		delete [] mTextureList;
-		mTextureList = NULL;
-	}
+	clearTextureList();
 
 	// Cleanup handled by volume manager
 	if (mVolumep)
@@ -191,13 +187,17 @@ LLPrimitive::~LLPrimitive()
 	mVolumep = NULL;
 }
 
+void LLPrimitive::clearTextureList()
+{
+}
+
 //===============================================================
 // static
 LLPrimitive *LLPrimitive::createPrimitive(LLPCode p_code)
 {
 	LLMemType m1(LLMemType::MTYPE_PRIMITIVE);
 	LLPrimitive *retval = new LLPrimitive();
-	
+
 	if (retval)
 	{
 		retval->init_primitive(p_code);
@@ -214,15 +214,7 @@ LLPrimitive *LLPrimitive::createPrimitive(LLPCode p_code)
 void LLPrimitive::init_primitive(LLPCode p_code)
 {
 	LLMemType m1(LLMemType::MTYPE_PRIMITIVE);
-	if (mNumTEs)
-	{
-		if (mTextureList)
-		{
-			delete [] mTextureList;
-		}
-		mTextureList = new LLTextureEntry[mNumTEs];
-	}
-
+	clearTextureList();
 	mPrimitiveCode = p_code;
 }
 
@@ -232,343 +224,140 @@ void LLPrimitive::setPCode(const U8 p_code)
 }
 
 //===============================================================
-const LLTextureEntry * LLPrimitive::getTE(const U8 te_num) const
+LLTextureEntry* LLPrimitive::getTE(const U8 index) const
 {
-	// if we're asking for a non-existent face, return null
-	if (mNumTEs && te_num < mNumTEs)
-	{
-		return &mTextureList[te_num];
-	}
-	else
-	{	
-		return NULL;
-	}
+	return mTextureList.getTexture(index);
 }
 
 //===============================================================
 void LLPrimitive::setNumTEs(const U8 num_tes)
 {
-	if (num_tes == mNumTEs)
-	{
-		return;
-	}
-	
-	// Right now, we don't try and preserve entries when the number of faces
-	// changes.
-
-	LLMemType m1(LLMemType::MTYPE_PRIMITIVE);
-	if (num_tes)
-	{
-		LLTextureEntry *new_tes;
-		new_tes = new LLTextureEntry[num_tes];
-		U32 i;
-		for (i = 0; i < num_tes; i++)
-		{
-			if (i < mNumTEs)
-			{
-				new_tes[i] = mTextureList[i];
-			}
-			else if (mNumTEs)
-			{
-				new_tes[i] = mTextureList[mNumTEs - 1];
-			}
-			else
-			{
-				new_tes[i] = LLTextureEntry();
-			}
-		}
-		delete[] mTextureList;
-		mTextureList = new_tes;
-	}
-	else
-	{
-		delete[] mTextureList;
-		mTextureList = NULL;
-	}
-
-	mNumTEs = num_tes;
+	mTextureList.setSize(num_tes);
 }
 
 //===============================================================
 void  LLPrimitive::setAllTETextures(const LLUUID &tex_id)
 {
-	U8 i;
-
-	for (i = 0; i < mNumTEs; i++)
-	{
-		mTextureList[i].setID(tex_id);
-	}
+	mTextureList.setAllIDs(tex_id);
 }
 
 //===============================================================
 void LLPrimitive::setTE(const U8 index, const LLTextureEntry &te)
 {
-	mTextureList[index] = te;
+	mTextureList.copyTexture(index, te);
 }
 
-S32  LLPrimitive::setTETexture(const U8 te, const LLUUID &tex_id)
+S32  LLPrimitive::setTETexture(const U8 index, const LLUUID &id)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setID(tex_id);
+	return mTextureList.setID(index, id);
 }
 
-S32  LLPrimitive::setTEColor(const U8 te, const LLColor4 &color)
+S32  LLPrimitive::setTEColor(const U8 index, const LLColor4 &color)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setColor(color);
+	return mTextureList.setColor(index, color);
 }
 
-S32  LLPrimitive::setTEColor(const U8 te, const LLColor3 &color)
+S32  LLPrimitive::setTEColor(const U8 index, const LLColor3 &color)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setColor(color);
+	return mTextureList.setColor(index, color);
 }
 
-S32  LLPrimitive::setTEAlpha(const U8 te, const F32 alpha)
+S32  LLPrimitive::setTEAlpha(const U8 index, const F32 alpha)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setAlpha(alpha);
+	return mTextureList.setAlpha(index, alpha);
 }
 
 //===============================================================
-S32  LLPrimitive::setTEScale(const U8 te, const F32 s, const F32 t)
+S32  LLPrimitive::setTEScale(const U8 index, const F32 s, const F32 t)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setScale(s,t);
+	return mTextureList.setScale(index, s, t);
 }
-
 
 // BUG: slow - done this way because texture entries have some
 // voodoo related to texture coords
-S32 LLPrimitive::setTEScaleS(const U8 te, const F32 s)
+S32 LLPrimitive::setTEScaleS(const U8 index, const F32 s)
 {
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	F32 ignore, t;
-	mTextureList[te].getScale(&ignore, &t);
-	return mTextureList[te].setScale(s,t);
+	return mTextureList.setScaleS(index, s);
 }
-
 
 // BUG: slow - done this way because texture entries have some
 // voodoo related to texture coords
-S32 LLPrimitive::setTEScaleT(const U8 te, const F32 t)
+S32 LLPrimitive::setTEScaleT(const U8 index, const F32 t)
 {
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	F32 s, ignore;
-	mTextureList[te].getScale(&s, &ignore);
-	return mTextureList[te].setScale(s,t);
+	return mTextureList.setScaleT(index, t);
 }
-
 
 //===============================================================
-S32  LLPrimitive::setTEOffset(const U8 te, const F32 s, const F32 t)
+S32  LLPrimitive::setTEOffset(const U8 index, const F32 s, const F32 t)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setOffset(s,t);
+	return mTextureList.setOffset(index, s, t);
 }
-
 
 // BUG: slow - done this way because texture entries have some
 // voodoo related to texture coords
-S32 LLPrimitive::setTEOffsetS(const U8 te, const F32 s)
+S32 LLPrimitive::setTEOffsetS(const U8 index, const F32 s)
 {
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	F32 ignore, t;
-	mTextureList[te].getOffset(&ignore, &t);
-	return mTextureList[te].setOffset(s,t);
+	return mTextureList.setOffsetS(index, s);
 }
-
 
 // BUG: slow - done this way because texture entries have some
 // voodoo related to texture coords
-S32 LLPrimitive::setTEOffsetT(const U8 te, const F32 t)
+S32 LLPrimitive::setTEOffsetT(const U8 index, const F32 t)
 {
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	F32 s, ignore;
-	mTextureList[te].getOffset(&s, &ignore);
-	return mTextureList[te].setOffset(s,t);
+	return mTextureList.setOffsetT(index, t);
 }
-
 
 //===============================================================
-S32  LLPrimitive::setTERotation(const U8 te, const F32 r)
+S32  LLPrimitive::setTERotation(const U8 index, const F32 r)
 {
-     // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "Setting nonexistent face" << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setRotation(r);
+	return mTextureList.setRotation(index, r);
 }
-
 
 //===============================================================
-S32  LLPrimitive::setTEBumpShinyFullbright(const U8 te, const U8 bump)
+S32  LLPrimitive::setTEBumpShinyFullbright(const U8 index, const U8 bump)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setBumpShinyFullbright( bump );
+	return mTextureList.setBumpShinyFullbright(index, bump);
 }
 
-S32  LLPrimitive::setTEMediaTexGen(const U8 te, const U8 media)
+S32  LLPrimitive::setTEMediaTexGen(const U8 index, const U8 media)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setMediaTexGen( media );
+	return mTextureList.setMediaTexGen(index, media);
 }
 
-S32  LLPrimitive::setTEBumpmap(const U8 te, const U8 bump)
+S32  LLPrimitive::setTEBumpmap(const U8 index, const U8 bump)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setBumpmap( bump );
+	return mTextureList.setBumpMap(index, bump);
 }
 
-S32  LLPrimitive::setTEBumpShiny(const U8 te, const U8 bump_shiny)
+S32  LLPrimitive::setTEBumpShiny(const U8 index, const U8 bump_shiny)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setBumpShiny( bump_shiny );
+	return mTextureList.setBumpShiny(index, bump_shiny);
 }
 
-S32  LLPrimitive::setTETexGen(const U8 te, const U8 texgen)
+S32  LLPrimitive::setTETexGen(const U8 index, const U8 texgen)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setTexGen( texgen );
+	return mTextureList.setTexGen(index, texgen);
 }
 
-S32  LLPrimitive::setTEShiny(const U8 te, const U8 shiny)
+S32  LLPrimitive::setTEShiny(const U8 index, const U8 shiny)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setShiny( shiny );
+	return mTextureList.setShiny(index, shiny);
 }
 
-S32  LLPrimitive::setTEFullbright(const U8 te, const U8 fullbright)
+S32  LLPrimitive::setTEFullbright(const U8 index, const U8 fullbright)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setFullbright( fullbright );
+	return mTextureList.setFullbright(index, fullbright);
 }
 
-S32  LLPrimitive::setTEMediaFlags(const U8 te, const U8 media_flags)
+S32  LLPrimitive::setTEMediaFlags(const U8 index, const U8 media_flags)
 {
-    // if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-		return 0;
-	}
-
-	return mTextureList[te].setMediaFlags( media_flags );
+	return mTextureList.setMediaFlags(index, media_flags);
 }
 
-S32 LLPrimitive::setTEGlow(const U8 te, const F32 glow)
+S32 LLPrimitive::setTEGlow(const U8 index, const F32 glow)
 {
-	// if we're asking for a non-existent face, return null
-	if (te >= mNumTEs)
-	{
-		llwarns << "setting non-existent te " << te << llendl;
-			return 0;
-	}
-
-	return mTextureList[te].setGlow( glow );
+	return mTextureList.setGlow(index, glow);
 }
-
 
 LLPCode LLPrimitive::legacyToPCode(const U8 legacy)
 {
@@ -715,7 +504,7 @@ U8 LLPrimitive::pCodeToLegacy(const LLPCode pcode)
 		break;
 	case LL_PCODE_LEGACY_BIRD:
 		legacy = BIRD;
-		break;		
+		break;
 	case LL_PCODE_LEGACY_DEMON:
 		legacy = DEMON;
 		break;
@@ -762,7 +551,6 @@ U8 LLPrimitive::pCodeToLegacy(const LLPCode pcode)
 	}
 	return legacy;
 }
-
 
 // static
 // Don't crash or llerrs here!  This function is used for debug strings.
@@ -874,29 +662,21 @@ std::string LLPrimitive::pCodeToString(const LLPCode pcode)
 	return pcode_string;
 }
 
-
 void LLPrimitive::copyTEs(const LLPrimitive *primitivep)
 {
 	U32 i;
-	if (primitivep->getNumTEs() != getNumTEs())
+	if (primitivep->getExpectedNumTEs() != getExpectedNumTEs())
 	{
-		llwarns << "Primitives don't have same number of TE's" << llendl;
+		llwarns << "Primitives don't have same expected number of TE's" << llendl;
 	}
-	U32 num_tes = llmin(primitivep->getNumTEs(), getNumTEs());
+	U32 num_tes = llmin(primitivep->getExpectedNumTEs(), getExpectedNumTEs());
+	if (mTextureList.size() < getExpectedNumTEs())
+	{
+		mTextureList.setSize(getExpectedNumTEs());
+	}
 	for (i = 0; i < num_tes; i++)
 	{
-		const LLTextureEntry *tep = primitivep->getTE(i);
-		F32 s, t;
-		setTETexture(i, tep->getID());
-		setTEColor(i, tep->getColor());
-		tep->getScale(&s, &t);
-		setTEScale(i, s, t);
-		tep->getOffset(&s, &t);
-		setTEOffset(i, s, t);
-		setTERotation(i, tep->getRotation());
-		setTEBumpShinyFullbright(i, tep->getBumpShinyFullbright());
-		setTEMediaTexGen(i, tep->getMediaTexGen());
-		setTEGlow(i, tep->getGlow());
+		mTextureList.copyTexture(i, *(primitivep->getTE(i)));
 	}
 }
 
@@ -940,14 +720,13 @@ BOOL LLPrimitive::setVolume(const LLVolumeParams &volume_params, const S32 detai
 		volumep = sVolumeManager->refVolume(volume_params, detail);
 		if (volumep == mVolumep)
 		{
-			sVolumeManager->unrefVolume( volumep );  // LLVolumeMgr::refVolume() creates a reference, but we don't need a second one.
+			sVolumeManager->unrefVolume(volumep);  // LLVolumeMgr::refVolume() creates a reference, but we don't need a second one.
 			return TRUE;
 		}
 	}
 
 	setChanged(GEOMETRY);
 
-	
 	if (!mVolumep)
 	{
 		mVolumep = volumep;
@@ -956,18 +735,12 @@ BOOL LLPrimitive::setVolume(const LLVolumeParams &volume_params, const S32 detai
 		return TRUE;
 	}
 
-	U32 old_face_mask = mVolumep->mFaceMask;
-
 	// build the new object
 	sVolumeManager->unrefVolume(mVolumep);
 	mVolumep = volumep;
-	
-	U32 new_face_mask = mVolumep->mFaceMask;	
-	if (old_face_mask != new_face_mask) 
-	{
-		setNumTEs(mVolumep->getNumFaces());
-	}	
-	
+
+	setNumTEs(mVolumep->getNumFaces());
+
 	return TRUE;
 }
 
@@ -984,50 +757,6 @@ BOOL LLPrimitive::setMaterial(U8 material)
 	}
 }
 
-void LLPrimitive::setTEArrays(const U8 size,
-							  const LLUUID* image_ids,
-							  const F32* scale_s,
-							  const F32* scale_t)
-{
-	S32 cur_size = size;
-	if (cur_size > getNumTEs())
-	{
-		llwarns << "Trying to set more TEs than exist!" << llendl;
-		cur_size = getNumTEs();
-	}
-
-	S32 i;
-	// Copy over image information
-	for (i = 0; i < cur_size; i++)
-	{
-		// This is very BAD!!!!!!
-		if (image_ids != NULL)
-		{
-			setTETexture(i,image_ids[i]);
-		}
-		if (scale_s && scale_t)
-		{
-			setTEScale(i, scale_s[i], scale_t[i]);
-		}
- 	}
-
-	if (i < getNumTEs())
-	{
-		cur_size--;
-		for (i=i; i < getNumTEs(); i++)		// the i=i removes a gcc warning
-		{
-			if (image_ids != NULL)
-			{
-				setTETexture(i, image_ids[cur_size]);
-			}
-			if (scale_s && scale_t)
-			{
-				setTEScale(i, scale_s[cur_size], scale_t[cur_size]);
-			}
-		}
-	}
-}
-
 const F32 LL_MAX_SCALE_S = 100.0f;
 const F32 LL_MAX_SCALE_T = 100.0f;
 S32 LLPrimitive::packTEField(U8 *cur_ptr, U8 *data_ptr, U8 data_size, U8 last_face_index, EMsgVariableType type) const
@@ -1039,7 +768,7 @@ S32 LLPrimitive::packTEField(U8 *cur_ptr, U8 *data_ptr, U8 data_size, U8 last_fa
 
 	htonmemcpy(cur_ptr,data_ptr + (last_face_index * data_size), type, data_size);
 	cur_ptr += data_size;
-	
+
 	for (face_index = last_face_index-1; face_index >= 0; face_index--)
 	{
 		BOOL already_sent = FALSE;
@@ -1062,7 +791,7 @@ S32 LLPrimitive::packTEField(U8 *cur_ptr, U8 *data_ptr, U8 data_size, U8 last_fa
 					exception_faces |= ((U64)1 << i); 
 				}
 			}
-			
+
 			//assign exception faces to cur_ptr
 			if (exception_faces >= (0x1 << 7))
 			{
@@ -1080,9 +809,9 @@ S32 LLPrimitive::packTEField(U8 *cur_ptr, U8 *data_ptr, U8 data_size, U8 last_fa
 				}
 				*cur_ptr++ = (U8)(((exception_faces >> 7) & 0x7F) | 0x80);
 			}
-			
+
 			*cur_ptr++ = (U8)(exception_faces & 0x7F);
-			
+
 			htonmemcpy(cur_ptr,data_ptr + (face_index * data_size), type, data_size);
 			cur_ptr += data_size;
    		}
@@ -1102,8 +831,8 @@ S32 LLPrimitive::unpackTEField(U8 *cur_ptr, U8 *buffer_end, U8 *data_ptr, U8 dat
 		// Already unswizzled, don't need to unswizzle it again!
 		memcpy(data_ptr+(i*data_size),data_ptr,data_size);	/* Flawfinder: ignore */ 
 	}
-	
-	while ((cur_ptr < buffer_end) && (*cur_ptr != 0))
+
+	while (cur_ptr < buffer_end && *cur_ptr != 0)
 	{
 //		llinfos << "TE exception" << llendl;
 		i = 0;
@@ -1122,11 +851,11 @@ S32 LLPrimitive::unpackTEField(U8 *cur_ptr, U8 *buffer_end, U8 *data_ptr, U8 dat
 				htonmemcpy(data_ptr+(j*data_size),cur_ptr,type,data_size);
 //				char foo[64];
 //				sprintf(foo,"%x %x",*(data_ptr+(j*data_size)), *(data_ptr+(j*data_size)+1));
-//				llinfos << "Assigning " << foo << " to face " << j << llendl;			
+//				llinfos << "Assigning " << foo << " to face " << j << llendl;
 			}
 			i = i >> 1;
 		}
-		cur_ptr += data_size;		
+		cur_ptr += data_size;
 	}
 	return (S32)(cur_ptr - start_loc);
 }
@@ -1139,8 +868,8 @@ BOOL LLPrimitive::packTEMessage(LLMessageSystem *mesgsys) const
 {
 	const U32 MAX_TES = 32;
 
-	U8     image_ids[MAX_TES*16];
-	U8     colors[MAX_TES*4];
+	U8     image_ids[MAX_TES * 16];
+	U8     colors[MAX_TES * 4];
 	F32    scale_s[MAX_TES];
 	F32    scale_t[MAX_TES];
 	S16    offset_s[MAX_TES];
@@ -1149,7 +878,7 @@ BOOL LLPrimitive::packTEMessage(LLMessageSystem *mesgsys) const
 	U8	   bump[MAX_TES];
 	U8	   media_flags[MAX_TES];
     U8     glow[MAX_TES];
-	
+
 	const U32 MAX_TE_BUFFER = 4096;
 	U8 packed_buffer[MAX_TE_BUFFER];
 	U8 *cur_ptr = packed_buffer;
@@ -1180,9 +909,9 @@ BOOL LLPrimitive::packTEMessage(LLMessageSystem *mesgsys) const
 			const LLTextureEntry* te = getTE(face_index);
 			scale_s[face_index] = (F32) te->mScaleS;
 			scale_t[face_index] = (F32) te->mScaleT;
-			offset_s[face_index] = (S16) llround((llclamp(te->mOffsetS,-1.0f,1.0f) * (F32)0x7FFF)) ;
-			offset_t[face_index] = (S16) llround((llclamp(te->mOffsetT,-1.0f,1.0f) * (F32)0x7FFF)) ;
-			image_rot[face_index] = (S16) llround(((fmod(te->mRotation, F_TWO_PI)/F_TWO_PI) * TEXTURE_ROTATION_PACK_FACTOR));
+			offset_s[face_index] = (S16) llround((llclamp(te->mOffsetS, -1.0f, 1.0f) * (F32)0x7FFF)) ;
+			offset_t[face_index] = (S16) llround((llclamp(te->mOffsetT, -1.0f, 1.0f) * (F32)0x7FFF)) ;
+			image_rot[face_index] = (S16) llround(((fmod(te->mRotation, F_TWO_PI) / F_TWO_PI) * TEXTURE_ROTATION_PACK_FACTOR));
 			bump[face_index] = te->getBumpShinyFullbright();
 			media_flags[face_index] = te->getMediaTexGen();
 			glow[face_index] = (U8) llround((llclamp(te->getGlow(), 0.0f, 1.0f) * (F32)0xFF));
@@ -1190,23 +919,23 @@ BOOL LLPrimitive::packTEMessage(LLMessageSystem *mesgsys) const
 
 		cur_ptr += packTEField(cur_ptr, (U8 *)image_ids, sizeof(LLUUID),last_face_index, MVT_LLUUID);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)colors, 4 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)colors, 4, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)scale_s, 4 ,last_face_index, MVT_F32);
+		cur_ptr += packTEField(cur_ptr, (U8 *)scale_s, 4, last_face_index, MVT_F32);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)scale_t, 4 ,last_face_index, MVT_F32);
+		cur_ptr += packTEField(cur_ptr, (U8 *)scale_t, 4, last_face_index, MVT_F32);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)offset_s, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)offset_s, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)offset_t, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)offset_t, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)image_rot, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)image_rot, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)bump, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)bump, 1, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)media_flags, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)media_flags, 1, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)glow, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)glow, 1, last_face_index, MVT_U8);
 	}
    	mesgsys->addBinaryDataFast(_PREHASH_TextureEntry, packed_buffer, (S32)(cur_ptr - packed_buffer));
 
@@ -1218,8 +947,8 @@ BOOL LLPrimitive::packTEMessage(LLDataPacker &dp) const
 {
 	const U32 MAX_TES = 32;
 
-	U8     image_ids[MAX_TES*16];
-	U8     colors[MAX_TES*4];
+	U8     image_ids[MAX_TES * 16];
+	U8     colors[MAX_TES * 4];
 	F32    scale_s[MAX_TES];
 	F32    scale_t[MAX_TES];
 	S16    offset_s[MAX_TES];
@@ -1228,7 +957,7 @@ BOOL LLPrimitive::packTEMessage(LLDataPacker &dp) const
 	U8	   bump[MAX_TES];
 	U8	   media_flags[MAX_TES];
     U8     glow[MAX_TES];
-	
+
 	const U32 MAX_TE_BUFFER = 4096;
 	U8 packed_buffer[MAX_TE_BUFFER];
 	U8 *cur_ptr = packed_buffer;
@@ -1251,17 +980,17 @@ BOOL LLPrimitive::packTEMessage(LLDataPacker &dp) const
 			// Note:  This is an optimization to send common colors (1.f, 1.f, 1.f, 1.f)
 			// as all zeros.  However, the subtraction and addition must be done in unsigned
 			// byte space, not in float space, otherwise off-by-one errors occur. JC
-			colors[4*face_index]     = 255 - coloru.mV[0];
-			colors[4*face_index + 1] = 255 - coloru.mV[1];
-			colors[4*face_index + 2] = 255 - coloru.mV[2];
-			colors[4*face_index + 3] = 255 - coloru.mV[3];
+			colors[4 * face_index]     = 255 - coloru.mV[0];
+			colors[4 * face_index + 1] = 255 - coloru.mV[1];
+			colors[4 * face_index + 2] = 255 - coloru.mV[2];
+			colors[4 * face_index + 3] = 255 - coloru.mV[3];
 
 			const LLTextureEntry* te = getTE(face_index);
 			scale_s[face_index] = (F32) te->mScaleS;
 			scale_t[face_index] = (F32) te->mScaleT;
-			offset_s[face_index] = (S16) llround((llclamp(te->mOffsetS,-1.0f,1.0f) * (F32)0x7FFF)) ;
-			offset_t[face_index] = (S16) llround((llclamp(te->mOffsetT,-1.0f,1.0f) * (F32)0x7FFF)) ;
-			image_rot[face_index] = (S16) llround(((fmod(te->mRotation, F_TWO_PI)/F_TWO_PI) * TEXTURE_ROTATION_PACK_FACTOR));
+			offset_s[face_index] = (S16) llround((llclamp(te->mOffsetS, -1.0f, 1.0f) * (F32)0x7FFF)) ;
+			offset_t[face_index] = (S16) llround((llclamp(te->mOffsetT, -1.0f, 1.0f) * (F32)0x7FFF)) ;
+			image_rot[face_index] = (S16) llround(((fmod(te->mRotation, F_TWO_PI) / F_TWO_PI) * TEXTURE_ROTATION_PACK_FACTOR));
 			bump[face_index] = te->getBumpShinyFullbright();
 			media_flags[face_index] = te->getMediaTexGen();
             glow[face_index] = (U8) llround((llclamp(te->getGlow(), 0.0f, 1.0f) * (F32)0xFF));
@@ -1269,23 +998,23 @@ BOOL LLPrimitive::packTEMessage(LLDataPacker &dp) const
 
 		cur_ptr += packTEField(cur_ptr, (U8 *)image_ids, sizeof(LLUUID),last_face_index, MVT_LLUUID);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)colors, 4 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)colors, 4, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)scale_s, 4 ,last_face_index, MVT_F32);
+		cur_ptr += packTEField(cur_ptr, (U8 *)scale_s, 4, last_face_index, MVT_F32);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)scale_t, 4 ,last_face_index, MVT_F32);
+		cur_ptr += packTEField(cur_ptr, (U8 *)scale_t, 4, last_face_index, MVT_F32);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)offset_s, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)offset_s, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)offset_t, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)offset_t, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)image_rot, 2 ,last_face_index, MVT_S16Array);
+		cur_ptr += packTEField(cur_ptr, (U8 *)image_rot, 2, last_face_index, MVT_S16Array);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)bump, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)bump, 1, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)media_flags, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)media_flags, 1, last_face_index, MVT_U8);
 		*cur_ptr++ = 0;
-		cur_ptr += packTEField(cur_ptr, (U8 *)glow, 1 ,last_face_index, MVT_U8);
+		cur_ptr += packTEField(cur_ptr, (U8 *)glow, 1, last_face_index, MVT_U8);
 	}
 
 	dp.packBinaryData(packed_buffer, (S32)(cur_ptr - packed_buffer), "TextureEntry");
@@ -1305,8 +1034,8 @@ S32 LLPrimitive::unpackTEMessage(LLMessageSystem *mesgsys, char const* block_nam
 
 	// Avoid construction of 32 UUIDs per call. JC
 
-	U8     image_data[MAX_TES*16];
-	U8	  colors[MAX_TES*4];
+	U8     image_data[MAX_TES * 16];
+	U8	  colors[MAX_TES * 4];
 	F32    scale_s[MAX_TES];
 	F32    scale_t[MAX_TES];
 	S16    offset_s[MAX_TES];
@@ -1315,7 +1044,7 @@ S32 LLPrimitive::unpackTEMessage(LLMessageSystem *mesgsys, char const* block_nam
 	U8	   bump[MAX_TES];
 	U8	   media_flags[MAX_TES];
     U8     glow[MAX_TES];
-	
+
 	const U32 MAX_TE_BUFFER = 4096;
 	U8 packed_buffer[MAX_TE_BUFFER];
 	U8 *cur_ptr = packed_buffer;
@@ -1367,7 +1096,7 @@ S32 LLPrimitive::unpackTEMessage(LLMessageSystem *mesgsys, char const* block_nam
 	cur_ptr += unpackTEField(cur_ptr, packed_buffer+size, (U8 *)media_flags, 1, face_count, MVT_U8);
 	cur_ptr++;
 	cur_ptr += unpackTEField(cur_ptr, packed_buffer+size, (U8 *)glow, 1, face_count, MVT_U8);
-	
+
 	LLColor4 color;
 	LLColor4U coloru;
 	for (U32 i = 0; i < face_count; i++)
@@ -1404,8 +1133,8 @@ S32 LLPrimitive::unpackTEMessage(LLDataPacker &dp)
 	// Avoid construction of 32 UUIDs per call
 	static LLUUID image_ids[MAX_TES];
 
-	U8     image_data[MAX_TES*16];
-	U8	   colors[MAX_TES*4];
+	U8     image_data[MAX_TES * 16];
+	U8	   colors[MAX_TES * 4];
 	F32    scale_s[MAX_TES];
 	F32    scale_t[MAX_TES];
 	S16    offset_s[MAX_TES];
@@ -1459,9 +1188,9 @@ S32 LLPrimitive::unpackTEMessage(LLDataPacker &dp)
 
 	for (i = 0; i < face_count; i++)
 	{
-		memcpy(image_ids[i].mData,&image_data[i*16],16);	/* Flawfinder: ignore */ 	
+		memcpy(image_ids[i].mData,&image_data[i*16],16);	/* Flawfinder: ignore */ 
 	}
-	
+
 	LLColor4 color;
 	LLColor4U coloru;
 	for (i = 0; i < face_count; i++)
@@ -1473,7 +1202,7 @@ S32 LLPrimitive::unpackTEMessage(LLDataPacker &dp)
 		retval |= setTEBumpShinyFullbright(i, bump[i]);
 		retval |= setTEMediaTexGen(i, media_flags[i]);
 		retval |= setTEGlow(i, (F32)glow[i] / (F32)0xFF);
-		coloru = LLColor4U(colors + 4*i);
+		coloru = LLColor4U(colors + 4 * i);
 
 		// Note:  This is an optimization to send common colors (1.f, 1.f, 1.f, 1.f)
 		// as all zeros.  However, the subtraction and addition must be done in unsigned
@@ -1489,11 +1218,24 @@ S32 LLPrimitive::unpackTEMessage(LLDataPacker &dp)
 	return retval;
 }
 
-void LLPrimitive::setTextureList(LLTextureEntry *listp)
+U8	LLPrimitive::getExpectedNumTEs() const
 {
-	LLTextureEntry* old_texture_list = mTextureList;
-	mTextureList = listp;
- 	delete[] old_texture_list;
+	U8 expected_face_count = 0;
+	if (mVolumep)
+	{
+		expected_face_count = mVolumep->getNumFaces();
+	}
+	return expected_face_count;
+}
+
+void LLPrimitive::copyTextureList(const LLPrimTextureList& other_list)
+{
+	mTextureList.copy(other_list);
+}
+
+void LLPrimitive::takeTextureList(LLPrimTextureList& other_list)
+{
+	mTextureList.take(other_list);
 }
 
 //============================================================================
@@ -1548,7 +1290,7 @@ bool LLPrimitive::getTESTAxes(const U8 face, U32* s_axis, U32* t_axis)
 BOOL LLNetworkData::isValid(U16 param_type, U32 size)
 {
 	// ew - better mechanism needed
-	
+
 	switch(param_type)
 	{
 	case PARAMS_FLEXIBLE:
@@ -1560,7 +1302,7 @@ BOOL LLNetworkData::isValid(U16 param_type, U32 size)
 	case PARAMS_LIGHT_IMAGE:
 		return (size == 28);
 	}
-	
+
 	return FALSE;
 }
 
@@ -1603,7 +1345,7 @@ BOOL LLLightParams::unpack(LLDataPacker &dp)
 	F32 falloff;
 	dp.unpackF32(falloff, "falloff");
 	setFalloff(falloff);
-	
+
 	return TRUE;
 }
 
@@ -1637,12 +1379,12 @@ void LLLightParams::copy(const LLNetworkData& data)
 LLSD LLLightParams::asLLSD() const
 {
 	LLSD sd;
-	
+
 	sd["color"] = ll_sd_from_color4(getColor());
 	sd["radius"] = getRadius();
 	sd["falloff"] = getFalloff();
 	sd["cutoff"] = getCutoff();
-		
+
 	return sd;
 }
 
@@ -1669,7 +1411,7 @@ bool LLLightParams::fromLLSD(LLSD& sd)
 	{
 		setCutoff( (F32)sd[w].asReal() );
 	} else goto fail;
-	
+
 	return true;
  fail:
 	return false;
@@ -1766,7 +1508,7 @@ LLSD LLFlexibleObjectData::asLLSD() const
 	sd["tension"] = getTension();
 	sd["user_force"] = getUserForce().getValue();
 	sd["wind_sensitivity"] = getWindSensitivity();
-	
+
 	return sd;
 }
 
@@ -1804,7 +1546,7 @@ bool LLFlexibleObjectData::fromLLSD(LLSD& sd)
 	{
 		setWindSensitivity( (F32)sd[w].asReal() );
 	} else goto fail;
-	
+
 	return true;
  fail:
 	return false;
@@ -1823,7 +1565,7 @@ BOOL LLSculptParams::pack(LLDataPacker &dp) const
 {
 	dp.packUUID(mSculptTexture, "texture");
 	dp.packU8(mSculptType, "type");
-	
+
 	return TRUE;
 }
 
@@ -1831,7 +1573,7 @@ BOOL LLSculptParams::unpack(LLDataPacker &dp)
 {
 	dp.unpackUUID(mSculptTexture, "texture");
 	dp.unpackU8(mSculptType, "type");
-	
+
 	return TRUE;
 }
 
@@ -1841,7 +1583,7 @@ bool LLSculptParams::operator==(const LLNetworkData& data) const
 	{
 		return false;
 	}
-	
+
 	const LLSculptParams *param = (const LLSculptParams*)&data;
 	if ( (param->mSculptTexture != mSculptTexture) ||
 		 (param->mSculptType != mSculptType) )
@@ -1849,7 +1591,7 @@ bool LLSculptParams::operator==(const LLNetworkData& data) const
 	{
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -1865,10 +1607,10 @@ void LLSculptParams::copy(const LLNetworkData& data)
 LLSD LLSculptParams::asLLSD() const
 {
 	LLSD sd;
-	
+
 	sd["texture"] = mSculptTexture;
 	sd["type"] = mSculptType;
-		
+
 	return sd;
 }
 
@@ -1885,7 +1627,7 @@ bool LLSculptParams::fromLLSD(LLSD& sd)
 	{
 		setSculptType( (U8)sd[w].asInteger() );
 	} else goto fail;
-	
+
 	return true;
  fail:
 	return false;

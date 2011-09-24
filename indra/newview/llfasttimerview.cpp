@@ -82,7 +82,7 @@ static struct ft_display_info ft_display_table[] =
 	{ LLFastTimer::FTM_MESSAGES,			" System Messages",		&LLColor4::grey1, 1 },
 	{ LLFastTimer::FTM_MOUSEHANDLER,		"  Mouse",				&LLColor4::grey1, 0 },
 	{ LLFastTimer::FTM_KEYHANDLER,			"  Keyboard",			&LLColor4::grey1, 0 },
-	{ LLFastTimer::FTM_SLEEP,				" Sleep & BG Threads",	&LLColor4::grey2, 0 },
+	{ LLFastTimer::FTM_SLEEP,				" Sleep & BG Threads",	&LLColor4::grey2, 1 },
 	{ LLFastTimer::FTM_THREADS,				"  Background Threads",	&LLColor4::grey4, 0 },
 	{ LLFastTimer::FTM_IDLE,				" Idle",				&blue0, 0 },
 	{ LLFastTimer::FTM_PUMP,				"  Pump",				&LLColor4::magenta2, 1 },
@@ -96,123 +96,157 @@ static struct ft_display_info ft_display_table[] =
 	{ LLFastTimer::FTM_RESET_DRAWORDER,		"  ResetDrawOrder",		&LLColor4::pink1, 0 },
 	{ LLFastTimer::FTM_WORLD_UPDATE,		"  World Update",		&LLColor4::blue1, 1 },
 	{ LLFastTimer::FTM_UPDATE_MOVE,			"   Move Objects",		&LLColor4::pink2, 0 },
-	{ LLFastTimer::FTM_OCTREE_BALANCE,		"    Octree Balance", &LLColor4::red3, 0 },
-	{ LLFastTimer::FTM_SIMULATE_PARTICLES,	"   Particle Sim",	&LLColor4::blue4, 0 },
-	{ LLFastTimer::FTM_OBJECTLIST_UPDATE,	"  Object Update",	&LLColor4::purple1, 1 },
-	{ LLFastTimer::FTM_AVATAR_UPDATE,		"   Avatars",		&LLColor4::purple2, 0 },
-	{ LLFastTimer::FTM_JOINT_UPDATE,		"    Joints",		&LLColor4::purple3, 0 },
-	{ LLFastTimer::FTM_PHYSICS_UPDATE,		"    Physics",		&LLColor4::red1, 0 },
-	{ LLFastTimer::FTM_ATTACHMENT_UPDATE,	"    Attachments",	&LLColor4::purple4, 0 },
-	{ LLFastTimer::FTM_UPDATE_ANIMATION,	"     Animation",	&LLColor4::purple5, 0 },
-	{ LLFastTimer::FTM_FLEXIBLE_UPDATE,		"   Flex Update",	&LLColor4::pink2, 0 },
-	{ LLFastTimer::FTM_LOD_UPDATE,			"   LOD Update",	&LLColor4::magenta1, 0 },
-	{ LLFastTimer::FTM_REGION_UPDATE,		"  Region Update",	&LLColor4::cyan2, 0 },
-	{ LLFastTimer::FTM_NETWORK,				"  Network",		&LLColor4::orange1, 1 },
-	{ LLFastTimer::FTM_IDLE_NETWORK,		"   Decode Msgs",	&LLColor4::orange2, 0 },
-	{ LLFastTimer::FTM_PROCESS_MESSAGES,	"    Process Msgs", &LLColor4::orange3, 0 },
-	{ LLFastTimer::FTM_PROCESS_OBJECTS,		"     Object Updates",&LLColor4::orange4, 0 },
-	{ LLFastTimer::FTM_CREATE_OBJECT,		"      Create Obj",	 &LLColor4::orange5, 0 },
-//	{ LLFastTimer::FTM_LOAD_AVATAR,			"       Load Avatar", &LLColor4::pink2, 0 },
-	{ LLFastTimer::FTM_PROCESS_IMAGES,		"     Image Updates",&LLColor4::orange6, 0 },
-	{ LLFastTimer::FTM_PIPELINE,			"     Pipeline",	&LLColor4::magenta4, 0 },
-	{ LLFastTimer::FTM_CLEANUP,				"  Cleanup",		&LLColor4::cyan3, 0 },
-	{ LLFastTimer::FTM_AUDIO_UPDATE,		"  Audio Update",	&LLColor4::yellow3, 0 },
-	{ LLFastTimer::FTM_VFILE_WAIT,			"  VFile Wait",		&LLColor4::cyan6, 0 },
-//	{ LLFastTimer::FTM_IDLE_CB,				"  Callbacks",		&LLColor4::pink1, 0 },
-	{ LLFastTimer::FTM_RENDER,				" Render",			&green0, 1 },
-	{ LLFastTimer::FTM_PICK,				"  Pick",			&LLColor4::purple, 1 },
-	{ LLFastTimer::FTM_HUD_EFFECTS,			"  HUD Effects",	&LLColor4::orange1, 0 },
-	{ LLFastTimer::FTM_HUD_UPDATE,			"  HUD Update",		&LLColor4::orange2, 0 },
-	{ LLFastTimer::FTM_UPDATE_SKY,			"  Sky Update",		&LLColor4::cyan1, 0 },
-	{ LLFastTimer::FTM_UPDATE_TEXTURES,		"  Textures",		&LLColor4::pink2, 0 },
-	{ LLFastTimer::FTM_GEO_UPDATE,			"  Geo Update",		&LLColor4::blue3, 1 },
-	{ LLFastTimer::FTM_UPDATE_PRIMITIVES,	"   Volumes",		&LLColor4::blue4, 0 },
-	{ LLFastTimer::FTM_GEN_VOLUME,			"    Gen Volume",	&LLColor4::yellow3, 0 },
-	{ LLFastTimer::FTM_GEN_FLEX,			"    Flexible",		&LLColor4::yellow4, 0 },
-	{ LLFastTimer::FTM_GEN_TRIANGLES,		"    Triangles",	&LLColor4::yellow5, 0 },
-	{ LLFastTimer::FTM_UPDATE_AVATAR,		"   Avatar",		&LLColor4::yellow1, 0 },
-	{ LLFastTimer::FTM_UPDATE_TREE,			"   Tree",			&LLColor4::yellow2, 0 },
-	{ LLFastTimer::FTM_UPDATE_TERRAIN,		"   Terrain",		&LLColor4::yellow6, 0 },
-	{ LLFastTimer::FTM_UPDATE_CLOUDS,		"   Clouds",		&LLColor4::yellow7, 0 },
-	{ LLFastTimer::FTM_UPDATE_GRASS,		"   Grass",			&LLColor4::yellow8, 0 },
-	{ LLFastTimer::FTM_UPDATE_WATER,		"   Water",			&LLColor4::yellow9, 0 },
-	{ LLFastTimer::FTM_GEO_LIGHT,			"   Lighting",		&LLColor4::yellow1, 0 },
-	{ LLFastTimer::FTM_GEO_SHADOW,			"   Shadow",		&LLColor4::black, 0 },
-	{ LLFastTimer::FTM_UPDATE_PARTICLES,	"   Particles",		&LLColor4::blue5, 0 },
-	{ LLFastTimer::FTM_GEO_RESERVE,			"   Reserve",		&LLColor4::blue6, 0 },
-	{ LLFastTimer::FTM_UPDATE_LIGHTS,		"   Lights",		&LLColor4::yellow2, 0 },
-	{ LLFastTimer::FTM_GEO_SKY,				"   Sky",			&LLColor4::yellow3, 0 },
-	{ LLFastTimer::FTM_UPDATE_WLPARAM,		"  Windlight Param",&LLColor4::magenta2, 0 },
-	{ LLFastTimer::FTM_CULL,				"  Object Cull",	&LLColor4::blue2, 1 },
-    { LLFastTimer::FTM_CULL_REBOUND,		"   Rebound",		&LLColor4::blue3, 0 },
-	{ LLFastTimer::FTM_FRUSTUM_CULL,		"   Frustum Cull",	&LLColor4::blue4, 0 },
+	{ LLFastTimer::FTM_OCTREE_BALANCE,		"    Octree Balance",	&LLColor4::red3, 0 },
+	{ LLFastTimer::FTM_SIMULATE_PARTICLES,	"   Particle Sim",		&LLColor4::blue4, 0 },
+	{ LLFastTimer::FTM_OBJECTLIST_UPDATE,	"  Object Update",		&LLColor4::purple1, 1 },
+	{ LLFastTimer::FTM_AVATAR_UPDATE,		"   Avatars",			&LLColor4::purple2, 0 },
+	{ LLFastTimer::FTM_JOINT_UPDATE,		"    Joints",			&LLColor4::purple3, 0 },
+	{ LLFastTimer::FTM_PHYSICS_UPDATE,		"    Physics",			&LLColor4::red1, 0 },
+	{ LLFastTimer::FTM_ATTACHMENT_UPDATE,	"    Attachments",		&LLColor4::purple4, 0 },
+	{ LLFastTimer::FTM_UPDATE_ANIMATION,	"     Animation",		&LLColor4::purple5, 0 },
+	{ LLFastTimer::FTM_FLEXIBLE_UPDATE,		"   Flex Update",		&LLColor4::pink2, 0 },
+	{ LLFastTimer::FTM_LOD_UPDATE,			"   LOD Update",		&LLColor4::magenta1, 0 },
+	{ LLFastTimer::FTM_UPDATE_RIGGED_VOLUME,"   Update Rigged",		&LLColor4::blue1, 1 },
+	{ LLFastTimer::FTM_SKIN_RIGGED,			"    Skin",				&LLColor4::green1, 0 },
+	{ LLFastTimer::FTM_RIGGED_OCTREE,		"    Octree",			&LLColor4::green3, 0 },
+	{ LLFastTimer::FTM_CLEANUP,				"  Cleanup",			&LLColor4::cyan3, 1 },
+	{ LLFastTimer::FTM_CLEANUP_DRAWABLE,	"   Cleanup Drawable",	&LLColor4::magenta1, 1 },
+	{ LLFastTimer::FTM_DELETE_FACES,		"    Faces",			&LLColor4::magenta2, 0 },
+	{ LLFastTimer::FTM_DEREF_DRAWABLE,		"    Deref",			&LLColor4::magenta3, 0 },
+	{ LLFastTimer::FTM_UNLINK,				"    Unlink",			&LLColor4::red5, 1 },
+	{ LLFastTimer::FTM_REMOVE_FROM_HIGHLIGHT_SET,"     Highlight Set",&LLColor4::red4, 0 },
+	{ LLFastTimer::FTM_REMOVE_FROM_LIGHT_SET,"     Light Set",		&LLColor4::red3, 0 },
+	{ LLFastTimer::FTM_REMOVE_FROM_MOVE_LIST,"     MoveList",		&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_REMOVE_FROM_SPATIAL_PARTITION,"     Spatial Part.",&LLColor4::red3, 0 },
+	{ LLFastTimer::FTM_REGION_UPDATE,		"  Region Update",		&LLColor4::cyan2, 0 },
+	{ LLFastTimer::FTM_NETWORK,				"  Network",			&LLColor4::orange1, 1 },
+	{ LLFastTimer::FTM_IDLE_NETWORK,		"   Decode Msgs",		&LLColor4::orange2, 0 },
+	{ LLFastTimer::FTM_PROCESS_MESSAGES,	"    Process Msgs",		&LLColor4::orange3, 0 },
+	{ LLFastTimer::FTM_PROCESS_OBJECTS,		"     Object Updates",	&LLColor4::orange4, 0 },
+	{ LLFastTimer::FTM_CREATE_OBJECT,		"      Create Obj",		&LLColor4::orange5, 0 },
+//	{ LLFastTimer::FTM_LOAD_AVATAR,			"       Load Avatar",	&LLColor4::pink2, 0 },
+	{ LLFastTimer::FTM_PROCESS_IMAGES,		"     Image Updates",	&LLColor4::orange6, 0 },
+	{ LLFastTimer::FTM_PIPELINE,			"     Pipeline",		&LLColor4::magenta4, 0 },
+	{ LLFastTimer::FTM_AUDIO_UPDATE,		"  Audio Update",		&LLColor4::yellow3, 0 },
+//	{ LLFastTimer::FTM_VFILE_WAIT,			"  VFile Wait",			&LLColor4::cyan6, 0 },
+//	{ LLFastTimer::FTM_IDLE_CB,				"  Callbacks",			&LLColor4::pink1, 0 },
+	{ LLFastTimer::FTM_RENDER,				" Render",				&green0, 1 },
+	{ LLFastTimer::FTM_PICK,				"  Pick",				&LLColor4::purple, 1 },
+	{ LLFastTimer::FTM_HUD_EFFECTS,			"  HUD Effects",		&LLColor4::orange1, 0 },
+	{ LLFastTimer::FTM_HUD_UPDATE,			"  HUD Update",			&LLColor4::orange2, 0 },
+	{ LLFastTimer::FTM_UPDATE_SKY,			"  Sky Update",			&LLColor4::cyan1, 0 },
+	{ LLFastTimer::FTM_UPDATE_TEXTURES,		"  Textures",			&LLColor4::pink2, 0 },
+	{ LLFastTimer::FTM_GEO_UPDATE,			"  Geo Update",			&LLColor4::blue3, 1 },
+	{ LLFastTimer::FTM_UPDATE_PRIMITIVES,	"   Volumes",			&LLColor4::blue4, 0 },
+	{ LLFastTimer::FTM_GEN_VOLUME,			"    Gen Volume",		&LLColor4::yellow3, 0 },
+	{ LLFastTimer::FTM_GEN_FLEX,			"    Flexible",			&LLColor4::yellow4, 0 },
+	{ LLFastTimer::FTM_GEN_TRIANGLES,		"    Triangles",		&LLColor4::yellow5, 0 },
+	{ LLFastTimer::FTM_UPDATE_AVATAR,		"   Avatar",			&LLColor4::yellow1, 0 },
+	{ LLFastTimer::FTM_UPDATE_TREE,			"   Tree",				&LLColor4::yellow2, 0 },
+	{ LLFastTimer::FTM_UPDATE_TERRAIN,		"   Terrain",			&LLColor4::yellow6, 0 },
+	{ LLFastTimer::FTM_UPDATE_CLOUDS,		"   Clouds",			&LLColor4::yellow7, 0 },
+	{ LLFastTimer::FTM_UPDATE_GRASS,		"   Grass",				&LLColor4::yellow8, 0 },
+	{ LLFastTimer::FTM_UPDATE_WATER,		"   Water",				&LLColor4::yellow9, 0 },
+	{ LLFastTimer::FTM_GEO_LIGHT,			"   Lighting",			&LLColor4::yellow1, 0 },
+	{ LLFastTimer::FTM_GEO_SHADOW,			"   Shadow",			&LLColor4::black, 0 },
+	{ LLFastTimer::FTM_UPDATE_PARTICLES,	"   Particles",			&LLColor4::blue5, 0 },
+	{ LLFastTimer::FTM_GEO_RESERVE,			"   Reserve",			&LLColor4::blue6, 0 },
+	{ LLFastTimer::FTM_UPDATE_LIGHTS,		"   Lights",			&LLColor4::yellow2, 0 },
+	{ LLFastTimer::FTM_GEO_SKY,				"   Sky",				&LLColor4::yellow3, 0 },
+	{ LLFastTimer::FTM_UPDATE_WLPARAM,		"  Windlight Param",	&LLColor4::magenta2, 0 },
+	{ LLFastTimer::FTM_CULL,				"  Object Cull",		&LLColor4::blue2, 1 },
+    { LLFastTimer::FTM_CULL_REBOUND,		"   Rebound",			&LLColor4::blue3, 0 },
+	{ LLFastTimer::FTM_FRUSTUM_CULL,		"   Frustum Cull",		&LLColor4::blue4, 0 },
+	{ LLFastTimer::FTM_OCCLUSION_EARLY_FAIL,"    Occl. Early Fail",	&LLColor4::blue1, 0 },
+
 	{ LLFastTimer::FTM_OCCLUSION_READBACK,	"   Occlusion Read",	&LLColor4::red2, 0 },
 	{ LLFastTimer::FTM_BUILD_OCCLUSION,		"   Occlusion Build",	&LLColor4::red3, 0 },
-	{ LLFastTimer::FTM_IMAGE_UPDATE,		"  Image Update",	&LLColor4::yellow4, 1 },
-	{ LLFastTimer::FTM_IMAGE_CREATE,		"   Image CreateGL",&LLColor4::yellow5, 0 },
-	{ LLFastTimer::FTM_IMAGE_DECODE,		"   Image Decode",	&LLColor4::yellow6, 0 },
-	{ LLFastTimer::FTM_IMAGE_READBACK,		"   Image Readback",&LLColor4::red2, 0 },
-	{ LLFastTimer::FTM_IMAGE_MARK_DIRTY,	"   Dirty Textures",&LLColor4::red1, 0 },
-	{ LLFastTimer::FTM_STATESORT,			"  State Sort",		&LLColor4::orange1, 1 },
-	{ LLFastTimer::FTM_STATESORT_DRAWABLE,	"   Drawable",		&LLColor4::orange2, 0 },
-	{ LLFastTimer::FTM_STATESORT_POSTSORT,	"   Post Sort",		&LLColor4::orange3, 0 },
-	{ LLFastTimer::FTM_REBUILD_OCCLUSION_VB,"    Occlusion",	&LLColor4::cyan5, 0 },
-	{ LLFastTimer::FTM_REBUILD_VBO,			"    VBO Rebuild",	&LLColor4::red4, 0 },
-	{ LLFastTimer::FTM_REBUILD_VOLUME_VB,	"     Volume",		&LLColor4::blue1, 0 },
-//	{ LLFastTimer::FTM_REBUILD_NONE_VB,		"      Unknown",	&LLColor4::cyan5, 0 },
-//	{ LLFastTimer::FTM_REBUILD_BRIDGE_VB,	"     Bridge",		&LLColor4::blue2, 0 },
-//	{ LLFastTimer::FTM_REBUILD_HUD_VB,		"     HUD",			&LLColor4::blue3, 0 },
-	{ LLFastTimer::FTM_REBUILD_TERRAIN_VB,	"     Terrain",		&LLColor4::blue4, 0 },
-//	{ LLFastTimer::FTM_REBUILD_WATER_VB,	"     Water",		&LLColor4::blue5, 0 },
-//	{ LLFastTimer::FTM_REBUILD_TREE_VB,		"     Tree",		&LLColor4::cyan1, 0 },
-	{ LLFastTimer::FTM_REBUILD_PARTICLE_VB,	"     Particle",	&LLColor4::cyan2, 0 },
-//	{ LLFastTimer::FTM_REBUILD_CLOUD_VB,	"     Cloud",		&LLColor4::cyan3, 0 },
-	{ LLFastTimer::FTM_REBUILD_GRASS_VB,	"     Grass",		&LLColor4::cyan4, 0 },
- 	{ LLFastTimer::FTM_SHADOW_RENDER,		"  Shadow",			&LLColor4::green5, 1 },
-	{ LLFastTimer::FTM_SHADOW_SIMPLE,		"   Simple",		&LLColor4::yellow2, 1 },
-	{ LLFastTimer::FTM_SHADOW_ALPHA,		"   Alpha",			&LLColor4::yellow6, 1 },
-	{ LLFastTimer::FTM_SHADOW_TERRAIN,		"   Terrain",		&LLColor4::green6, 1 },
-	{ LLFastTimer::FTM_SHADOW_AVATAR,		"   Avatar",		&LLColor4::yellow1, 1 },
-	{ LLFastTimer::FTM_SHADOW_TREE,			"   Tree",			&LLColor4::yellow8, 1 },
-	{ LLFastTimer::FTM_RENDER_GEOMETRY,		"  Geometry",		&LLColor4::green2, 1 },
-	{ LLFastTimer::FTM_POOLS,				"   Pools",			&LLColor4::green3, 1 },
-	{ LLFastTimer::FTM_POOLRENDER,			"    RenderPool",	&LLColor4::green4, 1 },
-	{ LLFastTimer::FTM_RENDER_TERRAIN,		"     Terrain",		&LLColor4::green6, 0 },
-	{ LLFastTimer::FTM_RENDER_CHARACTERS,	"     Avatars",		&LLColor4::yellow1, 0 },
-	{ LLFastTimer::FTM_RENDER_SIMPLE,		"     Simple",		&LLColor4::yellow2, 0 },
-	{ LLFastTimer::FTM_RENDER_FULLBRIGHT,	"     Fullbright",	&LLColor4::yellow5, 0 },
-	{ LLFastTimer::FTM_RENDER_GLOW,			"     Glow",		&LLColor4::orange1, 0 },
-	{ LLFastTimer::FTM_RENDER_GRASS,		"     Grass",		&LLColor4::yellow6, 0 },
-	{ LLFastTimer::FTM_RENDER_INVISIBLE,	"     Invisible",	&LLColor4::red2, 0 },
-	{ LLFastTimer::FTM_RENDER_SHINY,		"     Shiny",		&LLColor4::yellow3, 0 },
-	{ LLFastTimer::FTM_RENDER_BUMP,			"     Bump",		&LLColor4::yellow4, 0 },
-	{ LLFastTimer::FTM_RENDER_TREES,		"     Trees",		&LLColor4::yellow8, 0 },
-	{ LLFastTimer::FTM_RENDER_OCCLUSION,	"     Occlusion",	&LLColor4::red1, 0 },
-	{ LLFastTimer::FTM_RENDER_CLOUDS,		"     Clouds",		&LLColor4::yellow5, 0 },
-	{ LLFastTimer::FTM_RENDER_ALPHA,		"     Alpha",		&LLColor4::yellow6, 0 },
-	{ LLFastTimer::FTM_RENDER_HUD,			"     HUD",			&LLColor4::yellow7, 0 },
-	{ LLFastTimer::FTM_RENDER_WATER,		"     Water",		&LLColor4::yellow9, 0 },
-	{ LLFastTimer::FTM_RENDER_WL_SKY,		"     WL Sky",		&LLColor4::blue3,	0 },
-	{ LLFastTimer::FTM_RENDER_FAKE_VBO_UPDATE,"     Fake VBO update",		&LLColor4::red2,	0 },
-	{ LLFastTimer::FTM_RENDER_BLOOM,		"   Bloom",			&LLColor4::blue4, 0 },
-	{ LLFastTimer::FTM_RENDER_BLOOM_FBO,		"    First FBO",			&LLColor4::blue, 0 },
-	{ LLFastTimer::FTM_RENDER_UI,			"  UI",				&LLColor4::cyan4, 1 },
-	{ LLFastTimer::FTM_RENDER_TIMER,		"   Timers",		&LLColor4::cyan5, 1, 0 },
-	{ LLFastTimer::FTM_RENDER_FONTS,		"   Fonts",			&LLColor4::pink1, 0 },
-	{ LLFastTimer::FTM_SWAP,				"  Swap",			&LLColor4::pink2, 0 },
-	{ LLFastTimer::FTM_CLIENT_COPY,			"  Client Copy",	&LLColor4::red1, 1},
+	{ LLFastTimer::FTM_PUSH_OCCLUSION_VERTS,"   Occlusion Push",	&LLColor4::red4, 0 },
+	{ LLFastTimer::FTM_SET_OCCLUSION_STATE,	"   Occlusion State",	&LLColor4::orange1, 0 },
+
+	{ LLFastTimer::FTM_IMAGE_UPDATE,		"  Image Update",		&LLColor4::yellow4, 1 },
+	{ LLFastTimer::FTM_IMAGE_CREATE,		"   Image CreateGL",	&LLColor4::yellow5, 0 },
+	{ LLFastTimer::FTM_IMAGE_DECODE,		"   Image Decode",		&LLColor4::yellow6, 0 },
+	{ LLFastTimer::FTM_IMAGE_READBACK,		"   Image Readback",	&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_IMAGE_MARK_DIRTY,	"   Dirty Textures",	&LLColor4::red1, 0 },
+	{ LLFastTimer::FTM_STATESORT,			"  State Sort",			&LLColor4::orange1, 1 },
+	{ LLFastTimer::FTM_STATESORT_DRAWABLE,	"   Drawable",			&LLColor4::orange2, 0 },
+	{ LLFastTimer::FTM_STATESORT_POSTSORT,	"   Post Sort",			&LLColor4::orange3, 0 },
+	{ LLFastTimer::FTM_REBUILD_OCCLUSION_VB,"    Occlusion",		&LLColor4::cyan5, 0 },
+	{ LLFastTimer::FTM_REBUILD_VBO,			"    VBO Rebuild",		&LLColor4::red4, 0 },
+	{ LLFastTimer::FTM_REBUILD_VOLUME_VB,	"     Volume",			&LLColor4::blue1, 0 },
+//	{ LLFastTimer::FTM_REBUILD_NONE_VB,		"      Unknown",		&LLColor4::cyan5, 0 },
+//	{ LLFastTimer::FTM_REBUILD_BRIDGE_VB,	"     Bridge",			&LLColor4::blue2, 0 },
+//	{ LLFastTimer::FTM_REBUILD_HUD_VB,		"     HUD",				&LLColor4::blue3, 0 },
+	{ LLFastTimer::FTM_REBUILD_TERRAIN_VB,	"     Terrain",			&LLColor4::blue4, 0 },
+//	{ LLFastTimer::FTM_REBUILD_WATER_VB,	"     Water",			&LLColor4::blue5, 0 },
+//	{ LLFastTimer::FTM_REBUILD_TREE_VB,		"     Tree",			&LLColor4::cyan1, 0 },
+	{ LLFastTimer::FTM_REBUILD_PARTICLE_VB,	"     Particle",		&LLColor4::cyan2, 0 },
+//	{ LLFastTimer::FTM_REBUILD_CLOUD_VB,	"     Cloud",			&LLColor4::cyan3, 0 },
+	{ LLFastTimer::FTM_REBUILD_GRASS_VB,	"     Grass",			&LLColor4::cyan4, 0 },
+ 	{ LLFastTimer::FTM_BIND_DEFERRED,		"  Bind Deferred",		&LLColor4::green1, 0 },
+ 	{ LLFastTimer::FTM_RENDER_DEFERRED,		"  Deferred Shading",	&LLColor4::green2, 1 },
+ 	{ LLFastTimer::FTM_ATMOSPHERICS,		"   Atmospherics",		&LLColor4::purple1, 0 },
+ 	{ LLFastTimer::FTM_SUN_SHADOW,			"   Shadow Map",		&LLColor4::green3, 0 },
+ 	{ LLFastTimer::FTM_SOFTEN_SHADOW,		"   Shadow Soften",		&LLColor4::cyan3, 0 },
+ 	{ LLFastTimer::FTM_EDGE_DETECTION,		"   Edge Detection",	&LLColor4::blue1, 0 },
+ 	{ LLFastTimer::FTM_GI_TRACE,			"   GI Trace",			&LLColor4::blue2, 0 },
+ 	{ LLFastTimer::FTM_GI_GATHER,			"   GI Gather",			&LLColor4::blue3, 0 },
+ 	{ LLFastTimer::FTM_LOCAL_LIGHTS,		"   Local Lights",		&LLColor4::yellow1, 0 },
+ 	{ LLFastTimer::FTM_PROJECTORS,			"   Projectors",		&LLColor4::yellow3, 0 },
+ 	{ LLFastTimer::FTM_FULLSCREEN_LIGHTS,	"   Full Screen Lights",&LLColor4::yellow5, 0 },
+ 	{ LLFastTimer::FTM_POST,				"   Post Lighting",		&LLColor4::yellow8, 0 },
+ 	{ LLFastTimer::FTM_SHADOW_RENDER,		"  Shadow",				&LLColor4::grey1, 1 },
+	{ LLFastTimer::FTM_SHADOW_SIMPLE,		"   Simple",			&LLColor4::grey4, 0 },
+	{ LLFastTimer::FTM_SHADOW_ALPHA,		"   Alpha",				&LLColor4::grey2, 0 },
+	{ LLFastTimer::FTM_SHADOW_TERRAIN,		"   Terrain",			&LLColor4::green6, 0 },
+	{ LLFastTimer::FTM_SHADOW_AVATAR,		"   Avatar",			&LLColor4::magenta1, 0 },
+	{ LLFastTimer::FTM_SHADOW_TREE,			"   Tree",				&LLColor4::green1, 0 },
+	{ LLFastTimer::FTM_RENDER_GEOMETRY,		"  Geometry",			&LLColor4::green2, 1 },
+	{ LLFastTimer::FTM_POOLS,				"   Pools",				&LLColor4::green3, 1 },
+	{ LLFastTimer::FTM_POOLRENDER,			"    RenderPool",		&LLColor4::green4, 1 },
+	{ LLFastTimer::FTM_RENDER_TERRAIN,		"     Terrain",			&LLColor4::green6, 0 },
+	{ LLFastTimer::FTM_AVATAR_FACE,			"     Avatar Face",		&LLColor4::yellow1, 0 },
+	{ LLFastTimer::FTM_RENDER_CHARACTERS,	"     Avatars",			&LLColor4::yellow2, 0 },
+	{ LLFastTimer::FTM_RENDER_SIMPLE,		"     Simple",			&LLColor4::yellow4, 0 },
+	{ LLFastTimer::FTM_RENDER_FULLBRIGHT,	"     Fullbright",		&LLColor4::yellow5, 0 },
+	{ LLFastTimer::FTM_RENDER_GLOW,			"     Glow",			&LLColor4::orange1, 0 },
+	{ LLFastTimer::FTM_RENDER_GRASS,		"     Grass",			&LLColor4::yellow6, 0 },
+	{ LLFastTimer::FTM_RENDER_INVISIBLE,	"     Invisible",		&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_RENDER_SHINY,		"     Shiny",			&LLColor4::yellow3, 0 },
+	{ LLFastTimer::FTM_RENDER_BUMP,			"     Bump",			&LLColor4::yellow4, 0 },
+	{ LLFastTimer::FTM_RENDER_TREES,		"     Trees",			&LLColor4::yellow8, 0 },
+	{ LLFastTimer::FTM_VOLUME_GEOM,			"     Volume Geometry",	&LLColor4::blue1, 1 },
+	{ LLFastTimer::FTM_VOLUME_GEOM_PARTIAL,	"      Terse Rebuild",	&LLColor4::blue3, 0 },
+	{ LLFastTimer::FTM_FACE_GET_GEOM,		"     Face Geom",		&LLColor4::magenta1, 1 },
+	{ LLFastTimer::FTM_RENDER_OCCLUSION,	"     Occlusion",		&LLColor4::red1, 0 },
+	{ LLFastTimer::FTM_RENDER_CLOUDS,		"     Clouds",			&LLColor4::yellow5, 0 },
+	{ LLFastTimer::FTM_RENDER_ALPHA,		"     Alpha",			&LLColor4::yellow6, 0 },
+	{ LLFastTimer::FTM_RENDER_HUD,			"     HUD",				&LLColor4::yellow7, 0 },
+	{ LLFastTimer::FTM_RENDER_WATER,		"     Water",			&LLColor4::yellow9, 0 },
+	{ LLFastTimer::FTM_RENDER_WL_SKY,		"     WL Sky",			&LLColor4::blue3,	0 },
+	{ LLFastTimer::FTM_VISIBLE_CLOUD,		"      Visible Cloud",	&LLColor4::blue1, 0 },
+	{ LLFastTimer::FTM_RENDER_FAKE_VBO_UPDATE,"    Fake VBO update",&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_RENDER_BLOOM,		"   Bloom",				&LLColor4::blue4, 0 },
+	{ LLFastTimer::FTM_RENDER_BLOOM_FBO,	"    First FBO",		&LLColor4::blue, 0 },
+	{ LLFastTimer::FTM_RENDER_UI,			"  UI",					&LLColor4::cyan4, 1 },
+	{ LLFastTimer::FTM_RENDER_TIMER,		"   Timers",			&LLColor4::cyan5, 1,},
+	{ LLFastTimer::FTM_RENDER_FONTS,		"   Fonts",				&LLColor4::pink1, 0 },
+	{ LLFastTimer::FTM_RESIZE_SCREEN_TEXTURE,"  Resize Screen Tex.",&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_SWAP,				"  Swap",				&LLColor4::pink2, 0 },
+	{ LLFastTimer::FTM_CLIENT_COPY,			"  Client Copy",		&LLColor4::red1, 1 },
 
 #if 0 || !LL_RELEASE_FOR_DOWNLOAD
-	{ LLFastTimer::FTM_TEMP1,				" Temp1",			&LLColor4::red1, 0 },
-	{ LLFastTimer::FTM_TEMP2,				" Temp2",			&LLColor4::magenta1, 0 },
-	{ LLFastTimer::FTM_TEMP3,				" Temp3",			&LLColor4::red2, 0 },
-	{ LLFastTimer::FTM_TEMP4,				" Temp4",			&LLColor4::magenta2, 0 },
-	{ LLFastTimer::FTM_TEMP5,				" Temp5",			&LLColor4::red3, 0 },
-	{ LLFastTimer::FTM_TEMP6,				" Temp6",			&LLColor4::magenta3, 0 },
-	{ LLFastTimer::FTM_TEMP7,				" Temp7",			&LLColor4::red4, 0 },
-	{ LLFastTimer::FTM_TEMP8,				" Temp8",			&LLColor4::magenta4, 0 },
+	{ LLFastTimer::FTM_TEMP1,				" Temp1",				&LLColor4::red1, 0 },
+	{ LLFastTimer::FTM_TEMP2,				" Temp2",				&LLColor4::magenta1, 0 },
+	{ LLFastTimer::FTM_TEMP3,				" Temp3",				&LLColor4::red2, 0 },
+	{ LLFastTimer::FTM_TEMP4,				" Temp4",				&LLColor4::magenta2, 0 },
+	{ LLFastTimer::FTM_TEMP5,				" Temp5",				&LLColor4::red3, 0 },
+	{ LLFastTimer::FTM_TEMP6,				" Temp6",				&LLColor4::magenta3, 0 },
+	{ LLFastTimer::FTM_TEMP7,				" Temp7",				&LLColor4::red4, 0 },
+	{ LLFastTimer::FTM_TEMP8,				" Temp8",				&LLColor4::magenta4, 0 },
 #endif
-	
+
 	{ LLFastTimer::FTM_OTHER,				" Other",			&red0 }
 };
 static int ft_display_didcalc = 0;
@@ -238,7 +272,7 @@ LLFastTimerView::LLFastTimerView(const std::string& name, const LLRect& rect)
 	mBarEnd = new S32[(MAX_VISIBLE_HISTORY + 1) * FTV_DISPLAY_NUM];
 	memset(mBarEnd, 0, (MAX_VISIBLE_HISTORY + 1) * FTV_DISPLAY_NUM * sizeof(S32));
 	mSubtractHidden = 0;
-	mPrintStats = -1;	
+	mPrintStats = -1;
 
 	// One-time setup
 	if (!ft_display_didcalc)
@@ -302,7 +336,7 @@ S32 LLFastTimerView::getLegendIndex(S32 y)
 	{
 		return ft_display_idx[idx];
 	}
-	
+
 	return -1;
 }
 
@@ -345,7 +379,7 @@ BOOL LLFastTimerView::handleMouseDown(S32 x, S32 y, MASK mask)
 		}
 		else if (mask & MASK_CONTROL)
 		{
-			mDisplayHz = !mDisplayHz;	
+			mDisplayHz = !mDisplayHz;
 		}
 		else
 		{
@@ -423,7 +457,7 @@ BOOL LLFastTimerView::handleHover(S32 x, S32 y, MASK mask)
 			mHoverIndex = legend_index;
 		}
 	}
-	
+
 	return FALSE;
 }
 
@@ -450,16 +484,16 @@ void LLFastTimerView::onClose(bool app_quitting)
 void LLFastTimerView::draw()
 {
 	LLFastTimer t(LLFastTimer::FTM_RENDER_TIMER);
-	
+
 	std::string tdesc;
 
 	F64 clock_freq = (F64)LLFastTimer::countsPerSecond();
 	F64 iclock_freq = 1000.0 / clock_freq;
-	
+
 	S32 margin = 10;
 	S32 height = (S32) (gViewerWindow->getVirtualWindowRect().getHeight() * 0.75f);
 	S32 width = (S32) (gViewerWindow->getVirtualWindowRect().getWidth() * 0.75f);
-	
+
 	LLRect new_rect;
 	new_rect.setLeftTopAndSize(getRect().mLeft, getRect().mTop, width, height);
 	setRect(new_rect);
@@ -504,19 +538,19 @@ void LLFastTimerView::draw()
 		LLFastTimer::sCountAverage[LLFastTimer::FTM_OTHER] /= LLFastTimer::FTM_HISTORY_NUM;
 		LLFastTimer::sCallAverage[LLFastTimer::FTM_OTHER] /= LLFastTimer::FTM_HISTORY_NUM;
 	}
-	
+
 	// Draw the window background
 	{
 		gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 		gl_rect_2d(0, getRect().getHeight(), getRect().getWidth(), 0, LLColor4(0.f, 0.f, 0.f, 0.25f));
 	}
-	
+
 	S32 xleft = margin;
 	S32 ytop = margin;
-	
+
 	// Draw some help
 	{
-		
+
 		x = xleft;
 		y = height - ytop;
 		texth = (S32)LLFontGL::getFontMonospace()->getLineHeight();
@@ -581,7 +615,7 @@ void LLFastTimerView::draw()
 			}
 		}
 	}
-		
+
 	// Draw the legend
 
 	S32 legendwidth = 0;
@@ -604,7 +638,7 @@ void LLFastTimerView::draw()
 		cur_line++;
 		S32 level = ft_display_table[i].level;
 		S32 parent = ft_display_table[i].parent;
-		
+
 		x = xleft;
 
 		left = x; right = x + texth;
@@ -713,13 +747,13 @@ void LLFastTimerView::draw()
 
 	// Draw the history bars
 	if (LLFastTimer::sLastFrameIndex >= 0)
-	{	
+	{
 		U64 totalticks;
 		if (!LLFastTimer::sPauseHistory)
 		{
 			U64 ticks = 0;
 			int hidx = (LLFastTimer::sLastFrameIndex - mScrollIndex) % LLFastTimer::FTM_HISTORY_NUM;
-			for (S32 i=0; i<FTV_DISPLAY_NUM; i++)
+			for (S32 i = 0; i < FTV_DISPLAY_NUM; i++)
 			{
 				if (mSubtractHidden && ft_display_table[i].disabled > 1)
 				{
@@ -761,10 +795,10 @@ void LLFastTimerView::draw()
 		{
 			// Calculate the max total ticks for the current history
 			totalticks = 0;
-			for (S32 j=0; j<histmax; j++)
+			for (S32 j = 0; j < histmax; j++)
 			{
 				U64 ticks = 0;
-				for (S32 i=0; i<FTV_DISPLAY_NUM; i++)
+				for (S32 i = 0; i < FTV_DISPLAY_NUM; i++)
 				{
 					if (mSubtractHidden && ft_display_table[i].disabled > 1)
 					{
@@ -781,7 +815,7 @@ void LLFastTimerView::draw()
 		{
 			totalticks = (U64)(clock_freq * .1); // 100 ms
 		}
-		
+
 		// Draw MS ticks
 		{
 			U32 ms = (U32)((F64)totalticks * iclock_freq);
@@ -790,18 +824,18 @@ void LLFastTimerView::draw()
 			x = xleft + barw/4 - LLFontGL::getFontMonospace()->getWidth(tdesc);
 			LLFontGL::getFontMonospace()->renderUTF8(tdesc, 0, x, y, LLColor4::white,
 										 LLFontGL::LEFT, LLFontGL::TOP);
-			
+
 			tdesc = llformat("%.1f ms |", (F32)ms*.50f);
 			x = xleft + barw/2 - LLFontGL::getFontMonospace()->getWidth(tdesc);
 			LLFontGL::getFontMonospace()->renderUTF8(tdesc, 0, x, y, LLColor4::white,
 										 LLFontGL::LEFT, LLFontGL::TOP);
-			
+
 			tdesc = llformat("%.1f ms |", (F32)ms*.75f);
 			x = xleft + (barw*3)/4 - LLFontGL::getFontMonospace()->getWidth(tdesc);
 			LLFontGL::getFontMonospace()->renderUTF8(tdesc, 0, x, y, LLColor4::white,
 										 LLFontGL::LEFT, LLFontGL::TOP);
-			
-			tdesc = llformat( "%d ms |", ms);
+
+			tdesc = llformat("%d ms |", ms);
 			x = xleft + barw - LLFontGL::getFontMonospace()->getWidth(tdesc);
 			LLFontGL::getFontMonospace()->renderUTF8(tdesc, 0, x, y, LLColor4::white,
 										 LLFontGL::LEFT, LLFontGL::TOP);
@@ -814,7 +848,7 @@ void LLFastTimerView::draw()
 			gGL.color4f(0.5f,0.5f,0.5f,0.5f);
 
 			S32 by = y + 2;
-			
+
 			y -= ((S32)LLFontGL::getFontMonospace()->getLineHeight() + 4);
 
 			//heading
@@ -826,33 +860,33 @@ void LLFastTimerView::draw()
 			by = y + 5;
 			//average bar
 			gl_rect_2d(xleft-5, by, getRect().getWidth()-5, by-barh-dy-5, FALSE);
-			
+
 			by -= barh*2+dy;
-			
+
 			//current frame bar
 			gl_rect_2d(xleft-5, by, getRect().getWidth()-5, by-barh-dy-2, FALSE);
-			
+
 			by -= barh+dy+1;
-			
+
 			//history bars
-			gl_rect_2d(xleft-5, by, getRect().getWidth()-5, LINE_GRAPH_HEIGHT-barh-dy-2, FALSE);			
-			
+			gl_rect_2d(xleft-5, by, getRect().getWidth()-5, LINE_GRAPH_HEIGHT-barh-dy-2, FALSE);
+
 			by = LINE_GRAPH_HEIGHT-barh-dy-7;
-			
+
 			//line graph
 			graph_rect = LLRect(xleft-5, by, getRect().getWidth()-5, 5);
-			
+
 			gl_rect_2d(graph_rect, FALSE);
 		}
-		
+
 		// Draw bars for each history entry
 		// Special: -1 = show running average
 		gGL.getTexUnit(0)->bind(box_imagep->getImage());
-		for (S32 j=-1; j<histmax && y > LINE_GRAPH_HEIGHT; j++)
+		for (S32 j = -1; j < histmax && y > LINE_GRAPH_HEIGHT; j++)
 		{
-			int sublevel_dx[FTV_DISPLAY_NUM+1];
-			int sublevel_left[FTV_DISPLAY_NUM+1];
-			int sublevel_right[FTV_DISPLAY_NUM+1];
+			int sublevel_dx[FTV_DISPLAY_NUM + 1];
+			int sublevel_left[FTV_DISPLAY_NUM + 1];
+			int sublevel_right[FTV_DISPLAY_NUM + 1];
 			S32 tidx;
 			if (j >= 0)
 			{
@@ -862,9 +896,9 @@ void LLFastTimerView::draw()
 			{
 				tidx = -1;
 			}
-			
+
 			x = xleft;
-			
+
 			// draw the bars for each stat
 			int xpos[FTV_DISPLAY_NUM+1];
 			int deltax[FTV_DISPLAY_NUM+1];
@@ -877,18 +911,18 @@ void LLFastTimerView::draw()
 					continue;
 				}
 
-				F32 frac = (F32)ticks_sum[tidx+1][i] / (F32)totalticks;
-		
+				F32 frac = (F32)ticks_sum[tidx + 1][i] / (F32)totalticks;
+
 				dx = llround(frac * (F32)barw);
 				deltax[i] = dx;
-				
+
 				int level = ft_display_table[i].level;
 				int parent = ft_display_table[i].parent;
 				llassert(level < FTV_DISPLAY_NUM);
 				llassert(parent < FTV_DISPLAY_NUM);
-				
+
 				left = xpos[level];
-				
+
 				S32 prev_idx = i - 1;
 				while (prev_idx > 0)
 				{
@@ -914,12 +948,12 @@ void LLFastTimerView::draw()
 					sublevel_dx[level] = dx;
 					sublevel_right[level] = sublevel_left[level] + sublevel_dx[level];
 					}
-				else if (i==0 || ft_display_table[prev_idx].level < level)
+				else if (i == 0 || ft_display_table[prev_idx].level < level)
 				{
 					// If we are the first entry at a new sublevel block, calc the
 					//   total width of this sublevel and modify left to align block.
 						U64 sublevelticks = ticks_sum[tidx+1][i];
-						for (S32 k=i+1; k<FTV_DISPLAY_NUM; k++)
+						for (S32 k = i + 1; k < FTV_DISPLAY_NUM; k++)
 						{
 							if (ft_display_table[k].level < level)
 								break;
@@ -940,12 +974,12 @@ void LLFastTimerView::draw()
 
 					sublevel_left[level] = left;
 					sublevel_right[level] = sublevel_left[level] + sublevel_dx[level];
-				}				
+				}
 
 				right = left + dx;
 				xpos[level] = right;
 				xpos[level+1] = left;
-				
+
 				mBarStart[(j + 1) * FTV_DISPLAY_NUM + i] = left;
 				mBarEnd[(j + 1) * FTV_DISPLAY_NUM + i] = right;
 
@@ -960,7 +994,7 @@ void LLFastTimerView::draw()
 
 					BOOL is_child_of_hover_item = (i == mHoverIndex);
 					S32 next_parent = ft_display_table[i].parent;
-					while(!is_child_of_hover_item && next_parent >= 0)
+					while (!is_child_of_hover_item && next_parent >= 0)
 					{
 						is_child_of_hover_item = (mHoverIndex == next_parent);
 						next_parent = ft_display_table[next_parent].parent;
@@ -982,33 +1016,39 @@ void LLFastTimerView::draw()
 					gl_segmented_rect_2d_fragment_tex(sublevel_left[level], top - level + scale_offset, sublevel_right[level], bottom + level - scale_offset, box_imagep->getTextureWidth(), box_imagep->getTextureHeight(), 16, start_fragment, end_fragment);
 
 				}
-					
+
 			}
 			y -= (barh + dy);
 			if (j < 0)
 				y -= barh;
 		}
-		
+
 		//draw line graph history
 		{
 			gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 			LLLocalClipRect clip(graph_rect);
-			
+
 			//normalize based on last frame's maximum
 			static U64 last_max = 0;
 			static F32 alpha_interp = 0.f;
-			U64 max_ticks = llmax(last_max, (U64) 1);			
+			U64 max_ticks = llmax(last_max, (U64) 1);
 			F32 ms = (F32)((F64)max_ticks * iclock_freq);
-			
+
 			//display y-axis range
 			std::string tdesc;
-			 if (mDisplayCalls)
+			if (mDisplayCalls)
+			{
 				tdesc = llformat("%d calls", (int)max_ticks);
+			}
 			else if (mDisplayHz)
+			{
 				tdesc = llformat("%d Hz", (int)max_ticks);
+			}
 			else
+			{
 				tdesc = llformat("%4.2f ms", ms);
-							
+			}
+
 			x = graph_rect.mRight - LLFontGL::getFontMonospace()->getWidth(tdesc)-5;
 			y = graph_rect.mTop - ((S32)LLFontGL::getFontMonospace()->getLineHeight());
  
@@ -1019,29 +1059,29 @@ void LLFastTimerView::draw()
 			{
 				S32 first_frame = LLFastTimer::FTM_HISTORY_NUM - mScrollIndex;
 				S32 last_frame = first_frame - MAX_VISIBLE_HISTORY;
-				
+
 				F32 frame_delta = ((F32) (graph_rect.getWidth()))/(LLFastTimer::FTM_HISTORY_NUM-1);
-				
+
 				F32 right = (F32) graph_rect.mLeft + frame_delta*first_frame;
 				F32 left = (F32) graph_rect.mLeft + frame_delta*last_frame;
-				
-				gGL.color4f(0.5f,0.5f,0.5f,0.3f);
+
+				gGL.color4f(0.5f, 0.5f, 0.5f, 0.3f);
 				gl_rect_2d((S32) left, graph_rect.mTop, (S32) right, graph_rect.mBottom);
-				
+
 				if (mHoverBarIndex >= 0)
 				{
 					S32 bar_frame = first_frame - mHoverBarIndex;
 					F32 bar = (F32) graph_rect.mLeft + frame_delta*bar_frame;
 
-					gGL.color4f(0.5f,0.5f,0.5f,1);
-				
+					gGL.color4f(0.5f, 0.5f, 0.5f, 1.f);
+
 					gGL.begin(LLRender::LINES);
 					gGL.vertex2i((S32)bar, graph_rect.mBottom);
 					gGL.vertex2i((S32)bar, graph_rect.mTop);
 					gGL.end();
 				}
 			}
-			
+
 			U64 cur_max = 0;
 			for (S32 idx = 0; idx < FTV_DISPLAY_NUM; ++idx)
 			{
@@ -1049,18 +1089,18 @@ void LLFastTimerView::draw()
 				{	//skip disabled timers
 					continue;
 				}
-				
+
 				//fatten highlighted timer
 				if (mHoverIndex == idx)
 				{
 					gGL.flush();
 					glLineWidth(3);
 				}
-			
+
 				const F32 * col = ft_display_table[idx].color->mV;
-				
+
 				F32 alpha = 1.f;
-				
+
 				if (mHoverIndex >= 0 &&
 					idx != mHoverIndex)
 				{	//fade out non-hihglighted timers
@@ -1070,16 +1110,16 @@ void LLFastTimerView::draw()
 					}
 				}
 
-				gGL.color4f(col[0], col[1], col[2], alpha);				
+				gGL.color4f(col[0], col[1], col[2], alpha);
 				gGL.begin(LLRender::LINE_STRIP);
 				for (U32 j = 0; j < LLFastTimer::FTM_HISTORY_NUM; j++)
 				{
-					U64 ticks = ticks_sum[j+1][idx];
+					U64 ticks = ticks_sum[j + 1][idx];
 
 					if (mDisplayHz)
 					{
-						F64 tc = (F64) (ticks+1) * iclock_freq;
-						tc = 1000.f/tc;
+						F64 tc = (F64) (ticks + 1) * iclock_freq;
+						tc = 1000.f / tc;
 						ticks = llmin((U64) tc, (U64) 1024);
 					}
 					else if (mDisplayCalls)
@@ -1088,41 +1128,41 @@ void LLFastTimerView::draw()
 						S32 hidx = (LLFastTimer::sLastFrameIndex + j) % LLFastTimer::FTM_HISTORY_NUM;
 						ticks = (S32)LLFastTimer::sCallHistory[hidx][tidx];
 					}
-										
+
 					if (alpha == 1.f)
 					{ //normalize to highlighted timer
 						cur_max = llmax(cur_max, ticks);
 					}
-					F32 x = graph_rect.mLeft + ((F32) (graph_rect.getWidth()))/(LLFastTimer::FTM_HISTORY_NUM-1)*j;
-					F32 y = graph_rect.mBottom + (F32) graph_rect.getHeight()/max_ticks*ticks;
-					gGL.vertex2f(x,y);
+					F32 x = graph_rect.mLeft + ((F32) (graph_rect.getWidth())) / (LLFastTimer::FTM_HISTORY_NUM - 1) * j;
+					F32 y = graph_rect.mBottom + (F32) graph_rect.getHeight() / max_ticks*ticks;
+					gGL.vertex2f(x, y);
 				}
 				gGL.end();
-				
+
 				if (mHoverIndex == idx)
 				{
 					gGL.flush();
 					glLineWidth(1);
 				}
 			}
-			
+
 			//interpolate towards new maximum
 			F32 dt = gFrameIntervalSeconds*3.f;
 			last_max = (U64) ((F32) last_max + ((F32) cur_max- (F32) last_max) * dt);
 			F32 alpha_target = last_max > cur_max ?
-								llmin((F32) last_max/ (F32) cur_max - 1.f,1.f) :
-								llmin((F32) cur_max/ (F32) last_max - 1.f,1.f);
-			
+								llmin((F32) last_max/ (F32) cur_max - 1.f, 1.f) :
+								llmin((F32) cur_max/ (F32) last_max - 1.f, 1.f);
+
 			alpha_interp = alpha_interp + (alpha_target-alpha_interp) * dt;
 
 			if (mHoverIndex >= 0)
 			{
-				x = (graph_rect.mRight + graph_rect.mLeft)/2;
+				x = (graph_rect.mRight + graph_rect.mLeft) / 2;
 				y = graph_rect.mBottom + 8;
 
 				LLFontGL::getFontMonospace()->renderUTF8(std::string(ft_display_table[mHoverIndex].desc), 0, x, y, LLColor4::white,
 					LLFontGL::LEFT, LLFontGL::BOTTOM);
-			}					
+			}
 		}
 	}
 
@@ -1138,7 +1178,7 @@ void LLFastTimerView::draw()
 				continue;
 			if (!first)
 				legend_stat += ", ";
-			first=0;
+			first = 0;
 			legend_stat += ft_display_table[stat_num].desc;
 		}
 		llinfos << legend_stat << llendl;
@@ -1152,7 +1192,7 @@ void LLFastTimerView::draw()
 				continue;
 			if (!first)
 				timer_stat += ", ";
-			first=0;
+			first = 0;
 			U64 ticks;
 			S32 tidx = ft_display_table[stat_num].timer;
 			if (mPrintStats > 0)
@@ -1171,7 +1211,7 @@ void LLFastTimerView::draw()
 		llinfos << timer_stat << llendl;
 		mPrintStats = -1;
 	}
-		
+
 	mHoverIndex = -1;
 	mHoverBarIndex = -1;
 
@@ -1182,7 +1222,7 @@ F64 LLFastTimerView::getTime(LLFastTimer::EFastTimerType tidx)
 {
 	// Find table index
 	S32 i;
-	for (i=0; i<FTV_DISPLAY_NUM; i++)
+	for (i = 0; i < FTV_DISPLAY_NUM; i++)
 	{
 		if (tidx == ft_display_table[i].timer)
 		{
@@ -1199,11 +1239,11 @@ F64 LLFastTimerView::getTime(LLFastTimer::EFastTimerType tidx)
 	}
 
 	S32 table_idx = i;
-	
+
 	// Add child ticks to parent
 	U64 ticks = LLFastTimer::sCountAverage[tidx];
 	S32 level = ft_display_table[table_idx].level;
-	for (i=table_idx+1; i<FTV_DISPLAY_NUM; i++)
+	for (i = table_idx + 1; i < FTV_DISPLAY_NUM; i++)
 	{
 		if (ft_display_table[i].level <= level)
 		{

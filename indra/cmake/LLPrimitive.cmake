@@ -19,11 +19,11 @@ if (WINDOWS)
     set(LLPRIMITIVE_LIBRARIES 
         llprimitive
         debug libcollada14dom22-d
-        debug libboost_filesystem-d
-        debug libboost_system-d
+        debug libboost_filesystem-vc80-mt-gd-1_39
+        debug libboost_system-vc80-gd-mt-1_39
         optimized libcollada14dom22
-        optimized libboost_filesystem
-        optimized libboost_system
+        optimized libboost_filesystem-vc80-mt-1_39
+        optimized libboost_system-vc80-mt-1_39
         )
 else (WINDOWS)
     set(LLPRIMITIVE_LIBRARIES 
@@ -33,6 +33,6 @@ else (WINDOWS)
         xml2
        	pcrecpp
         pcre
-		boost_system
+        boost_system-gcc41-mt-1_39
         )
 endif (WINDOWS)

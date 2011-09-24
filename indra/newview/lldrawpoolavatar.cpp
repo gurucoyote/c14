@@ -1442,7 +1442,7 @@ void LLDrawPoolAvatar::renderRigged(LLVOAvatar* avatar, U32 type, bool glow)
 			continue;
 		}
 
-		const LLMeshSkinInfo* skin = gMeshRepo.getSkinInfo(mesh_id);
+		const LLMeshSkinInfo* skin = gMeshRepo.getSkinInfo(mesh_id, vobj);
 		if (!skin)
 		{
 			continue;

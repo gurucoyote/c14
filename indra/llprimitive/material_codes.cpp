@@ -1,10 +1,10 @@
 /** 
- * @file llversionviewer.h
- * @brief
+ * @file material_codes.cpp
+ * @brief Material_codes definitions
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2000&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2000-2009, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,17 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#include "linden_common.h"
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 1;
-const S32 LL_VERSION_BUILD = 1;
+#include "material_codes.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+#include "lluuid.h"
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
-
-#endif
+const LLUUID LL_DEFAULT_STONE_UUID("87c5765b-aa26-43eb-b8c6-c09a1ca6208e");
+const LLUUID LL_DEFAULT_METAL_UUID("6f3c53e9-ba60-4010-8f3e-30f51a762476");
+const LLUUID LL_DEFAULT_GLASS_UUID("b4ba225c-373f-446d-9f7e-6cb7b5cf9b3d");
+const LLUUID LL_DEFAULT_WOOD_UUID("89556747-24cb-43ed-920b-47caed15465f");
+const LLUUID LL_DEFAULT_FLESH_UUID("80736669-e4b9-450e-8890-d5169f988a50");
+const LLUUID LL_DEFAULT_PLASTIC_UUID("304fcb4e-7d33-4339-ba80-76d3d22dc11a");
+const LLUUID LL_DEFAULT_RUBBER_UUID("9fae0bc5-666d-477e-9f70-84e8556ec867");
+const LLUUID LL_DEFAULT_LIGHT_UUID("00000000-0000-0000-0000-000000000000");
