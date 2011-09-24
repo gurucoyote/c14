@@ -268,7 +268,6 @@ void LLToolSelect::handleDeselect()
 	}
 }
 
-
 void LLToolSelect::stopEditing()
 {
 	if(	hasMouseCapture() )
@@ -286,7 +285,3 @@ void LLToolSelect::onMouseCaptureLost()
 	// Clean up drag-specific variables
 	mIgnoreGroup = FALSE;
 }
-
-
-
-

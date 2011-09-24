@@ -52,6 +52,7 @@
 #include "llfloater.h"
 #include "llfloaterchat.h"
 #include "llkeyboard.h"
+#include "llmeshrepository.h"
 #include "llnetmap.h"
 #include "llnotify.h"
 #include "llparcel.h"
@@ -175,6 +176,12 @@ static bool handleRenderHideGroupTitleAllChanged(const LLSD& newvalue)
 bool handleRenderTransparentWaterChanged(const LLSD& newvalue)
 {
 	LLWorld::getInstance()->updateWaterObjects();
+	return true;
+}
+
+static bool handleMeshMaxConcurrentRequestsChanged(const LLSD& newvalue)
+{
+	LLMeshRepoThread::sMaxConcurrentRequests = (U32) newvalue.asInteger();
 	return true;
 }
 
@@ -659,6 +666,7 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("RenderDeferredSSAO")->getSignal()->connect(boost::bind(&handleSetShaderChanged, _2));
 	gSavedSettings.getControl("RenderDeferredGI")->getSignal()->connect(boost::bind(&handleSetShaderChanged, _2));
 	gSavedSettings.getControl("RenderTransparentWater")->getSignal()->connect(boost::bind(&handleRenderTransparentWaterChanged, _2));
+	gSavedSettings.getControl("MeshMaxConcurrentRequests")->getSignal()->connect(boost::bind(&handleMeshMaxConcurrentRequestsChanged, _2));	
 	gSavedSettings.getControl("TextureMemory")->getSignal()->connect(boost::bind(&handleVideoMemoryChanged, _2));
 	gSavedSettings.getControl("AuditTexture")->getSignal()->connect(boost::bind(&handleAuditTextureChanged, _2));
 	gSavedSettings.getControl("ChatFontSize")->getSignal()->connect(boost::bind(&handleChatFontSizeChanged, _2));

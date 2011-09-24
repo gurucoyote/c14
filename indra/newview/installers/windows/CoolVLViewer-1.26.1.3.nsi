@@ -10,7 +10,7 @@ RequestExecutionLevel admin
 !define VER_MAJOR 1
 !define VER_MINOR 26
 !define VER_MICRO 1
-!define VER_REVISION 2
+!define VER_REVISION 3
 !define VERSION "${VER_MAJOR}.${VER_MINOR}.${VER_MICRO}.${VER_REVISION}"
 !define TMP_DIR "C:\TMP"
 !define BUILD_DIR "${TMP_DIR}\${PROD_NAME}"
@@ -82,6 +82,20 @@ Section "Install"
 
   ; Delete some conflicting files
   Delete "$INSTDIR\SnowglobeRelease.exe.config"
+  Delete "$INSTDIR\skins\default\xui\da\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\de\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\es\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\fr\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\hu\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\it\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\ja\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\ko\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\pl\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\pt\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\ru\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\tr\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\uk\notifications.xml"
+  Delete "$INSTDIR\skins\default\xui\zh\notifications.xml"
 
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
    ;Create Start menu shortcuts

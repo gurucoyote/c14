@@ -605,7 +605,6 @@ void LLSpatialPartition::rebuildGeom(LLSpatialGroup* group)
 
 void LLSpatialPartition::rebuildMesh(LLSpatialGroup* group)
 {
-
 }
 
 BOOL LLSpatialGroup::boundObjects(BOOL empty, LLVector4a& minOut, LLVector4a& maxOut)

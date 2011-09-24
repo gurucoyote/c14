@@ -2122,7 +2122,10 @@ void LLPipeline::rebuildPriorityGroups()
 
 	assertInitialized();
 
-	gMeshRepo.notifyLoadedMeshes();
+	{
+		LLFastTimer ftm(LLFastTimer::FTM_REBUILD_MESH);
+		gMeshRepo.notifyLoadedMeshes();
+	}
 
 	mGroupQ1Locked = true;
 	// Iterate through all drawables on the priority build queue,
@@ -2241,12 +2244,12 @@ void LLPipeline::updateGeom(F32 max_dtime)
 	S32 size = (S32) mBuildQ2.size();
 	if (size > 1024)
 	{
-		min_count = llclamp((S32) (size * (F32) size/4096), 16, size);
+		min_count = llclamp((S32) (size * (F32) size / 4096), 16, size);
 	}
 
 	S32 count = 0;
 
-	max_dtime = llmax(update_timer.getElapsedTimeF32()+0.001f, max_dtime);
+	max_dtime = llmax(update_timer.getElapsedTimeF32() + 0.001f, max_dtime);
 	LLSpatialGroup* last_group = NULL;
 	LLSpatialBridge* last_bridge = NULL;
 
@@ -2261,7 +2264,7 @@ void LLPipeline::updateGeom(F32 max_dtime)
 
 		if (drawablep->getSpatialGroup() != last_group && 
 			(!last_bridge || bridge != last_bridge) &&
-			(update_timer.getElapsedTimeF32() >= max_dtime) && count > min_count)
+			update_timer.getElapsedTimeF32() >= max_dtime && count > min_count)
 		{
 			break;
 		}
