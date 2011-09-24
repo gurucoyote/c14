@@ -1,0 +1,27 @@
+# adding general ignores for 3rd party libs and build files
+LICENSE*
+libraries/*
+linden/*
+*.tgz
+*.tar.gz
+*.zip
+*.pyc
+*.o
+*.db2
+indra/build*
+indra/newview/vivox-runtime/universal-darwin/
+
+indra/newview/skins/
+# do include the default skin's xui
+!indra/newview/skins/default/xui/en-us/
+
+indra/newview/res*
+indra/newview/character/
+indra/newview/app_settings/windlight/
+installed.xml
+LICENSE-libraries-mac.txt
+indra/newview/cursors_mac/
+indra/newview/secondlife.icns
+indra/newview/secondlife_firstlook.icns
+# exclude the platform specific keys.ini
+indra/newview/app_settings/keys.ini

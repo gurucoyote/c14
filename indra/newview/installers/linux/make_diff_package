@@ -1,0 +1,291 @@
+#!/bin/bash
+
+# This quick'n dirty script is used to build the Linux "difference package"
+# (overlay package to be installed over Snowglobe v1.4) for the Cool VL Viewer.
+# It can take one option (-k, for "keep") and one parameter (the directory
+# containing the full binaries and files of the freshly built Cool VL Viewer).
+# Here is how to proceed:
+#  - First compile the Cool VL Viewer: you will get a tarball (for example:
+#    Snowglobe-i686-1.26.0.15.tar.bz2), normally in your home directory (if
+#    you used cmake-SL to build the viewer).
+#  - Extract the tarball somewhere (say, in your home directory):
+#    tar xjf Snowglobe-i686-1.26.0.15.tar.bz2
+#  - invoke this script, passing it the name of the extracted viewer directory.
+#    In our example, it should be:
+#	 make_diff_package ~/Snowglobe-i686-1.26.0.15
+#
+# Done !  Once the script exits, you should find yourself with a new tarball
+# in the directory where the extracted viewer directory is (in our example, in
+# your home directory). If you wish to keep the intermediate directory used to
+# copy the diff files, use the -k option, like so:
+#    make_diff_package -k ~/Snowglobe-i686-1.26.0.15
+# You may also omit the extracted viewer directory path from the command line
+# if you invoke make_diff_package from inside that directory.
+
+keep="no"
+if [ "$1" == "-k" ] ; then
+	shift 1
+	keep="yes"
+fi
+
+if [ "$1" != "" ] ; then
+	cd $1
+fi
+
+here=`pwd`
+dir=${here##*/}
+
+name=`echo $dir | cut -d '-' -f 1`
+if [ "$name" != "Snowglobe" ] ; then
+	echo "ERROR: this is not a Snowglobe installation directory (Snowglobe name absent) !"
+	exit 1
+fi
+
+arch=`echo $dir | cut -d '-' -f 2`
+if [ "$arch" == "" ] ; then
+	echo "ERROR: this is not a Snowglobe installation directory (architecture name absent) !"
+	exit 1
+fi
+
+version=`echo $dir | cut -d '-' -f 3`
+if [ "$version" == "" ] ; then
+	echo "ERROR: this is not a Snowglobe installation directory (version number absent) !"
+	exit 1
+fi
+
+tarball="CoolVLViewer-Linux_$arch-$version-diff_files.tar.bz2"
+
+temp="../DIFF.$$"
+if [ -d $temp ] ; then
+	echo "ERROR: A directory by my temporary directory name already exists !"
+	exit 1
+fi
+
+mkdir $temp
+ret=$?
+if (( $ret != 0 )) ; then
+	echo "ERROR: Could not create a temporary directory !"
+	exit 1
+fi
+
+echo "Copying the diff files into a temporary directory..."
+
+mkdir -p $temp/bin
+mkdir -p $temp/bin/llplugin
+mkdir -p $temp/app_settings
+mkdir -p $temp/character
+mkdir -p $temp/fonts
+mkdir -p $temp/lib
+mkdir -p $temp/res-sdl
+mkdir -p $temp/skins/default/html
+mkdir -p $temp/skins/default/textures
+mkdir -p $temp/skins/default/xui/en-us
+mkdir -p $temp/skins/silver/xui/en-us
+mkdir -p $temp/skins/default/xui/da
+mkdir -p $temp/skins/default/xui/de
+mkdir -p $temp/skins/default/xui/es
+mkdir -p $temp/skins/default/xui/fr
+mkdir -p $temp/skins/default/xui/hu
+mkdir -p $temp/skins/default/xui/it
+mkdir -p $temp/skins/default/xui/ja
+mkdir -p $temp/skins/default/xui/ko
+mkdir -p $temp/skins/default/xui/pl
+mkdir -p $temp/skins/default/xui/pt
+mkdir -p $temp/skins/default/xui/ru
+mkdir -p $temp/skins/default/xui/tr
+mkdir -p $temp/skins/default/xui/uk
+mkdir -p $temp/skins/default/xui/zh
+
+cp -a gridargs.dat $temp/
+cp -a featuretable_linux.txt $temp/
+cp -a gpu_table.txt $temp/
+cp -a snowglobe $temp/
+cp -a CoolVLViewerReadme.txt $temp/
+cp -a RestrainedLoveReadme.txt $temp/
+cp -a app_settings/CA.pem $temp/app_settings/
+cp -a app_settings/grids.xml $temp/app_settings/
+cp -a app_settings/keywords.ini $temp/app_settings/
+cp -a app_settings/logcontrol.xml $temp/app_settings/
+cp -a app_settings/message_template.msg $temp/app_settings/
+cp -a app_settings/message.xml $temp/app_settings/
+cp -a app_settings/settings_crash_behavior.xml $temp/app_settings/
+cp -a app_settings/settings_files.xml $temp/app_settings/
+cp -a app_settings/settings_per_account.xml $temp/app_settings/
+cp -a app_settings/settings.xml $temp/app_settings/
+cp -a app_settings/shaders $temp/app_settings/
+
+cp -a bin/snowglobe-do-not-run-directly $temp/bin/
+cp -a bin/SLPlugin $temp/bin/
+cp -a bin/llplugin/* $temp/bin/llplugin/
+cp -a lib/libllcommon.so $temp/lib/
+cp -a lib/libtcmalloc.* $temp/lib/
+cp -a lib/libcollada14dom.so $temp/lib/
+cp -a lib/libglod.so $temp/lib/
+cp -a lib/libminizip.so $temp/lib/
+cp -a character/avatar_lad.xml $temp/character/
+cp -a fonts/profontdoc.txt $temp/fonts/
+cp -a fonts/profontwindows.ttf $temp/fonts/
+cp -a res-sdl/cvlv_icon.BMP $temp/res-sdl/
+
+cp -a skins/default/html/* $temp/skins/default/html/
+rm -f $temp/skins/default/html/btn_purplepill_bg.png
+rm -f $temp/skins/default/html/en-us/loading/sl_logo_rotate_black.gif
+
+cp -a skins/default/textures/textures.xml $temp/skins/default/textures/
+cp -a skins/default/textures/ff_visible_map_theirs.tga $temp/skins/default/textures/
+cp -a skins/default/textures/ff_visible_online_or_map_button_theirs.tga $temp/skins/default/textures/
+cp -a skins/default/textures/ff_visible_online_theirs.tga $temp/skins/default/textures/
+cp -a skins/default/textures/icn-overlay_volume-panel.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_item_alpha.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_item_invalid.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_item_mesh.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_item_physics.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_item_tattoo.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_link_folder.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_link_item_broken.tga $temp/skins/default/textures/
+cp -a skins/default/textures/inv_link_item.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_buy_currency.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_build.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_fly.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_push.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_scripts.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_see.tga $temp/skins/default/textures/
+cp -a skins/default/textures/legacy_status_no_voice.tga $temp/skins/default/textures/
+cp -a skins/default/textures/skin_thumbnail_dark.png $temp/skins/default/textures/
+
+cp -a skins/default/xui/en-us/floater_about.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_about_land.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_animation_preview.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_area_search.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_audio_volume.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_beacons.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_camera.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_chat_history2.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_chat_history.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_chatterbox2.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_customize.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_directory2.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_directory.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_display_name.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_friends.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_groups.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_group_info.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_group_titles.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_hardware_settings.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_image_preview.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_inspect.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_instant_message_ad_hoc.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_instant_message_group.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_instant_message.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_inventory.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_live_lsleditor.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_media_browser.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_media_filter.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_mini_map.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_moveview.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_new_im.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_new_outfit_dialog.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_object_backup.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_object_im_info.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_pay.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_pay_object.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_preview_landmark.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_preview_notecard_keep_discard.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_preview_notecard.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_preview_texture.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_profile.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_radar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_region_debug_console.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_rlv_restrictions.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_script_ed_panel.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_script_preview.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_search_replace.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_settings_debug.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_snapshot.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_teleport_history.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_texture_ctrl.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_tools.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_tos.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_world_map.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/fonts.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_inventory.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_login.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_mini_map.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_pie_attachment.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_pie_object.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_pie_self.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_viewer.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/mime_types_linux.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/mime_types_mac.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/mime_types_windows.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/mime_types.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/notifications.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_audio2.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_avatar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_chat_bar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_group.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_login.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_master_volume.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_media_remote.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_music_remote.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_overlaybar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_audio.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_chat.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_cool.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_im.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_general.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_graphics1.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_input.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_network.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_notifications.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_skins.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_web.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_status_bar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_status_bar2.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_toolbar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_voice_enable.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_voice_remote.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/role_actions.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/strings.xml $temp/skins/default/xui/en-us/
+
+cp -a skins/silver/xui/en-us/floater_chat_history2.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/floater_directory2.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/floater_directory.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/floater_live_lsleditor.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/floater_script_ed_panel.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/floater_tools.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/panel_avatar.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/panel_status_bar.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/panel_status_bar2.xml $temp/skins/silver/xui/en-us/
+cp -a skins/silver/xui/en-us/panel_toolbar.xml $temp/skins/silver/xui/en-us/
+
+cp -a skins/dark $temp/skins/
+
+touch $temp/skins/default/xui/da/notifications.xml
+touch $temp/skins/default/xui/de/notifications.xml
+touch $temp/skins/default/xui/es/notifications.xml
+touch $temp/skins/default/xui/fr/notifications.xml
+touch $temp/skins/default/xui/hu/notifications.xml
+touch $temp/skins/default/xui/it/notifications.xml
+touch $temp/skins/default/xui/ja/notifications.xml
+touch $temp/skins/default/xui/ko/notifications.xml
+touch $temp/skins/default/xui/pl/notifications.xml
+touch $temp/skins/default/xui/pt/notifications.xml
+touch $temp/skins/default/xui/ru/notifications.xml
+touch $temp/skins/default/xui/tr/notifications.xml
+touch $temp/skins/default/xui/uk/notifications.xml
+touch $temp/skins/default/xui/zh/notifications.xml
+
+cd $temp
+echo "Creating $tarball..."
+tar cjf ../$tarball .
+
+temp=`pwd`
+cd
+if [ "$keep" == "yes" ] ; then
+	echo "Keeping temporary directory $temp"
+else
+	rm -rf $temp
+fi
+
+echo "All done !"

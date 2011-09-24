@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<panel top="20" left="10" height="440" width="517" follows="left|top|right|bottom"
+	border="true" label="Cool features" name="cool" enabled="true" mouse_opaque="true">
+	<tab_container label="Cool Prefs" bottom="0" height="440" width="500" left="0"
+		name="Cool Prefs" tab_min_width="90" tab_position="top">
+		<panel border="true" left="1" bottom="-440" height="440" width="500" mouse_opaque="true"
+			follows="left|top|right|bottom" label="User Interface" name="User Interface">
+			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
+			 bottom_delta="-70" left="10" height="60" width="470" follows="left|top"/>
+			<text name="toolbar_buttons" type="string" length="1" enabled="true" mouse_opaque="true"
+			 bg_visible="false" border_drop_shadow_visible="false" border_visible="false" drop_shadow_visible="true"
+			 font="SansSerifSmall" v_pad="0" h_pad="0" halign="left"
+			 bottom="-32" left="20" height="18" width="300" follows="left|top">
+				Show the following buttons in the toolbar:
+			</text>
+			<check_box bottom_delta="-16" control_name="ShowChatButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Chat" left="15"
+			    mouse_opaque="true" name="show_chat_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowIMButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="IM" left_delta="75"
+			    mouse_opaque="true" name="show_im_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowFriendsButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Friends" left_delta="75"
+			    mouse_opaque="true" name="show_friends_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowGroupsButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Groups" left_delta="75"
+			    mouse_opaque="true" name="show_group_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowFlyButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Fly" left_delta="75"
+			    mouse_opaque="true" name="show_fly_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowSnapshotButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Snapshot" left_delta="75"
+			    mouse_opaque="true" name="show_snapshot_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="-18" control_name="ShowSearchButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Search" left="15"
+			    mouse_opaque="true" name="show_search_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowBuildButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Build" left_delta="75"
+			    mouse_opaque="true" name="show_build_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowRadarButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Radar" left_delta="75"
+			    mouse_opaque="true" name="show_radar_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowMiniMapButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Mini-Map" left_delta="75"
+			    mouse_opaque="true" name="show_minimap_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowMapButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Map" left_delta="75"
+			    mouse_opaque="true" name="show_map_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="0" control_name="ShowInventoryButton" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Inventory" left_delta="75"
+			    mouse_opaque="true" name="show_inventory_button_check" radio_style="false"
+			    width="70" />
+			<check_box bottom_delta="-28" control_name="HideMasterRemote" enabled="true"
+				follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+				label="Hide the Master Remote volume control when useless" left="15"
+				mouse_opaque="true" name="hide_master_remote_check" radio_style="false"
+				width="400" />
+			<check_box bottom_delta="-20" control_name="UseOldChatHistory" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Use the old style 'Chat history' window (requires a restart)" left="15"
+		    	mouse_opaque="true" name="use_old_chat_history_check" radio_style="false"
+		    	width="400" />
+			<check_box bottom_delta="-20" control_name="IMTabsVerticalStacking" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Stack IM tabs vertically (requires a restart)" left="15"
+		    	mouse_opaque="true" name="im_tabs_vertical_stacking_check" radio_style="false"
+		    	width="400" />
+			<check_box bottom_delta="-20" control_name="UseOldStatusBarIcons" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Use the old, more readable, status bar icons (requires a restart)" left="15"
+			    mouse_opaque="true" name="use_old_statusbar_icons_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="UseOldTrackingDots" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Use the old T-like tracking dots in the mini-map" left="15"
+			    mouse_opaque="true" name="use_old_tracking_dots_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="HideTeleportProgress" enabled="true"
+				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+				label="Hide the teleport progress screen" left="15"
+				mouse_opaque="true" name="hide_teleport_progress_check" radio_style="false"
+				width="400" />
+			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
+			 bottom_delta="-95" left="10" height="90" width="385" follows="left|top"/>
+			<text name="minimized_floaters" type="string" length="1" enabled="true" mouse_opaque="true"
+			 bg_visible="false" border_drop_shadow_visible="false" border_visible="false" drop_shadow_visible="true"
+			 font="SansSerifSmall" v_pad="0" h_pad="0" halign="left"
+			 bottom_delta="65" left="20" height="18" width="300" follows="left|top">
+				Minimized floaters stacking on screen:
+			</text>
+			<check_box bottom_delta="-16" control_name="StackMinimizedTopToBottom" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Stack minimized floaters from top to bottom" left="40"
+			    mouse_opaque="true" name="stack_minimized_top_to_bottom_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="StackMinimizedRightToLeft" enabled="true"
+		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Stack minimized floaters from right to left" left="40"
+			    mouse_opaque="true" name="stack_minimized_right_to_left_check" radio_style="false"
+			    width="400" />
+			<spinner bottom_delta="-20" control_name="StackScreenWidthFraction" enabled="true" decimal_digits="0"
+				follows="left|top" font="SansSerifSmall" height="16" left="20" width="360"
+				label="Fraction of the screen width to use for minimized floaters:   1/" label_width="320"
+				max_val="10" min_val="1" initial_val="1" increment="1"
+				mouse_opaque="true" name="stack_screen_width_fraction_spinner" />
+			<spinner bottom_delta="-35" control_name="DecimalsForTools" enabled="true" decimal_digits="0"
+				follows="left|top" font="SansSerifSmall" height="16" left="20" width="360"
+				label="Decimals for Pos, Size and Rot parameters in the build tool:" label_width="320"
+				max_val="5" min_val="0" initial_val="3" increment="1"
+				mouse_opaque="true" name="decimals_for_tools_spinner" />
+			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
+			 bottom_delta="-50" left="10" height="40" width="460" follows="left|top"/>
+			<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+		    	bottom_delta="18" drop_shadow_visible="true" enabled="true" follows="left|top"
+	    		font="SansSerifSmall" h_pad="0" halign="left" height="10" hidden="false"
+		    	left="20" mouse_opaque="true" name="time_format_text_box" v_pad="0"
+			    width="80">
+				Time format:
+			</text>
+			<combo_box allow_text_entry="false" bottom_delta="-6" enabled="true" follows="left|top"
+		    	height="18" hidden="false" left_delta="80" max_chars="20" mouse_opaque="true"
+		    	name="time_format_combobox" width="130">
+				<combo_item type="string" length="1" enabled="true" name="24hours" value="default">
+					24 hours clock
+				</combo_item>
+				<combo_item type="string" length="1" enabled="true" name="12hours" value="default">
+					12 hours clock
+				</combo_item>
+			</combo_box>
+			<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+			    bottom_delta="6" drop_shadow_visible="true" enabled="true" follows="left|top"
+	    		font="SansSerifSmall" h_pad="0" halign="left" height="10" hidden="false"
+		    	left_delta="150" mouse_opaque="true" name="date_format_text_box" v_pad="0"
+			    width="80">
+					Date format:
+			</text>
+			<combo_box allow_text_entry="false" bottom_delta="-6" enabled="true" follows="left|top"
+	    		height="18" hidden="false" left_delta="80" max_chars="20" mouse_opaque="true"
+			    name="date_format_combobox" width="130">
+				<combo_item type="string" length="1" enabled="true" name="year_first" value="default">
+					YYYY-MM-DD
+				</combo_item>
+				<combo_item type="string" length="1" enabled="true" name="day_first" value="default">
+					DD/MM/YYYY
+				</combo_item>
+				<combo_item type="string" length="1" enabled="true" name="month_first" value="default">
+					MM/DD/YYYY
+				</combo_item>
+			</combo_box>
+		</panel>
+    	<panel border="true" left="1" bottom="-440" height="440" width="500" mouse_opaque="true"
+			 follows="left|top|right|bottom" label="Chat &amp; IM" name="Chat/IM">
+			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
+			 bottom="-54" left="10" height="48" width="415" follows="left|top"/>
+			<check_box bottom_delta="24" control_name="AllowMUpose" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Allow MU* pose style in chat and IM (with ':' as a synonymous to '/me ')" left="20"
+		    	mouse_opaque="true" name="allow_mu_pose_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="AutoCloseOOC" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Auto-close OOC chat/IM (i.e. add '))' if not found and '((' was used)" left="20"
+			    mouse_opaque="true" name="auto_close_ooc_check" radio_style="false"
+			    width="400" />
+			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
+			 bottom_delta="-100" left="10" height="90" width="460" follows="left|top"/>
+			<check_box bottom_delta="66" control_name="HighlightOwnNameInChat" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Highlight posts containing your own name/nicknames in chat" left="20"
+		    	mouse_opaque="true" name="highlight_own_name_in_chat_check" radio_style="false"
+			    width="370" />
+			<check_box bottom_delta="-20" control_name="HighlightOwnNameInIM" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+	    		label="Highlight posts containing your own name/nicknames in group IMs" left="20"
+		    	mouse_opaque="true" name="highlight_own_name_in_im_check" radio_style="false"
+			    width="370" />
+			<text bottom_delta="-25" follows="left|top" font="SansSerifSmall" height="20" left="20"
+				name="nickname_label" width="60">Nicknames:</text>
+			<line_editor bottom_delta="3" bevel_style="in" border_style="line" border_thickness="1"
+				enabled="true" follows="left|top" font="SansSerif"
+				handle_edit_keys_directly="true" height="20" left_delta="70"
+				max_length="512" mouse_opaque="true" name="highlight_nicknames_text"
+				select_all_on_focus_received="true" width="310" word_wrap="false" />
+			<color_swatch bottom_delta="0" border_color="0.45098 0.517647 0.607843 1"
+				can_apply_immediately="true" color="1 1 1 1" control_name="OwnNameChatColor"
+				enabled="true" follows="left|top" height="50" label="color" left="420"
+				mouse_opaque="true" name="OwnNameChatColor" width="36" />
+			<check_box bottom_delta="-20" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Highlight posts containing any (4+ characters) word part of your display name" left="20"
+		    	mouse_opaque="true" name="highlight_display_name_check" radio_style="false"
+			    width="400" />
+		</panel>
+    	<panel border="true" left="1" bottom="-440" height="440" width="500" mouse_opaque="true"
+			 follows="left|top|right|bottom" label="Miscellaneous" name="Miscellaneous">
+			<check_box bottom_delta="-30" control_name="DoubleClickTeleport" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Enable teleporting via double-click in-world" left="15"
+			    mouse_opaque="true" name="double_click_teleport_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="SpeedRez" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Enable speed-rezzing via draw distance stepping" left="15"
+		    	mouse_opaque="true" name="speed_rez_check" radio_style="false"
+			    width="400" />
+			<spinner bottom_delta="-20" control_name="SpeedRezInterval" enabled="true" decimal_digits="0"
+				follows="left|top" font="SansSerifSmall" height="16" left="35" width="230"
+				label="Draw distance stepping interval:" label_width="180"
+				max_val="60" min_val="5" initial_val="20" increment="5"
+				mouse_opaque="true" name="speed_rez_interval" />
+			<text type="string" length="1" bottom_delta="0" left="270" bg_visible="false"
+				border_visible="false" border_drop_shadow_visible="false"
+				drop_shadow_visible="true" enabled="true" follows="left|top"
+	    		font="SansSerifSmall" h_pad="0" halign="left" height="16"
+	     		mouse_opaque="true" name="speed_rez_seconds" v_pad="0" width="100">
+				seconds
+			</text>
+			<check_box bottom_delta="-20" control_name="PreviewAnimInWorld" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Preview animations on the avatar instead on a dummy before uploading" left="15"
+			    mouse_opaque="true" name="preview_anim_in_world_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="PrivateLookAt" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Do not look at or point to objects beyond 20m (defeats ShowLookAt)" left="15"
+			    mouse_opaque="true" name="private_look_at_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="RevokePermsOnStandUp" enabled="true"
+				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+				label="On standing up, revoke perms for the object your avatar was sitting on" left="15"
+				mouse_opaque="true" name="revoke_perms_on_stand_up_check" radio_style="false"
+				width="400" />
+			<check_box bottom_delta="-20" control_name="TeleportHistoryDeparture" enabled="true"
+				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+				label="Log the TP departure locations into the Teleport History" left="15"
+				mouse_opaque="true" name="teleport_history_departure_check" radio_style="false"
+				width="400" />
+			<check_box bottom_delta="-20" control_name="RezWithLandGroup" enabled="true"
+				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+				label="Rez objects with land group when possible" left="15"
+				mouse_opaque="true" name="rez_with_land_group_check" radio_style="false"
+				width="400" />
+			<check_box bottom_delta="-20" control_name="FetchInventoryOnLogin" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
+		    	label="Automatically fetch the inventory in the background after login" left="15"
+			    mouse_opaque="true" name="fetch_inventory_on_login_check" radio_style="false"
+		    	width="400" />
+			<check_box bottom_delta="-20" control_name="RestrainedLove" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="RestrainedLove (BDSM toys support) mode (requires a restart)" left="15"
+		    	mouse_opaque="true" name="restrained_love_check" radio_style="false"
+			    width="400" />
+			<check_box bottom_delta="-20" control_name="AvatarPhysics" enabled="true"
+			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	    		label="Enable avatar physics (read carefully the tooltip for this setting)" left="15"
+				tool_tip="This setting allows to turn Avatar Physics on (note that even when your avatar is wearing a Physics wearable, Avatar Physics stays off unless this setting is on). Beware: this feature requires a lot of viewer side calculations: it can cause a frame rate slow down, especially in crowded areas. Also, when on and using a Physics wearable on your avatar, the latter may fail to render properly for users of older viewers (v1.23, Snowglobe, etc)..."
+		    	mouse_opaque="true" name="avatar_physics_check" radio_style="false"
+			    width="400" />
+		</panel>
+	</tab_container>
+</panel>

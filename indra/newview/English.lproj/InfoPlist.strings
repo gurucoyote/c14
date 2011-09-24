@@ -1,0 +1,7 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "Snowglobe";
+
+CFBundleShortVersionString = "Cool VL Viewer v1.26.0.0";
+CFBundleGetInfoString = "Cool VL Viewer version 1.26.0.0, Copyright 2004-2010 Linden Research, Inc. and other Open Source developers";
+
