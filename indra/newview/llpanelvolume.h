@@ -65,14 +65,20 @@ public:
 	void			sendIsFlexible();
 
 	static BOOL		precommitValidate(LLUICtrl* ctrl,void* userdata);
-	
-	static void 	onCommitIsLight(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitLight(			LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitIsFlexible(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitFlexible(		LLUICtrl* ctrl, void* userdata);
+
+	static void 	onCommitIsLight(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitLight(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitIsFlexible(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitFlexible(LLUICtrl* ctrl, void* userdata);
 
 	static void		onLightCancelColor(LLUICtrl* ctrl, void* userdata);
 	static void		onLightSelectColor(LLUICtrl* ctrl, void* userdata);
+
+	static void		sendPhysicsShapeType(LLUICtrl* ctrl, void* userdata);
+	static void		sendPhysicsGravity(LLUICtrl* ctrl, void* userdata);
+	static void		sendPhysicsFriction(LLUICtrl* ctrl, void* userdata);
+	static void		sendPhysicsRestitution(LLUICtrl* ctrl, void* userdata);
+	static void		sendPhysicsDensity(LLUICtrl* ctrl, void* userdata);
 
 protected:
 	void			getState();

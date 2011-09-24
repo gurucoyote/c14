@@ -60,7 +60,6 @@
 //mk
 #include <boost/tokenizer.hpp>
 
-
 const F32 SPRING_STRENGTH = 0.7f;
 const F32 RESTORATION_SPRING_TIME_CONSTANT = 0.1f;
 const F32 HORIZONTAL_PADDING = 15.f;
@@ -87,7 +86,6 @@ bool lltextobject_further_away::operator()(const LLPointer<LLHUDText>& lhs, cons
 {
 	return (lhs->getDistance() > rhs->getDistance()) ? true : false;
 }
-
 
 LLHUDText::LLHUDText(const U8 type) :
 			LLHUDObject(type),
@@ -123,7 +121,6 @@ LLHUDText::~LLHUDText()
 {
 }
 
-
 BOOL LLHUDText::lineSegmentIntersect(const LLVector3& start, const LLVector3& end, LLVector3& intersection, BOOL debug_render)
 {
 	if (!mVisible || mHidden)
@@ -136,7 +133,7 @@ BOOL LLHUDText::lineSegmentIntersect(const LLVector3& start, const LLVector3& en
 	{
 		return FALSE;
 	}
-	
+
 	F32 alpha_factor = 1.f;
 	LLColor4 text_color = mColor;
 	if (mDoFade)
@@ -159,7 +156,7 @@ BOOL LLHUDText::lineSegmentIntersect(const LLVector3& start, const LLVector3& en
 
 	LLVector3 x_pixel_vec;
 	LLVector3 y_pixel_vec;
-	
+
 	if (mOnHUDAttachment)
 	{
 		x_pixel_vec = LLVector3::y_axis / (F32)gViewerWindow->getWindowWidth();
@@ -172,17 +169,16 @@ BOOL LLHUDText::lineSegmentIntersect(const LLVector3& start, const LLVector3& en
 
 	LLVector3 width_vec = mWidth * x_pixel_vec;
 	LLVector3 height_vec = mHeight * y_pixel_vec;
-	
+
 	LLCoordGL screen_pos;
 	LLViewerCamera::getInstance()->projectPosAgentToScreen(mPositionAgent, screen_pos, FALSE);
 
 	LLVector2 screen_offset;
 	screen_offset = updateScreenPos(mPositionOffset);
-	
+
 	LLVector3 render_position = mPositionAgent  
 			+ (x_pixel_vec * screen_offset.mV[VX])
 			+ (y_pixel_vec * screen_offset.mV[VY]);
-
 
 	if (mUseBubble)
 	{
@@ -216,7 +212,7 @@ BOOL LLHUDText::lineSegmentIntersect(const LLVector3& start, const LLVector3& en
 		F32 a, b, t;
 
 		if (LLTriangleRayIntersect(v[0], v[1], v[2], start, dir, a, b, t, FALSE) ||
-			LLTriangleRayIntersect(v[2], v[3], v[0], start, dir, a, b, t, FALSE) )
+			LLTriangleRayIntersect(v[2], v[3], v[0], start, dir, a, b, t, FALSE))
 		{
 			if (t <= 1.f)
 			{
@@ -234,36 +230,22 @@ void LLHUDText::render()
 	if (!mOnHUDAttachment && sDisplayText)
 	{
 		LLGLDepthTest gls_depth(GL_TRUE, GL_FALSE);
-		renderText(FALSE);
+		renderText();
 	}
 }
 
-void LLHUDText::renderText(BOOL for_select)
+void LLHUDText::renderText()
 {
 	if (!mVisible || mHidden)
 	{
 		return;
 	}
 
-	// don't pick text that isn't bound to a viewerobject or isn't in a bubble
-	if (for_select && 
-		(!mSourceObject || mSourceObject->mDrawable.isNull() || !mUseBubble))
-	{
-		return;
-	}
-	
-	if (for_select)
-	{
-		gGL.getTexUnit(0)->disable();
-	}
-	else
-	{
-		gGL.getTexUnit(0)->enable(LLTexUnit::TT_TEXTURE);
-	}
+	gGL.getTexUnit(0)->enable(LLTexUnit::TT_TEXTURE);
 
-	LLGLState gls_blend(GL_BLEND, for_select ? FALSE : TRUE);
-	LLGLState gls_alpha(GL_ALPHA_TEST, for_select ? FALSE : TRUE);
-	
+	LLGLState gls_blend(GL_BLEND, TRUE);
+	LLGLState gls_alpha(GL_ALPHA_TEST, TRUE);
+
 	LLColor4 shadow_color(0.f, 0.f, 0.f, 1.f);
 	F32 alpha_factor = 1.f;
 	LLColor4 text_color = mColor;
@@ -271,7 +253,7 @@ void LLHUDText::renderText(BOOL for_select)
 	{
 		if (mLastDistance > mFadeDistance)
 		{
-			alpha_factor = llmax(0.f, 1.f - (mLastDistance - mFadeDistance)/mFadeRange);
+			alpha_factor = llmax(0.f, 1.f - (mLastDistance - mFadeDistance) / mFadeRange);
 			text_color.mV[3] = text_color.mV[3]*alpha_factor;
 		}
 	}
@@ -287,8 +269,10 @@ void LLHUDText::renderText(BOOL for_select)
 	LLUIImagePtr imagep = LLUI::getUIImage("rounded_square.tga");
 
 	// *TODO: make this a per-text setting
-	LLColor4 bg_color = gSavedSettings.getColor4("BackgroundChatColor");
-	bg_color.setAlpha(gSavedSettings.getF32("ChatBubbleOpacity") * alpha_factor);
+	static LLCachedControl<LLColor4> background_chat_color(gSavedSettings, "BackgroundChatColor");
+	LLColor4 bg_color = background_chat_color;
+	static LLCachedControl<F32> chat_bubble_opacity(gSavedSettings, "ChatBubbleOpacity");
+	bg_color.setAlpha(chat_bubble_opacity * alpha_factor);
 
 	const S32 border_height = 16;
 	const S32 border_width = 16;
@@ -310,7 +294,7 @@ void LLHUDText::renderText(BOOL for_select)
 
 	LLVector3 x_pixel_vec;
 	LLVector3 y_pixel_vec;
-	
+
 	if (mOnHUDAttachment)
 	{
 		x_pixel_vec = LLVector3::y_axis / (F32)gViewerWindow->getWindowWidth();
@@ -346,16 +330,6 @@ void LLHUDText::renderText(BOOL for_select)
 			+ (x_pixel_vec * screen_offset.mV[VX])
 			+ (y_pixel_vec * screen_offset.mV[VY]);
 
-	//if (mOnHUD)
-	//{
-	//	render_position.mV[VY] -= fmodf(render_position.mV[VY], 1.f / (F32)gViewerWindow->getWindowWidth());
-	//	render_position.mV[VZ] -= fmodf(render_position.mV[VZ], 1.f / (F32)gViewerWindow->getWindowHeight());
-	//}
-	//else
-	//{
-	//	render_position = LLViewerCamera::getInstance()->roundToPixel(render_position);
-	//}
-
 	if (mUseBubble)
 	{
 		LLGLDepthTest gls_depth(GL_TRUE, GL_FALSE);
@@ -367,35 +341,22 @@ void LLHUDText::renderText(BOOL for_select)
 				- (height_vec);
 			LLUI::translate(bg_pos.mV[VX], bg_pos.mV[VY], bg_pos.mV[VZ]);
 
-			if (for_select)
+			gGL.getTexUnit(0)->bind(imagep->getImage());
+
+			gGL.color4fv(bg_color.mV);
+			gl_segmented_rect_3d_tex(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, height_vec);
+
+			if (mLabelSegments.size())
 			{
-				gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
-				S32 name = mSourceObject->mGLName;
-				LLColor4U coloru((U8)(name >> 16), (U8)(name >> 8), (U8)name);
-				gGL.color4ubv(coloru.mV);
-				gl_segmented_rect_3d_tex(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, height_vec);
-				LLUI::popMatrix();
-				return;
-			}
-			else
-			{
-				gGL.getTexUnit(0)->bind(imagep->getImage());
-				
-				gGL.color4fv(bg_color.mV);
-				gl_segmented_rect_3d_tex(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, height_vec);
-		
-				if ( mLabelSegments.size())
+				LLUI::pushMatrix();
 				{
-					LLUI::pushMatrix();
-					{
-						gGL.color4f(text_color.mV[VX], text_color.mV[VY], text_color.mV[VZ], gSavedSettings.getF32("ChatBubbleOpacity") * alpha_factor);
-						LLVector3 label_height = (mFontp->getLineHeight() * mLabelSegments.size() + (VERTICAL_PADDING / 3.f)) * y_pixel_vec;
-						LLVector3 label_offset = height_vec - label_height;
-						LLUI::translate(label_offset.mV[VX], label_offset.mV[VY], label_offset.mV[VZ]);
-						gl_segmented_rect_3d_tex_top(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, label_height);
-					}
-					LLUI::popMatrix();
+					gGL.color4f(text_color.mV[VX], text_color.mV[VY], text_color.mV[VZ], gSavedSettings.getF32("ChatBubbleOpacity") * alpha_factor);
+					LLVector3 label_height = (mFontp->getLineHeight() * mLabelSegments.size() + (VERTICAL_PADDING / 3.f)) * y_pixel_vec;
+					LLVector3 label_offset = height_vec - label_height;
+					LLUI::translate(label_offset.mV[VX], label_offset.mV[VY], label_offset.mV[VZ]);
+					gl_segmented_rect_3d_tex_top(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, label_height);
 				}
+				LLUI::popMatrix();
 			}
 
 			BOOL outside_width = llabs(mPositionOffset.mV[VX]) > mWidth * 0.5f;
@@ -413,13 +374,13 @@ void LLHUDText::renderText(BOOL for_select)
 					target_pos -= 3.f * x_pixel_vec;
 					target_pos -= 6.f * y_pixel_vec;
 					LLUI::translate(target_pos.mV[VX], target_pos.mV[VY], target_pos.mV[VZ]);
-					gl_segmented_rect_3d_tex(border_scale_vec, 3.f * x_pixel_vec, 3.f * y_pixel_vec, 6.f * x_pixel_vec, 6.f * y_pixel_vec);	
+					gl_segmented_rect_3d_tex(border_scale_vec, 3.f * x_pixel_vec, 3.f * y_pixel_vec, 6.f * x_pixel_vec, 6.f * y_pixel_vec);
 				}
 				LLUI::popMatrix();
 
 				gGL.getTexUnit(0)->unbind(LLTexUnit::TT_TEXTURE);
 				LLGLDepthTest gls_depth(mZCompare ? GL_TRUE : GL_FALSE, GL_FALSE);
-				
+
 				LLVector3 box_center_offset;
 				box_center_offset = (width_vec * 0.5f) + (height_vec * 0.5f);
 				LLUI::translate(box_center_offset.mV[VX], box_center_offset.mV[VY], box_center_offset.mV[VZ]);
@@ -480,13 +441,13 @@ void LLHUDText::renderText(BOOL for_select)
 	}
 
 	F32 y_offset = (F32)mOffsetY;
-		
+
 	// Render label
 	{
 		gGL.getTexUnit(0)->setTextureBlendType(LLTexUnit::TB_MULT);
 
-		for(std::vector<LLHUDTextSegment>::iterator segment_iter = mLabelSegments.begin();
-			segment_iter != mLabelSegments.end(); ++segment_iter )
+		for (std::vector<LLHUDTextSegment>::iterator segment_iter = mLabelSegments.begin();
+			segment_iter != mLabelSegments.end(); ++segment_iter)
 		{
 			const LLFontGL* fontp = (segment_iter->mStyle == LLFontGL::BOLD) ? mBoldFontp : mFontp;
 			y_offset -= fontp->getLineHeight();
@@ -494,7 +455,7 @@ void LLHUDText::renderText(BOOL for_select)
 			F32 x_offset;
 			if (mTextAlignment == ALIGN_TEXT_CENTER)
 			{
-				x_offset = -0.5f*segment_iter->getWidth(fontp);
+				x_offset = -0.5f * segment_iter->getWidth(fontp);
 			}
 			else // ALIGN_LEFT
 			{
@@ -523,7 +484,7 @@ void LLHUDText::renderText(BOOL for_select)
 		}
 
 		for (std::vector<LLHUDTextSegment>::iterator segment_iter = mTextSegments.begin() + start_segment;
-			 segment_iter != mTextSegments.end(); ++segment_iter )
+			 segment_iter != mTextSegments.end(); ++segment_iter)
 		{
 			const LLFontGL* fontp = (segment_iter->mStyle == LLFontGL::BOLD) ? mBoldFontp : mFontp;
 			y_offset -= fontp->getLineHeight();
@@ -533,7 +494,7 @@ void LLHUDText::renderText(BOOL for_select)
 			{
 				style |= LLFontGL::DROP_SHADOW;
 			}
-	
+
 			F32 x_offset;
 			if (mTextAlignment== ALIGN_TEXT_CENTER)
 			{
@@ -552,10 +513,6 @@ void LLHUDText::renderText(BOOL for_select)
 	}
 	/// Reset the default color to white.  The renderer expects this to be the default. 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	if (for_select)
-	{
-		gGL.getTexUnit(0)->enable(LLTexUnit::TT_TEXTURE);
-	}
 }
 
 void LLHUDText::setStringUTF8(const std::string &wtext)
@@ -608,12 +565,10 @@ void LLHUDText::clearString()
 	mTextSegments.clear();
 }
 
-
 void LLHUDText::addLine(const std::string &str, const LLColor4& color, const LLFontGL::StyleFlags style)
 {
 	addLine(utf8str_to_wstring(str), color, style);
 }
-
 
 void LLHUDText::addLine(const LLWString &wstr, const LLColor4& color, const LLFontGL::StyleFlags style)
 {
@@ -634,7 +589,7 @@ void LLHUDText::addLine(const LLWString &wstr, const LLColor4& color, const LLFo
 		while (iter != tokens.end())
 		{
 			U32 line_length = 0;
-			do	
+			do
 			{
 				S32 segment_length = mFontp->maxDrawableChars(iter->substr(line_length).c_str(), mUseBubble ? HUD_TEXT_MAX_WIDTH : HUD_TEXT_MAX_WIDTH_NO_BUBBLE, wline.length(), TRUE);
 				mTextSegments.push_back(LLHUDTextSegment(iter->substr(line_length, segment_length), style, color));
@@ -670,7 +625,7 @@ void LLHUDText::setLabel(const LLWString &wlabel)
 		while (iter != tokens.end())
 		{
 			U32 line_length = 0;
-			do	
+			do
 			{
 				S32 segment_length = mFontp->maxDrawableChars(iter->substr(line_length).c_str(), mUseBubble ? HUD_TEXT_MAX_WIDTH : HUD_TEXT_MAX_WIDTH_NO_BUBBLE, wstr.length(), TRUE);
 				mLabelSegments.push_back(LLHUDTextSegment(iter->substr(line_length, segment_length), LLFontGL::NORMAL, mColor));
@@ -697,17 +652,15 @@ void LLHUDText::setFont(const LLFontGL* font)
 	mFontp = font;
 }
 
-
 void LLHUDText::setColor(const LLColor4 &color)
 {
 	mColor = color;
 	for (std::vector<LLHUDTextSegment>::iterator segment_iter = mTextSegments.begin();
-		 segment_iter != mTextSegments.end(); ++segment_iter )
+		 segment_iter != mTextSegments.end(); ++segment_iter)
 	{
 		segment_iter->mColor = color;
 	}
 }
-
 
 void LLHUDText::setUsePixelSize(const BOOL use_pixel_size)
 {
@@ -725,7 +678,7 @@ void LLHUDText::updateVisibility()
 	{
 		mSourceObject->updateText();
 	}
-	
+
 	mPositionAgent = gAgent.getPosAgentFromGlobal(mPositionGlobal);
 
 	if (!mSourceObject)
@@ -769,7 +722,7 @@ void LLHUDText::updateVisibility()
 		mVisible = FALSE;
 		return;
 	}
-		
+
 	if (vec_from_camera * LLViewerCamera::getInstance()->getAtAxis() <= LLViewerCamera::getInstance()->getNear() + 0.1f + mSourceObject->getVObjRadius())
 	{
 		mPositionAgent = LLViewerCamera::getInstance()->getOrigin() + vec_from_camera * ((LLViewerCamera::getInstance()->getNear() + 0.1f) / (vec_from_camera * LLViewerCamera::getInstance()->getAtAxis()));
@@ -792,7 +745,7 @@ void LLHUDText::updateVisibility()
 
 	LLViewerCamera::getInstance()->getPixelVectors(mPositionAgent, y_pixel_vec, x_pixel_vec);
 
-	LLVector3 render_position = mPositionAgent + 			
+	LLVector3 render_position = mPositionAgent + 
 			(x_pixel_vec * mPositionOffset.mV[VX]) +
 			(y_pixel_vec * mPositionOffset.mV[VY]);
 
@@ -858,7 +811,7 @@ LLVector2 LLHUDText::updateScreenPos(LLVector2 &offset)
 	LLVector2 screen_center;
 	screen_center.mV[VX] = llclamp((F32)screen_pos_vec.mV[VX], mWidth * 0.5f, (F32)gViewerWindow->getWindowDisplayWidth() - mWidth * 0.5f);
 
-	if(mVertAlignment == ALIGN_VERT_TOP)
+	if (mVertAlignment == ALIGN_VERT_TOP)
 	{
 		screen_center.mV[VY] = llclamp((F32)screen_pos_vec.mV[VY], 
 			(F32)bottom, 
@@ -903,7 +856,7 @@ void LLHUDText::updateSize()
 		width = llmax(width, llmin(iter->getWidth(mFontp), HUD_TEXT_MAX_WIDTH));
 		++iter;
 	}
-	
+
 	if (width == 0.f)
 	{
 		return;
@@ -934,7 +887,7 @@ void LLHUDText::updateAll()
 	// and add them to the visible set if they are on screen and close enough
 	sVisibleTextObjects.clear();
 	sVisibleHUDTextObjects.clear();
-	
+
 	TextObjectIterator text_it;
 	for (text_it = sTextObjects.begin(); text_it != sTextObjects.end(); ++text_it)
 	{
@@ -943,7 +896,7 @@ void LLHUDText::updateAll()
 		textp->updateSize();
 		textp->updateVisibility();
 	}
-	
+
 	// sort back to front for rendering purposes
 	std::sort(sVisibleTextObjects.begin(), sVisibleTextObjects.end(), lltextobject_further_away());
 	std::sort(sVisibleHUDTextObjects.begin(), sVisibleHUDTextObjects.end(), lltextobject_further_away());
@@ -1014,7 +967,7 @@ void LLHUDText::updateAll()
 					LLRectf intersect_rect = src_textp->mSoftScreenRect;
 					intersect_rect.intersectWith(dst_textp->mSoftScreenRect);
 					intersect_rect.stretch(-BUFFER_SIZE * 0.5f);
-					
+
 					F32 src_center_x = src_textp->mSoftScreenRect.getCenterX();
 					F32 src_center_y = src_textp->mSoftScreenRect.getCenterY();
 					F32 dst_center_x = dst_textp->mSoftScreenRect.getCenterX();
@@ -1044,7 +997,7 @@ void LLHUDText::updateAll()
 					src_force.mV[VY] *= llmin(intersect_rect.getHeight() * src_mult, intersect_rect.getWidth() * SPRING_STRENGTH);
 					dst_force.mV[VX] *=  llmin(intersect_rect.getWidth() * dst_mult, intersect_rect.getHeight() * SPRING_STRENGTH);
 					dst_force.mV[VY] *=  llmin(intersect_rect.getHeight() * dst_mult, intersect_rect.getWidth() * SPRING_STRENGTH);
-					
+
 					src_textp->mTargetPositionOffset += src_force;
 					dst_textp->mTargetPositionOffset += dst_force;
 					src_textp->mTargetPositionOffset = src_textp->updateScreenPos(src_textp->mTargetPositionOffset);
@@ -1075,17 +1028,17 @@ void LLHUDText::setLOD(S32 lod)
 
 S32 LLHUDText::getMaxLines()
 {
-	switch(mLOD)
+	switch (mLOD)
 	{
-	case 0:
-		return mMaxLines;
-	case 1:
-		return mMaxLines > 0 ? mMaxLines / 2 : 5;
-	case 2:
-		return mMaxLines > 0 ? mMaxLines / 3 : 2;
-	default:
-		// label only
-		return 0;
+		case 0:
+			return mMaxLines;
+		case 1:
+			return mMaxLines > 0 ? mMaxLines / 2 : 5;
+		case 2:
+			return mMaxLines > 0 ? mMaxLines / 3 : 2;
+		default:
+			// label only
+			return 0;
 	}
 }
 
@@ -1104,15 +1057,15 @@ void LLHUDText::renderAllHUD()
 	{
 		LLGLEnable color_mat(GL_COLOR_MATERIAL);
 		LLGLDepthTest depth(GL_FALSE, GL_FALSE);
-		
+
 		VisibleTextObjectIterator text_it;
 
 		for (text_it = sVisibleHUDTextObjects.begin(); text_it != sVisibleHUDTextObjects.end(); ++text_it)
 		{
-			(*text_it)->renderText(FALSE);
+			(*text_it)->renderText();
 		}
 	}
-	
+
 	LLVertexBuffer::unbind();
 
 	LLGLState::checkStates();
@@ -1161,15 +1114,15 @@ void LLHUDText::reshape()
 		LLHUDText* textp = (*text_it);
 		std::vector<LLHUDTextSegment>::iterator segment_iter; 
 		for (segment_iter = textp->mTextSegments.begin();
-			 segment_iter != textp->mTextSegments.end(); ++segment_iter )
+			 segment_iter != textp->mTextSegments.end(); ++segment_iter)
 		{
 			segment_iter->clearFontWidthMap();
 		}
-		for(segment_iter = textp->mLabelSegments.begin();
-			segment_iter != textp->mLabelSegments.end(); ++segment_iter )
+		for (segment_iter = textp->mLabelSegments.begin();
+			 segment_iter != textp->mLabelSegments.end(); ++segment_iter)
 		{
 			segment_iter->clearFontWidthMap();
-		}		
+		}
 	}
 }
 

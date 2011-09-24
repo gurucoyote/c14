@@ -178,6 +178,7 @@ cp -a skins/default/xui/en-us/floater_instant_message_ad_hoc.xml $temp/skins/def
 cp -a skins/default/xui/en-us/floater_instant_message_group.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_instant_message.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_inventory.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_inventory_view_finder.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_live_lsleditor.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_media_browser.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_media_filter.xml $temp/skins/default/xui/en-us/

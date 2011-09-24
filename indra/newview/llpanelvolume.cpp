@@ -36,37 +36,40 @@
 #include "llpanelvolume.h"
 
 // linden library includes
+#include "llbutton.h"
+#include "llcheckboxctrl.h"
 #include "llclickaction.h"
+#include "llcombobox.h"
 #include "lleconomy.h"
 #include "llerror.h"
+#include "llfocusmgr.h"
 #include "llfontgl.h"
-#include "llflexibleobject.h"
 #include "llmaterialtable.h"
 #include "llpermissionsflags.h"
+#include "llresmgr.h"
+#include "llspinctrl.h"
 #include "llstring.h"
+#include "lltextbox.h"
+#include "llui.h"
+#include "lluictrlfactory.h"
 #include "llvolume.h"
 #include "m3math.h"
 #include "material_codes.h"
 
 // project includes
 #include "llagent.h"
-#include "llbutton.h"
-#include "llcheckboxctrl.h"
 #include "llcolorswatch.h"
-#include "llcombobox.h"
+#include "lldrawpool.h"
 #include "llfirstuse.h"
-#include "llfocusmgr.h"
+#include "llflexibleobject.h"
 #include "llmanipscale.h"
+#include "llmeshrepository.h"
 #include "llpanelinventory.h"
 #include "llpreviewscript.h"
-#include "llresmgr.h"
 #include "llselectmgr.h"
-#include "llspinctrl.h"
-#include "lltextbox.h"
 #include "lltool.h"
 #include "lltoolcomp.h"
 #include "lltoolmgr.h"
-#include "llui.h"
 #include "llviewerobject.h"
 #include "llviewerregion.h"
 #include "llviewerwindow.h"
@@ -74,51 +77,58 @@
 #include "llworld.h"
 #include "pipeline.h"
 
-#include "lldrawpool.h"
-#include "lluictrlfactory.h"
-
 // "Features" Tab
 
-BOOL	LLPanelVolume::postBuild()
+BOOL LLPanelVolume::postBuild()
 {
 	// Flexible Objects Parameters
 	{
-		childSetCommitCallback("Flexible1D Checkbox Ctrl",onCommitIsFlexible,this);
-		childSetCommitCallback("FlexNumSections",onCommitFlexible,this);
+		childSetCommitCallback("Flexible1D Checkbox Ctrl", onCommitIsFlexible, this);
+		childSetCommitCallback("FlexNumSections", onCommitFlexible, this);
 		childSetValidate("FlexNumSections",precommitValidate);
-		childSetCommitCallback("FlexGravity",onCommitFlexible,this);
+		childSetCommitCallback("FlexGravity", onCommitFlexible, this);
 		childSetValidate("FlexGravity",precommitValidate);
-		childSetCommitCallback("FlexFriction",onCommitFlexible,this);
+		childSetCommitCallback("FlexFriction", onCommitFlexible, this);
 		childSetValidate("FlexFriction",precommitValidate);
-		childSetCommitCallback("FlexWind",onCommitFlexible,this);
+		childSetCommitCallback("FlexWind", onCommitFlexible, this);
 		childSetValidate("FlexWind",precommitValidate);
-		childSetCommitCallback("FlexTension",onCommitFlexible,this);
+		childSetCommitCallback("FlexTension", onCommitFlexible, this);
 		childSetValidate("FlexTension",precommitValidate);
-		childSetCommitCallback("FlexForceX",onCommitFlexible,this);
+		childSetCommitCallback("FlexForceX", onCommitFlexible, this);
 		childSetValidate("FlexForceX",precommitValidate);
-		childSetCommitCallback("FlexForceY",onCommitFlexible,this);
+		childSetCommitCallback("FlexForceY", onCommitFlexible, this);
 		childSetValidate("FlexForceY",precommitValidate);
-		childSetCommitCallback("FlexForceZ",onCommitFlexible,this);
+		childSetCommitCallback("FlexForceZ", onCommitFlexible, this);
 		childSetValidate("FlexForceZ",precommitValidate);
 	}
 
 	// LIGHT Parameters
 	{
-		childSetCommitCallback("Light Checkbox Ctrl",onCommitIsLight,this);
+		childSetCommitCallback("Light Checkbox Ctrl", onCommitIsLight, this);
 		LLColorSwatchCtrl*	LightColorSwatch = getChild<LLColorSwatchCtrl>("colorswatch");
-		if(LightColorSwatch){
+		if (LightColorSwatch)
+		{
 			LightColorSwatch->setOnCancelCallback(onLightCancelColor);
 			LightColorSwatch->setOnSelectCallback(onLightSelectColor);
-			childSetCommitCallback("colorswatch",onCommitLight,this);
+			childSetCommitCallback("colorswatch", onCommitLight, this);
 		}
-		childSetCommitCallback("Light Intensity",onCommitLight,this);
+		childSetCommitCallback("Light Intensity", onCommitLight, this);
 		childSetValidate("Light Intensity",precommitValidate);
-		childSetCommitCallback("Light Radius",onCommitLight,this);
+		childSetCommitCallback("Light Radius", onCommitLight, this);
 		childSetValidate("Light Radius",precommitValidate);
-		childSetCommitCallback("Light Falloff",onCommitLight,this);
+		childSetCommitCallback("Light Falloff", onCommitLight, this);
 		childSetValidate("Light Falloff",precommitValidate);
 	}
-	
+
+	// PHYSICS Parameters
+	{
+		childSetCommitCallback("Physics Shape Type Combo Ctrl", sendPhysicsShapeType, this);
+		childSetCommitCallback("Physics Gravity", sendPhysicsGravity, this);
+		childSetCommitCallback("Physics Friction", sendPhysicsFriction, this);
+		childSetCommitCallback("Physics Density", sendPhysicsDensity, this);
+		childSetCommitCallback("Physics Restitution", sendPhysicsRestitution, this);
+	}
+
 	// Start with everyone disabled
 	clearCtrls();
 
@@ -132,17 +142,16 @@ LLPanelVolume::LLPanelVolume(const std::string& name)
 
 }
 
-
 LLPanelVolume::~LLPanelVolume()
 {
 	// Children all cleaned up by default view destructor.
 }
 
-void LLPanelVolume::getState( )
+void LLPanelVolume::getState()
 {
 	LLViewerObject* objectp = LLSelectMgr::getInstance()->getSelection()->getFirstRootObject();
 	LLViewerObject* root_objectp = objectp;
-	if(!objectp)
+	if (!objectp)
 	{
 		objectp = LLSelectMgr::getInstance()->getSelection()->getFirstObject();
 		// *FIX: shouldn't we just keep the child?
@@ -162,12 +171,12 @@ void LLPanelVolume::getState( )
 	}
 
 	LLVOVolume *volobjp = NULL;
-	if ( objectp && (objectp->getPCode() == LL_PCODE_VOLUME))
+	if (objectp && (objectp->getPCode() == LL_PCODE_VOLUME))
 	{
 		volobjp = (LLVOVolume *)objectp;
 	}
-	
-	if( !objectp )
+
+	if (!objectp)
 	{
 		//forfeit focus
 		if (gFocusMgr.childHasKeyboardFocus(this))
@@ -188,42 +197,42 @@ void LLPanelVolume::getState( )
 
 	// BUG? Check for all objects being editable?
 	BOOL editable = root_objectp->permModify();
-	BOOL single_volume = LLSelectMgr::getInstance()->selectionAllPCode( LL_PCODE_VOLUME )
+	BOOL single_volume = LLSelectMgr::getInstance()->selectionAllPCode(LL_PCODE_VOLUME)
 		&& LLSelectMgr::getInstance()->getSelection()->getObjectCount() == 1;
 
 	// Select Single Message
 	if (single_volume)
 	{
-		childSetVisible("edit_object",true);
-		childSetEnabled("edit_object",true);
-		childSetVisible("select_single",false);
+		childSetVisible("edit_object", true);
+		childSetEnabled("edit_object", true);
+		childSetVisible("select_single", false);
 	}
 	else
-	{	
-		childSetVisible("edit_object",false);
-		childSetVisible("select_single",true);
-		childSetEnabled("select_single",true);
+	{
+		childSetVisible("edit_object", false);
+		childSetVisible("select_single", true);
+		childSetEnabled("select_single", true);
 	}
-	
+
 	// Light properties
 	BOOL is_light = volobjp && volobjp->getIsLight();
 	childSetValue("Light Checkbox Ctrl",is_light);
 	childSetEnabled("Light Checkbox Ctrl",editable && single_volume && volobjp);
-	
+
 	if (is_light && editable && single_volume)
 	{
-		childSetEnabled("label color",true);
-		//mLabelColor		 ->setEnabled( TRUE );
+		childSetEnabled("label color", true);
+		//mLabelColor		 ->setEnabled(TRUE);
 		LLColorSwatchCtrl* LightColorSwatch = getChild<LLColorSwatchCtrl>("colorswatch");
-		if(LightColorSwatch)
+		if (LightColorSwatch)
 		{
-			LightColorSwatch->setEnabled( TRUE );
-			LightColorSwatch->setValid( TRUE );
+			LightColorSwatch->setEnabled(TRUE);
+			LightColorSwatch->setValid(TRUE);
 			LightColorSwatch->set(volobjp->getLightBaseColor());
 		}
-		childSetEnabled("Light Intensity",true);
-		childSetEnabled("Light Radius",true);
-		childSetEnabled("Light Falloff",true);
+		childSetEnabled("Light Intensity", true);
+		childSetEnabled("Light Radius", true);
+		childSetEnabled("Light Falloff", true);
 
 		childSetValue("Light Intensity",volobjp->getLightIntensity());
 		childSetValue("Light Radius",volobjp->getLightRadius());
@@ -237,18 +246,18 @@ void LLPanelVolume::getState( )
 		getChild<LLSpinCtrl>("Light Radius", true)->clear();
 		getChild<LLSpinCtrl>("Light Falloff", true)->clear();
 
-		childSetEnabled("label color",false);	
+		childSetEnabled("label color", false);
 		LLColorSwatchCtrl* LightColorSwatch = getChild<LLColorSwatchCtrl>("colorswatch");
-		if(LightColorSwatch)
+		if (LightColorSwatch)
 		{
-			LightColorSwatch->setEnabled( FALSE );
-			LightColorSwatch->setValid( FALSE );
+			LightColorSwatch->setEnabled(FALSE);
+			LightColorSwatch->setValid(FALSE);
 		}
-		childSetEnabled("Light Intensity",false);
-		childSetEnabled("Light Radius",false);
-		childSetEnabled("Light Falloff",false);
+		childSetEnabled("Light Intensity", false);
+		childSetEnabled("Light Radius", false);
+		childSetEnabled("Light Falloff", false);
 	}
-	
+
 	// Flexible properties
 	BOOL is_flexible = volobjp && volobjp->isFlexible();
 	childSetValue("Flexible1D Checkbox Ctrl",is_flexible);
@@ -262,26 +271,26 @@ void LLPanelVolume::getState( )
 	}
 	if (is_flexible && editable && single_volume)
 	{
-		childSetVisible("FlexNumSections",true);
-		childSetVisible("FlexGravity",true);
-		childSetVisible("FlexTension",true);
-		childSetVisible("FlexFriction",true);
-		childSetVisible("FlexWind",true);
-		childSetVisible("FlexForceX",true);
-		childSetVisible("FlexForceY",true);
-		childSetVisible("FlexForceZ",true);
+		childSetVisible("FlexNumSections", true);
+		childSetVisible("FlexGravity", true);
+		childSetVisible("FlexTension", true);
+		childSetVisible("FlexFriction", true);
+		childSetVisible("FlexWind", true);
+		childSetVisible("FlexForceX", true);
+		childSetVisible("FlexForceY", true);
+		childSetVisible("FlexForceZ", true);
 
-		childSetEnabled("FlexNumSections",true);
-		childSetEnabled("FlexGravity",true);
-		childSetEnabled("FlexTension",true);
-		childSetEnabled("FlexFriction",true);
-		childSetEnabled("FlexWind",true);
-		childSetEnabled("FlexForceX",true);
-		childSetEnabled("FlexForceY",true);
-		childSetEnabled("FlexForceZ",true);
+		childSetEnabled("FlexNumSections", true);
+		childSetEnabled("FlexGravity", true);
+		childSetEnabled("FlexTension", true);
+		childSetEnabled("FlexFriction", true);
+		childSetEnabled("FlexWind", true);
+		childSetEnabled("FlexForceX", true);
+		childSetEnabled("FlexForceY", true);
+		childSetEnabled("FlexForceZ", true);
 
 		LLFlexibleObjectData *attributes = (LLFlexibleObjectData *)objectp->getParameterEntry(LLNetworkData::PARAMS_FLEXIBLE);
-		
+
 		childSetValue("FlexNumSections",(F32)attributes->getSimulateLOD());
 		childSetValue("FlexGravity",attributes->getGravity());
 		childSetValue("FlexTension",attributes->getTension());
@@ -302,27 +311,69 @@ void LLPanelVolume::getState( )
 		getChild<LLSpinCtrl>("FlexForceY", true)->clear();
 		getChild<LLSpinCtrl>("FlexForceZ", true)->clear();
 
-		childSetEnabled("FlexNumSections",false);
-		childSetEnabled("FlexGravity",false);
-		childSetEnabled("FlexTension",false);
-		childSetEnabled("FlexFriction",false);
-		childSetEnabled("FlexWind",false);
-		childSetEnabled("FlexForceX",false);
-		childSetEnabled("FlexForceY",false);
-		childSetEnabled("FlexForceZ",false);
+		childSetEnabled("FlexNumSections", false);
+		childSetEnabled("FlexGravity", false);
+		childSetEnabled("FlexTension", false);
+		childSetEnabled("FlexFriction", false);
+		childSetEnabled("FlexWind", false);
+		childSetEnabled("FlexForceX", false);
+		childSetEnabled("FlexForceY", false);
+		childSetEnabled("FlexForceZ", false);
 	}
-	
+
+	// Physics properties
+	childSetValue("Physics Gravity", objectp->getPhysicsGravity());
+	childSetEnabled("Physics Gravity", editable);
+	childSetValue("Physics Friction", objectp->getPhysicsFriction());
+	childSetEnabled("Physics Friction", editable);
+	childSetValue("Physics Density", objectp->getPhysicsDensity());
+	childSetEnabled("Physics Density", editable);
+	childSetValue("Physics Restitution", objectp->getPhysicsRestitution());
+	childSetEnabled("Physics Restitution", editable);
+
+	// update the physics shape combo to include allowed physics shapes
+	LLComboBox* physics_shape = getChild<LLComboBox>("Physics Shape Type Combo Ctrl");
+	physics_shape->removeall();
+	physics_shape->add(getString("None"), LLSD(1));
+
+	BOOL isMesh = FALSE;
+	LLSculptParams *sculpt_params = (LLSculptParams *)objectp->getParameterEntry(LLNetworkData::PARAMS_SCULPT);
+	if (sculpt_params)
+	{
+		isMesh = (sculpt_params->getSculptType() & LL_SCULPT_TYPE_MASK) == LL_SCULPT_TYPE_MESH;
+	}
+
+	if (isMesh && objectp)
+	{
+		const LLVolumeParams &volume_params = objectp->getVolume()->getParams();
+		LLUUID mesh_id = volume_params.getSculptID();
+		if (gMeshRepo.hasPhysicsShape(mesh_id))
+		{
+			// if a mesh contains an uploaded or decomposed physics mesh,
+			// allow 'Prim'
+			physics_shape->add(getString("Prim"), LLSD(0));			
+		}
+	}
+	else
+	{
+		// simple prims always allow physics shape prim
+		physics_shape->add(getString("Prim"), LLSD(0));	
+	}
+
+	physics_shape->add(getString("Convex Hull"), LLSD(2));	
+	physics_shape->setValue(LLSD(objectp->getPhysicsShapeType()));
+	physics_shape->setEnabled(editable);
+
 	mObject = objectp;
 	mRootObject = root_objectp;
 }
 
 // static
-BOOL LLPanelVolume::precommitValidate( LLUICtrl* ctrl, void* userdata )
+BOOL LLPanelVolume::precommitValidate(LLUICtrl* ctrl, void* userdata)
 {
 	// TODO: Richard will fill this in later.  
 	return TRUE; // FALSE means that validation failed and new value should not be commited.
 }
-
 
 void LLPanelVolume::refresh()
 {
@@ -336,8 +387,26 @@ void LLPanelVolume::refresh()
 	{
 		mRootObject = NULL;
 	}
-}
+/* *TODO
+	bool visible = (LLViewerShaderMgr::instance()->getVertexShaderLevel(LLViewerShaderMgr::SHADER_DEFERRED) > 0);
 
+	childSetVisible("label texture", visible);
+	childSetVisible("Light FOV", visible);
+	childSetVisible("Light Focus", visible);
+	childSetVisible("Light Ambiance", visible);
+	childSetVisible("light texture control", visible);
+*/
+	bool enable_mesh = gAgent.getRegion() &&
+					   !gAgent.getRegion()->getCapability("GetMesh").empty();
+
+	childSetVisible("label physicsshapetype", enable_mesh);
+	childSetEnabled("label physicsshapetype", enable_mesh);
+	childSetVisible("Physics Shape Type Combo Ctrl", enable_mesh);
+	childSetVisible("Physics Gravity", enable_mesh);
+	childSetVisible("Physics Friction", enable_mesh);
+	childSetVisible("Physics Density", enable_mesh);
+	childSetVisible("Physics Restitution", enable_mesh);
+}
 
 void LLPanelVolume::draw()
 {
@@ -349,32 +418,37 @@ void LLPanelVolume::clearCtrls()
 {
 	LLPanel::clearCtrls();
 
-	childSetEnabled("select_single",false);
-	childSetVisible("select_single",true);
-	childSetEnabled("edit_object",false);
-	childSetVisible("edit_object",false);
-	childSetEnabled("Light Checkbox Ctrl",false);
-	childSetEnabled("label color",false);
-	childSetEnabled("label color",false);
+	childSetEnabled("select_single", false);
+	childSetVisible("select_single", true);
+	childSetEnabled("edit_object", false);
+	childSetVisible("edit_object", false);
+	childSetEnabled("Light Checkbox Ctrl", false);
+	childSetEnabled("label color", false);
+	childSetEnabled("label color", false);
 	LLColorSwatchCtrl* LightColorSwatch = getChild<LLColorSwatchCtrl>("colorswatch");
-	if(LightColorSwatch)
+	if (LightColorSwatch)
 	{
-		LightColorSwatch->setEnabled( FALSE );
-		LightColorSwatch->setValid( FALSE );
+		LightColorSwatch->setEnabled(FALSE);
+		LightColorSwatch->setValid(FALSE);
 	}
-	childSetEnabled("Light Intensity",false);
-	childSetEnabled("Light Radius",false);
-	childSetEnabled("Light Falloff",false);
+	childSetEnabled("Light Intensity", false);
+	childSetEnabled("Light Radius", false);
+	childSetEnabled("Light Falloff", false);
 
-	childSetEnabled("Flexible1D Checkbox Ctrl",false);
-	childSetEnabled("FlexNumSections",false);
-	childSetEnabled("FlexGravity",false);
-	childSetEnabled("FlexTension",false);
-	childSetEnabled("FlexFriction",false);
-	childSetEnabled("FlexWind",false);
-	childSetEnabled("FlexForceX",false);
-	childSetEnabled("FlexForceY",false);
-	childSetEnabled("FlexForceZ",false);
+	childSetEnabled("Flexible1D Checkbox Ctrl", false);
+	childSetEnabled("FlexNumSections", false);
+	childSetEnabled("FlexGravity", false);
+	childSetEnabled("FlexTension", false);
+	childSetEnabled("FlexFriction", false);
+	childSetEnabled("FlexWind", false);
+	childSetEnabled("FlexForceX", false);
+	childSetEnabled("FlexForceY", false);
+	childSetEnabled("FlexForceZ", false);
+
+	childSetEnabled("Physics Gravity", false);
+	childSetEnabled("Physics Friction", false);
+	childSetEnabled("Physics Density", false);
+	childSetEnabled("Physics Restitution", false);
 }
 
 //
@@ -387,9 +461,9 @@ void LLPanelVolume::sendIsLight()
 	if (!objectp || (objectp->getPCode() != LL_PCODE_VOLUME))
 	{
 		return;
-	}	
+	}
 	LLVOVolume *volobjp = (LLVOVolume *)objectp;
-	
+
 	BOOL value = childGetValue("Light Checkbox Ctrl");
 	volobjp->setIsLight(value);
 	llinfos << "update light sent" << llendl;
@@ -401,9 +475,9 @@ void LLPanelVolume::sendIsFlexible()
 	if (!objectp || (objectp->getPCode() != LL_PCODE_VOLUME))
 	{
 		return;
-	}	
+	}
 	LLVOVolume *volobjp = (LLVOVolume *)objectp;
-	
+
 	BOOL is_flexible = childGetValue("Flexible1D Checkbox Ctrl");
 	//BOOL is_flexible = mCheckFlexible1D->get();
 
@@ -431,7 +505,7 @@ void LLPanelVolume::onLightCancelColor(LLUICtrl* ctrl, void* userdata)
 {
 	LLPanelVolume* self = (LLPanelVolume*) userdata;
 	LLColorSwatchCtrl*	LightColorSwatch = self->getChild<LLColorSwatchCtrl>("colorswatch");
-	if(LightColorSwatch)
+	if (LightColorSwatch)
 	{
 		LightColorSwatch->setColor(self->mLightSavedColor);
 	}
@@ -445,45 +519,45 @@ void LLPanelVolume::onLightSelectColor(LLUICtrl* ctrl, void* userdata)
 	if (!objectp || (objectp->getPCode() != LL_PCODE_VOLUME))
 	{
 		return;
-	}	
+	}
 	LLVOVolume *volobjp = (LLVOVolume *)objectp;
 
 
 	LLColorSwatchCtrl*	LightColorSwatch = self->getChild<LLColorSwatchCtrl>("colorswatch");
-	if(LightColorSwatch)
+	if (LightColorSwatch)
 	{
 		LLColor4	clr = LightColorSwatch->get();
-		LLColor3	clr3( clr );
+		LLColor3	clr3(clr);
 		volobjp->setLightColor(clr3);
 		self->mLightSavedColor = clr;
 	}
 }
 
 // static
-void LLPanelVolume::onCommitLight( LLUICtrl* ctrl, void* userdata )
+void LLPanelVolume::onCommitLight(LLUICtrl* ctrl, void* userdata)
 {
 	LLPanelVolume* self = (LLPanelVolume*) userdata;
 	LLViewerObject* objectp = self->mObject;
 	if (!objectp || (objectp->getPCode() != LL_PCODE_VOLUME))
 	{
 		return;
-	}	
+	}
 	LLVOVolume *volobjp = (LLVOVolume *)objectp;
-	
-	
+
+
 	volobjp->setLightIntensity((F32)self->childGetValue("Light Intensity").asReal());
 	volobjp->setLightRadius((F32)self->childGetValue("Light Radius").asReal());
 	volobjp->setLightFalloff((F32)self->childGetValue("Light Falloff").asReal());
 	LLColorSwatchCtrl*	LightColorSwatch = self->getChild<LLColorSwatchCtrl>("colorswatch");
-	if(LightColorSwatch)
+	if (LightColorSwatch)
 	{
-		LLColor4	clr = LightColorSwatch->get();
+		LLColor4 clr = LightColorSwatch->get();
 		volobjp->setLightColor(LLColor3(clr));
 	}
 }
 
 // static
-void LLPanelVolume::onCommitIsLight( LLUICtrl* ctrl, void* userdata )
+void LLPanelVolume::onCommitIsLight(LLUICtrl* ctrl, void* userdata)
 {
 	LLPanelVolume* self = (LLPanelVolume*) userdata;
 	self->sendIsLight();
@@ -492,7 +566,7 @@ void LLPanelVolume::onCommitIsLight( LLUICtrl* ctrl, void* userdata )
 //----------------------------------------------------------------------------
 
 // static
-void LLPanelVolume::onCommitFlexible( LLUICtrl* ctrl, void* userdata )
+void LLPanelVolume::onCommitFlexible(LLUICtrl* ctrl, void* userdata)
 {
 	LLPanelVolume* self = (LLPanelVolume*) userdata;
 	LLViewerObject* objectp = self->mObject;
@@ -500,7 +574,7 @@ void LLPanelVolume::onCommitFlexible( LLUICtrl* ctrl, void* userdata )
 	{
 		return;
 	}
-	
+
 	LLFlexibleObjectData *attributes = (LLFlexibleObjectData *)objectp->getParameterEntry(LLNetworkData::PARAMS_FLEXIBLE);
 	if (attributes)
 	{
@@ -527,9 +601,46 @@ void LLPanelVolume::onCommitFlexible( LLUICtrl* ctrl, void* userdata )
 }
 
 // static
-void LLPanelVolume::onCommitIsFlexible( LLUICtrl* ctrl, void* userdata )
+void LLPanelVolume::onCommitIsFlexible(LLUICtrl* ctrl, void* userdata)
 {
 	LLPanelVolume* self = (LLPanelVolume*) userdata;
 	self->sendIsFlexible();
 }
 
+// static
+void LLPanelVolume::sendPhysicsShapeType(LLUICtrl* ctrl, void* userdata)
+{
+	U8 type = ctrl->getValue().asInteger();
+	LLSelectMgr::getInstance()->selectionSetPhysicsType(type);
+/*	*TODO
+	refreshCost();
+*/
+}
+
+// static
+void LLPanelVolume::sendPhysicsGravity(LLUICtrl* ctrl, void* userdata)
+{
+	F32 val = ctrl->getValue().asReal();
+	LLSelectMgr::getInstance()->selectionSetGravity(val);
+}
+
+// static
+void LLPanelVolume::sendPhysicsFriction(LLUICtrl* ctrl, void* userdata)
+{
+	F32 val = ctrl->getValue().asReal();
+	LLSelectMgr::getInstance()->selectionSetFriction(val);
+}
+
+// static
+void LLPanelVolume::sendPhysicsRestitution(LLUICtrl* ctrl, void* userdata)
+{
+	F32 val = ctrl->getValue().asReal();
+	LLSelectMgr::getInstance()->selectionSetRestitution(val);
+}
+
+// static
+void LLPanelVolume::sendPhysicsDensity(LLUICtrl* ctrl, void* userdata)
+{
+	F32 val = ctrl->getValue().asReal();
+	LLSelectMgr::getInstance()->selectionSetDensity(val);
+}

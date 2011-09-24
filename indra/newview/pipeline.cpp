@@ -2457,32 +2457,6 @@ void LLPipeline::markGLRebuild(LLGLUpdate* glu)
 	}
 }
 
-void LLPipeline::markPartitionMove(LLDrawable* drawable)
-{
-	if (!drawable->isState(LLDrawable::PARTITION_MOVE) && 
-		!drawable->getPositionGroup().equals3(LLVector4a::getZero()))
-	{
-		drawable->setState(LLDrawable::PARTITION_MOVE);
-		mPartitionQ.push_back(drawable);
-	}
-}
-
-void LLPipeline::processPartitionQ()
-{
-	for (LLDrawable::drawable_list_t::iterator iter = mPartitionQ.begin(); iter != mPartitionQ.end(); ++iter)
-	{
-		LLDrawable* drawable = *iter;
-		if (!drawable->isDead())
-		{
-			drawable->updateBinRadius();
-			drawable->movePartition();
-		}
-		drawable->clearState(LLDrawable::PARTITION_MOVE);
-	}
-
-	mPartitionQ.clear();
-}
-
 void LLPipeline::markRebuild(LLSpatialGroup* group, BOOL priority)
 {
 	LLMemType mt(LLMemType::MTYPE_PIPELINE);
@@ -3264,6 +3238,9 @@ void render_hud_elements()
 		LLWorld::getInstance()->renderPropertyLines();
 		LLViewerParcelMgr::getInstance()->render();
 		LLViewerParcelMgr::getInstance()->renderParcelCollision();
+
+		// Render name tags and hover texts.
+		LLHUDObject::renderAll();
 	}
 	else if (gForceRenderLandFence)
 	{
@@ -3675,7 +3652,6 @@ void LLPipeline::renderGeom(LLCamera& camera, BOOL forceVBOUpdate)
 		{
 			// Render debugging beacons.
 			gObjectList.renderObjectBeacons();
-			LLHUDObject::renderAll();
 			gObjectList.resetObjectBeacons();
 		}
 		else

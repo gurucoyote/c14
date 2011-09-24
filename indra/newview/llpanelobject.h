@@ -33,10 +33,10 @@
 #ifndef LL_LLPANELOBJECT_H
 #define LL_LLPANELOBJECT_H
 
-#include "v3math.h"
 #include "llpanel.h"
 #include "llpointer.h"
 #include "llvolume.h"
+#include "v3math.h"
 
 class LLSpinCtrl;
 class LLCheckBoxCtrl;
@@ -64,27 +64,25 @@ public:
 	void			refresh();
 
 	static BOOL		precommitValidate(LLUICtrl* ctrl,void* userdata);
-	
+
 	static void		onCommitLock(LLUICtrl *ctrl, void *data);
-	static void 	onCommitPosition(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitScale(			LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitRotation(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitPhysics(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitTemporary(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitPhantom(		LLUICtrl* ctrl, void* userdata);
-	static void 	onCommitCastShadows(	LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitPosition(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitScale(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitRotation(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitTemporary(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitPhantom(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitPhysics(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitCastShadows(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitMaterial(LLUICtrl* ctrl, void* userdata);
 
 	static void 	onCommitParametric(LLUICtrl* ctrl, void* userdata);
 
-	static void 	onCommitMaterial(		LLUICtrl* ctrl, void* userdata);
+	static void     onCommitSculpt(LLUICtrl* ctrl, void* userdata);
+	static void     onCancelSculpt(LLUICtrl* ctrl, void* userdata);
+	static void     onSelectSculpt(LLUICtrl* ctrl, void* userdata);
+	static BOOL     onDropSculpt(LLUICtrl* ctrl, LLInventoryItem* item, void* ud);
+	static void     onCommitSculptType(LLUICtrl *ctrl, void* userdata);
 
-	static void     onCommitSculpt(        LLUICtrl* ctrl, void* userdata);
-	static void     onCancelSculpt(        LLUICtrl* ctrl, void* userdata);
-	static void     onSelectSculpt(        LLUICtrl* ctrl, void* userdata);
-	static BOOL     onDropSculpt(          LLUICtrl* ctrl, LLInventoryItem* item, void* ud);
-	static void     onCommitSculptType(    LLUICtrl *ctrl, void* userdata);
-		
-	
 protected:
 	void			getState();
 
@@ -96,15 +94,15 @@ protected:
 	void			sendIsPhantom();
 	void			sendCastShadows();
 	void            sendSculpt();
-	
+
 	void 			getVolumeParams(LLVolumeParams& volume_params);
-	
+
 protected:
 	S32				mComboMaterialItemCount;
 
 	LLTextBox*		mLabelMaterial;
 	LLComboBox*		mComboMaterial;
-	
+
 	// Per-object options
 	LLTextBox*		mLabelBaseType;
 	LLComboBox*		mComboBaseType;
@@ -125,7 +123,7 @@ protected:
 
 	LLSpinCtrl*		mSpinScaleX;
 	LLSpinCtrl*		mSpinScaleY;
-	
+
 	LLTextBox*		mLabelSkew;
 	LLSpinCtrl*		mSpinSkew;
 
@@ -173,7 +171,7 @@ protected:
 	LLComboBox      *mCtrlSculptType;
 	LLCheckBoxCtrl  *mCtrlSculptMirror;
 	LLCheckBoxCtrl  *mCtrlSculptInvert;
-	
+
 	LLVector3		mCurEulerDegrees;		// to avoid sending rotation when not changed
 	BOOL			mIsPhysical;			// to avoid sending "physical" when not changed
 	BOOL			mIsTemporary;			// to avoid sending "temporary" when not changed
