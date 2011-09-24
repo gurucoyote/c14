@@ -58,7 +58,6 @@
 #include "llfloaterproperties.h"
 #include "llfloaterreporter.h"
 #include "llfloatertools.h"
-#include "llframetimer.h"
 #include "llfocusmgr.h"
 #include "llhudeffecttrail.h"
 #include "llhudmanager.h"
@@ -557,6 +556,131 @@ BOOL LLSelectMgr::removeObjectFromSelections(const LLUUID &id)
 	return object_found;
 }
 
+bool LLSelectMgr::linkObjects()
+{
+//MK
+	if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+		gAgent.mRRInterface.isSittingOnAnySelectedObject())
+	{
+		return true;
+	}
+//mk
+	if (!LLSelectMgr::getInstance()->selectGetAllRootsValid())
+	{
+		LLNotifications::instance().add("UnableToLinkWhileDownloading");
+		return true;
+	}
+
+	S32 object_count = LLSelectMgr::getInstance()->getSelection()->getObjectCount();
+	if (object_count > MAX_CHILDREN_PER_TASK + 1)
+	{
+		LLSD args;
+		args["COUNT"] = llformat("%d", object_count);
+		S32 max = MAX_CHILDREN_PER_TASK+1;
+		args["MAX"] = llformat("%d", max);
+		LLNotifications::instance().add("UnableToLinkObjects", args);
+		return true;
+	}
+
+	if (LLSelectMgr::getInstance()->getSelection()->getRootObjectCount() < 2)
+	{
+		LLNotifications::instance().add("CannotLinkIncompleteSet");
+		return true;
+	}
+
+	if (!LLSelectMgr::getInstance()->selectGetRootsModify())
+	{
+		LLNotifications::instance().add("CannotLinkModify");
+		return true;
+	}
+
+	LLUUID owner_id;
+	std::string owner_name;
+	if (!LLSelectMgr::getInstance()->selectGetOwner(owner_id, owner_name))
+	{
+		// we don't actually care if you're the owner, but novices are
+		// the most likely to be stumped by this one, so offer the
+		// easiest and most likely solution.
+		LLNotifications::instance().add("CannotLinkDifferentOwners");
+		return true;
+	}
+
+	LLSelectMgr::getInstance()->sendLink();
+
+	return true;
+}
+
+bool LLSelectMgr::unlinkObjects()
+{
+//MK
+	if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+		gAgent.mRRInterface.isSittingOnAnySelectedObject())
+	{
+		return true;
+	}
+//mk
+	LLSelectMgr::getInstance()->sendDelink();
+	return true;
+}
+
+// in order to link, all objects must have the same owner, and the
+// agent must have the ability to modify all of the objects. However,
+// we're not answering that question with this method. The question
+// we're answering is: does the user have a reasonable expectation
+// that a link operation should work? If so, return true, false
+// otherwise. this allows the handle_link method to more finely check
+// the selection and give an error message when the uer has a
+// reasonable expectation for the link to work, but it will fail.
+bool LLSelectMgr::enableLinkObjects()
+{
+	bool new_value = false;
+	// check if there are at least 2 objects selected, and that the
+	// user can modify at least one of the selected objects.
+
+	// in component mode, can't link
+	if (!gSavedSettings.getBOOL("EditLinkedParts"))
+	{
+		if (LLSelectMgr::getInstance()->selectGetAllRootsValid() &&
+			LLSelectMgr::getInstance()->getSelection()->getRootObjectCount() >= 2)
+		{
+			struct f : public LLSelectedObjectFunctor
+			{
+				virtual bool apply(LLViewerObject* object)
+				{
+					return object->permModify();
+				}
+			} func;
+			const bool firstonly = true;
+			new_value = LLSelectMgr::getInstance()->getSelection()->applyToRootObjects(&func, firstonly);
+		}
+//MK
+		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+			gAgent.mRRInterface.isSittingOnAnySelectedObject())
+		{
+			new_value = false;
+		}
+//mk
+	}
+
+	return new_value;
+}
+
+bool LLSelectMgr::enableUnlinkObjects()
+{
+	LLViewerObject* first_editable_object = LLSelectMgr::getInstance()->getSelection()->getFirstEditableObject();
+
+	bool new_value = LLSelectMgr::getInstance()->selectGetAllRootsValid() &&
+					 first_editable_object && !first_editable_object->isAttachment();
+//MK
+		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+			gAgent.mRRInterface.isSittingOnAnySelectedObject())
+		{
+			new_value = false;
+		}
+//mk
+	return new_value;
+}
+
 void LLSelectMgr::deselectObjectAndFamily(LLViewerObject* object, BOOL send_to_sim, BOOL include_entire_object)
 {
 	// bail if nothing selected or if object wasn't selected in the first place
@@ -844,12 +968,9 @@ void LLSelectMgr::highlightObjectOnly(LLViewerObject* objectp)
 		return;
 	}
 
-	if (objectp->getPCode() != LL_PCODE_VOLUME
-#ifdef HIGHLIGHT_GRASS_AND_TREES	// Broken for now
-		&& objectp->getPCode() != LL_PCODE_LEGACY_TREE
-		&& objectp->getPCode() != LL_PCODE_LEGACY_GRASS
-#endif
-	   )
+	if (objectp->getPCode() != LL_PCODE_VOLUME &&
+		objectp->getPCode() != LL_PCODE_LEGACY_TREE &&
+		objectp->getPCode() != LL_PCODE_LEGACY_GRASS)
 	{
 		return;
 	}
@@ -898,12 +1019,9 @@ void LLSelectMgr::highlightObjectAndFamily(const std::vector<LLViewerObject*>& o
 			continue;
 		}
 
-		if (object->getPCode() != LL_PCODE_VOLUME
-#ifdef HIGHLIGHT_GRASS_AND_TREES	// Broken for now
-			&& object->getPCode() != LL_PCODE_LEGACY_TREE
-			&& object->getPCode() != LL_PCODE_LEGACY_GRASS
-#endif
-		   )
+		if (object->getPCode() != LL_PCODE_VOLUME &&
+			object->getPCode() != LL_PCODE_LEGACY_TREE &&
+			object->getPCode() != LL_PCODE_LEGACY_GRASS)
 		{
 			continue;
 		}
@@ -928,12 +1046,9 @@ void LLSelectMgr::unhighlightObjectOnly(LLViewerObject* objectp)
 		return;
 	}
 
-	if (objectp->getPCode() != LL_PCODE_VOLUME
-#ifdef HIGHLIGHT_GRASS_AND_TREES	// Broken for now
-		&& objectp->getPCode() != LL_PCODE_LEGACY_TREE
-		&& objectp->getPCode() != LL_PCODE_LEGACY_GRASS
-#endif
-	   )
+	if (objectp->getPCode() != LL_PCODE_VOLUME &&
+		objectp->getPCode() != LL_PCODE_LEGACY_TREE &&
+		objectp->getPCode() != LL_PCODE_LEGACY_GRASS)
 	{
 		return;
 	}
@@ -4208,9 +4323,9 @@ void LLSelectMgr::packPermissions(LLSelectNode* node, void *user_data)
 	gMessageSystem->nextBlockFast(_PREHASH_ObjectData);
 	gMessageSystem->addU32Fast(_PREHASH_ObjectLocalID, node->getObject()->getLocalID());
 
-	gMessageSystem->addU8Fast(_PREHASH_Field,	data->mField);
-	gMessageSystem->addBOOLFast(_PREHASH_Set,		data->mSet);
-	gMessageSystem->addU32Fast(_PREHASH_Mask,		data->mMask);
+	gMessageSystem->addU8Fast(_PREHASH_Field, data->mField);
+	gMessageSystem->addBOOLFast(_PREHASH_Set, data->mSet);
+	gMessageSystem->addU32Fast(_PREHASH_Mask, data->mMask);
 }
 
 // Utility function to send some information to every region containing
@@ -5136,7 +5251,6 @@ void LLSelectMgr::generateSilhouette(LLSelectNode* nodep, const LLVector3& view_
 	{
 		((LLVOVolume*)objectp)->generateSilhouette(nodep, view_point);
 	}
-#ifdef HIGHLIGHT_GRASS_AND_TREES	// Broken for now
 	else if (objectp && objectp->getPCode() == LL_PCODE_LEGACY_GRASS)
 	{
 		((LLVOGrass*)objectp)->generateSilhouette(nodep, view_point);
@@ -5145,7 +5259,6 @@ void LLSelectMgr::generateSilhouette(LLSelectNode* nodep, const LLVector3& view_
 	{
 		((LLVOTree*)objectp)->generateSilhouette(nodep, view_point);
 	}
-#endif
 }
 
 //
@@ -5595,10 +5708,9 @@ void LLSelectNode::renderOneSilhouette(const LLColor4 &color)
 
 	LLViewerCamera* camera = LLViewerCamera::getInstance();
 
-#ifndef HIGHLIGHT_GRASS_AND_TREES	// Broken for now
-	LLVolume *volume = objectp->getVolume();
-	if (volume)
-#endif
+	// we used to only call this for volumes, but let's render silhouettes for any node that has them.
+	//LLVolume *volume = objectp->getVolume();
+	//if (volume)
 	{
 		F32 silhouette_thickness;
 		if (is_hud_object && gAgent.getAvatarObject())
@@ -5770,8 +5882,8 @@ S32 get_family_count(LLViewerObject *parent)
 //-----------------------------------------------------------------------------
 void LLSelectMgr::updateSelectionCenter()
 {
-	const F32 MOVE_SELECTION_THRESHOLD = 1.f;		//  Movement threshold in meters for updating selection
-													//  center (tractor beam)
+	// Movement threshold in meters for updating selection center (tractor beam)
+	const F32 MOVE_SELECTION_THRESHOLD = 1.f;
 
 	//override any object updates received
 	//for selected objects
@@ -5787,13 +5899,13 @@ void LLSelectMgr::updateSelectionCenter()
 		mSelectionBBox = LLBBox(); 
 		mPauseRequest = NULL;
 		resetAgentHUDZoom();
-
 	}
 	else
 	{
 		mSelectedObjects->mSelectType = getSelectTypeForObject(object);
 
-		if (mSelectedObjects->mSelectType == SELECT_TYPE_ATTACHMENT && gAgent.getAvatarObject())
+		if (mSelectedObjects->mSelectType == SELECT_TYPE_ATTACHMENT &&
+			gAgent.getAvatarObject())
 		{
 			mPauseRequest = gAgent.getAvatarObject()->requestPause();
 		}
@@ -5802,7 +5914,8 @@ void LLSelectMgr::updateSelectionCenter()
 			mPauseRequest = NULL;
 		}
 
-		if (mSelectedObjects->mSelectType != SELECT_TYPE_HUD && gAgent.getAvatarObject())
+		if (mSelectedObjects->mSelectType != SELECT_TYPE_HUD &&
+			gAgent.getAvatarObject())
 		{
 			// reset hud ZOOM
 			gAgent.mHUDTargetZoom = 1.f;
@@ -5849,7 +5962,6 @@ void LLSelectMgr::updateSelectionCenter()
 		LLVector3 bbox_center_agent = bbox.getCenterAgent();
 		mSelectionCenterGlobal = gAgent.getPosGlobalFromAgent(bbox_center_agent);
 		mSelectionBBox = bbox;
-
 	}
 
 	if (gAgentID != LLUUID::null)
@@ -6434,7 +6546,9 @@ bool LLObjectSelection::applyToTEs(LLSelectedTEFunctor* func, bool firstonly)
 		LLSelectNode* node = *nextiter;
 		LLViewerObject* object = (*nextiter)->getObject();
 		if (!object)
+		{
 			continue;
+		}
 		S32 num_tes = llmin((S32)object->getNumTEs(), (S32)object->getNumFaces()); // avatars have TEs but no faces
 		for (S32 te = 0; te < num_tes; ++te)
 		{
@@ -6442,9 +6556,13 @@ bool LLObjectSelection::applyToTEs(LLSelectedTEFunctor* func, bool firstonly)
 			{
 				bool r = func->apply(object, te);
 				if (firstonly && r)
+				{
 					return true;
+				}
 				else
+				{
 					result = result && r;
+				}
 			}
 		}
 	}
@@ -6460,9 +6578,13 @@ bool LLObjectSelection::applyToNodes(LLSelectedNodeFunctor *func, bool firstonly
 		LLSelectNode* node = *nextiter;
 		bool r = func->apply(node);
 		if (firstonly && r)
+		{
 			return true;
+		}
 		else
+		{
 			result = result && r;
+		}
 	}
 	return result;
 }
@@ -6476,9 +6598,13 @@ bool LLObjectSelection::applyToRootNodes(LLSelectedNodeFunctor *func, bool first
 		LLSelectNode* node = *nextiter;
 		bool r = func->apply(node);
 		if (firstonly && r)
+		{
 			return true;
+		}
 		else
+		{
 			result = result && r;
+		}
 	}
 	return result;
 }
@@ -6677,16 +6803,13 @@ LLViewerObject* LLObjectSelection::getFirstDeleteableObject()
 		bool apply(LLSelectNode* node)
 		{
 			LLViewerObject* obj = node->getObject();
-			// you can delete an object if you are the owner
-			// or you have permission to modify it.
-			if (obj && (obj->permModify() ||
-						obj->permYouOwner() ||
-						!obj->permAnyOwner()))		// public
+			// You can delete an object if it is not an attachment and you are
+			// the owner or you have permission to modify it.
+			if (obj && !obj->isAttachment() &&
+				(obj->permModify() || obj->permYouOwner() ||
+				 !obj->permAnyOwner()))		// not public
 			{
-				if (!obj->isAttachment())
-				{
-					return true;
-				}
+				return true;
 			}
 			return false;
 		}

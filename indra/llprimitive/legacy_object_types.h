@@ -70,11 +70,11 @@ const	S8		PRIMITIVE_VOLUME = 'v';
 
 // Misc constants 
 
-//const   F32		AVATAR_RADIUS			= 0.5f;
-//const   F32		SHOT_RADIUS				= 0.05f;
-//const   F32		BIG_SHOT_RADIUS			= 0.05f;
-//const   F32		TREE_SIZE				= 5.f;
-//const   F32		BALL_SIZE				= 4.f;
+//const F32		AVATAR_RADIUS			= 0.5f;
+//const F32		SHOT_RADIUS				= 0.05f;
+//const F32		BIG_SHOT_RADIUS			= 0.05f;
+//const F32		TREE_SIZE				= 5.f;
+//const F32		BALL_SIZE				= 4.f;
 
 //const	F32		SHOT_VELOCITY			= 100.f;
 //const	F32		GRENADE_BLAST_RADIUS	= 5.f;

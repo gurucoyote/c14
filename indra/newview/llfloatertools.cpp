@@ -34,33 +34,36 @@
 
 #include "llfloatertools.h"
 
-#include "llfontgl.h"
-#include "llcoord.h"
-#include "llgl.h"
-
-#include "llagent.h"
 #include "llbutton.h"
 #include "llcheckboxctrl.h"
 #include "llcombobox.h"
+#include "llcoord.h"
 #include "lldraghandle.h"
-#include "llfloaterbuildoptions.h"
-#include "llfloateropenobject.h"
 #include "llfocusmgr.h"
+#include "llfontgl.h"
+#include "llgl.h"
 #include "llmenugl.h"
-#include "llpanelcontents.h"
-#include "llpanelface.h"
-#include "llpanelland.h"
-#include "llpanelinventory.h"
-#include "llpanelobject.h"
-#include "llpanelvolume.h"
-#include "llpanelpermissions.h"
 #include "llresmgr.h"
-#include "llselectmgr.h"
 #include "llslider.h"
 #include "llspinctrl.h"
-#include "llstatusbar.h"
 #include "lltabcontainer.h"
 #include "lltextbox.h"
+#include "llui.h"
+#include "lluictrlfactory.h"
+
+#include "llagent.h"
+#include "llfloaterbuildoptions.h"
+#include "llfloateropenobject.h"
+#include "llmeshrepository.h"
+#include "llpanelcontents.h"
+#include "llpanelface.h"
+#include "llpanelinventory.h"
+#include "llpanelland.h"
+#include "llpanelobject.h"
+#include "llpanelpermissions.h"
+#include "llpanelvolume.h"
+#include "llselectmgr.h"
+#include "llstatusbar.h"
 #include "qltoolalign.h"
 #include "lltoolbrush.h"
 #include "lltoolcomp.h"
@@ -68,21 +71,18 @@
 #include "lltoolface.h"
 #include "lltoolfocus.h"
 #include "lltoolgrab.h"
-#include "lltoolgrab.h"
 #include "lltoolindividual.h"
 #include "lltoolmgr.h"
 #include "lltoolpie.h"
 #include "lltoolpipette.h"
 #include "lltoolplacer.h"
 #include "lltoolselectland.h"
-#include "llui.h"
+#include "llviewercontrol.h"
+#include "llviewerjoystick.h"
 #include "llviewermenu.h"
 #include "llviewerparcelmgr.h"
 #include "llviewerregion.h"
 #include "llviewerwindow.h"
-#include "llviewercontrol.h"
-#include "llviewerjoystick.h"
-#include "lluictrlfactory.h"
 
 // Globals
 LLFloaterTools *gFloaterTools = NULL;
@@ -249,10 +249,9 @@ BOOL	LLFloaterTools::postBuild()
 	mCheckSelectIndividual = getChild<LLCheckBoxCtrl>("checkbox edit linked parts");
 	childSetValue("checkbox edit linked parts",(BOOL)gSavedSettings.getBOOL("EditLinkedParts"));
 	childSetCommitCallback("checkbox edit linked parts",commit_select_component,this);
-	mCheckSnapToGrid = getChild<LLCheckBoxCtrl>("checkbox snap to grid");
 	childSetValue("checkbox snap to grid",(BOOL)gSavedSettings.getBOOL("SnapEnabled"));
-	mBtnGridOptions = getChild<LLButton>("Options...");
-	childSetAction("Options...",onClickGridOptions, this);
+	mBtnGridOptions = getChild<LLButton>("Grid Options");
+	childSetAction("Grid Options", onClickGridOptions, this);
 	mCheckStretchUniform = getChild<LLCheckBoxCtrl>("checkbox uniform");
 	childSetValue("checkbox uniform",(BOOL)gSavedSettings.getBOOL("ScaleUniform"));
 	mCheckStretchTexture = getChild<LLCheckBoxCtrl>("checkbox stretch textures");
@@ -262,6 +261,10 @@ BOOL	LLFloaterTools::postBuild()
 	mTextGridMode = getChild<LLTextBox>("text ruler mode");
 	mComboGridMode = getChild<LLComboBox>("combobox grid mode");
 	childSetCommitCallback("combobox grid mode",commit_grid_mode, this);
+	mBtnLink = getChild<LLButton>("Link");
+	childSetAction("Link", onClickLink, this);
+	mBtnUnlink = getChild<LLButton>("Unlink");
+	childSetAction("Unlink", onClickUnlink, this);
 
 	toolsPrecision();
 
@@ -392,7 +395,6 @@ LLFloaterTools::LLFloaterTools()
 	mRadioSelectFace(NULL),
 	mCheckSelectIndividual(NULL),
 
-	mCheckSnapToGrid(NULL),
 	mBtnGridOptions(NULL),
 	mTextGridMode(NULL),
 	mComboGridMode(NULL),
@@ -403,6 +405,9 @@ LLFloaterTools::LLFloaterTools()
 	mBtnRotateLeft(NULL),
 	mBtnRotateReset(NULL),
 	mBtnRotateRight(NULL),
+
+	mBtnLink(NULL),
+	mBtnUnlink(NULL),
 
 	mBtnDelete(NULL),
 	mBtnDuplicate(NULL),
@@ -498,7 +503,7 @@ void LLFloaterTools::refresh()
 	std::string prim_count_string;
 	S32 prim_count = selectmgr->getSelection()->getObjectCount();
 	LLResMgr::getInstance()->getIntegerString(prim_count_string, prim_count);
-	if (gAgent.getRegion() && !gAgent.getRegion()->getCapability("GetMesh").empty())
+	if (gMeshRepo.meshRezEnabled())
 	{
 		S32 link_cost = (S32)selectmgr->getSelection()->getSelectedLinksetCost();
 		if (link_cost > prim_count)
@@ -644,6 +649,12 @@ void LLFloaterTools::updatePopup(LLCoordGL center, MASK mask)
 		mRadioSelectFace->set(tool == LLToolFace::getInstance());
 	}
 
+	mBtnLink->setVisible(edit_visible);
+	mBtnUnlink->setVisible(edit_visible);
+
+	mBtnLink->setEnabled(LLSelectMgr::instance().enableLinkObjects());
+	mBtnUnlink->setEnabled(LLSelectMgr::instance().enableUnlinkObjects());
+
 	if (mCheckSelectIndividual)
 	{
 		mCheckSelectIndividual->setVisible(edit_visible);
@@ -684,8 +695,6 @@ void LLFloaterTools::updatePopup(LLCoordGL center, MASK mask)
 	}
 	if (mTextGridMode) mTextGridMode->setVisible(edit_visible);
 
-	// Snap to grid disabled for grab tool - very confusing
-	if (mCheckSnapToGrid) mCheckSnapToGrid->setVisible(edit_visible /* || tool == LLToolGrab::getInstance() */);
 	if (mBtnGridOptions) mBtnGridOptions->setVisible(edit_visible /* || tool == LLToolGrab::getInstance() */);
 
 	//mCheckSelectLinked->setVisible(edit_visible);
@@ -1018,6 +1027,18 @@ void LLFloaterTools::onClickGridOptions(void* data)
 	LLFloaterBuildOptions::show(NULL);
 	// RN: this makes grid options dependent on build tools window
 	//floaterp->addDependentFloater(LLFloaterBuildOptions::getInstance(), FALSE);
+}
+
+// static
+void LLFloaterTools::onClickLink(void* data)
+{
+	LLSelectMgr::getInstance()->linkObjects();
+}
+
+// static
+void LLFloaterTools::onClickUnlink(void* data)
+{
+	LLSelectMgr::getInstance()->unlinkObjects();
 }
 
 void LLFloaterTools::setEditTool(void* tool_pointer)

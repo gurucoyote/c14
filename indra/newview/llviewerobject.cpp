@@ -1879,7 +1879,7 @@ U32 LLViewerObject::processUpdateMessage(LLMessageSystem *mesgsys,
 
 	// WTF?   If we're going to skip this message, why are we 
 	// doing all the parenting, etc above?
-	U32 packet_id = mesgsys->getCurrentRecvPacketID(); 
+	U32 packet_id = mesgsys->getCurrentRecvPacketID();
 	if (packet_id < mLatestRecvPacketID && 
 		mLatestRecvPacketID - packet_id < 65536)
 	{
@@ -3851,7 +3851,7 @@ void LLViewerObject::sendTEUpdate() const
 void LLViewerObject::setTE(const U8 te, const LLTextureEntry &texture_entry)
 {
 	LLPrimitive::setTE(te, texture_entry);
-// This doesn't work, don't get any textures.
+//	This doesn't work, don't get any textures.
 //	if (mDrawable.notNull() && mDrawable->isVisible())
 //	{
 		const LLUUID& image_id = getTE(te)->getID();

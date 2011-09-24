@@ -117,13 +117,18 @@
 	     font="SansSerifSmall" height="15" initial_value="true"
 	     label="Limit drag distance" left_delta="0" mouse_opaque="true"
 	     name="checkbox limit drag distance" width="134" />
-	<check_box bottom_delta="-16" control_name="SnapEnabled" follows="left|top"
-	     font="SansSerifSmall" height="15" initial_value="true" label="Use Grid"
-	     left_delta="0" mouse_opaque="true" name="checkbox snap to grid" width="134" />
 	<button bottom_delta="-17" follows="left|top" font="SansSerifSmall"
        halign="center" valign="center"
-	     height="20" label="Options..." label_selected="Options..." left_delta="20"
-	     mouse_opaque="true" name="Options..." scale_image="TRUE" width="80" />
+	   height="16" label="Grid Options" label_selected="Grid Options" left_delta="0"
+	   mouse_opaque="true" name="Grid Options" width="120" />
+	<button bottom_delta="-18" follows="left|top" font="SansSerifSmall"
+       halign="center" valign="center"
+	   height="18" label="Link" label_selected="Link" left_delta="0"
+	   mouse_opaque="true" name="Link" width="55" />
+	<button bottom_delta="0" follows="left|top" font="SansSerifSmall"
+       halign="center" valign="center"
+	   height="18" label="Unlink" label_selected="Unlink" left_delta="65"
+	   mouse_opaque="true" name="Unlink" width="55" />
 
 <!-- Help text -->
 
@@ -658,36 +663,6 @@
 			     max_val="9999" min_val="-9999" mouse_opaque="true" name="Rot Z"
 			     text_enabled_color="1, 1, 1, 1" width="87" />
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
-			     bottom_delta="-16" drop_shadow_visible="true" follows="left|top"
-			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="10"
-			     mouse_opaque="true" name="label material" v_pad="0" width="121">
-				Material
-			</text>
-			<combo_box allow_text_entry="false" bottom_delta="-22" follows="left|top" height="18"
-			     left="10" max_chars="20" mouse_opaque="true" name="material" width="87">
-				<combo_item name="Stone" value="Stone">
-					Stone
-				</combo_item>
-				<combo_item name="Metal" value="Metal">
-					Metal
-				</combo_item>
-				<combo_item name="Glass" value="Glass">
-					Glass
-				</combo_item>
-				<combo_item name="Wood" value="Wood">
-					Wood
-				</combo_item>
-				<combo_item name="Flesh" value="Flesh">
-					Flesh
-				</combo_item>
-				<combo_item name="Plastic" value="Plastic">
-					Plastic
-				</combo_item>
-				<combo_item name="Rubber" value="Rubber">
-					Rubber
-				</combo_item>
-			</combo_box>
-			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom="-36" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="10" left="121"
 			     mouse_opaque="true" name="label basetype" v_pad="0" width="141">
@@ -941,57 +916,94 @@
 			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 			     bottom_delta="0" drop_shadow_visible="true" follows="left|top"
 			     font="SansSerifSmall" h_pad="0" halign="left" height="16" left="140"
-			     mouse_opaque="true" name="label physicsshapetype" v_pad="0" width="120">
-				Physics Shape Type:
+			     mouse_opaque="true" name="label material" v_pad="0" width="120">
+				Material:
 			</text>
 			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
 			     increment="1" initial_val="2" label="Softness" label_width="55" left="10"
 			     max_val="3" min_val="0" mouse_opaque="true" name="FlexNumSections"
 			     width="118" />
 			<combo_box allow_text_entry="false" bottom_delta="-2" follows="left|top" height="18"
-			     left="140" max_chars="20" mouse_opaque="true" name="Physics Shape Type Combo Ctrl"
-			     visible="false" width="118" tool_tip="Choose the physics shape type"/>
+			     left="140" max_chars="20" mouse_opaque="true" name="material" width="118">
+				<combo_item name="Stone" value="Stone">
+					Stone
+				</combo_item>
+				<combo_item name="Metal" value="Metal">
+					Metal
+				</combo_item>
+				<combo_item name="Glass" value="Glass">
+					Glass
+				</combo_item>
+				<combo_item name="Wood" value="Wood">
+					Wood
+				</combo_item>
+				<combo_item name="Flesh" value="Flesh">
+					Flesh
+				</combo_item>
+				<combo_item name="Plastic" value="Plastic">
+					Plastic
+				</combo_item>
+				<combo_item name="Rubber" value="Rubber">
+					Rubber
+				</combo_item>
+			</combo_box>
 			<spinner bottom_delta="-18" decimal_digits="3" follows="left|top" height="16"
 			     increment="0.5" initial_val="0.3" label="Gravity" label_width="55"
 			     left="10" max_val="10" min_val="-10" mouse_opaque="true" name="FlexGravity"
 			     width="118" />
+			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+			     bottom_delta="0" drop_shadow_visible="true" follows="left|top"
+			     font="SansSerifSmall" h_pad="0" halign="left" height="14" left="140"
+			     mouse_opaque="true" name="label physicsshapetype" v_pad="0" width="120">
+				Physics Shape Type:
+			</text>
+			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
+			     increment="0.5" initial_val="2" label="Drag" label_width="55" left="10"
+			     max_val="10" min_val="0" mouse_opaque="true" name="FlexFriction"
+			     width="118" />
+			<combo_box allow_text_entry="false" bottom_delta="-2" follows="left|top" height="18"
+			     left="140" max_chars="20" mouse_opaque="true" name="Physics Shape Type Combo Ctrl"
+			     visible="false" width="118" tool_tip="Choose the physics shape type"/>
+			<spinner bottom_delta="-18" decimal_digits="3" follows="left|top" height="16"
+			     increment="0.5" initial_val="0" label="Wind" label_width="55" left="10"
+			     max_val="10" min_val="0" mouse_opaque="true" name="FlexWind" width="118" />
+			<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+			     bottom_delta="0" drop_shadow_visible="true" follows="left|top"
+			     font="SansSerifSmall" h_pad="0" halign="left" height="14" left="140"
+			     mouse_opaque="true" name="label physicsparams" v_pad="0" width="120"
+				 tool_tip="You can change these parameters for objects that have been set Physical in the Object tab.">
+				Physics Parameters:
+			</text>
+			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
+			     increment="0.5" initial_val="1" label="Tension" label_width="55" left="10"
+			     max_val="10" min_val="0" mouse_opaque="true" name="FlexTension" width="118" />
 			<spinner bottom_delta="0" decimal_digits="1" follows="left|top" height="16"
 			     increment="1" initial_val="1" label="Gravity" label_width="55" left="140"
 			     max_val="28" min_val="-1" mouse_opaque="true" name="Physics Gravity"
 			     width="118" />
 			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.5" initial_val="2" label="Drag" label_width="55" left="10"
-			     max_val="10" min_val="0" mouse_opaque="true" name="FlexFriction"
+			     increment="0.01" initial_val="0" label="Force X" label_width="55" left="10"
+			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceX"
 			     width="118" />
 			<spinner bottom_delta="0" decimal_digits="1" follows="left|top" height="16"
 			     increment="0.1" initial_val="0" label="Friction" label_width="55" left="140"
 			     max_val="255" min_val="0" mouse_opaque="true" name="Physics Friction"
 			     width="118" />
 			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.5" initial_val="0" label="Wind" label_width="55" left="10"
-			     max_val="10" min_val="0" mouse_opaque="true" name="FlexWind" width="118" />
+			     increment="0.01" initial_val="0" label="Force Y" label_width="55" left="10"
+			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceY"
+			     width="118" />
 			<spinner bottom_delta="0" decimal_digits="1" follows="left|top" height="16"
 			     increment="0.1" initial_val="0" label="Density" label_width="55" left="140"
 			     max_val="22587" min_val="1" mouse_opaque="true" name="Physics Density"
 			     width="118" tool_tip="Density in 100 kg/m3" />
 			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.5" initial_val="1" label="Tension" label_width="55" left="10"
-			     max_val="10" min_val="0" mouse_opaque="true" name="FlexTension" width="118" />
+			     increment="0.01" initial_val="0" label="Force Z" label_width="55" left="10"
+			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceZ"
+			     width="118" />
 			<spinner bottom_delta="0" decimal_digits="3" follows="left|top" height="16"
 			     increment="0.01" initial_val="0" label="Restitution" label_width="55" left="140"
 			     max_val="1" min_val="0" mouse_opaque="true" name="Physics Restitution"
-			     width="118" />
-			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.01" initial_val="0" label="Force X" label_width="55" left="10"
-			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceX"
-			     width="118" />
-			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.01" initial_val="0" label="Force Y" label_width="55" left="10"
-			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceY"
-			     width="118" />
-			<spinner bottom_delta="-20" decimal_digits="3" follows="left|top" height="16"
-			     increment="0.01" initial_val="0" label="Force Z" label_width="55" left="10"
-			     max_val="10" min_val="-10" mouse_opaque="true" name="FlexForceZ"
 			     width="118" />
 			<check_box bottom_delta="-30" follows="left|top" font="SansSerifSmall" height="16"
 			     initial_value="false" label="Light" left="10" mouse_opaque="true"

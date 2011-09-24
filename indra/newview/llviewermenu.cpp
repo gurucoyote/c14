@@ -2077,6 +2077,72 @@ class LLObjectInspect : public view_listener_t
 	}
 };
 
+class LLObjectDerender : public view_listener_t
+{
+    bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+    {
+		LLViewerObject* vobj = LLSelectMgr::getInstance()->getSelection()->getFirstRootObject(TRUE);
+		if (!vobj)
+		{
+			return true;
+		}
+
+		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+			gAgent.mRRInterface.isSittingOnAnySelectedObject())
+		{
+			// Do not derender an object we are sitting on when RestrainedLove
+			// is enabled and we are forbidden to unsit.
+			return true;
+		}
+
+		LLSelectMgr::getInstance()->removeObjectFromSelections(vobj->getID());
+
+		// Don't derender ourselves neither our attachments
+		if (find_avatar_from_object(vobj) != gAgent.getAvatarObject())
+		{
+			// Derender by killing the object.
+			gObjectList.killObject(vobj);
+		}
+
+		return true;
+	}
+};
+
+class LLObjectEnableDerender : public view_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent>, const LLSD& userdata)
+	{
+		bool enable = true;
+
+		LLViewerObject* vobj = LLSelectMgr::getInstance()->getSelection()->getFirstRootObject(TRUE);
+		if (vobj)
+		{
+			if (find_avatar_from_object(vobj) != gAgent.getAvatarObject())
+			{
+				if (gRRenabled && gAgent.mRRInterface.mContainsUnsit &&
+					gAgent.mRRInterface.isSittingOnAnySelectedObject())
+				{
+					// Do not allow to derender an object we are sitting on
+					// when RestrainedLove is enabled and we are forbidden to
+					// unsit.
+					enable = false;
+				}
+			}
+			else
+			{
+				// Don't allow to derender ourselves neither our attachments
+				enable = false;
+			}
+		}
+		else
+		{
+			enable = false;
+		}
+
+		gMenuHolder->findControl(userdata["control"].asString())->setValue(enable);
+		return true;
+	}
+};
 
 //---------------------------------------------------------------------------
 // Land pie menu
@@ -4785,45 +4851,11 @@ class LLToolsSelectNextPart : public view_listener_t
 	}
 };
 
-// in order to link, all objects must have the same owner, and the
-// agent must have the ability to modify all of the objects. However,
-// we're not answering that question with this method. The question
-// we're answering is: does the user have a reasonable expectation
-// that a link operation should work? If so, return true, false
-// otherwise. this allows the handle_link method to more finely check
-// the selection and give an error message when the uer has a
-// reasonable expectation for the link to work, but it will fail.
 class LLToolsEnableLink : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-		bool new_value = false;
-		// check if there are at least 2 objects selected, and that the
-		// user can modify at least one of the selected objects.
-
-		// in component mode, can't link
-		if (!gSavedSettings.getBOOL("EditLinkedParts"))
-		{
-			if(LLSelectMgr::getInstance()->selectGetAllRootsValid() && LLSelectMgr::getInstance()->getSelection()->getRootObjectCount() >= 2)
-			{
-				struct f : public LLSelectedObjectFunctor
-				{
-					virtual bool apply(LLViewerObject* object)
-					{
-						return object->permModify();
-					}
-				} func;
-				const bool firstonly = true;
-				new_value = LLSelectMgr::getInstance()->getSelection()->applyToRootObjects(&func, firstonly);
-			}
-		}
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit
-			&& gAgent.mRRInterface.isSittingOnAnySelectedObject())
-		{
-			new_value = false;
-		}
-//mk
+		bool new_value = LLSelectMgr::getInstance()->enableLinkObjects();
 		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
 		return true;
 	}
@@ -4833,51 +4865,7 @@ class LLToolsLink : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit
-			&& gAgent.mRRInterface.isSittingOnAnySelectedObject())
-		{
-			return true;
-		}
-//mk
-		if(!LLSelectMgr::getInstance()->selectGetAllRootsValid())
-		{
-			LLNotifications::instance().add("UnableToLinkWhileDownloading");
-			return true;
-		}
-
-		S32 object_count = LLSelectMgr::getInstance()->getSelection()->getObjectCount();
-		if (object_count > MAX_CHILDREN_PER_TASK + 1)
-		{
-			LLSD args;
-			args["COUNT"] = llformat("%d", object_count);
-			int max = MAX_CHILDREN_PER_TASK+1;
-			args["MAX"] = llformat("%d", max);
-			LLNotifications::instance().add("UnableToLinkObjects", args);
-			return true;
-		}
-
-		if(LLSelectMgr::getInstance()->getSelection()->getRootObjectCount() < 2)
-		{
-			LLNotifications::instance().add("CannotLinkIncompleteSet");
-			return true;
-		}
-		if(!LLSelectMgr::getInstance()->selectGetRootsModify())
-		{
-			LLNotifications::instance().add("CannotLinkModify");
-			return true;
-		}
-		LLUUID owner_id;
-		std::string owner_name;
-		if(!LLSelectMgr::getInstance()->selectGetOwner(owner_id, owner_name))
-		{
-			// we don't actually care if you're the owner, but novices are
-			// the most likely to be stumped by this one, so offer the
-			// easiest and most likely solution.
-			LLNotifications::instance().add("CannotLinkDifferentOwners");
-			return true;
-		}
-		LLSelectMgr::getInstance()->sendLink();
+		LLSelectMgr::getInstance()->linkObjects();
 		return true;
 	}
 };
@@ -4886,16 +4874,7 @@ class LLToolsEnableUnlink : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-		bool new_value = LLSelectMgr::getInstance()->selectGetAllRootsValid() &&
-			LLSelectMgr::getInstance()->getSelection()->getFirstEditableObject() &&
-			!LLSelectMgr::getInstance()->getSelection()->getFirstEditableObject()->isAttachment();
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit
-			&& gAgent.mRRInterface.isSittingOnAnySelectedObject())
-		{
-			new_value = false;
-		}
-//mk
+		bool new_value = LLSelectMgr::getInstance()->enableUnlinkObjects();
 		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
 		return true;
 	}
@@ -4905,18 +4884,10 @@ class LLToolsUnlink : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit
-			&& gAgent.mRRInterface.isSittingOnAnySelectedObject())
-		{
-			return true;
-		}
-//mk
-		LLSelectMgr::getInstance()->sendDelink();
+		LLSelectMgr::getInstance()->unlinkObjects();
 		return true;
 	}
 };
-
 
 class LLToolsStopAllAnimations : public view_listener_t
 {
@@ -8760,6 +8731,8 @@ void initialize_menus()
 	addMenu(new LLObjectReturn(), "Object.Return");
 	addMenu(new LLObjectReportAbuse(), "Object.ReportAbuse");
 	addMenu(new LLObjectMute(), "Object.Mute");
+	addMenu(new LLObjectDerender(), "Object.Derender");
+	addMenu(new LLObjectEnableDerender(), "Object.EnableDerender");
 	addMenu(new LLObjectBuy(), "Object.Buy");
 	addMenu(new LLObjectEdit(), "Object.Edit");
 	addMenu(new LLObjectInspect(), "Object.Inspect");

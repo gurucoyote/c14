@@ -106,10 +106,12 @@ public:
 	void saveLastTool();
 private:
 	static void setObjectType( void* data );
-	
+
 	void refresh();
 
 	static void onClickGridOptions(void* data);
+	static void onClickLink(void* data);
+	static void onClickUnlink(void* data);
 
 public:
 
@@ -139,8 +141,9 @@ public:
 	LLCheckBoxCtrl	*mRadioSelectFace;
 
 	LLCheckBoxCtrl	*mCheckSelectIndividual;
+	LLButton*		mBtnLink;
+	LLButton*		mBtnUnlink;
 
-	LLCheckBoxCtrl*	mCheckSnapToGrid;
 	LLButton*		mBtnGridOptions;
 	LLTextBox*		mTextGridMode;
 	LLComboBox*		mComboGridMode;
@@ -148,13 +151,13 @@ public:
 	LLCheckBoxCtrl*	mCheckStretchTexture;
 	LLCheckBoxCtrl*	mCheckLimitDrag;
 
-	LLButton	*mBtnRotateLeft;
-	LLButton	*mBtnRotateReset;
-	LLButton	*mBtnRotateRight;
+	LLButton		*mBtnRotateLeft;
+	LLButton		*mBtnRotateReset;
+	LLButton		*mBtnRotateRight;
 
-	LLButton	*mBtnDelete;
-	LLButton	*mBtnDuplicate;
-	LLButton	*mBtnDuplicateInPlace;
+	LLButton		*mBtnDelete;
+	LLButton		*mBtnDuplicate;
+	LLButton		*mBtnDuplicateInPlace;
 
 	// Create buttons
 	LLCheckBoxCtrl	*mCheckSticky;

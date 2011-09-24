@@ -159,6 +159,7 @@ cp -a skins/default/xui/en-us/floater_animation_preview.xml $temp/skins/default/
 cp -a skins/default/xui/en-us/floater_area_search.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_audio_volume.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_beacons.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_build_options.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_camera.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_chat_history2.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_chat_history.xml $temp/skins/default/xui/en-us/
@@ -213,6 +214,7 @@ cp -a skins/default/xui/en-us/menu_inventory.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_login.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_mini_map.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_pie_attachment.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/menu_pie_avatar.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_pie_object.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_pie_self.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/menu_viewer.xml $temp/skins/default/xui/en-us/

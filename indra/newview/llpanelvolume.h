@@ -33,10 +33,10 @@
 #ifndef LL_LLPANELVOLUME_H
 #define LL_LLPANELVOLUME_H
 
-#include "v3math.h"
 #include "llpanel.h"
 #include "llpointer.h"
 #include "llvolume.h"
+#include "v3math.h"
 
 class LLSpinCtrl;
 class LLCheckBoxCtrl;
@@ -70,6 +70,7 @@ public:
 	static void 	onCommitLight(LLUICtrl* ctrl, void* userdata);
 	static void 	onCommitIsFlexible(LLUICtrl* ctrl, void* userdata);
 	static void 	onCommitFlexible(LLUICtrl* ctrl, void* userdata);
+	static void 	onCommitMaterial(LLUICtrl* ctrl, void* userdata);
 
 	static void		onLightCancelColor(LLUICtrl* ctrl, void* userdata);
 	static void		onLightSelectColor(LLUICtrl* ctrl, void* userdata);
@@ -88,6 +89,11 @@ protected:
 	void			refreshCost();
 
 protected:
+	S32				mComboMaterialItemCount;
+
+	LLTextBox*		mLabelMaterial;
+	LLComboBox*		mComboMaterial;
+
 	LLColor4		mLightSavedColor;
 	LLUUID			mLightSavedTexture;
 	LLPointer<LLViewerObject> mObject;

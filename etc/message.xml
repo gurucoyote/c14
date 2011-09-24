@@ -604,7 +604,6 @@
 					<key>trusted-sender</key>
 					<boolean>true</boolean>
 				</map>
-
 		  </map>
   	  	<key>capBans</key>
     	<map>

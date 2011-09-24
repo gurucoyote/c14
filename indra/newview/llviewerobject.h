@@ -481,8 +481,8 @@ public:
 	// Does "open" object menu item apply?
 	BOOL allowOpen() const;
 
-	void setClickAction(U8 action) { mClickAction = action; }
-	U8 getClickAction() const { return mClickAction; }
+	void setClickAction(U8 action)					{ mClickAction = action; }
+	U8 getClickAction() const						{ return mClickAction; }
 	bool specialHoverCursor() const;	// does it have a special hover cursor?
 
 	void			setRegion(LLViewerRegion *regionp);
@@ -497,7 +497,7 @@ public:
 	void setPhysicsRestitution(F32 restitution);
 
 	virtual void dump() const;
-	static U32		getNumZombieObjects()			{ return sNumZombieObjects; }
+	static U32 getNumZombieObjects()				{ return sNumZombieObjects; }
 
 	void printNameValuePairs() const;
 

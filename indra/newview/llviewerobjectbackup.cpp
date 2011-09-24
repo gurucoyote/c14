@@ -664,27 +664,29 @@ LLSD LLObjectBackup::primsToLLSD(LLViewerObject::child_list_t child_list, bool i
 			// Sculpt
 			LLSculptParams* sculpt = (LLSculptParams*)object->getParameterEntry(LLNetworkData::PARAMS_SCULPT);
 			prim_llsd["sculpt"] = sculpt->asLLSD();
-
-			LLUUID sculpt_texture = sculpt->getSculptTexture();
-			if (sculpt_texture == validateTextureID(sculpt_texture))
+			if ((sculpt->getSculptType() & LL_SCULPT_TYPE_MASK) != LL_SCULPT_TYPE_MESH)
 			{
-				bool alreadyseen = false;
-				std::list<LLUUID>::iterator iter;
-				for (iter = mTexturesList.begin(); iter != mTexturesList.end(); iter++) 
+				LLUUID sculpt_texture = sculpt->getSculptTexture();
+				if (sculpt_texture == validateTextureID(sculpt_texture))
 				{
-					if ((*iter) == sculpt_texture)
-						alreadyseen = true;
+					bool alreadyseen = false;
+					std::list<LLUUID>::iterator iter;
+					for (iter = mTexturesList.begin(); iter != mTexturesList.end(); iter++) 
+					{
+						if ((*iter) == sculpt_texture)
+							alreadyseen = true;
+					}
+					if (alreadyseen == false)
+					{
+						LL_INFOS("ObjectBackup") << "Found a sculpt texture, adding to list " << sculpt_texture << LL_ENDL;
+						mTexturesList.push_back(sculpt_texture);
+					}
 				}
-				if (alreadyseen == false)
+				else
 				{
-					LL_INFOS("ObjectBackup") << "Found a sculpt texture, adding to list " << sculpt_texture << LL_ENDL;
-					mTexturesList.push_back(sculpt_texture);
+					LL_WARNS("ObjectBackup") << "Incorrect permission to export a sculpt texture." << LL_ENDL;
+					LLObjectBackup::getInstance()->mExportState = EXPORT_FAILED;
 				}
-			}
-			else
-			{
-				LL_WARNS("ObjectBackup") << "Incorrect permission to export a sculpt texture." << LL_ENDL;
-				LLObjectBackup::getInstance()->mExportState = EXPORT_FAILED;
 			}
 		}
 
@@ -841,17 +843,20 @@ void LLObjectBackup::importObject(bool upload)
 			{
 				LLSculptParams* sculpt = new LLSculptParams();
 				sculpt->fromLLSD(prim_llsd["sculpt"]);
-				LLUUID orig = sculpt->getSculptTexture();
-				bool alreadyseen = false;
-				for (iter = mTexturesList.begin(); iter != mTexturesList.end(); iter++)
+				if ((sculpt->getSculptType() & LL_SCULPT_TYPE_MASK) != LL_SCULPT_TYPE_MESH)
 				{
-					if ((*iter) == orig)
-						alreadyseen = true;
-				}
-				if (alreadyseen == false)
-				{
-					LL_INFOS("ObjectBackup") << "Found a new SCULPT texture to upload " << orig << LL_ENDL;			
-					mTexturesList.push_back(orig);
+					LLUUID orig = sculpt->getSculptTexture();
+					bool alreadyseen = false;
+					for (iter = mTexturesList.begin(); iter != mTexturesList.end(); iter++)
+					{
+						if ((*iter) == orig)
+							alreadyseen = true;
+					}
+					if (alreadyseen == false)
+					{
+						LL_INFOS("ObjectBackup") << "Found a new SCULPT texture to upload " << orig << LL_ENDL;			
+						mTexturesList.push_back(orig);
+					}
 				}
 			}
 
@@ -884,9 +889,13 @@ void LLObjectBackup::importObject(bool upload)
 	}
 
 	if (mRetexture == TRUE)
+	{
 		uploadNextAsset();
+	}
 	else
+	{
 		importFirstObject();
+	}
 }
 
 LLVector3 LLObjectBackup::offsetAgent(LLVector3 offset)

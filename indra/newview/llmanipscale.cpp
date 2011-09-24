@@ -35,35 +35,36 @@
 #include "llmanipscale.h"
 
 // library includes
+#include "llbbox.h"
+#include "llcriticaldamp.h"
 #include "llmath.h"
-#include "v3math.h"
 #include "llquaternion.h"
 #include "llgl.h"
+#include "llglheaders.h"
 #include "llrender.h"
-#include "v4color.h"
 #include "llprimitive.h"
+#include "llui.h"
+#include "v2math.h"
+#include "v3math.h"
+#include "v4color.h"
 
 // viewer includes
 #include "llagent.h"
-#include "llbbox.h"
 #include "llbox.h"
-#include "llviewercontrol.h"
-#include "llcriticaldamp.h"
 #include "lldrawable.h"
 #include "llfloatertools.h"
-#include "llglheaders.h"
+#include "llhudrender.h"
+#include "llmeshrepository.h"
 #include "llselectmgr.h"
-#include "llstatusbar.h"
 #include "llstartup.h"	// gIsInSecondLife
-#include "llui.h"
+#include "llstatusbar.h"
 #include "llviewercamera.h"
+#include "llviewercontrol.h"
 #include "llviewerobject.h"
 #include "llviewerregion.h"
 #include "llviewerwindow.h"
-#include "llhudrender.h"
-#include "llworld.h"
-#include "v2math.h"
 #include "llvoavatar.h"
+#include "llworld.h"
 
 const F32 MAX_MANIP_SELECT_DISTANCE_SQUARED = 11.f * 11.f;
 const F32 SNAP_GUIDE_SCREEN_OFFSET = 0.05f;
@@ -98,8 +99,7 @@ F32 get_default_max_prim_scale(bool is_flora)
 	{
 		return DEFAULT_MAX_PRIM_SCALE_OPENSIM;
 	}
-	else if (!is_flora && gAgent.getRegion() &&
-			 !gAgent.getRegion()->getCapability("GetMesh").empty())
+	else if (!is_flora && gMeshRepo.meshRezEnabled())
 	{
 		return DEFAULT_MAX_PRIM_SCALE;
 	}

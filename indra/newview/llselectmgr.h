@@ -244,7 +244,7 @@ public:
 	typedef boost::filter_iterator<is_root, list_t::iterator > root_iterator;
 	root_iterator root_begin() { return root_iterator(mList.begin(), mList.end()); }
 	root_iterator root_end() { return root_iterator(mList.end(), mList.end()); }
-	
+
 	struct is_valid_root
 	{
 		bool operator()(LLSelectNode* node)
@@ -256,7 +256,7 @@ public:
 	typedef boost::filter_iterator<is_root, list_t::iterator > valid_root_iterator;
 	valid_root_iterator valid_root_begin() { return valid_root_iterator(mList.begin(), mList.end()); }
 	valid_root_iterator valid_root_end() { return valid_root_iterator(mList.end(), mList.end()); }
-	
+
 	struct is_root_object
 	{
 		bool operator()(LLSelectNode* node)
@@ -268,7 +268,7 @@ public:
 	typedef boost::filter_iterator<is_root_object, list_t::iterator > root_object_iterator;
 	root_object_iterator root_object_begin() { return root_object_iterator(mList.begin(), mList.end()); }
 	root_object_iterator root_object_end() { return root_object_iterator(mList.end(), mList.end()); }
-	
+
 public:
 	LLObjectSelection();
 
@@ -282,7 +282,7 @@ public:
 	LLViewerObject* getFirstSelectedObject(LLSelectedNodeFunctor* func, BOOL get_parent = FALSE);
 	LLViewerObject*	getFirstObject();
 	LLViewerObject*	getFirstRootObject(BOOL non_root_ok = FALSE);
-	
+
 	LLSelectNode*	getFirstMoveableNode(BOOL get_root_first = FALSE);
 
 	LLViewerObject*	getFirstEditableObject(BOOL get_parent = FALSE);
@@ -295,7 +295,7 @@ public:
 
 	// iterate through texture entries
 	template <typename T> bool getSelectedTEValue(LLSelectedTEGetFunctor<T>* func, T& res);
-		
+
 	void addNode(LLSelectNode *nodep);
 	void addNodeAtEnd(LLSelectNode *nodep);
 	void moveNodeToFront(LLSelectNode *nodep);
@@ -408,7 +408,7 @@ public:
 	////////////////////////////////////////////////////////////////
 
 	// This method is meant to select an object, and then select all
-	// of the ancestors and descendants. This should be the normal behavior.
+	// of the ancestors and descendents. This should be the normal behavior.
 	//
 	// *NOTE: You must hold on to the object selection handle, otherwise
 	// the objects will be automatically deselected in 1 frame.
@@ -456,12 +456,21 @@ public:
 	BOOL removeObjectFromSelections(const LLUUID &id);
 
 	////////////////////////////////////////////////////////////////
+	// Selection editing
+	////////////////////////////////////////////////////////////////
+	bool linkObjects();
+	bool unlinkObjects();
+	bool enableLinkObjects();
+	bool enableUnlinkObjects();
+
+	////////////////////////////////////////////////////////////////
 	// Selection accessors
 	////////////////////////////////////////////////////////////////
-	LLObjectSelectionHandle	getSelection() { return mSelectedObjects; }
-	// right now this just renders the selection with root/child colors instead of a single color
-	LLObjectSelectionHandle	getEditSelection() { convertTransient(); return mSelectedObjects; }
-	LLObjectSelectionHandle	getHighlightedObjects() { return mHighlightedObjects; }
+	LLObjectSelectionHandle	getSelection()			{ return mSelectedObjects; }
+	// right now this just renders the selection with
+	// root/child colors instead of a single color
+	LLObjectSelectionHandle	getEditSelection()		{ convertTransient(); return mSelectedObjects; }
+	LLObjectSelectionHandle	getHighlightedObjects()	{ return mHighlightedObjects; }
 
 	LLSelectNode *getHoverNode();
 	LLSelectNode *getPrimaryHoverNode();
@@ -472,24 +481,24 @@ public:
 	void			addGridObject(LLViewerObject* objectp);
 	void			clearGridObjects();
 	void			setGridMode(EGridMode mode);
-	EGridMode		getGridMode() { return mGridMode; }
+	EGridMode		getGridMode()			{ return mGridMode; }
 	void			getGrid(LLVector3& origin, LLQuaternion& rotation, LLVector3 &scale);
 
-	BOOL getTEMode()		{ return mTEMode; }
-	void setTEMode(BOOL b)	{ mTEMode = b; }
+	BOOL getTEMode()						{ return mTEMode; }
+	void setTEMode(BOOL b)					{ mTEMode = b; }
 
-	BOOL shouldShowSelection()	{ return mShowSelection; }
+	BOOL shouldShowSelection()				{ return mShowSelection; }
 
 	LLBBox getBBoxOfSelection() const;
-	LLBBox getSavedBBoxOfSelection() const { return mSavedSelectionBBox; }
+	LLBBox getSavedBBoxOfSelection() const	{ return mSavedSelectionBBox; }
 
 	void dump();
 	void cleanup();
 
 	void updateSilhouettes();
 	void renderSilhouettes(BOOL for_hud);
-	void enableSilhouette(BOOL enable) { mRenderSilhouettes = enable; }
-	
+	void enableSilhouette(BOOL enable)		{ mRenderSilhouettes = enable; }
+
 	////////////////////////////////////////////////////////////////
 	// Utility functions that operate on the current selection
 	////////////////////////////////////////////////////////////////
@@ -520,11 +529,11 @@ public:
 	void selectionSetAlphaOnly(const F32 alpha); // Set only the alpha channel
 	void selectionRevertColors();
 	BOOL selectionRevertTextures();
-	void selectionSetBumpmap( U8 bumpmap );
-	void selectionSetTexGen( U8 texgen );
-	void selectionSetShiny( U8 shiny );
-	void selectionSetFullbright( U8 fullbright );
-	void selectionSetMediaTypeAndURL( U8 media_type, const std::string& media_url );
+	void selectionSetBumpmap(U8 bumpmap);
+	void selectionSetTexGen(U8 texgen);
+	void selectionSetShiny(U8 shiny);
+	void selectionSetFullbright(U8 fullbright);
+	void selectionSetMediaTypeAndURL(U8 media_type, const std::string& media_url);
 	void selectionSetClickAction(U8 action);
 	void selectionSetIncludeInSearch(bool include_in_search);
 	void selectionSetGlow(const F32 glow);
@@ -546,7 +555,6 @@ public:
 
 	void sendGodlikeRequest(const std::string& request, const std::string& parameter);
 
-
 	// will make sure all selected object meet current criteria, or deselect them otherwise
 	void validateSelection();
 
@@ -566,7 +574,7 @@ public:
 
 	// returns TRUE if selected objects can be copied.
 	BOOL selectGetRootsCopy();
-	
+
 	BOOL selectGetCreator(LLUUID& id, std::string& name);					// TRUE if all have same creator, returns id
 	BOOL selectGetOwner(LLUUID& id, std::string& name);					// TRUE if all objects have same owner, returns id
 	BOOL selectGetLastOwner(LLUUID& id, std::string& name);				// TRUE if all objects have same owner, returns id
@@ -581,7 +589,7 @@ public:
 	// returns TRUE if all the nodes are valid. Accumulates
 	// permissions in the parameter.
 	BOOL selectGetPermissions(LLPermissions& perm);
-	
+
 	// Get a bunch of useful sale information for the object(s) selected.
 	// "_mixed" is true if not all objects have the same setting.
 	void selectGetAggregateSaleInfo(U32 &num_for_sale,
@@ -592,7 +600,7 @@ public:
 
 	// returns TRUE if all nodes are valid. 
 	BOOL selectGetCategory(LLCategory& category);
-	
+
 	// returns TRUE if all nodes are valid. method also stores an
 	// accumulated sale info.
 	BOOL selectGetSaleInfo(LLSaleInfo& sale_info);
@@ -677,7 +685,6 @@ private:
 							void *user_data,
 							ESendType send_type);
 
-
 	static void packAgentID(	void *);
 	static void packAgentAndSessionID(void* user_data);
 	static void packAgentAndGroupID(void* user_data);
@@ -710,21 +717,20 @@ private:
 	static void packPermissionsHead(void* user_data);
 	static void packGodlikeHead(void* user_data);
 	static bool confirmDelete(const LLSD& notification, const LLSD& response, LLObjectSelectionHandle handle);
-	
+
 private:
 	LLPointer<LLViewerTexture>				mSilhouetteImagep;
 	LLObjectSelectionHandle					mSelectedObjects;
 	LLObjectSelectionHandle					mHoverObjects;
 	LLObjectSelectionHandle					mHighlightedObjects;
 	std::set<LLPointer<LLViewerObject> >	mRectSelectedObjects;
-	
+
 	LLObjectSelection		mGridObjects;
 	LLQuaternion			mGridRotation;
 	LLVector3				mGridOrigin;
 	LLVector3				mGridScale;
 	EGridMode				mGridMode;
 	BOOL					mGridValid;
-
 
 	BOOL					mTEMode;			// render te
 	LLVector3d				mSelectionCenterGlobal;
@@ -785,7 +791,7 @@ template <typename T> bool LLObjectSelection::getSelectedTEValue(LLSelectedTEGet
 			}
 			else
 			{
-				if ( value != selected_value )
+				if (value != selected_value)
 				{
 					identical = false;
 				}
@@ -807,6 +813,5 @@ template <typename T> bool LLObjectSelection::getSelectedTEValue(LLSelectedTEGet
 	}
 	return identical;
 }
-
 
 #endif

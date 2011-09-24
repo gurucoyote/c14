@@ -71,6 +71,7 @@
 #include "lltool.h"
 #include "lltoolcomp.h"
 #include "lltoolmgr.h"
+#include "lltrans.h"
 #include "llviewerobject.h"
 #include "llviewerregion.h"
 #include "llviewerwindow.h"
@@ -146,6 +147,34 @@ BOOL LLPanelVolume::postBuild()
 		childSetCommitCallback("Physics Restitution", sendPhysicsRestitution, this);
 	}
 
+	std::map<std::string, std::string> material_name_map;
+	material_name_map["Stone"]= LLTrans::getString("Stone");
+	material_name_map["Metal"]= LLTrans::getString("Metal");
+	material_name_map["Glass"]= LLTrans::getString("Glass");
+	material_name_map["Wood"]= LLTrans::getString("Wood");
+	material_name_map["Flesh"]= LLTrans::getString("Flesh");
+	material_name_map["Plastic"]= LLTrans::getString("Plastic");
+	material_name_map["Rubber"]= LLTrans::getString("Rubber");
+	material_name_map["Light"]= LLTrans::getString("Light");
+	LLMaterialTable::basic.initTableTransNames(material_name_map);
+
+	// material type popup
+	mLabelMaterial = getChild<LLTextBox>("label material");
+	mComboMaterial = getChild<LLComboBox>("material");
+	childSetCommitCallback("material", onCommitMaterial, this);
+	mComboMaterial->removeall();
+
+	for (LLMaterialTable::info_list_t::iterator iter = LLMaterialTable::basic.mMaterialInfoList.begin();
+		 iter != LLMaterialTable::basic.mMaterialInfoList.end(); ++iter)
+	{
+		LLMaterialInfo* minfop = *iter;
+		if (minfop->mMCode != LL_MCODE_LIGHT)
+		{
+			mComboMaterial->add(minfop->mName);
+		}
+	}
+	mComboMaterialItemCount = mComboMaterial->getItemCount();
+
 	// Start with everyone disabled
 	clearCtrls();
 
@@ -153,7 +182,8 @@ BOOL LLPanelVolume::postBuild()
 }
 
 LLPanelVolume::LLPanelVolume(const std::string& name)
-	:	LLPanel(name)
+:	LLPanel(name),
+	mComboMaterialItemCount(0)
 {
 	setMouseOpaque(FALSE);
 
@@ -304,7 +334,7 @@ void LLPanelVolume::getState()
 
 	// Flexible properties
 	BOOL is_flexible = volobjp && volobjp->isFlexible();
-	childSetValue("Flexible1D Checkbox Ctrl",is_flexible);
+	childSetValue("Flexible1D Checkbox Ctrl", is_flexible);
 	if (is_flexible || (volobjp && volobjp->canBeFlexible()))
 	{
 		childSetEnabled("Flexible1D Checkbox Ctrl", editable && single_volume && volobjp);
@@ -365,29 +395,89 @@ void LLPanelVolume::getState()
 		childSetEnabled("FlexForceZ", false);
 	}
 
+	// Material properties
+
+	// Update material part
+	// slightly inefficient - materials are unique per object, not per TE
+	U8 material_code = 0;
+	struct f : public LLSelectedTEGetFunctor<U8>
+	{
+		U8 get(LLViewerObject* object, S32 te)
+		{
+			return object->getMaterial();
+		}
+	} func;
+	bool material_same = LLSelectMgr::getInstance()->getSelection()->getSelectedTEValue(&func, material_code);
+	std::string LEGACY_FULLBRIGHT_DESC = LLTrans::getString("Fullbright");
+	if (editable && single_volume && material_same)
+	{
+		mComboMaterial->setEnabled(TRUE);
+		mLabelMaterial->setEnabled(TRUE);
+		if (material_code == LL_MCODE_LIGHT)
+		{
+			if (mComboMaterial->getItemCount() == mComboMaterialItemCount)
+			{
+				mComboMaterial->add(LEGACY_FULLBRIGHT_DESC);
+			}
+			mComboMaterial->setSimple(LEGACY_FULLBRIGHT_DESC);
+		}
+		else
+		{
+			if (mComboMaterial->getItemCount() != mComboMaterialItemCount)
+			{
+				mComboMaterial->remove(LEGACY_FULLBRIGHT_DESC);
+			}
+			// *TODO:Translate
+			mComboMaterial->setSimple(std::string(LLMaterialTable::basic.getName(material_code)));
+		}
+	}
+	else
+	{
+		mComboMaterial->setEnabled(FALSE);
+		mLabelMaterial->setEnabled(FALSE);
+	}
+
 	// Physics properties
-	childSetValue("Physics Gravity", objectp->getPhysicsGravity());
-	childSetEnabled("Physics Gravity", editable);
-	childSetValue("Physics Friction", objectp->getPhysicsFriction());
-	childSetEnabled("Physics Friction", editable);
-	childSetValue("Physics Density", objectp->getPhysicsDensity());
-	childSetEnabled("Physics Density", editable);
-	childSetValue("Physics Restitution", objectp->getPhysicsRestitution());
-	childSetEnabled("Physics Restitution", editable);
+
+	bool is_physical = root_objectp && root_objectp->usePhysics();
+	if (is_physical && editable)
+	{
+		childSetEnabled("label physicsparams", true);
+		childSetValue("Physics Gravity", objectp->getPhysicsGravity());
+		childSetEnabled("Physics Gravity", true);
+		childSetValue("Physics Friction", objectp->getPhysicsFriction());
+		childSetEnabled("Physics Friction", true);
+		childSetValue("Physics Density", objectp->getPhysicsDensity());
+		childSetEnabled("Physics Density", true);
+		childSetValue("Physics Restitution", objectp->getPhysicsRestitution());
+		childSetEnabled("Physics Restitution", true);
+	}
+	else
+	{
+		childSetEnabled("label physicsparams", false);
+		getChild<LLSpinCtrl>("Physics Gravity", true)->clear();
+		childSetEnabled("Physics Gravity", false);
+		getChild<LLSpinCtrl>("Physics Friction", true)->clear();
+		childSetEnabled("Physics Friction", false);
+		getChild<LLSpinCtrl>("Physics Density", true)->clear();
+		childSetEnabled("Physics Density", false);
+		getChild<LLSpinCtrl>("Physics Restitution", true)->clear();
+		childSetEnabled("Physics Restitution", false);
+	}
 
 	// update the physics shape combo to include allowed physics shapes
 	LLComboBox* physics_shape = getChild<LLComboBox>("Physics Shape Type Combo Ctrl");
 	physics_shape->removeall();
 	physics_shape->add(getString("None"), LLSD(1));
 
-	BOOL isMesh = FALSE;
+	BOOL is_mesh = FALSE;
 	LLSculptParams *sculpt_params = (LLSculptParams *)objectp->getParameterEntry(LLNetworkData::PARAMS_SCULPT);
 	if (sculpt_params)
 	{
-		isMesh = (sculpt_params->getSculptType() & LL_SCULPT_TYPE_MASK) == LL_SCULPT_TYPE_MESH;
+		is_mesh = (sculpt_params->getSculptType() & LL_SCULPT_TYPE_MASK) == LL_SCULPT_TYPE_MESH;
 	}
 
-	if (isMesh && objectp)
+	if (is_mesh && objectp)
 	{
 		const LLVolumeParams &volume_params = objectp->getVolume()->getParams();
 		LLUUID mesh_id = volume_params.getSculptID();
@@ -407,6 +497,7 @@ void LLPanelVolume::getState()
 	physics_shape->add(getString("Convex Hull"), LLSD(2));	
 	physics_shape->setValue(LLSD(objectp->getPhysicsShapeType()));
 	physics_shape->setEnabled(editable);
+	childSetEnabled("label physicsshapetype", editable);
 
 	mObject = objectp;
 	mRootObject = root_objectp;
@@ -441,15 +532,24 @@ void LLPanelVolume::refresh()
 	childSetVisible("light texture control", visible);
 #endif
 
-	bool enable_mesh = gAgent.getRegion() &&
-					   !gAgent.getRegion()->getCapability("GetMesh").empty();
-	childSetVisible("label physicsshapetype", enable_mesh);
-	childSetEnabled("label physicsshapetype", enable_mesh);
-	childSetVisible("Physics Shape Type Combo Ctrl", enable_mesh);
-	childSetVisible("Physics Gravity", enable_mesh);
-	childSetVisible("Physics Friction", enable_mesh);
-	childSetVisible("Physics Density", enable_mesh);
-	childSetVisible("Physics Restitution", enable_mesh);
+	bool enable_physics = false;
+	LLSD sim_features;
+	LLViewerRegion *region = gAgent.getRegion();
+	if (region)
+	{
+		LLSD sim_features;
+		region->getSimulatorFeatures(sim_features);		 
+		enable_physics = sim_features.has("PhysicsShapeTypes");
+	}
+	childSetVisible("label physicsshapetype", enable_physics);
+	childSetVisible("Physics Shape Type Combo Ctrl", enable_physics);
+	childSetVisible("label physicsparams", enable_physics);
+	childSetVisible("Physics Gravity", enable_physics);
+	childSetVisible("Physics Friction", enable_physics);
+	childSetVisible("Physics Density", enable_physics);
+	childSetVisible("Physics Restitution", enable_physics);
+    // *TODO: add/remove individual physics shape types as per the
+	// PhysicsShapeTypes simulator features
 }
 
 void LLPanelVolume::draw()
@@ -501,6 +601,9 @@ void LLPanelVolume::clearCtrls()
 	childSetEnabled("Physics Friction", false);
 	childSetEnabled("Physics Density", false);
 	childSetEnabled("Physics Restitution", false);
+
+	mComboMaterial->setEnabled(FALSE);
+	mLabelMaterial->setEnabled(FALSE);
 }
 
 //
@@ -653,6 +756,25 @@ void LLPanelVolume::onLightSelectTexture(LLUICtrl* ctrl, void* userdata)
 		LLUUID id = LightTextureCtrl->getImageAssetID();
 		volobjp->setLightTextureID(id);
 		self->mLightSavedTexture = id;
+	}
+}
+
+// static
+void LLPanelVolume::onCommitMaterial(LLUICtrl* ctrl, void* userdata)
+{
+	//LLPanelVolume* self = (LLPanelVolume*) userdata;
+	LLComboBox* box = (LLComboBox*) ctrl;
+
+	if (box)
+	{
+		// apply the currently selected material to the object
+		const std::string& material_name = box->getSimple();
+		std::string LEGACY_FULLBRIGHT_DESC = LLTrans::getString("Fullbright");
+		if (material_name != LEGACY_FULLBRIGHT_DESC)
+		{
+			U8 material_code = LLMaterialTable::basic.getMCode(material_name);
+			LLSelectMgr::getInstance()->selectionSetMaterial(material_code);
+		}
 	}
 }
 
