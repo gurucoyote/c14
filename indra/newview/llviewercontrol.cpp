@@ -62,6 +62,7 @@
 #include "lltracker.h"
 #include "llvieweraudio.h"
 #include "llviewerjoystick.h"
+#include "llviewermenu.h"
 #include "llviewerparcelmedia.h"
 #include "llviewerparcelmgr.h"
 #include "llviewershadermgr.h"
@@ -80,9 +81,8 @@
 #include "pipeline.h"
 
 #ifdef TOGGLE_HACKED_GODLIKE_VIEWER
-BOOL 				gHackGodmode = FALSE;
+BOOL gHackGodmode = FALSE;
 #endif
-
 
 std::map<std::string, LLControlGroup*> gSettings;
 LLControlGroup gSavedSettings("Global");				// saved at end of session
@@ -99,6 +99,7 @@ extern BOOL gAuditTexture;
 extern BOOL gAnimateTextures;
 extern BOOL gPingInterpolate;
 extern BOOL gVelocityInterpolate;
+
 ////////////////////////////////////////////////////////////////////////////
 // Listeners
 
@@ -621,6 +622,15 @@ static bool handleCheesyBeaconChanged(const LLSD& newvalue)
 	return true;
 }
 
+static bool handleUseDebugMenusChanged(const LLSD& newvalue)
+{
+	if (gMenuBarView)
+	{
+		show_debug_menus();
+	}
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 void settings_setup_listeners()
@@ -803,4 +813,5 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("ShowMapButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
 	gSavedSettings.getControl("ShowInventoryButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
 	gSavedSettings.getControl("CheesyBeacon")->getSignal()->connect(boost::bind(&handleCheesyBeaconChanged, _2));	
+	gSavedSettings.getControl("UseDebugMenus")->getSignal()->connect(boost::bind(&handleUseDebugMenusChanged, _2));	
 }

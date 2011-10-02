@@ -716,8 +716,10 @@ bool gAttachmentsListDirty = true;
 // Helper functions
 //-----------------------------------------------------------------------------
 static F32 calc_bouncy_animation(F32 x);
+#define NEW_RENDER_COSTS 1
+#if ! NEW_RENDER_COSTS
 static U32 calc_shame(LLVOVolume* volume, std::set<LLUUID> &textures);
-
+#endif
 //-----------------------------------------------------------------------------
 // LLVOAvatar()
 //-----------------------------------------------------------------------------
@@ -748,7 +750,7 @@ LLVOAvatar::LLVOAvatar(const LLUUID& id,
 	mNameAway(FALSE),
 	mNameBusy(FALSE),
 	mNameTyping(FALSE),
-	mNameMute(FALSE),
+	mNameMute(-1),
 	mRenderGroupTitles(sRenderGroupTitles),
 	mNameAppearance(FALSE),
 	mLastRegionHandle(0),
@@ -3398,13 +3400,21 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 			BOOL is_away = mSignaledAnimations.find(ANIM_AGENT_AWAY)  != mSignaledAnimations.end();
 			BOOL is_busy = mSignaledAnimations.find(ANIM_AGENT_BUSY) != mSignaledAnimations.end();
 			BOOL is_appearance = mSignaledAnimations.find(ANIM_AGENT_CUSTOMIZE) != mSignaledAnimations.end();
+			bool chat_muted = false;
+			S32 mute_flags = -1;
+			std::string mute_desc;
 			LLMuteList* ml = LLMuteList::getInstance();
-			BOOL is_muted = mIsSelf ? FALSE : (ml && ml->isMuted(getID()));
+			if (ml && !mIsSelf)
+			{
+				mute_flags = ml->getMuteFlags(getID(), mute_desc);
+				chat_muted = mute_flags == 0 || (mute_flags & LLMute::flagTextChat);
+			}
 
 			if (mNameString.empty() || new_name || complete_name != mCompleteName ||
 				(!title && !mTitle.empty()) || (title && mTitle != title->getString()) ||
-				is_away != mNameAway || is_busy != mNameBusy || is_muted != mNameMute ||
-				is_appearance != mNameAppearance || (show_typing && !is_muted && mTyping != mNameTyping))
+				is_away != mNameAway || is_busy != mNameBusy || mute_flags != mNameMute ||
+				is_appearance != mNameAppearance ||
+				(show_typing && !chat_muted && mTyping != mNameTyping))
 			{
 				std::string line;
 				if (sRenderGroupTitles && title && title->getString() && title->getString()[0] != '\0')
@@ -3420,7 +3430,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				}
 
 				bool need_comma = false;
-				if (is_away || is_busy || is_muted || (show_typing && mTyping))
+				if (is_away || is_busy || mute_flags != -1 || (show_typing && mTyping))
 				{
 					line += "\n(";
 					if (is_away)
@@ -3437,13 +3447,13 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 						line += "Busy";
 						need_comma = true;
 					}
-					if (is_muted)
+					if (mute_flags != -1)
 					{
 						if (need_comma)
 						{
 							line += ", ";
 						}
-						line += "Muted";
+						line += mute_desc;
 					}
 					else if (show_typing && mTyping)
 					{
@@ -3463,7 +3473,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				mNameAway = is_away;
 				mNameBusy = is_busy;
 				mNameTyping = mTyping;
-				mNameMute = is_muted;
+				mNameMute = mute_flags;
 				mNameAppearance = is_appearance;
 				mTitle = title ? title->getString() : "";
 				mCompleteName = complete_name;
@@ -9945,6 +9955,83 @@ void LLVOAvatar::getImpostorValues(LLVector4a* extents, LLVector3& angle, F32& d
 	angle.mV[2] = da;
 }
 
+#if NEW_RENDER_COSTS
+void LLVOAvatar::idleUpdateRenderCost()
+{
+	static const U32 ARC_BODY_PART_COST = 200;
+	static const U32 ARC_LIMIT = 2048;
+
+	if (!gPipeline.hasRenderDebugMask(LLPipeline::RENDER_DEBUG_SHAME))
+	{
+		return;
+	}
+
+	U32 cost = 0;
+	LLVOVolume::texture_cost_t textures;
+
+	for (U8 baked_index = 0; baked_index < BAKED_NUM_INDICES; baked_index++)
+	{
+		const LLVOAvatarDictionary::BakedDictionaryEntry* baked_dict = LLVOAvatarDictionary::getInstance()->getBakedTexture((EBakedTextureIndex)baked_index);
+		ETextureIndex tex_index = baked_dict->mTextureIndex;
+		if (tex_index != TEX_SKIRT_BAKED || isWearingWearableType(WT_SKIRT))
+		{
+			if (isTextureVisible(tex_index))
+			{
+				cost += ARC_BODY_PART_COST;
+			}
+		}
+	}
+
+	for (attachment_map_t::const_iterator iter = mAttachmentPoints.begin(); 
+		 iter != mAttachmentPoints.end(); ++iter)
+	{
+		LLViewerJointAttachment* attachment = iter->second;
+		for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();
+			 attachment_iter != attachment->mAttachedObjects.end();
+			 ++attachment_iter)
+		{
+			const LLViewerObject* attached_object = (*attachment_iter);
+			if (attached_object && !attached_object->isHUDAttachment())
+			{
+				textures.clear();
+				const LLDrawable* drawable = attached_object->mDrawable;
+				if (drawable)
+				{
+					const LLVOVolume* volume = drawable->getVOVolume();
+					if (volume)
+					{
+						cost += volume->getRenderCost(textures);
+
+						const_child_list_t children = volume->getChildren();
+						for (const_child_list_t::const_iterator child_iter = children.begin();
+							 child_iter != children.end(); ++child_iter)
+						{
+							LLViewerObject* child_obj = *child_iter;
+							LLVOVolume *child = dynamic_cast<LLVOVolume*>(child_obj);
+							if (child)
+							{
+								cost += child->getRenderCost(textures);
+							}
+						}
+
+						for (LLVOVolume::texture_cost_t::iterator iter = textures.begin(); iter != textures.end(); ++iter)
+						{
+							// add the cost of each individual texture in the linkset
+							cost += iter->second;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	setDebugText(llformat("%d", cost));
+	cost /= 50;
+	F32 green = 1.f - llclamp(((F32)cost - (F32)ARC_LIMIT) / (F32)ARC_LIMIT, 0.f, 1.f);
+	F32 red = llmin((F32)cost / (F32)ARC_LIMIT, 1.f);
+	mText->setColor(LLColor4(red, green, 0, 1));
+}
+#else
 void LLVOAvatar::idleUpdateRenderCost()
 {
 	if (!gPipeline.hasRenderDebugMask(LLPipeline::RENDER_DEBUG_SHAME))
@@ -9990,6 +10077,7 @@ void LLVOAvatar::idleUpdateRenderCost()
 	F32 red = llmin((F32) shame/1024.f, 1.f);
 	mText->setColor(LLColor4(red,green,0,1));
 }
+#endif
 
 // static
 BOOL LLVOAvatar::isIndexLocalTexture(ETextureIndex index)
@@ -10028,6 +10116,7 @@ const std::string LLVOAvatar::getBakedStatusForPrintout() const
 	return line;
 }
 
+#if ! NEW_RENDER_COSTS
 U32 calc_shame(LLVOVolume* volume, std::set<LLUUID> &textures)
 {
 	if (!volume)
@@ -10131,6 +10220,7 @@ U32 calc_shame(LLVOVolume* volume, std::set<LLUUID> &textures)
 
 	return shame;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Utility functions

@@ -640,21 +640,21 @@ private:
 
 	F32		mAdjustedPixelArea;
 
-	LLWString mNameString;
-	std::string  mTitle;
-	std::string  mCompleteName;
-	BOOL	  mNameAway;
-	BOOL	  mNameBusy;
-	BOOL	  mNameTyping;
-	BOOL	  mNameMute;
-	BOOL      mNameAppearance;
-	BOOL	  mVisibleChat;
-	BOOL      mRenderGroupTitles;
+	LLWString	mNameString;
+	std::string	mTitle;
+	std::string	mCompleteName;
+	BOOL	mNameAway;
+	BOOL	mNameBusy;
+	BOOL	mNameTyping;
+	S32		mNameMute;
+	BOOL	mNameAppearance;
+	BOOL	mVisibleChat;
+	BOOL	mRenderGroupTitles;
 
 	std::string  mDebugText;
-	U64		  mLastRegionHandle;
+	U64		mLastRegionHandle;
 	LLFrameTimer mRegionCrossingTimer;
-	S32		  mRegionCrossingCount;
+	S32		mRegionCrossingCount;
 
 	//--------------------------------------------------------------------
 	// local textures for compositing.

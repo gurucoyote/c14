@@ -205,6 +205,7 @@ cp -a skins/default/xui/en-us/floater_script_preview.xml $temp/skins/default/xui
 cp -a skins/default/xui/en-us/floater_search_replace.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_settings_debug.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_snapshot.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_statistics.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_teleport_history.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_texture_ctrl.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_tools.xml $temp/skins/default/xui/en-us/

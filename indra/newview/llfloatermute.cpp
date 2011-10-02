@@ -227,6 +227,7 @@ void LLFloaterMute::refreshMuteList()
 void LLFloaterMute::selectMute(const LLUUID& mute_id)
 {
 	mMuteList->selectByID(mute_id);
+	mMuteList->setScrollPos(mMuteList->getFirstSelectedIndex());
 	updateButtons();
 }
 

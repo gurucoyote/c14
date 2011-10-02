@@ -193,8 +193,6 @@ std::string	LLViewerWindow::sSnapshotDir;
 
 std::string	LLViewerWindow::sMovieBaseName;
 
-extern void toggle_debug_menus(void*);
-
 ////////////////////////////////////////////////////////////////////////////
 //
 // LLDebugText
@@ -2343,12 +2341,6 @@ BOOL LLViewerWindow::handleKey(KEY key, MASK mask)
 		{
 			return TRUE;
 		}
-	}
-
-	// Explicit hack for debug menu.
-	if (mask == (MASK_ALT | MASK_CONTROL) && ('D' == key || 'd' == key))
-	{
-		toggle_debug_menus(NULL);
 	}
 
 	// Grid selection combo on splash page only.

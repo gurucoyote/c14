@@ -26,8 +26,8 @@
 
 #define RR_VIEWER_NAME "RestrainedLife"
 #define RR_VIEWER_NAME_NEW "RestrainedLove"
-#define RR_VERSION_NUM "2070304"
-#define RR_VERSION "2.07.03.04"
+#define RR_VERSION_NUM "2070305"
+#define RR_VERSION "2.07.03.05"
 #define RR_SLV_VERSION "Cool VL Viewer v1.26.1"
 
 #define RR_PREFIX "@"

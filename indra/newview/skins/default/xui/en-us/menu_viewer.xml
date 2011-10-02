@@ -292,11 +292,6 @@
 			<on_enable function="View.CheckCameraFrontView" />
 			<on_check control="CameraFrontView" />
 		</menu_item_check>
-		<menu_item_check bottom="-48" enabled="true" height="19" label="Build" left="0"
-		     mouse_opaque="true" name="Build" shortcut="B" width="211">
-			<on_click function="View.BuildMode" userdata="" />
-			<on_check function="View.CheckBuildMode" />
-		</menu_item_check>
 		<menu_item_check bottom="-48" enabled="true" height="19" label="Joystick Flycam" left="0"
 		     mouse_opaque="true" name="Joystick Flycam" shortcut="alt|shift|F"
 		     width="211">
@@ -486,6 +481,13 @@
 		     mouse_opaque="true" name="Set UI Size to Default" width="188">
 			<on_click function="View.DefaultUISize" userdata="" />
 		</menu_item_call>
+		<menu_item_separator bottom="-520" enabled="true" height="8" label="-----------" left="0"
+		     mouse_opaque="true" name="separator6" width="211" />
+		<menu_item_check bottom="-19" enabled="true" height="19" label="Advanced Menu" left="0"
+		     mouse_opaque="true" name="Advanced Menu" shortcut="control|alt|D" width="211">
+			<on_click function="ToggleControl" userdata="UseDebugMenus" />
+			<on_check control="UseDebugMenus" />
+		</menu_item_check>
 	</menu>
 	<menu bottom="-18" create_jump_keys="true" drop_shadow="true" enabled="true"
 	     height="339" label="World" left="0" mouse_opaque="false" name="World"
@@ -620,6 +622,11 @@
 	<menu bottom="-18" create_jump_keys="true" drop_shadow="true" enabled="true"
 	     height="510" label="Tools" left="0" mouse_opaque="false" name="Tools"
 	     opaque="true" tear_off="true" visible="false" width="250">
+		<menu_item_check bottom="-29" enabled="true" height="19" label="Build" left="0"
+		     mouse_opaque="true" name="Build" shortcut="B" width="211">
+			<on_click function="Tools.BuildMode" userdata="" />
+			<on_check function="Tools.CheckBuildMode" />
+		</menu_item_check>
 		<menu bottom="-554" create_jump_keys="true" drop_shadow="true" enabled="true"
 		     height="109" label="Select Tool" left="0" mouse_opaque="false"
 		     name="Select Tool" opaque="true" tear_off="true" width="118">

@@ -145,7 +145,7 @@ class ViewerManifest(LLManifest):
         channel_flags = '--channel "Cool VL Viewer"'
 
         # Deal with settings 
-        setting_flags = '--settings settings_coolvlviewer_126.xml'
+        setting_flags = '--settings settings_coolvlviewer_1261.xml'
 
         return " ".join((channel_flags, grid_flags, setting_flags)).strip()
 
@@ -530,7 +530,7 @@ class DarwinManifest(ViewerManifest):
 
                 for libfile in ("libapr-1.0.3.7.dylib",
                                 "libaprutil-1.0.3.8.dylib",
-                                "libexpat.0.5.0.dylib"
+                                "libexpat.0.5.0.dylib",
                                 "libcollada14dom.dylib",
                                 "libGLOD.dylib"):
                     self.path(os.path.join(libdir, libfile), libfile)

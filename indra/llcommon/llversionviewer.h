@@ -36,7 +36,7 @@
 const S32 LL_VERSION_MAJOR = 1;
 const S32 LL_VERSION_MINOR = 26;
 const S32 LL_VERSION_PATCH = 1;
-const S32 LL_VERSION_BUILD = 8;
+const S32 LL_VERSION_BUILD = 9;
 
 const char * const LL_CHANNEL = "Cool VL Viewer";
 

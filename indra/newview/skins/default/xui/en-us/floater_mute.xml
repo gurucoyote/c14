@@ -38,6 +38,6 @@
 	 bottom_delta="-22" left="4" height="20" width="260" follows="left|right|bottom" />
 	<button name="mute_by_name" label="Mute object by name..." font="SansSerif" halign="center"
 	 enabled="true" mouse_opaque="true"
-	 tool_tip="Enter the name of a object to mute"
+	 tool_tip="Enter the name of an object to mute"
 	 bottom_delta="-22" left="4" height="20" width="260" follows="left|right|bottom" />
 </floater>

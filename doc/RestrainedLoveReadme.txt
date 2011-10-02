@@ -2,7 +2,7 @@ This is the edited version of the original readme file by Marine Kelley.
 The file has been edited to take into account the improvements by Henri Beauchamp, as well as the Cool VL Viewer.
 
 -------------
-Version 2.07.03.04
+Version 2.07.03.05
 
 
 WHAT IS IT ?
@@ -155,6 +155,10 @@ Since v1.23d you may set the RestrainedLoveAddReplace advanced setting to TRUE s
 
 RELEASE NOTES :
 ---------------
+2.07.03.05 (@versionnum = 2070305) by Henri Beauchamp:
+- changed: when deafened and RestrainedLoveShowEllipsis is FALSE, fully skip chat lines instead of displaying empty lines.
+
+
 2.07.03.04 (@versionnum = 2070304) by Henri Beauchamp:
 - Inclusion of Marine Kelley's (upcoming) change:
 	- changed : @detach may now be issued by script in child primitives and (un)lock the whole object.

@@ -178,13 +178,13 @@ std::string LLMute::getNameAndType() const
 		{
 			name_with_suffix += VOICE_SUFFIX;
 		}
-		if (~mFlags & flagParticles)
-		{
-			name_with_suffix += PARTICLES_SUFFIX;
-		}
 		if (~mFlags & flagObjectSounds)
 		{
 			name_with_suffix += SOUNDS_SUFFIX;
+		}
+		if (~mFlags & flagParticles)
+		{
+			name_with_suffix += PARTICLES_SUFFIX;
 		}
 	}
 	return name_with_suffix;
@@ -424,7 +424,7 @@ BOOL LLMuteList::add(const LLMute& mute, U32 flags)
 			// will be muted) and that mFlags will not be 0 (0 = full mute,
 			// including things not covered by flags such as script dialogs,
 			// inventory offers, avatar rendering, etc...).
-			localmute.mFlags = ~LLMute::flagAll | (localmute.mFlags & ~flags);
+			localmute.mFlags = LLMute::flagPartialMute | (localmute.mFlags & ~flags);
 		}
 		else
 		{
@@ -484,26 +484,20 @@ BOOL LLMuteList::remove(const LLMute& mute, U32 flags)
 	if (it != mMutes.end())
 	{
 		LLMute localmute = *it;
-		bool remove = true;
+		bool remove = true; // When the caller didn't pass any flag remove the entire entry.
 		if (flags)
 		{
-			// If the user passed mute flags, we may only want to turn some flags on.
-			localmute.mFlags |= flags;
-
-			if (localmute.mFlags == LLMute::flagAll)
+			// If the user passed mute flags, we may only want to change some flags.
+			localmute.mFlags |= flags | LLMute::flagPartialMute;
+			if (localmute.mFlags != (LLMute::flagAll | LLMute::flagPartialMute))
 			{
-				// Every currently available mute property has been masked out.
-				// Remove the mute entry entirely.
+				// Only some of the properties are masked out. Update the entry.
+				remove = false;
 			}
 			else
 			{
-				// Only some of the properties are masked out.  Update the entry.
-				remove = false;
+				localmute.mFlags = 0;
 			}
-		}
-		else
-		{
-			// The caller didn't pass any flags -- just remove the mute entry entirely.
 		}
 
 		// Always remove the entry from the set -- it will be re-added with new flags if necessary.
@@ -846,6 +840,66 @@ BOOL LLMuteList::isMuted(const LLUUID& id,
 		string_set_t::const_iterator legacy_it = mLegacyMutes.find(name);
 		return legacy_it != mLegacyMutes.end() ?  TRUE : FALSE;
 	}
+}
+
+S32 LLMuteList::getMuteFlags(const LLUUID& id, std::string& description) const
+{
+	S32 flags = -1;			// Defaults to no mute
+	description.clear();	// Empty description for no mute.
+
+	if (id.notNull())
+	{
+		// for objects, check for muting on their parent prim
+		LLViewerObject* mute_object = get_object_to_mute_from_id(id);
+		LLUUID id_to_check  = (mute_object) ? mute_object->getID() : id;
+
+		LLMute mute(id_to_check);
+		mute_set_t::const_iterator mute_it = mMutes.find(mute);
+		if (mute_it != mMutes.end())
+		{
+			flags = (S32)mute_it->mFlags;
+			if (flags == 0)
+			{
+				description = "Muted";
+			}
+			else
+			{
+				flags = ~flags & LLMute::flagAll;
+
+				if (flags & LLMute::flagTextChat)
+				{
+					description = 'C';
+				}
+				if (flags & LLMute::flagVoiceChat)
+				{
+					if (!description.empty())
+					{
+						description += '/';
+					}
+					description += 'V';
+				}
+				if (flags & LLMute::flagObjectSounds)
+				{
+					if (!description.empty())
+					{
+						description += '/';
+					}
+					description += 'S';
+				}
+				if (flags & LLMute::flagParticles)
+				{
+					if (!description.empty())
+					{
+						description += '/';
+					}
+					description += 'P';
+				}
+				description = "Muted (" + description + ")";
+			}
+		}
+	}
+
+	return flags;
 }
 
 //-----------------------------------------------------------------------------

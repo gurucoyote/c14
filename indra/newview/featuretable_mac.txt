@@ -42,8 +42,8 @@ RenderTerrainDetail				1	1
 RenderTerrainLODFactor			1	2.0
 RenderTreeLODFactor				1	1.0
 RenderUseImpostors				1	1
-RenderVBOEnable					1	1
-RenderUseStreamVBO				1	1
+RenderVBOEnable					0	0
+RenderUseStreamVBO				0	0
 RenderDeferred					1	0
 RenderVolumeLODFactor			1	2.0
 RenderWaterReflections			1	1
@@ -168,25 +168,25 @@ RenderVBOEnable				1	0
 // Class 0 Hardware (just old)
 //
 list Class0
-RenderVBOEnable				1	1
+RenderVBOEnable				1	0
 
 //
 // Class 1 Hardware
 //
 list Class1
-RenderVBOEnable				1	1
+RenderVBOEnable				1	0
 
 //
 // Class 2 Hardware (make it purty)
 //
 list Class2
-RenderVBOEnable				1	1
+RenderVBOEnable				1	0
 
 //
 // Class 3 Hardware (make it purty)
 //
 list Class3
-RenderVBOEnable				1	1
+RenderVBOEnable				1	0
 
 //
 // No Pixel Shaders available

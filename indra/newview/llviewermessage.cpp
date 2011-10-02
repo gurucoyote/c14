@@ -1286,14 +1286,6 @@ bool LLOfferInfo::inventory_offer_callback(const LLSD& notification, const LLSD&
 
 void inventory_offer_handler(LLOfferInfo* info, BOOL from_task)
 {
-	// Until throttling is implemented, busy mode should reject inventory
-	// instead of silently accepting it.  SEE SL-39554
-	if (gSavedSettings.getBOOL("RejectNewInventoryWhenBusy") && gAgent.getBusy())
-	{
-		info->forceResponse(IOR_BUSY);
-		return;
-	}
-
 	LLMuteList* ml = LLMuteList::getInstance();
 	BOOL muted = FALSE;
 	std::string name;
@@ -2093,6 +2085,13 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 				// Same as closing window
 				info->forceResponse(IOR_MUTED);
 			}
+			else if (is_busy && dialog != IM_TASK_INVENTORY_OFFERED &&
+					 gSavedSettings.getBOOL("RejectNewInventoryWhenBusy"))
+			{
+				// Until throttling is implemented, busy mode should reject
+				// inventory instead of silently accepting it. SEE SL-39554
+				info->forceResponse(IOR_BUSY);
+			}
 			else
 			{
 				inventory_offer_handler(info, info->mFromObject);
@@ -2840,7 +2839,8 @@ void process_chat_from_simulator(LLMessageSystem *msg, void **user_data)
 					chat.mText = gAgent.mRRInterface.crunchEmote (mesg, 20); // + '\0';
 					if (!gSavedSettings.getBOOL("RestrainedLoveShowEllipsis") && chat.mText == "...")
 					{
-						chat.mText = "";
+						//chat.mText = "";
+						return;
 					}
 					mesg = chat.mText;
 				}
@@ -2858,7 +2858,8 @@ void process_chat_from_simulator(LLMessageSystem *msg, void **user_data)
 						}
 						else
 						{
-							chat.mText = "";
+							//chat.mText = "";
+							return;
 						}
 						mesg = chat.mText;
 					}

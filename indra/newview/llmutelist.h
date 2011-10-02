@@ -47,10 +47,11 @@ public:
 	// Legacy mutes are BY_NAME and have null UUID.
 	enum EType { BY_NAME = 0, AGENT = 1, OBJECT = 2, GROUP = 3, COUNT = 4 };
 
-	// Bits in the mute flags.  For backwards compatibility (since any mute list entries that were created before the flags existed
-	// will have a flags field of 0), some of the flags are "inverted".
-	// Note that it's possible, through flags, to completely disable an entry in the mute list.  The code should detect this case
-	// and remove the mute list entry instead.
+	// Bits in the mute flags. For backwards compatibility (since any mute list
+	// entries that were created before the flags existed will have a flags
+	// field of 0), the flags are "inverted" in the stored mute entry.
+	// Note that it's possible, through flags, to completely disable an entry in
+	// the mute list.
 	enum 
 	{
 		flagTextChat		= 0x00000001,		// If set, don't mute user's text chat
@@ -58,7 +59,21 @@ public:
 		flagParticles		= 0x00000004,		// If set, don't mute user's particles
 		flagObjectSounds 	= 0x00000008,		// If set, mute user's object sounds
 
-		flagAll				= 0x0000000F		// Mask of all currently defined flags
+		flagAll				= 0x0000000F,		// Mask of all currently defined flags
+
+		flagPartialMute 	= 0x00000010		// Set when any of the above flags is
+												// in use to differenciate partial
+												// mutes from full mutes and especially
+												// when an entry got all partial mute
+												// flags set (which is still not a
+												// full mute but would appear as one
+												// in the stored mask without
+												// flagPartialMute).
+												// *TODO (?): Consider adding partial
+												// mute flags for inventory offers,
+												// script dialogs, Av rendering, TP
+												// offers, etc and then restore the
+												// equivalence of flagAll = full mute ?
 	};
 
 	static char CHAT_SUFFIX[];
@@ -71,7 +86,8 @@ public:
 	static char OBJECT_SUFFIX[];
 	static char GROUP_SUFFIX[];
 
-	LLMute(const LLUUID& id, const std::string& name = std::string(), EType type = BY_NAME, U32 flags = 0);
+	LLMute(const LLUUID& id, const std::string& name = std::string(),
+		   EType type = BY_NAME, U32 flags = 0);
 
 	// Returns name + suffix based on type
 	// For example:  "James Tester (resident)"
@@ -96,7 +112,7 @@ public:
 	enum EAutoReason 
 	{ 
 		AR_IM = 0,			// agent IMed a muted resident
-		AR_MONEY = 1,			// agent paid L$ to a muted resident
+		AR_MONEY = 1,		// agent paid L$ to a muted resident
 		AR_INVENTORY = 2,	// agent offered inventory to a muted resident
 		AR_COUNT			// enum count
 	};
@@ -127,6 +143,8 @@ public:
 
 	// Alternate (convenience) form for places we don't need to pass the name, but do need flags
 	BOOL isMuted(const LLUUID& id, U32 flags) const { return isMuted(id, LLStringUtil::null, flags); };
+
+	S32 getMuteFlags(const LLUUID& id, std::string& description) const;
 
 	BOOL isLinden(const std::string& name) const;
 

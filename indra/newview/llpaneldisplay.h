@@ -60,7 +60,7 @@ class LLPanelDisplay
 : public LLPanel
 {
 	friend class LLPreferenceCore;
-	
+
 public:
 	LLPanelDisplay();
 	virtual ~LLPanelDisplay();
@@ -69,17 +69,16 @@ public:
 
 	void refresh();	// Refresh enable/disable
 	void refreshEnabledState();
-	void disableUnavailableSettings();
 	void setHiddenGraphicsState(bool isHidden);
 	void apply();	// Apply the changed values.
 	void applyResolution();
 	void applyWindowSize();
 	void cancel();
-	
+
 protected:
 	void initWindowSizeControls();
 	bool extractWindowSizeFromString(const std::string& instr, U32 &width, U32 &height);
-	
+
 	// aspect ratio sliders and boxes
 	LLComboBox		*mCtrlFullScreen;               // Fullscreen resolution
 	LLCheckBoxCtrl	*mCtrlAutoDetectAspect;			// automatically detect aspect ratio
@@ -123,7 +122,7 @@ protected:
 	LLTextBox		*mDisplayResLabel;
 	LLTextEditor	*mFullScreenInfo;
 	LLTextBox       *mWindowSizeLabel;
-	
+
 	LLTextBox		*mShaderText;
 	LLTextBox		*mReflectionText;
 	LLTextBox		*mAvatarText;
@@ -165,6 +164,15 @@ protected:
 	S32 mLightingDetail;
 	S32 mTerrainDetail;
 
+	bool mCanDoObjectBump;
+	bool mCanDoBasicShaders;
+	bool mCanDoReflections;
+	bool mCanDoWindlight;
+	bool mCanDoSkinning;
+	bool mCanDoCloth;
+	bool mCanDoImpostors;
+	bool mCanDoDeferred;
+
 	F32 mRenderFarClip;
 	F32 mPrimLOD;
 	F32 mFlexLOD;
@@ -180,10 +188,10 @@ protected:
 
 	// if the quality radio buttons are changed
 	static void onChangeQuality(LLUICtrl *ctrl, void *data);
-	
+
 	// if the custom settings box is clicked
 	static void onChangeCustom(LLUICtrl *ctrl, void *data);
-	
+
 	static void onOpenHelp(void *data);
 	static void onOpenHardwareSettings(void *data);
 	static void onCommitAutoDetectAspect(LLUICtrl *ctrl, void *data);

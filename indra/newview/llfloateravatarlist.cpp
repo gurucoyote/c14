@@ -16,44 +16,38 @@
 
 #include "llviewerprecompiledheaders.h"
 
-#include "llavatarconstants.h"
-#include "llfloateravatarlist.h"
-
-#include "llcachename.h"
-#include "lluictrlfactory.h"
-#include "llviewerwindow.h"
-#include "llscrolllistctrl.h"
-#include "llradiogroup.h"
-#include "llviewercontrol.h"
-
-#include "llvoavatar.h"
-#include "llimview.h"
-#include "llfloateravatarinfo.h"
-#include "llregionflags.h"
-#include "llfloaterreporter.h"
-#include "llagent.h"
-#include "llviewerregion.h"
-#include "lltracker.h"
-#include "llviewerstats.h"
-#include "llerror.h"
-#include "llchat.h"
-#include "llfloaterchat.h"
-#include "llviewermessage.h"
-#include "llweb.h"
-#include "llviewerobjectlist.h"
-#include "llmutelist.h"
-#include "llcallbacklist.h"
-#include "llviewermenu.h"
-
 #include <time.h>
 #include <string.h>
-
 #include <map>
 
+#include "llfloateravatarlist.h"
 
-#include "llworld.h"
-
+#include "llavatarconstants.h"
+#include "llcachename.h"
+#include "llradiogroup.h"
+#include "llregionflags.h"
+#include "llscrolllistctrl.h"
 #include "llsdutil.h"
+#include "lluictrlfactory.h"
+
+#include "llagent.h"
+#include "llcallbacklist.h"
+#include "llchat.h"
+#include "llfloateravatarinfo.h"
+#include "llfloaterchat.h"
+#include "llfloatermute.h"
+#include "llfloaterreporter.h"
+#include "llimview.h"
+#include "lltracker.h"
+#include "llviewercontrol.h"
+#include "llviewermenu.h"
+#include "llviewermessage.h"
+#include "llviewerobjectlist.h"
+#include "llviewerregion.h"
+#include "llviewerwindow.h"
+#include "llvoavatar.h"
+#include "llweb.h"
+#include "llworld.h"
 
 /**
  * @brief How long to keep people who are gone in the list and in memory.
@@ -1340,7 +1334,11 @@ void LLFloaterAvatarList::onClickMute(void *userdata)
 				else
 				{
 					LLMute mute(agent_id, agent_name, LLMute::AGENT);
-					ml->add(mute);
+					if (ml->add(mute))
+					{
+						LLFloaterMute::showInstance();
+						LLFloaterMute::getInstance()->selectMute(mute.mID);
+					}
 				}
 			}
 		}

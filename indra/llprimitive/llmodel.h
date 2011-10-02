@@ -43,7 +43,6 @@ class domMesh;
 
 #define MAX_MODEL_FACES 8
 
-
 class LLMeshSkinInfo 
 {
 public:
@@ -74,7 +73,7 @@ public:
 		LOD_PHYSICS,
 		NUM_LODS
 	};
-	
+
 	enum EModelStatus
 	{
 		NO_ERRORS = 0,
@@ -87,7 +86,7 @@ public:
 	//each convex hull is a set of points
 	typedef std::vector<std::vector<LLVector3> > convex_hull_decomposition;
 	typedef std::vector<LLVector3> hull;
-	
+
 	class PhysicsMesh
 	{
 	public:
@@ -132,7 +131,7 @@ public:
 	bool loadModel(std::istream& is);
 	bool loadSkinInfo(LLSD& header, std::istream& is);
 	bool loadDecomposition(LLSD& header, std::istream& is);
-	
+
 	static LLSD writeModel(
 		std::ostream& ostr,
 		LLModel* physics,
@@ -154,7 +153,8 @@ public:
 	static LLModel* loadModelFromDomMesh(domMesh* mesh);
 	static std::string getElementLabel(daeElement* element);
 	std::string getName() const;
-	EModelStatus getStatus() const {return mStatus;}
+	std::string getMetric() const	{ return mMetric; }
+	EModelStatus getStatus() const	{ return mStatus; }
 	static std::string getStatusString(U32 status) ;
 
 	void appendFaces(LLModel* model, LLMatrix4& transform, LLMatrix4& normal_transform);
@@ -176,12 +176,14 @@ public:
 
 	void normalizeVolumeFaces();
 	void optimizeVolumeFaces();
-	void offsetMesh( const LLVector3& pivotPoint );
+	void offsetMesh(const LLVector3& pivotPoint);
 	void getNormalizedScaleTranslation(LLVector3& scale_out, LLVector3& translation_out);
-	
+
 	//reorder face list based on mMaterialList in this and reference so 
 	//order matches that of reference (material ordering touchup)
-	void matchMaterialOrder(LLModel* reference);
+	bool matchMaterialOrder(LLModel* ref, int& refFaceCnt, int& modelFaceCnt);
+	bool isMaterialListSubset(LLModel* ref);
+	bool needToAddFaces(LLModel* ref, int& refFaceCnt, int& modelFaceCnt);
 
 	std::vector<std::string> mMaterialList;
 
@@ -191,7 +193,7 @@ public:
 	public:
 		S32 mJointIdx;
 		F32 mWeight;
-		
+
 		JointWeight()
 		{
 			mJointIdx = 0;
@@ -223,7 +225,19 @@ public:
 		}
 	};
 
-	//copy of position array for this model -- mPosition[idx].mV[X,Y,Z]
+	//Are the doubles the same w/in epsilon specified tolerance
+	bool areEqual(double a, double b)
+	{
+		const float epsilon = 1e-5f;
+		return fabs(a - b) < epsilon;
+	}
+	//Make sure that we return false for any values that are within the tolerance for equivalence
+	bool jointPositionalLookup(const LLVector3& a, const LLVector3& b) 
+	{
+		 return areEqual(a[0], b[0]) && areEqual(a[1], b[1]) && areEqual(a[2], b[2]);
+	}
+
+	//copy of position array for this model -- mPosition[idx].mV[X, Y, Z]
 	std::vector<LLVector3> mPosition;
 
 	//map of positions to skin weights --- mSkinWeights[pos].mV[0..4] == <joint_index>.<weight>
@@ -236,19 +250,21 @@ public:
 	weight_list& getJointInfluences(const LLVector3& pos);
 
 	LLMeshSkinInfo mSkinInfo;
-	
+
 	std::string mRequestedLabel; // name requested in UI, if any.
 	std::string mLabel; // name computed from dae.
+
+	std::string mMetric; // user-supplied metric data for upload
 
 	LLVector3 mNormalizedScale;
 	LLVector3 mNormalizedTranslation;
 
-	float	mPelvisOffset;
+	float mPelvisOffset;
 	// convex hull decomposition
 	S32 mDecompID;
-	
+
 	void setConvexHullDecomposition(
-		const convex_hull_decomposition& decomp);
+	const convex_hull_decomposition& decomp);
 	void updateHullCenters();
 
 	LLVector3 mCenterOfHullCenters;
