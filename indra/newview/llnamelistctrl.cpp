@@ -37,6 +37,7 @@
 #include "llnamelistctrl.h"
 
 #include "llcachename.h"
+
 #include "llagent.h"
 #include "llinventory.h"
 #include "llviewercontrol.h"
@@ -64,13 +65,11 @@ LLNameListCtrl::LLNameListCtrl(const std::string& name,
 	LLNameListCtrl::sInstances.insert(this);
 }
 
-
 // virtual
 LLNameListCtrl::~LLNameListCtrl()
 {
 	LLNameListCtrl::sInstances.erase(this);
 }
-
 
 // public
 BOOL LLNameListCtrl::addNameItem(const LLUUID& agent_id, EAddPosition pos,
@@ -89,12 +88,11 @@ BOOL LLNameListCtrl::addNameItem(const LLUUID& agent_id, EAddPosition pos,
 }
 
 // virtual, public
-BOOL LLNameListCtrl::handleDragAndDrop( 
-		S32 x, S32 y, MASK mask,
-		BOOL drop,
-		EDragAndDropType cargo_type, void *cargo_data, 
-		EAcceptance *accept,
-		std::string& tooltip_msg)
+BOOL LLNameListCtrl::handleDragAndDrop(S32 x, S32 y, MASK mask, BOOL drop,
+									   EDragAndDropType cargo_type,
+									   void *cargo_data, 
+									   EAcceptance *accept,
+									   std::string& tooltip_msg)
 {
 	if (!mAllowCallingCardDrop)
 	{
@@ -131,7 +129,8 @@ BOOL LLNameListCtrl::handleDragAndDrop(
 	}
 
 	handled = TRUE;
-	lldebugst(LLERR_USER_INPUT) << "dragAndDrop handled by LLNameListCtrl " << getName() << llendl;
+	lldebugst(LLERR_USER_INPUT) << "dragAndDrop handled by LLNameListCtrl "
+								<< getName() << llendl;
 
 	return handled;
 }
@@ -148,7 +147,7 @@ void LLNameListCtrl::addGroupNameItem(const LLUUID& group_id, EAddPosition pos,
 
 // public
 void LLNameListCtrl::addGroupNameItem(LLScrollListItem* item, EAddPosition pos)
-					
+
 {
 	//llinfos << "LLNameListCtrl::addGroupNameItem " << item->getUUID() << llendl;
 
@@ -156,7 +155,7 @@ void LLNameListCtrl::addGroupNameItem(LLScrollListItem* item, EAddPosition pos)
 	gCacheName->getGroupName(item->getUUID(), group_name);
 
 	LLScrollListCell* cell = (LLScrollListCell*)item->getColumn(mNameColumnIndex);
-	((LLScrollListText*)cell)->setText( std::string(group_name) );
+	((LLScrollListText*)cell)->setText(std::string(group_name));
 
 	addItem(item, pos);
 }
@@ -169,7 +168,7 @@ BOOL LLNameListCtrl::addNameItem(LLScrollListItem* item, EAddPosition pos)
 	BOOL result = getResidentName(item->getUUID(), fullname);
 
 	LLScrollListCell* cell = (LLScrollListCell*)item->getColumn(mNameColumnIndex);
-	((LLScrollListText*)cell)->setText( fullname );
+	((LLScrollListText*)cell)->setText(fullname);
 
 	addItem(item, pos);
 
@@ -206,9 +205,9 @@ LLScrollListItem* LLNameListCtrl::addElement(const LLSD& value, EAddPosition pos
 			fullname = name;
 		}
 	}
-	
+
 	LLScrollListCell* cell = (LLScrollListCell*)item->getColumn(mNameColumnIndex);
-	((LLScrollListText*)cell)->setText( fullname );
+	((LLScrollListText*)cell)->setText(fullname);
 
 	dirtyColumns();
 
@@ -225,11 +224,11 @@ LLScrollListItem* LLNameListCtrl::addElement(const LLSD& value, EAddPosition pos
 // public
 void LLNameListCtrl::removeNameItem(const LLUUID& agent_id)
 {
-	BOOL item_exists = selectByID( agent_id );
-	if(item_exists)
+	BOOL item_exists = selectByID(agent_id);
+	if (item_exists)
 	{
 		S32 index = getItemIndex(getFirstSelected());
-		if(index >= 0)
+		if (index >= 0)
 		{
 			deleteSingleItem(index);
 		}
@@ -256,14 +255,12 @@ void LLNameListCtrl::refresh(const LLUUID& id, const std::string& fullname, bool
 	dirtyColumns();
 }
 
-
 // static
 void LLNameListCtrl::refreshAll(const LLUUID& id, const std::string& fullname, bool is_group)
 {
 	std::set<LLNameListCtrl*>::iterator it;
 	for (it = LLNameListCtrl::sInstances.begin();
-		 it != LLNameListCtrl::sInstances.end();
-		 ++it)
+		 it != LLNameListCtrl::sInstances.end(); ++it)
 	{
 		LLNameListCtrl* ctrl = *it;
 		ctrl->refresh(id, fullname, is_group);
@@ -279,6 +276,8 @@ LLXMLNodePtr LLNameListCtrl::getXML(bool save_children) const
 
 	node->createChild("allow_calling_card_drop", TRUE)->setBoolValue(mAllowCallingCardDrop);
 
+	node->createChild("use_display_names", TRUE)->setBoolValue(mUseDisplayNames);
+
 	if (mNameColumnIndex != 0)
 	{
 		node->createChild("name_column_index", TRUE)->setIntValue(mNameColumnIndex);
@@ -289,7 +288,8 @@ LLXMLNodePtr LLNameListCtrl::getXML(bool save_children) const
 	return node;
 }
 
-LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFactory *factory)
+LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent,
+								LLUICtrlFactory *factory)
 {
 	std::string name("name_list");
 	node->getAttributeString("name", name);
@@ -311,13 +311,9 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 
 	LLUICtrlCallback callback = NULL;
 
-	LLNameListCtrl* name_list = new LLNameListCtrl(name,
-				   rect,
-				   callback,
-				   NULL,
-				   multi_select,
-				   draw_border,
-				   name_column_index);
+	LLNameListCtrl* name_list = new LLNameListCtrl(name, rect, callback, NULL,
+												   multi_select, draw_border,
+												   name_column_index);
 
 	name_list->setDisplayHeading(draw_heading);
 	if (node->hasAttribute("heading_height"))
@@ -333,10 +329,13 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 		name_list->setAllowCallingCardDrop(allow_calling_card_drop);
 	}
 
-	BOOL use_display_names;
-	if (node->getAttributeBOOL("use_display_names", use_display_names))
+	if (node->hasAttribute("use_display_names"))
 	{
-		name_list->setUseDisplayNames(use_display_names);
+		BOOL use_display_names;
+		if (node->getAttributeBOOL("use_display_names", use_display_names))
+		{
+			name_list->setUseDisplayNames(use_display_names);
+		}
 	}
 
 	name_list->setScrollListParameters(node);
@@ -362,7 +361,7 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 
 			std::string sortname(columnname);
 			child->getAttributeString("sort", sortname);
-		
+
 			S32 columnwidth = -1;
 			if (child->hasAttribute("relwidth"))
 			{
@@ -379,7 +378,7 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 			LLFontGL::HAlign h_align = LLFontGL::LEFT;
 			h_align = LLView::selectFontHAlign(child);
 
-			//if(!columndynamicwidth) total_static += llmax(0, columnwidth);
+			//if (!columndynamicwidth) total_static += llmax(0, columnwidth);
 
 			columns[index]["name"] = columnname;
 			columns[index]["label"] = labelname;
@@ -391,7 +390,6 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 		}
 	}
 	name_list->setColumnHeadings(columns);
-
 
 	for (child = node->getFirstChild(); child.notNull(); child = child->getNextSibling())
 	{
@@ -439,7 +437,7 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFacto
 	tokenizer tokens(contents, sep);
 	tokenizer::iterator token_iter = tokens.begin();
 
-	while(token_iter != tokens.end())
+	while (token_iter != tokens.end())
 	{
 		const std::string& line = *token_iter;
 		name_list->addCommentText(line);

@@ -188,7 +188,8 @@ static bool handleMeshMaxConcurrentRequestsChanged(const LLSD& newvalue)
 
 static bool handleReleaseGLBufferChanged(const LLSD& newvalue)
 {
-	LLPipeline::sRenderFSAASamples = gSavedSettings.getU32("RenderFSAASamples");
+	// Disabled because it causes font corruption when changed during the session
+	//LLPipeline::sRenderFSAASamples = gSavedSettings.getU32("RenderFSAASamples");
 	if (gPipeline.isInit())
 	{
 		gPipeline.releaseGLBuffers();
@@ -646,7 +647,7 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("RenderSpecularResX")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
 	gSavedSettings.getControl("RenderSpecularResY")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
 	gSavedSettings.getControl("RenderSpecularExponent")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
-	gSavedSettings.getControl("RenderFSAASamples")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
+//	gSavedSettings.getControl("RenderFSAASamples")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
 	gSavedSettings.getControl("RenderAnisotropic")->getSignal()->connect(boost::bind(&handleAnisotropicChanged, _2));
 	gSavedSettings.getControl("RenderShadowResolutionScale")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));
 	gSavedSettings.getControl("RenderGlow")->getSignal()->connect(boost::bind(&handleReleaseGLBufferChanged, _2));

@@ -76,10 +76,10 @@ public:
 
 	static void refreshAll(const LLUUID& id, const std::string& fullname, bool is_group);
 
-	virtual BOOL	handleDragAndDrop(S32 x, S32 y, MASK mask,
-									  BOOL drop, EDragAndDropType cargo_type, void *cargo_data,
-									  EAcceptance *accept,
-									  std::string& tooltip_msg);
+	virtual BOOL handleDragAndDrop(S32 x, S32 y, MASK mask,
+								   BOOL drop, EDragAndDropType cargo_type, void *cargo_data,
+								   EAcceptance *accept,
+								   std::string& tooltip_msg);
 
 	void setAllowCallingCardDrop(BOOL b) { mAllowCallingCardDrop = b; }
 

@@ -31,16 +31,15 @@
  */
 
 #include "llviewerprecompiledheaders.h"
+
 #include "llfloaternewim.h"
+
 #include "lluictrlfactory.h"
-#include "llnamelistctrl.h"
 #include "llresmgr.h"
 #include "lltabcontainer.h"
+
 #include "llimview.h"
-
-S32 COL_1_WIDTH = 400;
-
-static std::string sOnlineDescriptor = "*";
+#include "llnamelistctrl.h"
 
 LLFloaterNewIM::LLFloaterNewIM()
 {
@@ -52,82 +51,70 @@ BOOL LLFloaterNewIM::postBuild()
 	requires<LLButton>("start_btn");
 	requires<LLButton>("close_btn");
 	requires<LLNameListCtrl>("user_list");
+	requires<LLNameListCtrl>("group_list");
 
 	if (checkRequirements())
 	{
 		childSetAction("start_btn", &LLFloaterNewIM::onStart, this);
 		childSetAction("close_btn", &LLFloaterNewIM::onClickClose, this);
-		mSelectionList = getChild<LLNameListCtrl>("user_list");
-		if (mSelectionList)
+
+		mGroupList = getChild<LLNameListCtrl>("group_list");
+		if (mGroupList)
 		{
-			mSelectionList->setDoubleClickCallback(&LLFloaterNewIM::onStart);
-			mSelectionList->setCallbackUserData(this);
+			mGroupList->setCommitOnSelectionChange(TRUE);
+			childSetCommitCallback("group_list", onSelectGroup, this);
+			mGroupList->setDoubleClickCallback(&LLFloaterNewIM::onStart);
+			mGroupList->setCallbackUserData(this);
+		}
+		else
+		{
+			llwarns << "LLUICtrlFactory::getNameListByName() returned NULL for 'group_list'" << llendl;
+		}
+
+		mAgentList = getChild<LLNameListCtrl>("user_list");
+		if (mAgentList)
+		{
+			mAgentList->setCommitOnSelectionChange(TRUE);
+			childSetCommitCallback("user_list", onSelectAgent, this);
+			mAgentList->setDoubleClickCallback(&LLFloaterNewIM::onStart);
+			mAgentList->setCallbackUserData(this);
 		}
 		else
 		{
 			llwarns << "LLUICtrlFactory::getNameListByName() returned NULL for 'user_list'" << llendl;
 		}
-		sOnlineDescriptor = getString("online_descriptor");
 		setDefaultBtn("start_btn");
 		return TRUE;
-	}	
+	}
 
 	return FALSE;
 }
-
 
 LLFloaterNewIM::~LLFloaterNewIM()
 {
 	clearAllTargets();
 }
 
-
 void LLFloaterNewIM::clearAllTargets()
 {
-	mSelectionList->deleteAllItems();
+	mGroupList->deleteAllItems();
+	mAgentList->deleteAllItems();
 }
 
-void LLFloaterNewIM::addSpecial(const LLUUID& uuid, const std::string& name,
-							 void* data, BOOL bold, BOOL online)
-{
-	LLSD row;
-	row["id"] = uuid;
-	row["name"] = name;
-	row["target"] = "SPECIAL";
-	row["columns"][0]["value"] = name;
-	row["columns"][0]["width"] = COL_1_WIDTH;
-	row["columns"][0]["font"] = "SANSSERIF";
-	row["columns"][0]["font-style"] = bold ? "BOLD" : "NORMAL";
-	row["columns"][1]["value"] = online ? sOnlineDescriptor : "";
-	row["columns"][1]["font"] = "SANSSERIF";
-	row["columns"][1]["font-style"] = "BOLD";
-	LLScrollListItem* itemp = mSelectionList->addElement(row);
-	itemp->setUserdata(data);
-
-	if (mSelectionList->getFirstSelectedIndex() == -1)
-	{
-		mSelectionList->selectFirstItem();
-	}
-}
-
-void LLFloaterNewIM::addGroup(const LLUUID& uuid, void* data, BOOL bold, BOOL online)
+void LLFloaterNewIM::addGroup(const LLUUID& uuid, void* data)
 {
 	LLSD row;
 	row["id"] = uuid;
 	row["target"] = "GROUP";
 	row["columns"][0]["value"] = ""; // name will be looked up
-	row["columns"][0]["width"] = COL_1_WIDTH;
 	row["columns"][0]["font"] = "SANSSERIF";
-	row["columns"][0]["font-style"] = bold ? "BOLD" : "NORMAL";
-	row["columns"][1]["value"] = online ? sOnlineDescriptor : "";
-	row["columns"][1]["font"] = "SANSSERIF";
-	row["columns"][1]["font-style"] = "BOLD";
-	LLScrollListItem* itemp = mSelectionList->addElement(row);
+	row["columns"][0]["font-style"] = "BOLD";
+	LLScrollListItem* itemp = mGroupList->addElement(row);
 	itemp->setUserdata(data);
 
-	if (mSelectionList->getFirstSelectedIndex() == -1)
+	if (mGroupList->getFirstSelectedIndex() == -1)
 	{
-		mSelectionList->selectFirstItem();
+		mGroupList->selectFirstItem();
 	}
 }
 
@@ -139,53 +126,67 @@ void LLFloaterNewIM::addAgent(const LLUUID& uuid, void* data, BOOL online)
 	LLSD row;
 	row["id"] = uuid;
 	row["columns"][0]["value"] = fullname;
-	row["columns"][0]["width"] = COL_1_WIDTH;
 	row["columns"][0]["font"] = "SANSSERIF";
 	row["columns"][0]["font-style"] = online ? "BOLD" : "NORMAL";
-	row["columns"][1]["value"] = online ? sOnlineDescriptor : "";
-	row["columns"][1]["font"] = "SANSSERIF";
-	row["columns"][1]["font-style"] = "BOLD";
-	LLScrollListItem* itemp = mSelectionList->addElement(row);
+	LLScrollListItem* itemp = mAgentList->addElement(row);
 	itemp->setUserdata(data);
 
-	if (mSelectionList->getFirstSelectedIndex() == -1)
+	if (mAgentList->getFirstSelectedIndex() == -1)
 	{
-		mSelectionList->selectFirstItem();
+		mAgentList->selectFirstItem();
 	}
 }
 
-BOOL LLFloaterNewIM::isUUIDAvailable(const LLUUID& uuid)
+//static
+void LLFloaterNewIM::onSelectGroup(LLUICtrl*, void* userdata)
 {
-	std::vector<LLScrollListItem*> data_list = mSelectionList->getAllData();
-	std::vector<LLScrollListItem*>::iterator data_itor;
-	for (data_itor = data_list.begin(); data_itor != data_list.end(); ++data_itor)
+	LLFloaterNewIM* self = (LLFloaterNewIM*)userdata;
+
+ 	LLScrollListItem *item = self->mAgentList->getFirstSelected();
+	if (item)
 	{
-		LLScrollListItem* item = *data_itor;
-		if(item->getUUID() == uuid)
-		{
-			return TRUE;
-		}
+		item->setSelected(FALSE);
 	}
-	return FALSE;
 }
 
+//static
+void LLFloaterNewIM::onSelectAgent(LLUICtrl*, void* userdata)
+{
+	LLFloaterNewIM* self = (LLFloaterNewIM*)userdata;
+
+ 	LLScrollListItem *item = self->mGroupList->getFirstSelected();
+	if (item)
+	{
+		item->setSelected(FALSE);
+	}
+}
+
+//static
 void LLFloaterNewIM::onStart(void* userdata)
 {
-	LLFloaterNewIM* self = (LLFloaterNewIM*) userdata;
+	LLFloaterNewIM* self = (LLFloaterNewIM*)userdata;
 
-	LLScrollListItem* item = self->mSelectionList->getFirstSelected();
-	if(item)
+	LLScrollListItem* item = self->mGroupList->getFirstSelected();
+	if (!item)
+	{
+		item = self->mAgentList->getFirstSelected();
+	}
+	if (item)
 	{
 		const LLScrollListCell* cell = item->getColumn(0);
 		std::string name(cell->getValue());
 
-		// *NOTE: Do a live determination of what type of session it
-		// should be. If we restrict the new im panel to online users,
-		// then we can remove some of this code.
+		// *NOTE: Do a live determination of what type of session it should be.
 		EInstantMessage type;
 		EInstantMessage* t = (EInstantMessage*)item->getUserdata();
-		if(t) type = (*t);
-		else type = LLIMMgr::defaultIMTypeForAgent(item->getUUID());
+		if (t)
+		{
+			type = (*t);
+		}
+		else
+		{
+			type = LLIMMgr::defaultIMTypeForAgent(item->getUUID());
+		}
 		if (type != IM_SESSION_GROUP_START)
 		{
 			// Needed to avoid catching a display name, which would
@@ -203,13 +204,11 @@ void LLFloaterNewIM::onStart(void* userdata)
 	}
 }
 
-
 // static
 void LLFloaterNewIM::onClickClose(void *userdata)
 {
 	gIMMgr->setFloaterOpen(FALSE);
 }
-
 
 BOOL LLFloaterNewIM::handleKeyHere(KEY key, MASK mask)
 {
@@ -249,12 +248,22 @@ void LLFloaterNewIM::close(bool app_quitting)
 	}
 }
 
-S32 LLFloaterNewIM::getScrollPos()
+S32 LLFloaterNewIM::getGroupScrollPos()
 {
-	return mSelectionList->getScrollPos();
+	return mGroupList->getScrollPos();
 }
 
-void LLFloaterNewIM::setScrollPos( S32 pos )
+void LLFloaterNewIM::setGroupScrollPos(S32 pos)
 {
-	mSelectionList->setScrollPos( pos );
+	mGroupList->setScrollPos(pos);
+}
+
+S32 LLFloaterNewIM::getAgentScrollPos()
+{
+	return mAgentList->getScrollPos();
+}
+
+void LLFloaterNewIM::setAgentScrollPos(S32 pos)
+{
+	mAgentList->setScrollPos(pos);
 }

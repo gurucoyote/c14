@@ -1031,7 +1031,8 @@ void LLIMMgr::refresh()
 
 	if (!floaterimp) return;
 
-	S32 old_scroll_pos = floaterimp->getScrollPos();
+	S32 old_group_scroll_pos = floaterimp->getGroupScrollPos();
+	S32 old_agent_scroll_pos = floaterimp->getAgentScrollPos();
 	floaterimp->clearAllTargets();
 
 	// build a list of groups.
@@ -1050,7 +1051,7 @@ void LLIMMgr::refresh()
 	// add groups to the floater on the second pass.
 	for (group = group_list.getFirstData(); group; group = group_list.getNextData())
 	{
-		floaterimp->addGroup(group->mID, (void*)(&GROUP_DIALOG), TRUE, FALSE);
+		floaterimp->addGroup(group->mID, (void*)(&GROUP_DIALOG));
 	}
 
 	// build a set of buddies in the current buddy list.
@@ -1071,7 +1072,8 @@ void LLIMMgr::refresh()
 		floaterimp->addAgent((*it).second, (void*)(&DEFAULT_DIALOG), FALSE);
 	}
 
-	floaterimp->setScrollPos(old_scroll_pos);
+	floaterimp->setGroupScrollPos(old_group_scroll_pos);
+	floaterimp->setAgentScrollPos(old_agent_scroll_pos);
 }
 
 void LLIMMgr::setFloaterOpen(BOOL set_open)
@@ -1190,9 +1192,8 @@ LLSD LLIMMgr::getPendingAgentListUpdates(const LLUUID& session_id)
 	}
 }
 
-void LLIMMgr::addPendingAgentListUpdates(
-	const LLUUID& session_id,
-	const LLSD& updates)
+void LLIMMgr::addPendingAgentListUpdates(const LLUUID& session_id,
+										 const LLSD& updates)
 {
 	LLSD::map_const_iterator iter;
 

@@ -79,6 +79,7 @@
 #include "llviewergenericmessage.h"
 #include "llviewermedia.h"
 #include "llviewermenu.h"
+#include "llviewernetwork.h"		// for isInProductionGrid()
 #include "llviewerobjectlist.h"
 #include "llviewerparcelmgr.h"
 #include "llviewershadermgr.h"
@@ -2696,7 +2697,9 @@ void LLVOAvatar::checkAttachments()
 						}
 					}
 				}
-				std::string filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, "attachments.xml");
+				std::string filename = (LLViewerLogin::getInstance()->isInProductionGrid() ?
+										"attachments.xml" : "attachments_beta.xml");
+				filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, filename);
 				//llinfos << "Reading the saved worn attachments list from: " << filename << llendl;
 				LLSD list;
 				llifstream llsd_xml;
@@ -2773,7 +2776,9 @@ void LLVOAvatar::checkAttachments()
 				}
 			}
 			list.insert("attachments", array);
-			std::string filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, "attachments.xml");
+			std::string filename = (LLViewerLogin::getInstance()->isInProductionGrid() ?
+									"attachments.xml" : "attachments_beta.xml");
+			filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT, filename);
 			llofstream list_file(filename);
 			LLSDSerialize::toPrettyXML(list, list_file);
 			list_file.close();

@@ -44,34 +44,34 @@ public:
 	/*virtual*/ ~LLFloaterNewIM();
 
 	/*virtual*/ BOOL postBuild();
-
 	/*virtual*/ BOOL handleKeyHere(KEY key, MASK mask);
-	virtual BOOL canClose();
-	virtual void close(bool app_quitting);
+	/*virtual*/ BOOL canClose();
+	/*virtual*/ void close(bool app_quitting);
 
+	static void	onSelectGroup(LLUICtrl*, void* userdata);
+	static void	onSelectAgent(LLUICtrl*, void* userdata);
 	static void	onStart(void* userdata);
 	static void onClickClose(void* userdata);
 
 	void clearAllTargets();
 
-	// add a scroll list item which has everything specified - useful
-	// for special IM targets like everyone.
-	void addSpecial(const LLUUID& uuid, const std::string& name, 
-		void* data, BOOL bold, BOOL online);
-
 	// add a scroll list item for an agent - the name will be autoupdated
 	// as it appears
 	void addAgent(const LLUUID& uuid, void* data, BOOL online);
-	void addGroup(const LLUUID& uuid, void* data, BOOL bold, BOOL online);
 
-	void addDefaultTargets();
-	BOOL isUUIDAvailable(const LLUUID& uuid);
+	void addGroup(const LLUUID& uuid, void* data);
 
-	S32		getScrollPos();
-	void	setScrollPos( S32 pos );
+	S32		getGroupScrollPos();
+	void	setGroupScrollPos(S32 pos);
+
+	S32		getAgentScrollPos();
+	void	setAgentScrollPos(S32 pos);
 
 protected:
-	LLNameListCtrl*	mSelectionList;
+	LLNameListCtrl*	mAgentList;
+	LLNameListCtrl*	mGroupList;
+
+	bool mAgentSelected;
 };
 
 #endif  // LL_NEWIMPANEL_H

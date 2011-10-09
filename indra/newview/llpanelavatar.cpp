@@ -1953,7 +1953,19 @@ void LLPanelAvatar::processAvatarPropertiesReply(LLMessageSystem *msg, void**)
 			image_ctrl->setImageAssetID(image_id);
 			self->childSetEnabled("view_sl_img", !image_id.isNull());
 		}
-		self->childSetValue("about", about_text);
+
+		LLTextEditor* about_ctrl = self->getChild<LLTextEditor>("about");
+		// We need to prune the highlights, and clear() is not doing it...
+		about_ctrl->removeTextFromEnd(about_ctrl->getMaxLength());
+		if (self->mAvatarID == gAgent.getID())
+		{
+			about_ctrl->setText(about_text);
+		}
+		else
+		{
+			about_ctrl->appendColoredText(about_text, false, false,
+										  about_ctrl->getReadOnlyFgColor());
+		}
 
 		self->mPanelSecondLife->setPartnerID(partner_id);
 		self->mPanelSecondLife->updatePartnerName();
@@ -1961,7 +1973,19 @@ void LLPanelAvatar::processAvatarPropertiesReply(LLMessageSystem *msg, void**)
 		if (self->mPanelFirstLife)
 		{
 			// Teens don't get these
-			self->mPanelFirstLife->childSetValue("about", fl_about_text);
+
+			about_ctrl = self->mPanelFirstLife->getChild<LLTextEditor>("about");
+			// We need to prune the highlights, and clear() is not doing it...
+			about_ctrl->removeTextFromEnd(about_ctrl->getMaxLength());
+			if (self->mAvatarID == gAgent.getID())
+			{
+				about_ctrl->setText(fl_about_text);
+			}
+			else
+			{
+				about_ctrl->appendColoredText(fl_about_text, false, false,
+											  about_ctrl->getReadOnlyFgColor());
+			}
 
 			LLTextureCtrl* image_ctrl = self->mPanelFirstLife->getChild<LLTextureCtrl>("img");
 			if (image_ctrl)

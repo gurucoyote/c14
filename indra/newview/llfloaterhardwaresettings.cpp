@@ -33,25 +33,25 @@
 #include "llviewerprecompiledheaders.h"
 
 #include "llfloaterhardwaresettings.h"
-#include "llfloaterpreference.h"
-#include "llviewerwindow.h"
-#include "llviewercontrol.h"
-#include "llviewertexturelist.h"
-#include "llfeaturemanager.h"
-#include "llstartup.h"
 
-#include "llradiogroup.h"
+#include "llnotifications.h"
 #include "lluictrlfactory.h"
 
-#include "llimagegl.h"
+#include "llfeaturemanager.h"
+#include "llstartup.h"
+#include "llviewercontrol.h"
+#include "llviewertexturelist.h"
+#include "llviewerwindow.h"
 #include "pipeline.h"
 
 LLFloaterHardwareSettings* LLFloaterHardwareSettings::sHardwareSettings = NULL;
 BOOL LLFloaterHardwareSettings::sUseStreamVBOexists = FALSE;
 
-LLFloaterHardwareSettings::LLFloaterHardwareSettings() : LLFloater(std::string("Hardware Settings Floater"))
+LLFloaterHardwareSettings::LLFloaterHardwareSettings()
+:	LLFloater(std::string("Hardware Settings Floater"))
 {
-	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_hardware_settings.xml");
+	LLUICtrlFactory::getInstance()->buildFloater(this,
+												 "floater_hardware_settings.xml");
 }
 
 LLFloaterHardwareSettings::~LLFloaterHardwareSettings()
@@ -63,7 +63,8 @@ void LLFloaterHardwareSettings::onCommitCheckBoxVBO(LLUICtrl* ctrl, void* user_d
 	LLFloaterHardwareSettings* self = (LLFloaterHardwareSettings*)user_data;
 	if (self && sUseStreamVBOexists)
 	{
-		gSavedSettings.setBOOL("RenderUseStreamVBO", self->childGetValue("stream_vbo").asBoolean());
+		gSavedSettings.setBOOL("RenderUseStreamVBO",
+							   self->childGetValue("stream_vbo").asBoolean());
 		self->refreshEnabledState();
 	}
 }
@@ -143,11 +144,6 @@ void LLFloaterHardwareSettings::show()
 	LLFloaterHardwareSettings* hardSettings = instance();
 	hardSettings->refresh();
 	hardSettings->center();
-
-	// comment in if you want the menu to rebuild each time
-	//LLUICtrlFactory::getInstance()->buildFloater(hardSettings, "floater_hardware_settings.xml");
-	//hardSettings->initCallbacks();
-
 	hardSettings->open();
 }
 
@@ -192,6 +188,7 @@ void LLFloaterHardwareSettings::apply()
 	BOOL logged_in = (LLStartUp::getStartupState() >= STATE_STARTED);
 
 	if (gSavedSettings.getU32("RenderFSAASamples") != mFSAASamples)
+#if 0	// Disabled because it causes font corruption when changed during the session
 	{
 		LLWindow* window = gViewerWindow->getWindow();
 		LLCoordScreen size;
@@ -202,7 +199,13 @@ void LLFloaterHardwareSettings::apply()
 											 logged_in);
 		gViewerWindow->restartDisplay(logged_in);
 	}
-	else if (gSavedSettings.getBOOL("RenderAnisotropic") != mUseAniso)
+	else
+#else
+	{
+		LLNotifications::instance().add("InEffectAfterRestart");
+	}
+#endif
+	if (gSavedSettings.getBOOL("RenderAnisotropic") != mUseAniso)
 	{
 		gViewerWindow->restartDisplay(logged_in);
 	}
@@ -222,13 +225,13 @@ void LLFloaterHardwareSettings::cancel()
 	gSavedSettings.setF32("RenderGamma", mGamma);
 	gSavedSettings.setS32("TextureMemory", mVideoCardMem);
 	gSavedSettings.setF32("RenderFogRatio", mFogRatio);
-	gSavedSettings.setBOOL("ProbeHardwareOnStartup", mProbeHardwareOnStartup );
+	gSavedSettings.setBOOL("ProbeHardwareOnStartup", mProbeHardwareOnStartup);
 
 	close();
 }
 
 // static 
-void LLFloaterHardwareSettings::onBtnOK( void* userdata )
+void LLFloaterHardwareSettings::onBtnOK(void* userdata)
 {
 	LLFloaterHardwareSettings *fp =(LLFloaterHardwareSettings *)userdata;
 	fp->apply();

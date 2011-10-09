@@ -33,12 +33,9 @@
 #ifndef LL_LLPANELGROUPVOTING_H
 #define LL_LLPANELGROUPVOTING_H
 
-// Group voting is deprecated in SL and, AFAIK, was never implemented in OpenSim
-// If you reenable, make sure to uncomment the corresponding panel tab entry in
-// panel_group.xml
-#undef GROUP_VOTING
+#include "roles_constants.h"
 
-#ifdef GROUP_VOTING
+#ifdef GROUP_VOTING			// may be defined in roles_constants.h
 
 #include "llpanelgroup.h"
 

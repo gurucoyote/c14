@@ -145,7 +145,7 @@ class ViewerManifest(LLManifest):
         channel_flags = '--channel "Cool VL Viewer"'
 
         # Deal with settings 
-        setting_flags = '--settings settings_coolvlviewer_1261.xml'
+        setting_flags = '--settings settings_coolvlviewer_1262.xml'
 
         return " ".join((channel_flags, grid_flags, setting_flags)).strip()
 

@@ -362,8 +362,21 @@ void LLPanelPick::processPickInfoReply(LLMessageSystem *msg, void **)
 		self->mPosGlobal = pos_global;
 
 		// Update UI controls
+
         self->mNameEditor->setText(std::string(name));
-        self->mDescEditor->setText(std::string(desc));
+
+		// We need to prune the highlights, and clear() is not doing it...
+		self->mDescEditor->removeTextFromEnd(self->mDescEditor->getMaxLength());
+		if (self->mCreatorID == gAgent.getID())
+		{
+			self->mDescEditor->setText(desc);
+		}
+		else
+		{
+			self->mDescEditor->appendColoredText(desc, false, false,
+												 self->mDescEditor->getReadOnlyFgColor());
+		}
+
         self->mSnapshotCtrl->setImageAssetID(snapshot_id);
         self->mLocationEditor->setText(location_text);
         self->mEnabledCheck->set(enabled);

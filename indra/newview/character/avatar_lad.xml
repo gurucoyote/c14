@@ -1582,6 +1582,7 @@
        name="Hair_Egg_Head"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="-1.3"
        value_max="1">
          <param_morph />
@@ -1593,6 +1594,7 @@
        name="Hair_Squash_Stretch_Head"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="-.5"
        value_max="1">
          <param_morph />
@@ -1604,6 +1606,7 @@
        name="Hair_Square_Head"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="0"
        value_max="1">
          <param_morph />
@@ -1615,6 +1618,7 @@
        name="Hair_Round_Head"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="0"
        value_max="1">
          <param_morph />
@@ -1626,6 +1630,7 @@
        name="Hair_Forehead_Round"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="0"
        value_max="1">
          <param_morph />
@@ -1637,6 +1642,7 @@
        name="Hair_Forehead_Slant"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="0"
        value_max="1">
          <param_morph />
@@ -1648,6 +1654,7 @@
        name="Shear_Head_Hair"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="-2"
        value_max="2">
          <param_morph />
@@ -1659,6 +1666,7 @@
        name="Elongate_Head_Hair"
        wearable="hair"
        edit_group="hair_style"
+       cross_wearable="true"
        value_min="-1"
        value_max="1">
          <param_morph />
@@ -5162,6 +5170,7 @@
        clothing_morph="false"
        wearable="skirt"
        edit_group="skirt"
+       cross_wearable="true"
        label_min="form fitting"
        label_max="loose"
        value_min="0"
@@ -5196,6 +5205,7 @@
        label="legs skirt"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        value_min="-1"
        value_max="1"
        value_default="0">
@@ -5208,6 +5218,7 @@
        name="skirt_bigbutt"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        label="bigbutt skirt"
        label_min="less"
        label_max="more"
@@ -5222,6 +5233,7 @@
        name="skirt_belly"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        label="big belly skirt"
        value_min="0"
        value_max="1">
@@ -5234,6 +5246,7 @@
        name="skirt_saddlebags"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        value_min="-.5"
        value_max="3">
          <param_morph />
@@ -5245,6 +5258,7 @@
        name="skirt_chubby"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        label_min="less"
        label_max="more"
        value_min="0"
@@ -5259,6 +5273,7 @@
        name="skirt_lovehandles"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        label_min="less"
        label_max="more"
        value_min="-1"
@@ -5278,6 +5293,7 @@
        name="skirt_male"
        wearable="skirt"
        edit_group="driven"
+       cross_wearable="true"
        value_min="0"
        value_max="1">
          <param_morph />
@@ -7943,6 +7959,7 @@
          <param
           id="1020"
           group="1"
+          wearable="jacket"
           edit_group="driven"
           name="jacket Sleeve Length"
           value_min="0"
@@ -7956,6 +7973,7 @@
          <param
           id="1022"
           group="1"
+          wearable="jacket"
           edit_group="driven"
           name="jacket Collar Front"
           value_min="0"
@@ -7969,6 +7987,7 @@
          <param
           id="1024"
           group="1"
+          wearable="jacket"
           edit_group="driven"
           edit_group_order="3.5"
           name="jacket Collar Back"
@@ -8079,6 +8098,7 @@
           group="1"
           name="Shading"
           wearable="pants"
+          cross_wearable="true"
           value_min="0"
           value_max="1">
             <param_color>
@@ -8779,6 +8799,7 @@
           group="1"
           wearable="jacket"
           edit_group="driven"
+          cross_wearable="true"
           name="jacket bottom length lower bump"
           value_min="0"
           value_max="1">
@@ -9257,7 +9278,7 @@
              id="1017" />
 
             <driven
-             id="1033" />
+             id="1035" />
 
             <driven
              id="914"

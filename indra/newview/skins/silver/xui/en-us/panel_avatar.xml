@@ -138,7 +138,7 @@
 			     mouse_opaque="true" name="(500 chars)" v_pad="0" width="70">
 				(500 chars)
 			</text>
-			<text_editor bottom="-375" embedded_items="false"
+			<text_editor bottom="-375" embedded_items="false" allow_html="true" parse_html="true"
 			     enabled="true" follows="left|top" font="SansSerifSmall" height="110"
 			     is_unicode="false" left="79" max_length="511" mouse_opaque="true"
 			     name="about" width="321" word_wrap="true" />
@@ -395,7 +395,7 @@
 			     mouse_opaque="true" name="(250 chars)" v_pad="0" width="65">
 				(250 chars)
 			</text>
-			<text_editor bottom="-347" embedded_items="false"
+			<text_editor bottom="-347" embedded_items="false" allow_html="true" parse_html="true"
 			     enabled="true" follows="left|top" font="SansSerifSmall" height="160"
 			     is_unicode="false" left="70" max_length="254" mouse_opaque="false"
 			     name="about" width="330" word_wrap="true" />

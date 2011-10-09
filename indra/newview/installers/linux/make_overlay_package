@@ -227,6 +227,7 @@ cp -a skins/default/xui/en-us/mime_types.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/notifications.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_audio2.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_avatar.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_avatar_pick.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_chat_bar.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_group.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_login.xml $temp/skins/default/xui/en-us/

@@ -471,9 +471,9 @@ void LLFloaterStats::buildStats()
 	stat_barp->setUnitLabel(" pps");
 	stat_barp->mPrecision = 0;
 	stat_barp->mMinBar = 0.f;
-	stat_barp->mMaxBar = 2000.f;
-	stat_barp->mTickSpacing = 250.f;
-	stat_barp->mLabelSpacing = 1000.f;
+	stat_barp->mMaxBar = 20000.f;
+	stat_barp->mTickSpacing = 2500.f;
+	stat_barp->mLabelSpacing = 10000.f;
 	stat_barp->mPerSec = FALSE;
 	stat_barp->mDisplayMean = FALSE;
 
@@ -483,9 +483,9 @@ void LLFloaterStats::buildStats()
 	stat_barp->setUnitLabel(" pps");
 	stat_barp->mPrecision = 0;
 	stat_barp->mMinBar = 0.f;
-	stat_barp->mMaxBar = 2000.f;
-	stat_barp->mTickSpacing = 250.f;
-	stat_barp->mLabelSpacing = 1000.f;
+	stat_barp->mMaxBar = 20000.f;
+	stat_barp->mTickSpacing = 2500.f;
+	stat_barp->mLabelSpacing = 10000.f;
 	stat_barp->mPerSec = FALSE;
 	stat_barp->mDisplayMean = FALSE;
 

@@ -43,7 +43,6 @@
 #include "llspinctrl.h"
 #include "lltextbox.h"
 #include "lltexteditor.h"
-#include "roles_constants.h"
 
 #include "llagent.h"
 #include "llfocusmgr.h"
