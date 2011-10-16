@@ -89,7 +89,6 @@ LLCacheNameEntry::LLCacheNameEntry()
 {
 }
 
-
 class PendingReply
 {
 public:
@@ -130,7 +129,7 @@ private:
 };
 
 ReplySender::ReplySender(LLMessageSystem* msg)
-	: mMsg(msg), mPending(false), mCurrIsGroup(false)
+:	mMsg(msg), mPending(false), mCurrIsGroup(false)
 { }
 
 ReplySender::~ReplySender()
@@ -156,7 +155,7 @@ void ReplySender::send(const LLUUID& id,
 		mCurrIsGroup = entry.mIsGroup;
 		mCurrHost = host;
 
-		if(mCurrIsGroup)
+		if (mCurrIsGroup)
 			mMsg->newMessageFast(_PREHASH_UUIDGroupNameReply);
 		else
 			mMsg->newMessageFast(_PREHASH_UUIDNameReply);
@@ -164,7 +163,7 @@ void ReplySender::send(const LLUUID& id,
 
 	mMsg->nextBlockFast(_PREHASH_UUIDNameBlock);
 	mMsg->addUUIDFast(_PREHASH_ID, id);
-	if(mCurrIsGroup)
+	if (mCurrIsGroup)
 	{
 		mMsg->addStringFast(_PREHASH_GroupName, entry.mGroupName);
 	}
@@ -174,7 +173,7 @@ void ReplySender::send(const LLUUID& id,
 		mMsg->addStringFast(_PREHASH_LastName, entry.mLastName);
 	}
 
-	if(mMsg->isSendFullFast(_PREHASH_UUIDNameBlock))
+	if (mMsg->isSendFullFast(_PREHASH_UUIDNameBlock))
 	{
 		flush();
 	}
@@ -188,7 +187,6 @@ void ReplySender::flush()
 		mPending = false;
 	}
 }
-
 
 typedef std::set<LLUUID>					AskQueue;
 typedef std::list<PendingReply*>			ReplyQueue;
@@ -244,17 +242,16 @@ public:
 	static void handleUUIDGroupNameReply(LLMessageSystem* msg, void** userdata);
 };
 
-
 /// --------------------------------------------------------------------------
 /// class LLCacheName
 /// ---------------------------------------------------------------------------
 
 LLCacheName::LLCacheName(LLMessageSystem* msg)
-	: impl(* new Impl(msg))
+:	impl(* new Impl(msg))
 	{ }
 
 LLCacheName::LLCacheName(LLMessageSystem* msg, const LLHost& upstream_host)
-	: impl(* new Impl(msg))
+:	impl(* new Impl(msg))
 {
 	sCacheName["waiting"] = "(loading...)";
 	sCacheName["nobody"] = "(nobody)";
@@ -268,7 +265,7 @@ LLCacheName::~LLCacheName()
 }
 
 LLCacheName::Impl::Impl(LLMessageSystem* msg)
-	: mMsg(msg), mUpstreamHost(LLHost::invalid)
+:	mMsg(msg), mUpstreamHost(LLHost::invalid)
 {
 	mMsg->setHandlerFuncFast(
 		_PREHASH_UUIDNameRequest, handleUUIDNameRequest, (void**)this);
@@ -279,7 +276,6 @@ LLCacheName::Impl::Impl(LLMessageSystem* msg)
 	mMsg->setHandlerFuncFast(
 		_PREHASH_UUIDGroupNameReply, handleUUIDGroupNameReply, (void**)this);
 }
-
 
 LLCacheName::Impl::~Impl()
 {
@@ -314,7 +310,7 @@ boost::signals2::connection LLCacheName::addObserver(const LLCacheNameCallback& 
 bool LLCacheName::importFile(std::istream& istr)
 {
 	LLSD data;
-	if(LLSDSerialize::fromXMLDocument(data, istr) < 1)
+	if (LLSDSerialize::fromXMLDocument(data, istr) < 1)
 		return false;
 
 	// We'll expire entries more than a week old
@@ -327,12 +323,12 @@ bool LLCacheName::importFile(std::istream& istr)
 	LLSD agents = data[AGENTS];
 	LLSD::map_iterator iter = agents.beginMap();
 	LLSD::map_iterator end = agents.endMap();
-	for( ; iter != end; ++iter)
+	for ( ; iter != end; ++iter)
 	{
 		LLUUID id((*iter).first);
 		LLSD agent = (*iter).second;
 		U32 ctime = (U32)agent[CTIME].asInteger();
-		if(ctime < delete_before_time) continue;
+		if (ctime < delete_before_time) continue;
 
 		LLCacheNameEntry* entry = new LLCacheNameEntry();
 		entry->mIsGroup = false;
@@ -352,12 +348,12 @@ bool LLCacheName::importFile(std::istream& istr)
 	LLSD groups = data[GROUPS];
 	iter = groups.beginMap();
 	end = groups.endMap();
-	for( ; iter != end; ++iter)
+	for ( ; iter != end; ++iter)
 	{
 		LLUUID id((*iter).first);
 		LLSD group = (*iter).second;
 		U32 ctime = (U32)group[CTIME].asInteger();
-		if(ctime < delete_before_time) continue;
+		if (ctime < delete_before_time) continue;
 
 		LLCacheNameEntry* entry = new LLCacheNameEntry();
 		entry->mIsGroup = true;
@@ -376,11 +372,11 @@ void LLCacheName::exportFile(std::ostream& ostr)
 	LLSD data;
 	Cache::iterator iter = impl.mCache.begin();
 	Cache::iterator end = impl.mCache.end();
-	for( ; iter != end; ++iter)
+	for ( ; iter != end; ++iter)
 	{
 		// Only write entries for which we have valid data.
 		LLCacheNameEntry* entry = iter->second;
-		if(!entry
+		if (!entry
 		   || (std::string::npos != entry->mFirstName.find('?'))
 		   || (std::string::npos != entry->mGroupName.find('?')))
 		{
@@ -391,13 +387,13 @@ void LLCacheName::exportFile(std::ostream& ostr)
 		LLUUID id = iter->first;
 		std::string id_str = id.asString();
 		// IDEVO TODO: Should we store SLIDs with last name "Resident" or not?
-		if(!entry->mFirstName.empty() && !entry->mLastName.empty())
+		if (!entry->mFirstName.empty() && !entry->mLastName.empty())
 		{
 			data[AGENTS][id_str][FIRST] = entry->mFirstName;
 			data[AGENTS][id_str][LAST] = entry->mLastName;
 			data[AGENTS][id_str][CTIME] = (S32)entry->mCreateTime;
 		}
-		else if(entry->mIsGroup && !entry->mGroupName.empty())
+		else if (entry->mIsGroup && !entry->mGroupName.empty())
 		{
 			data[GROUPS][id_str][NAME] = entry->mGroupName;
 			data[GROUPS][id_str][CTIME] = (S32)entry->mCreateTime;
@@ -406,7 +402,6 @@ void LLCacheName::exportFile(std::ostream& ostr)
 
 	LLSDSerialize::toPrettyXML(data, ostr);
 }
-
 
 BOOL LLCacheName::Impl::getName(const LLUUID& id, std::string& first, std::string& last)
 {
@@ -417,7 +412,7 @@ BOOL LLCacheName::Impl::getName(const LLUUID& id, std::string& first, std::strin
 		return TRUE;
 	}
 
-	LLCacheNameEntry* entry = get_ptr_in_map(mCache, id );
+	LLCacheNameEntry* entry = get_ptr_in_map(mCache, id);
 	if (entry)
 	{
 		first = entry->mFirstName;
@@ -434,13 +429,12 @@ BOOL LLCacheName::Impl::getName(const LLUUID& id, std::string& first, std::strin
 		}	
 		return FALSE;
 	}
-
 }
 
 // static
 void LLCacheName::localizeCacheName(std::string key, std::string value)
 {
-	if (key!="" && value!= "" )
+	if (key!="" && value!= "")
 		sCacheName[key] = value;
 	else
 		llwarns << " Error localizing cache key " << key << " To "<< value << llendl;
@@ -461,7 +455,7 @@ BOOL LLCacheName::getFullName(const LLUUID& id, std::string& fullname)
 
 BOOL LLCacheName::getGroupName(const LLUUID& id, std::string& group)
 {
-	if(id.isNull())
+	if (id.isNull())
 	{
 		group = sCacheName["none"];
 		return TRUE;
@@ -615,7 +609,7 @@ boost::signals2::connection LLCacheName::get(const LLUUID& id, bool is_group, co
 {
 	boost::signals2::connection res;
 	
-	if(id.isNull())
+	if (id.isNull())
 	{
 		LLCacheNameSignal signal;
 		signal.connect(callback);
@@ -623,7 +617,7 @@ boost::signals2::connection LLCacheName::get(const LLUUID& id, bool is_group, co
 		return res;
 	}
 
-	LLCacheNameEntry* entry = get_ptr_in_map(impl.mCache, id );
+	LLCacheNameEntry* entry = get_ptr_in_map(impl.mCache, id);
 	if (entry)
 	{
 		LLCacheNameSignal signal;
@@ -673,12 +667,12 @@ boost::signals2::connection LLCacheName::get(const LLUUID& id, bool is_group, ol
 void LLCacheName::processPending()
 {
 	const F32 SECS_BETWEEN_PROCESS = 0.1f;
-	if(!impl.mProcessTimer.checkExpirationAndReset(SECS_BETWEEN_PROCESS))
+	if (!impl.mProcessTimer.checkExpirationAndReset(SECS_BETWEEN_PROCESS))
 	{
 		return;
 	}
 
-	if(!impl.mUpstreamHost.isOk())
+	if (!impl.mUpstreamHost.isOk())
 	{
 		lldebugs << "LLCacheName::processPending() - bad upstream host."
 				 << llendl;
@@ -693,7 +687,7 @@ void LLCacheName::deleteEntriesOlderThan(S32 secs)
 {
 	U32 now = (U32)time(NULL);
 	U32 expire_time = now - secs;
-	for(Cache::iterator iter = impl.mCache.begin(); iter != impl.mCache.end(); )
+	for (Cache::iterator iter = impl.mCache.begin(); iter != impl.mCache.end(); )
 	{
 		Cache::iterator curiter = iter++;
 		LLCacheNameEntry* entry = curiter->second;
@@ -706,8 +700,8 @@ void LLCacheName::deleteEntriesOlderThan(S32 secs)
 
 	// These are pending requests that we never heard back from.
 	U32 pending_expire_time = now - PENDING_TIMEOUT_SECS;
-	for(PendingQueue::iterator p_iter = impl.mPendingQueue.begin();
-		p_iter != impl.mPendingQueue.end(); )
+	for (PendingQueue::iterator p_iter = impl.mPendingQueue.begin();
+		 p_iter != impl.mPendingQueue.end(); )
 	{
 		PendingQueue::iterator p_curitor = p_iter++;
  
@@ -717,7 +711,6 @@ void LLCacheName::deleteEntriesOlderThan(S32 secs)
 		}
 	}
 }
-
 
 void LLCacheName::dump()
 {
@@ -786,11 +779,11 @@ void LLCacheName::Impl::processPendingAsks()
 void LLCacheName::Impl::processPendingReplies()
 {
 	// First call all the callbacks, because they might send messages.
-	for(ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); ++it)
+	for (ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); ++it)
 	{
 		PendingReply* reply = *it;
 		LLCacheNameEntry* entry = get_ptr_in_map(mCache, reply->mID);
-		if(!entry) continue;
+		if (!entry) continue;
 
 		if (!entry->mIsGroup)
 		{
@@ -806,11 +799,11 @@ void LLCacheName::Impl::processPendingReplies()
 
 	// Forward on all replies, if needed.
 	ReplySender sender(mMsg);
-	for(ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); ++it)
+	for (ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); ++it)
 	{
 		PendingReply* reply = *it;
 		LLCacheNameEntry* entry = get_ptr_in_map(mCache, reply->mID);
-		if(!entry) continue;
+		if (!entry) continue;
 
 		if (reply->mHost.isOk())
 		{
@@ -820,7 +813,7 @@ void LLCacheName::Impl::processPendingReplies()
 		reply->done();
 	}
 	
-	for(ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); )
+	for (ReplyQueue::iterator it = mReplyQueue.begin(); it != mReplyQueue.end(); )
 	{
 		ReplyQueue::iterator curit = it++;
 		PendingReply* reply = *curit;
@@ -832,12 +825,9 @@ void LLCacheName::Impl::processPendingReplies()
 	}
 }
 
-
-void LLCacheName::Impl::sendRequest(
-	const char* msg_name,
-	const AskQueue& queue)
+void LLCacheName::Impl::sendRequest(const char* msg_name, const AskQueue& queue)
 {
-	if(queue.empty())
+	if (queue.empty())
 	{
 		return;		
 	}
@@ -845,9 +835,9 @@ void LLCacheName::Impl::sendRequest(
 	bool start_new_message = true;
 	AskQueue::const_iterator it = queue.begin();
 	AskQueue::const_iterator end = queue.end();
-	for(; it != end; ++it)
+	for ( ; it != end; ++it)
 	{
-		if(start_new_message)
+		if (start_new_message)
 		{
 			start_new_message = false;
 			mMsg->newMessageFast(msg_name);
@@ -855,13 +845,13 @@ void LLCacheName::Impl::sendRequest(
 		mMsg->nextBlockFast(_PREHASH_UUIDNameBlock);
 		mMsg->addUUIDFast(_PREHASH_ID, (*it));
 
-		if(mMsg->isSendFullFast(_PREHASH_UUIDNameBlock))
+		if (mMsg->isSendFullFast(_PREHASH_UUIDNameBlock))
 		{
 			start_new_message = true;
 			mMsg->sendReliable(mUpstreamHost);
 		}
 	}
-	if(!start_new_message)
+	if (!start_new_message)
 	{
 		mMsg->sendReliable(mUpstreamHost);
 	}
@@ -874,8 +864,7 @@ bool LLCacheName::Impl::isRequestPending(const LLUUID& id)
 
 	PendingQueue::iterator iter = mPendingQueue.find(id);
 
-	if (iter == mPendingQueue.end()
-		|| (iter->second < expire_time) )
+	if (iter == mPendingQueue.end() || iter->second < expire_time)
 	{
 		mPendingQueue[id] = now;
 		return false;
@@ -898,12 +887,12 @@ void LLCacheName::Impl::processUUIDRequest(LLMessageSystem* msg, bool isGroup)
 	ReplySender sender(msg);
 
 	S32 count = msg->getNumberOfBlocksFast(_PREHASH_UUIDNameBlock);
-	for(S32 i = 0; i < count; ++i)
+	for (S32 i = 0; i < count; ++i)
 	{
 		LLUUID id;
 		msg->getUUIDFast(_PREHASH_UUIDNameBlock, _PREHASH_ID, id, i);
 		LLCacheNameEntry* entry = get_ptr_in_map(mCache, id);
-		if(entry)
+		if (entry)
 		{
 			if (isGroup != entry->mIsGroup)
 			{
@@ -938,12 +927,10 @@ void LLCacheName::Impl::processUUIDRequest(LLMessageSystem* msg, bool isGroup)
 	}
 }
 
-
-
 void LLCacheName::Impl::processUUIDReply(LLMessageSystem* msg, bool isGroup)
 {
 	S32 count = msg->getNumberOfBlocksFast(_PREHASH_UUIDNameBlock);
-	for(S32 i = 0; i < count; ++i)
+	for (S32 i = 0; i < count; ++i)
 	{
 		LLUUID id;
 		msg->getUUIDFast(_PREHASH_UUIDNameBlock, _PREHASH_ID, id, i);
@@ -1001,7 +988,6 @@ void LLCacheName::Impl::processUUIDReply(LLMessageSystem* msg, bool isGroup)
 		}
 	}
 }
-
 
 // static call back functions
 

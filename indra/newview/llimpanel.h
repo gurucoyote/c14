@@ -310,6 +310,7 @@ private:
 	LLUUID mSessionUUID;
 
 	std::string mSessionLabel;
+	std::string mSessionLog;
 	LLVoiceChannel*	mVoiceChannel;
 
 	BOOL mSessionInitialized;

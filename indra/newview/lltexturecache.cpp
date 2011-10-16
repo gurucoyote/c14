@@ -1585,7 +1585,10 @@ void LLTextureCache::purgeTextures(bool validate)
 			{
 				S32 idx = iter2->second;
 				time_idx_set.insert(std::make_pair(entries[idx].mTime, idx));
-// 				llinfos << "TIME: " << entries[idx].mTime << " TEX: " << entries[idx].mID << " IDX: " << idx << " Size: " << entries[idx].mImageSize << llendl;
+// 				LL_INFOS("TextureCache") << "TIME: " << entries[idx].mTime
+//										 << " TEX: " << entries[idx].mID
+//										 << " IDX: " << idx << " Size: "
+//										 << entries[idx].mImageSize << LL_ENDL;
 			}
 			else
 			{
@@ -1604,7 +1607,9 @@ void LLTextureCache::purgeTextures(bool validate)
 		validate_idx = (gSavedSettings.getU32("CacheValidateCounter") / 4) * 4;
 		U32 next_idx = (validate_idx + 4) % 256;
 		gSavedSettings.setU32("CacheValidateCounter", next_idx);
-		LL_DEBUGS("TextureCache") << "TEXTURE CACHE: Validating indexes " << validate_idx << " to " << validate_idx + 3 << LL_ENDL;
+		LL_DEBUGS("TextureCache") << "TEXTURE CACHE: Validating indexes "
+								  << validate_idx << " to " << validate_idx + 3
+								  << LL_ENDL;
 	}
 
 	S64 cache_size = mTexturesSizeTotal;
@@ -1626,12 +1631,16 @@ void LLTextureCache::purgeTextures(bool validate)
 			U32 uuididx = entries[idx].mID.mData[0];
 			if (uuididx >= validate_idx && uuididx < validate_idx + 4)
 			{
- 				LL_DEBUGS("TextureCache") << "Validating: " << filename << "Size: " << entries[idx].mBodySize << LL_ENDL;
+ 				LL_DEBUGS("TextureCache") << "Validating: " << filename
+										  << "Size: " << entries[idx].mBodySize
+										  << LL_ENDL;
 				S32 bodysize = LLAPRFile::size(filename);
 				if (bodysize != entries[idx].mBodySize)
 				{
-					LL_WARNS("TextureCache") << "TEXTURE CACHE BODY HAS BAD SIZE: " << bodysize << " != " << entries[idx].mBodySize
-							<< filename << LL_ENDL;
+					LL_WARNS("TextureCache") << "TEXTURE CACHE BODY HAS BAD SIZE: "
+											 << bodysize << " != "
+											 << entries[idx].mBodySize << " for "
+											 << filename << LL_ENDL;
 					purge_entry = true;
 				}
 			}
@@ -1650,22 +1659,23 @@ void LLTextureCache::purgeTextures(bool validate)
 		}
 	}
 
-	LL_DEBUGS("TextureCache") << "TEXTURE CACHE: Writing Entries: " << num_entries << LL_ENDL;
+	LL_DEBUGS("TextureCache") << "TEXTURE CACHE: Writing Entries: "
+							  << num_entries << LL_ENDL;
 
 	if (purge_count > 0)
 	{
 		writeEntriesAndClose(entries);
 
-		LL_INFOS("TextureCache") << "TEXTURE CACHE:"
-				<< " Purged: " << purge_count
+		LL_INFOS("TextureCache") << "TEXTURE CACHE: Purged: " << purge_count
 				<< " - Entries: " << num_entries
-				<< " - Cache size: " << mTexturesSizeTotal / (1024 * 1024) << " MB"
+				<< " - Cache size: " << mTexturesSizeTotal / 1048576 << " MB"
 				<< " - Files scheduled for deletion: " << mFilesToDelete.size()
 				<< LL_ENDL;
 	}
 	else
 	{
-		LL_INFOS("TextureCache") << "TEXTURE CACHE: nothing to purge." << LL_ENDL;
+		LL_INFOS("TextureCache") << "TEXTURE CACHE: nothing to purge."
+								 << LL_ENDL;
 	}
 
 	// *FIX:Mani - watchdog back on.

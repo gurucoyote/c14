@@ -1,4 +1,5 @@
 <textures version="101">
+
  <texture name="sm_rounded_corners_simple.tga" scale_left="4" scale_top="4" scale_bottom="4" scale_right="4"/>
  <texture name="icn_textfield_enabled.tga" scale_left="5" scale_top="5" scale_bottom="5" scale_right="5"/>
  <texture name="button_disabled_32x128.tga" preload="true" scale_left="8" scale_top="16" scale_right="120" scale_bottom="8"/>
@@ -339,4 +340,9 @@
  <texture name="UIImgCrosshairsUUID" file_name="crosshairs.tga"/>
  <texture name="icn_label_music.tga"/>
  <texture name="icn_label_media.tga"/>
+
+ <texture name="ModelImport_Status_Good" file_name="green_checkmark.png" preload="false"/>
+ <texture name="ModelImport_Status_Warning" file_name="lag_status_warning.tga" preload="false"/>
+ <texture name="ModelImport_Status_Error" file_name="red_x.png" preload="false"/>
+
 </textures>

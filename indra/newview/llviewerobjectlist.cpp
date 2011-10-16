@@ -475,7 +475,6 @@ void LLViewerObjectList::processObjectUpdate(LLMessageSystem *mesgsys,
 			
 			if (objectp->getRegion() != regionp)
 			{    // Object changed region, so update it
-				objectp->setRegion(regionp);
 				objectp->updateRegion(regionp); // for LLVOAvatar
 			}
 		}
@@ -1106,7 +1105,6 @@ void LLViewerObjectList::clearDebugText()
 	}
 }
 
-
 void LLViewerObjectList::cleanupReferences(LLViewerObject *objectp)
 {
 	if (!objectp)
@@ -1170,11 +1168,11 @@ void LLViewerObjectList::removeDrawable(LLDrawable* drawablep)
 		LLFace* facep = drawablep->getFace(i) ;
 		if (facep)
 		{
-			   LLViewerObject* objectp = facep->getViewerObject();
-			   if (objectp)
-			   {
-					   mSelectPickList.erase(objectp);
-			   }
+			LLViewerObject* objectp = facep->getViewerObject();
+			if (objectp)
+			{
+				mSelectPickList.erase(objectp);
+			}
 		}
 	}
 }
@@ -1182,7 +1180,8 @@ void LLViewerObjectList::removeDrawable(LLDrawable* drawablep)
 BOOL LLViewerObjectList::killObject(LLViewerObject *objectp)
 {
 	// Don't ever kill gAgentAvatarp, just force it to the agent's region
-	if (objectp == gAgent.getAvatarObject())
+	// unless region is NULL which is assumed to mean you are logging out.
+	if (objectp == gAgent.getAvatarObject() && gAgent.getRegion())
 	{
 		objectp->setRegion(gAgent.getRegion());
 		return FALSE;

@@ -10,7 +10,7 @@ RequestExecutionLevel admin
 !define VER_MAJOR 1
 !define VER_MINOR 26
 !define VER_MICRO 2
-!define VER_REVISION 0
+!define VER_REVISION 1
 !define VERSION "${VER_MAJOR}.${VER_MINOR}.${VER_MICRO}.${VER_REVISION}"
 !define TMP_DIR "C:\TMP"
 !define BUILD_DIR "${TMP_DIR}\${PROD_NAME}"
@@ -31,7 +31,7 @@ Var STARTMENU_FOLDER
 XPStyle on
 Name "${PROD_NAME}"
 Caption "${PROD_NAME} ${VERSION} - Setup"
-OutFile "${TMP_DIR}\${PROD_NAME}-${VERSION}.exe"
+OutFile "${TMP_DIR}\${PROD_NAME}-${VERSION}-overlay.exe"
 InstallDir "$PROGRAMFILES\Snowglobe"
 ;LicenseData "${BUILD_DIR}\COPYING"
 

@@ -400,7 +400,7 @@ void LLVoiceChannel::onChange(EStatusType type, const std::string &channelURI, b
 void LLVoiceChannel::handleStatusChange(EStatusType type)
 {
 	// status updates
-	switch(type)
+	switch (type)
 	{
 	case STATUS_LOGIN_RETRY:
 		LLNotifications::instance().add("VoiceLoginRetry");
@@ -1068,17 +1068,18 @@ LLFloaterIMPanel::LLFloaterIMPanel(const std::string& session_label,
 
 void LLFloaterIMPanel::init(const std::string& session_label)
 {
-	mSessionLabel = session_label;
+	mSessionLabel = mSessionLog = session_label;
 	mProfileButtonEnabled = FALSE;
 
 	std::string xml_filename;
-	switch(mDialog)
+	switch (mDialog)
 	{
 	case IM_SESSION_GROUP_START:
 		mFactoryMap["active_speakers_panel"] = LLCallbackMap(createSpeakersPanel, this);
 		xml_filename = "floater_instant_message_group.xml";
 		mVoiceChannel = new LLVoiceChannelGroup(mSessionUUID, mSessionLabel);
 		break;
+
 	case IM_SESSION_INVITE:
 		mFactoryMap["active_speakers_panel"] = LLCallbackMap(createSpeakersPanel, this);
 		if (gAgent.isInGroup(mSessionUUID))
@@ -1091,25 +1092,35 @@ void LLFloaterIMPanel::init(const std::string& session_label)
 		}
 		mVoiceChannel = new LLVoiceChannelGroup(mSessionUUID, mSessionLabel);
 		break;
+
 	case IM_SESSION_P2P_INVITE:
 		xml_filename = "floater_instant_message.xml";
+		mProfileButtonEnabled = TRUE;
+		if (LLAvatarName::sOmitResidentAsLastName)
+		{
+			mSessionLabel = LLCacheName::cleanFullName(mSessionLabel);
+		}
 		mVoiceChannel = new LLVoiceChannelP2P(mSessionUUID, mSessionLabel, mOtherParticipantUUID);
 		break;
+
 	case IM_SESSION_CONFERENCE_START:
 		mFactoryMap["active_speakers_panel"] = LLCallbackMap(createSpeakersPanel, this);
 		xml_filename = "floater_instant_message_ad_hoc.xml";
 		mVoiceChannel = new LLVoiceChannelGroup(mSessionUUID, mSessionLabel);
 		break;
-	// just received text from another user
-	case IM_NOTHING_SPECIAL:
-		xml_filename = "floater_instant_message.xml";
 
+	case IM_NOTHING_SPECIAL:	// just received text from another user
+		xml_filename = "floater_instant_message.xml";
 		mTextIMPossible = LLVoiceClient::getInstance()->isSessionTextIMPossible(mSessionUUID);
 		mProfileButtonEnabled = LLVoiceClient::getInstance()->isParticipantAvatar(mSessionUUID);
+		if (mProfileButtonEnabled && LLAvatarName::sOmitResidentAsLastName)
+		{
+			mSessionLabel = LLCacheName::cleanFullName(mSessionLabel);
+		}
 		mCallBackEnabled = LLVoiceClient::getInstance()->isSessionCallBackPossible(mSessionUUID);
-
 		mVoiceChannel = new LLVoiceChannelP2P(mSessionUUID, mSessionLabel, mOtherParticipantUUID);
 		break;
+
 	default:
 		llwarns << "Unknown session type" << llendl;
 		xml_filename = "floater_instant_message.xml";
@@ -1120,6 +1131,14 @@ void LLFloaterIMPanel::init(const std::string& session_label)
 
 	LLUICtrlFactory::getInstance()->buildFloater(this, xml_filename,
 												 &getFactoryMap(), FALSE);
+
+	if (mProfileButtonEnabled && mSessionLog.find(' ') == std::string::npos)
+	{
+		// Make sure the IM log file will be unique (avoid getting both
+		// "JohnDoe.txt" and "JohnDoe Resident.txt", depending on how
+		// the IM session was started)
+		mSessionLog += " Resident";
+	}
 
 	setTitle(mSessionLabel);
 	if (mProfileButtonEnabled)
@@ -1133,7 +1152,7 @@ void LLFloaterIMPanel::init(const std::string& session_label)
 
 	if (gSavedPerAccountSettings.getBOOL("LogShowHistory"))
 	{
-		LLLogChat::loadHistory(mSessionLabel, &chatFromLogFile, (void *)this);
+		LLLogChat::loadHistory(mSessionLog, &chatFromLogFile, (void *)this);
 	}
 
 	if (!mSessionInitialized)
@@ -1156,7 +1175,7 @@ void LLFloaterIMPanel::init(const std::string& session_label)
 
 			addHistoryLine(session_start,
 						   gSavedSettings.getColor4("SystemChatColor"),
-						  false);
+						   false);
 		}
 	}
 }
@@ -1330,9 +1349,9 @@ void LLFloaterIMPanel::onVolumeChange(LLUICtrl* source, void* user_data)
 
 // virtual
 void LLFloaterIMPanel::draw()
-{	
+{
 	LLViewerRegion* region = gAgent.getRegion();
-	
+
 	BOOL enable_connect = region &&
 						  region->getCapability("ChatSessionRequest") != "" &&
 					  	  mCallBackEnabled && mSessionInitialized &&
@@ -1343,7 +1362,7 @@ void LLFloaterIMPanel::draw()
 	childSetVisible("start_call_btn", LLVoiceClient::voiceEnabled() && mVoiceChannel->getState() < LLVoiceChannel::STATE_CALL_STARTED);
 	childSetEnabled("start_call_btn", enable_connect);
 	childSetEnabled("send_btn", !childGetValue("chat_editor").asString().empty());
-	
+
 	LLPointer<LLSpeaker> self_speaker = mSpeakers->findSpeaker(gAgent.getID());
 	if (!mTextIMPossible)
 	{
@@ -1522,21 +1541,18 @@ void LLFloaterIMPanel::addHistoryLine(const std::string &utf8msg,
 					av_id = gAgent.getID();
 				}
 			}
-			if (LLAvatarNameCache::useDisplayNames())
+			else if (LLAvatarNameCache::useDisplayNames())
 			{
-				if (av_id != LLUUID::null)
+				LLAvatarName avatar_name;
+				if (LLAvatarNameCache::get(av_id, &avatar_name))
 				{
-					LLAvatarName avatar_name;
-					if (LLAvatarNameCache::get(av_id, &avatar_name))
+					if (LLAvatarNameCache::useDisplayNames() == 2)
 					{
-						if (LLAvatarNameCache::useDisplayNames() == 2)
-						{
-							name = avatar_name.mDisplayName;
-						}
-						else
-						{
-							name = avatar_name.getNames();
-						}
+						name = avatar_name.mDisplayName;
+					}
+					else
+					{
+						name = avatar_name.getNames();
 					}
 				}
 			}
@@ -1547,7 +1563,7 @@ void LLFloaterIMPanel::addHistoryLine(const std::string &utf8msg,
 		prepend_newline = false;
 	}
 	mHistoryEditor->appendColoredText(utf8msg, false, prepend_newline, color);
-	
+
 	if (log_to_file && gSavedPerAccountSettings.getBOOL("LogInstantMessages"))
 	{
 		std::string histstr = "";
@@ -1557,7 +1573,7 @@ void LLFloaterIMPanel::addHistoryLine(const std::string &utf8msg,
 		}
 		histstr += name + utf8msg;
 
-		LLLogChat::saveHistory(mSessionLabel, histstr);
+		LLLogChat::saveHistory(mSessionLog, histstr);
 	}
 
 	if (!isInVisibleChain())
@@ -1712,7 +1728,7 @@ BOOL LLFloaterIMPanel::dropCategory(LLInventoryCategory* category, BOOL drop)
 		else if (drop)
 		{
 			LLDynamicArray<LLUUID> ids;
-			for(S32 i = 0; i < count; ++i)
+			for (S32 i = 0; i < count; ++i)
 			{
 				ids.put(items.get(i)->getCreatorUUID());
 			}
@@ -2113,8 +2129,7 @@ void LLFloaterIMPanel::sessionInitReplyReceived(const LLUUID& session_id)
 	//and now, send the queued msg
 	LLSD::array_iterator iter;
 	for (iter = mQueuedMsgsForInit.beginArray();
-		 iter != mQueuedMsgsForInit.endArray();
-		 ++iter)
+		 iter != mQueuedMsgsForInit.endArray(); ++iter)
 	{
 		deliver_message(iter->asString(), mSessionUUID, mOtherParticipantUUID,
 						mDialog);
@@ -2308,7 +2323,6 @@ void LLFloaterIMPanel::showSessionForceClose(const std::string& reason_string)
 	LLNotifications::instance().add("ForceCloseChatterBoxSession", args,
 									payload,
 									LLFloaterIMPanel::onConfirmForceCloseError);
-
 }
 
 bool LLFloaterIMPanel::onConfirmForceCloseError(const LLSD& notification, const LLSD& response)

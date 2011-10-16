@@ -3643,9 +3643,11 @@ void LLVOAvatar::idleUpdateTractorBeam()
 	LLObjectSelectionHandle selection = LLSelectMgr::getInstance()->getSelection();
 	LLViewerObject* object = selection->getFirstObject();
 	static LLCachedControl<bool> private_look_at(gSavedSettings, "PrivateLookAt");
+	static LLCachedControl<U32> private_look_at_limit(gSavedSettings, "PrivateLookAtLimit");
 	if (object && private_look_at)
 	{
-		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() > 20.0)
+		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() >
+			private_look_at_limit)
 		{
 			return;
 		}
@@ -4895,9 +4897,13 @@ void LLVOAvatar::updateTextures()
 	{
 		render_avatar = TRUE;
 	}
+	else if (!isVisible())
+	{
+		return;
+	}
 	else
 	{
-		render_avatar = isVisible() && !mCulled;
+		render_avatar = !mCulled;
 	}
 
 	std::vector<bool> layer_baked;
@@ -5507,30 +5513,15 @@ void LLVOAvatar::resetSpecificJointPosition(const std::string& name)
 //-----------------------------------------------------------------------------
 void LLVOAvatar::resetJointPositionsToDefault(void)
 {
-	const LLVector3& avPos = getCharacterPosition();
-
-	//Reposition the pelvis
-	LLJoint* pPelvis = mRoot.findJoint("mPelvis");
-	if (pPelvis)
-	{
-		pPelvis->setPosition(avPos + pPelvis->getPosition());
-	}
-	else 
-	{
-		llwarns << "Can't get pelvis joint." << llendl;
-		return;
-	}
-
 	//Subsequent joints are relative to pelvis
 	for (S32 i = 0; i < (S32)mNumJoints; ++i)
 	{
 		LLJoint* pJoint = (LLJoint*)&mSkeleton[i];
 		if (pJoint->doesJointNeedToBeReset())
 		{
-
 			pJoint->setId(LLUUID::null);
 			//restore joints to default positions, however skip over the pelvis
-			if (pJoint && pPelvis != pJoint)
+			if (pJoint)
 			{
 				pJoint->restoreOldXform();
 			}

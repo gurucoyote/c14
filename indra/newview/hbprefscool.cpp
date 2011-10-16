@@ -56,6 +56,7 @@ private:
 	static void onCommitCheckBoxShowButton(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxRestrainedLove(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxSpeedRez(LLUICtrl* ctrl, void* user_data);
+	static void onCommitCheckBoxPrivateLookAt(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data);
 	void refreshValues();
 
@@ -99,6 +100,7 @@ private:
 	std::string mHighlightNicknames;
 	U32 mStackScreenWidthFraction;
 	U32 mSpeedRezInterval;
+	U32 mPrivateLookAtLimit;
 	U32 mDecimalsForTools;
 	U32 mTimeFormat;
 	U32 mDateFormat;
@@ -123,6 +125,7 @@ HBPrefsCoolImpl::HBPrefsCoolImpl()
 	childSetCommitCallback("show_inventory_button_check",		onCommitCheckBoxShowButton, this);
 	childSetCommitCallback("restrained_love_check",				onCommitCheckBoxRestrainedLove, this);
 	childSetCommitCallback("speed_rez_check",					onCommitCheckBoxSpeedRez, this);
+	childSetCommitCallback("private_look_at_check",				onCommitCheckBoxPrivateLookAt, this);
 	childSetCommitCallback("use_old_chat_history_check",		onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("im_tabs_vertical_stacking_check",	onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("use_old_statusbar_icons_check",		onCommitCheckBoxAfterRestart, this);
@@ -176,6 +179,18 @@ void HBPrefsCoolImpl::onCommitCheckBoxSpeedRez(LLUICtrl* ctrl, void* user_data)
 }
 
 //static
+void HBPrefsCoolImpl::onCommitCheckBoxPrivateLookAt(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enabled = check->get();
+	self->childSetEnabled("private_look_at_limit", enabled);
+	self->childSetEnabled("private_look_at_limit_meters", enabled);
+}
+
+//static
 void HBPrefsCoolImpl::onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data)
 {
 	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
@@ -226,6 +241,7 @@ void HBPrefsCoolImpl::refreshValues()
 	mAllowMUpose				= gSavedSettings.getBOOL("AllowMUpose");
 	mAutoCloseOOC				= gSavedSettings.getBOOL("AutoCloseOOC");
 	mPrivateLookAt				= gSavedSettings.getBOOL("PrivateLookAt");
+	mPrivateLookAtLimit			= gSavedSettings.getU32("PrivateLookAtLimit");
 	mRestrainedLove				= gSavedSettings.getBOOL("RestrainedLove");
 	if (mRestrainedLove)
 	{
@@ -358,6 +374,7 @@ void HBPrefsCoolImpl::cancel()
 	gSavedSettings.setBOOL("AllowMUpose",				mAllowMUpose);
 	gSavedSettings.setBOOL("AutoCloseOOC",				mAutoCloseOOC);
 	gSavedSettings.setBOOL("PrivateLookAt",				mPrivateLookAt);
+	gSavedSettings.setU32("PrivateLookAtLimit",			mPrivateLookAtLimit);
 	gSavedSettings.setBOOL("FetchInventoryOnLogin",		mFetchInventoryOnLogin);
 	gSavedSettings.setBOOL("RestrainedLove",			mRestrainedLove);
 	gSavedSettings.setBOOL("PreviewAnimInWorld",		mPreviewAnimInWorld);

@@ -449,29 +449,57 @@ LLView* LLNameListCtrl::fromXML(LLXMLNodePtr node, LLView *parent,
 
 bool LLNameListCtrl::getResidentName(const LLUUID& agent_id, std::string& fullname)
 {
-	std::string name;
-	if (gCacheName->getFullName(agent_id, name))
+	LLAvatarName av_name;
+	if (LLAvatarNameCache::get(agent_id, &av_name))
 	{
-		fullname = name;
-		if (mUseDisplayNames && LLAvatarNameCache::useDisplayNames() && !gSavedSettings.getBOOL("LegacyNamesForFriends"))
+		if (mUseDisplayNames && LLAvatarNameCache::useDisplayNames() &&
+			!gSavedSettings.getBOOL("LegacyNamesForFriends"))
 		{
-			LLAvatarName avatar_name;
-			if (LLAvatarNameCache::get(agent_id, &avatar_name))
+			if (LLAvatarNameCache::useDisplayNames() == 2)
 			{
-				if (LLAvatarNameCache::useDisplayNames() == 2)
-				{
-					fullname = avatar_name.mDisplayName;
-				}
-				else
-				{
-					fullname = avatar_name.getNames();
-				}
+				fullname = av_name.mDisplayName;
 			}
+			else
+			{
+				fullname = av_name.getNames();
+			}
+		}
+		else
+		{
+			fullname = av_name.getLegacyName();
 		}
 		return true;
 	}
 	else
 	{
+		// ...schedule a callback
+		LLAvatarNameCache::get(agent_id,
+							   boost::bind(&LLNameListCtrl::onAvatarNameCache,
+							   this, _1, _2));
 		return false;
 	}
+}
+
+void LLNameListCtrl::onAvatarNameCache(const LLUUID& agent_id,
+									   const LLAvatarName& av_name)
+{
+	std::string fullname;
+	if (mUseDisplayNames && LLAvatarNameCache::useDisplayNames() &&
+		!gSavedSettings.getBOOL("LegacyNamesForFriends"))
+	{
+		if (LLAvatarNameCache::useDisplayNames() == 2)
+		{
+			fullname = av_name.mDisplayName;
+		}
+		else
+		{
+			fullname = av_name.getNames();
+		}
+	}
+	else
+	{
+		fullname = av_name.getLegacyName();
+	}
+
+	refresh(agent_id, fullname, false);
 }

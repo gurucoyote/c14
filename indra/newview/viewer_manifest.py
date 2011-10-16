@@ -141,13 +141,10 @@ class ViewerManifest(LLManifest):
                          "--helperuri http://preview-%(grid)s.secondlife.com/helpers/" %\
                            {'grid':self.grid()}
 
-        # set command line flags for channel
-        channel_flags = '--channel "Cool VL Viewer"'
-
         # Deal with settings 
-        setting_flags = '--settings settings_coolvlviewer_1262.xml'
+        setting_flags = ''
 
-        return " ".join((channel_flags, grid_flags, setting_flags)).strip()
+        return " ".join((grid_flags, setting_flags)).strip()
 
 class WindowsManifest(ViewerManifest):
     def final_exe(self):

@@ -39,6 +39,8 @@
 
 #include "llfilepicker.h"
 
+#undef MESH_UPLOAD		// #define to enable mesh uploading
+
 class LLTransactionID;
 
 void init_menu_file();
@@ -118,4 +120,5 @@ public:
 
 	virtual void notify(const std::string& filename) = 0;
 };
+
 #endif

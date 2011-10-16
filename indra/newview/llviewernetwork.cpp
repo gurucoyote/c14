@@ -161,7 +161,8 @@ void LLViewerLogin::setGridChoice(EGridInfo grid)
 {	
 	if (grid < 0 || grid > GRID_INFO_OTHER)
 	{
-		llerrs << "Invalid grid index specified." << llendl;
+		llwarns << "Invalid grid index specified." << llendl;
+		grid = DEFAULT_GRID_CHOICE;
 	}
 
 	mGridChoice = grid;
@@ -173,7 +174,7 @@ void LLViewerLogin::setGridChoice(EGridInfo grid)
 	}
 	else if (name == "other")
 	{
-		// *FIX:Mani - could this possibly be valid?
+		// *FIX: Mani - could this possibly be valid?
 		mGridName = "other";
 	}
 	else

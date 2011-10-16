@@ -72,9 +72,11 @@
  
 BOOL LLAgent::setLookAt(ELookAtType target_type, LLViewerObject *object, LLVector3 position)
 {
-	if (object && target_type != LOOKAT_TARGET_NONE && gSavedSettings.getBOOL("PrivateLookAt"))
+	if (object && target_type != LOOKAT_TARGET_NONE &&
+		gSavedSettings.getBOOL("PrivateLookAt"))
 	{
-		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() > 20.0)
+		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() >
+			gSavedSettings.getU32("PrivateLookAtLimit"))
 		{
 			target_type = LOOKAT_TARGET_NONE;
 			object = mAvatarObject;
@@ -118,7 +120,8 @@ BOOL LLAgent::setPointAt(EPointAtType target_type, LLViewerObject *object, LLVec
 		target_type != POINTAT_TARGET_NONE &&
 		target_type != POINTAT_TARGET_CLEAR)
 	{
-		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() > 20.0)
+		if ((object->getPositionGlobal() - gAgent.getPositionGlobal()).magVec() >
+			gSavedSettings.getU32("PrivateLookAtLimit"))
 		{
 			target_type = POINTAT_TARGET_NONE;
 			object = NULL;
@@ -185,8 +188,6 @@ void LLAgent::renderAutoPilotTarget()
 		gGL.popMatrix();
 	}
 }
-
-extern BOOL gDebugSelect;
 
 // Returns true if you got at least one object
 void LLToolSelectRect::handleRectangleSelection(S32 x, S32 y, MASK mask)

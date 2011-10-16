@@ -86,6 +86,8 @@ public:
 	void setUseDisplayNames(BOOL b) { mUseDisplayNames = b; }
 
 private:
+	void onAvatarNameCache(const LLUUID& agent_id, const LLAvatarName& av_name);
+
 	bool	getResidentName(const LLUUID& agent_id, std::string& fullname);
 	BOOL	mUseDisplayNames;
 

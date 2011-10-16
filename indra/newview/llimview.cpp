@@ -641,9 +641,14 @@ void LLIMMgr::addMessage(const LLUUID& session_id,
 	if (!floater)
 	{
 		std::string name = from_name;
-		if (!session_name.empty() && session_name.size()>1)
+		if (!session_name.empty() && session_name.size() > 1)
 		{
 			name = session_name;
+		}
+		if (LLAvatarName::sOmitResidentAsLastName)
+		{
+			name = LLCacheName::cleanFullName(name);
+			from_name = LLCacheName::cleanFullName(from_name);
 		}
 
 		floater = createFloater(new_session_id, other_participant_id, name,
@@ -1009,11 +1014,16 @@ void LLIMMgr::inviteToSession(const LLUUID& session_id,
 void LLIMMgr::onInviteNameLookup(const LLUUID& id, const std::string& full_name,
 								 bool is_group, LLSD payload)
 {
-	payload["caller_name"] = full_name;
-	payload["session_name"] = payload["caller_name"].asString();
+	std::string name = full_name;
+	if (LLAvatarName::sOmitResidentAsLastName)
+	{
+		name = LLCacheName::cleanFullName(name);
+	}
+	payload["caller_name"] = name;
+	payload["session_name"] = name;
 
 	LLSD args;
-	args["NAME"] = full_name;
+	args["NAME"] = name;
 
 	LLNotifications::instance().add(payload["notify_box_type"].asString(),
 									args, payload, &inviteUserResponse);
@@ -1566,6 +1576,10 @@ public:
 
 			std::string message = message_params["message"].asString();
 			std::string name = message_params["from_name"].asString();
+			if (LLAvatarName::sOmitResidentAsLastName)
+			{
+				name = LLCacheName::cleanFullName(name);
+			}
 			LLUUID from_id = message_params["from_id"].asUUID();
 			LLUUID session_id = message_params["id"].asUUID();
 			std::vector<U8> bin_bucket = message_params["data"]["binary_bucket"].asBinary();
@@ -1580,7 +1594,7 @@ public:
 			BOOL is_linden = ml && ml->isLinden(name);
 
 			std::string separator_string(": ");
-			int message_offset=0;
+			int message_offset = 0;
 
 			//Handle IRC styled /me messages.
 			std::string prefix = message.substr(0, 4);

@@ -127,6 +127,7 @@ cp -a fonts/profontdoc.txt $temp/fonts/
 cp -a fonts/profontwindows.ttf $temp/fonts/
 cp -a res-sdl/cvlv_icon.BMP $temp/res-sdl/
 
+cp -a skins/default/colors_base.xml $temp/skins/default/
 cp -a skins/default/html/* $temp/skins/default/html/
 rm -f $temp/skins/default/html/btn_purplepill_bg.png
 rm -f $temp/skins/default/html/en-us/loading/sl_logo_rotate_black.gif
@@ -184,6 +185,7 @@ cp -a skins/default/xui/en-us/floater_live_lsleditor.xml $temp/skins/default/xui
 cp -a skins/default/xui/en-us/floater_media_browser.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_media_filter.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_mini_map.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/floater_model_preview.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_moveview.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_mute.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/floater_new_im.xml $temp/skins/default/xui/en-us/
@@ -253,6 +255,7 @@ cp -a skins/default/xui/en-us/panel_voice_remote.xml $temp/skins/default/xui/en-
 cp -a skins/default/xui/en-us/role_actions.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/strings.xml $temp/skins/default/xui/en-us/
 
+cp -a skins/silver/colors_base.xml $temp/skins/silver/
 cp -a skins/silver/xui/en-us/floater_chat_history2.xml $temp/skins/silver/xui/en-us/
 cp -a skins/silver/xui/en-us/floater_directory2.xml $temp/skins/silver/xui/en-us/
 cp -a skins/silver/xui/en-us/floater_directory.xml $temp/skins/silver/xui/en-us/

@@ -417,4 +417,8 @@
   <texture name="media_btn_stoploading.png"/>
   <texture name="media_panel_divider.png"/>
 
+  <texture name="ModelImport_Status_Good" file_name="green_checkmark.png" preload="false"/>
+  <texture name="ModelImport_Status_Warning" file_name="lag_status_warning.tga" preload="false"/>
+  <texture name="ModelImport_Status_Error" file_name="red_x.png" preload="false"/>
+
 </textures>

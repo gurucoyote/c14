@@ -195,7 +195,7 @@ bool LLFloaterEnvSettings::isOpen()
 {
 	if (sEnvSettings != NULL) 
 	{
-		return true;
+		return sEnvSettings->getVisible();
 	}
 	return false;
 }

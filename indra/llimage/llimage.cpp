@@ -165,7 +165,7 @@ U8* LLImageBase::allocateData(S32 size)
 	{
 		deleteData(); // virtual
 		mBadBufferAllocation = FALSE;
-		mData = new U8[size];
+		mData = new (std::nothrow) U8[size];
 		if (!mData)
 		{
 			llwarns << "allocate image data: " << size << llendl;
@@ -187,7 +187,7 @@ U8* LLImageBase::reallocateData(S32 size)
 		return mData;
 	}
 	LLMemType mt1((LLMemType::EMemType)mMemType);
-	U8 *new_datap = new U8[size];
+	U8 *new_datap = new (std::nothrow) U8[size];
 	if (!new_datap)
 	{
 		llwarns << "Out of memory in LLImageBase::reallocateData" << llendl;
@@ -331,12 +331,11 @@ BOOL LLImageRaw::resize(U16 width, U16 height, S8 components)
 U8 * LLImageRaw::getSubImage(U32 x_pos, U32 y_pos, U32 width, U32 height) const
 {
 	LLMemType mt1((LLMemType::EMemType)mMemType);
-	U8 *data = new U8[width * height * getComponents()];
-
+	U8 *data = new (std::nothrow) U8[width * height * getComponents()];
 	// Should do some simple bounds checking
 	if (!data)
 	{
-		llerrs << "Out of memory in LLImageRaw::getSubImage" << llendl;
+		llwarns << "Out of memory in LLImageRaw::getSubImage" << llendl;
 		return NULL;
 	}
 
@@ -415,10 +414,10 @@ void LLImageRaw::verticalFlip()
 {
 	LLMemType mt1((LLMemType::EMemType)mMemType);
 	S32 row_bytes = getWidth() * getComponents();
-	U8* line_buffer = new U8[row_bytes];
+	U8* line_buffer = new (std::nothrow) U8[row_bytes];
 	if (!line_buffer)
 	{
-		llerrs << "Out of memory in LLImageRaw::verticalFlip()" << llendl;
+		llwarns << "Out of memory in LLImageRaw::verticalFlip()" << llendl;
 		return;
 	}
 	S32 mid_row = getHeight() / 2;
@@ -553,7 +552,12 @@ void LLImageRaw::compositeScaled4onto3(LLImageRaw* src)
 
 	// Vertical: scale but no composite
 	S32 temp_data_size = src->getWidth() * dst->getHeight() * src->getComponents();
-	U8* temp_buffer = new U8[temp_data_size];
+	U8* temp_buffer = new (std::nothrow) U8[temp_data_size];
+	if (!temp_buffer)
+	{
+		llwarns << "Out of memory in LLImageRaw::compositeScaled4onto3()" << llendl;
+		return;
+	}
 	for (S32 col = 0; col < src->getWidth(); col++)
 	{
 		copyLineScaled(src->getData() + (src->getComponents() * col), temp_buffer + (src->getComponents() * col), src->getHeight(), dst->getHeight(), src->getWidth(), src->getWidth());
@@ -787,7 +791,12 @@ void LLImageRaw::copyScaled(LLImageRaw* src)
 	// Vertical
 	S32 temp_data_size = src->getWidth() * dst->getHeight() * getComponents();
 	llassert_always(temp_data_size > 0);
-	U8* temp_buffer = new U8[temp_data_size];
+	U8* temp_buffer = new (std::nothrow) U8[temp_data_size];
+	if (!temp_buffer)
+	{
+		llwarns << "Out of memory in LLImageRaw::copyScaled()" << llendl;
+		return;
+	}
 	for (S32 col = 0; col < src->getWidth(); col++)
 	{
 		copyLineScaled(src->getData() + (getComponents() * col), temp_buffer + (getComponents() * col), src->getHeight(), dst->getHeight(), src->getWidth(), src->getWidth());
@@ -822,7 +831,16 @@ BOOL LLImageRaw::scale(S32 new_width, S32 new_height, BOOL scale_image_data)
 	{
 		// Vertical
 		S32 temp_data_size = old_width * new_height * getComponents();
-		U8* temp_buffer = new U8[temp_data_size];
+		U8* temp_buffer = new (std::nothrow) U8[temp_data_size];
+		if (!temp_buffer)
+		{
+			llwarns << "Out of memory in LLImageRaw::scale: old (w, h, c) = ("
+					<< old_width << ", " << old_height << ", "
+					<< (S32)getComponents() << "); new (w, h, c) = ("
+					<< new_width << ", " << new_height << ", "
+					<< (S32)getComponents() << ")" << llendl;
+			return FALSE;
+		}
 		for (S32 col = 0; col < old_width; col++)
 		{
 			copyLineScaled(getData() + (getComponents() * col), temp_buffer + (getComponents() * col), old_height, new_height, old_width, old_width);
@@ -845,12 +863,14 @@ BOOL LLImageRaw::scale(S32 new_width, S32 new_height, BOOL scale_image_data)
 	{
 		// copy	out	existing image data
 		S32	temp_data_size = old_width * old_height	* getComponents();
-		U8*	temp_buffer	= new U8[temp_data_size];
+		U8*	temp_buffer	= new (std::nothrow) U8[temp_data_size];
 		if (!temp_buffer)
 		{
-			llwarns << "Out of memory in LLImageRaw::scale: old (w, h, c) = (" << old_width << ", " << old_height << ", " << (S32)getComponents() << 
-				"); new (w, h, c) = (" << new_width << ", " << new_height << ", " << (S32)getComponents() << ")" << llendl;
-
+			llwarns << "Out of memory in LLImageRaw::scale: old (w, h, c) = ("
+					<< old_width << ", " << old_height << ", "
+					<< (S32)getComponents() << "); new (w, h, c) = ("
+					<< new_width << ", " << new_height << ", "
+					<< (S32)getComponents() << ")" << llendl;
 			return FALSE;
 		}
 		memcpy(temp_buffer,	getData(), temp_data_size);	/* Flawfinder: ignore */

@@ -30,7 +30,9 @@
  */
 
 #include "linden_common.h"
+
 #include "llworkerthread.h"
+
 #include "llstl.h"
 
 #if USE_FRAME_CALLBACK_MANAGER
@@ -40,8 +42,10 @@
 //============================================================================
 // Run on MAIN thread
 
-LLWorkerThread::LLWorkerThread(const std::string& name, bool threaded) :
-	LLQueuedThread(name, threaded)
+LLWorkerThread::LLWorkerThread(const std::string& name,
+							   bool threaded,
+							   bool should_pause)
+:	LLQueuedThread(name, threaded, should_pause)
 {
 	mDeleteMutex = new LLMutex;
 }

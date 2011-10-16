@@ -816,6 +816,7 @@ void init_client_menu(LLMenuGL* menu)
 		sub_menu->append(new LLMenuItemToggleGL("Show FOV Info", &gDisplayFOV));
 		sub_menu->append(new LLMenuItemCheckGL("Show Time", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowTime"));
 		sub_menu->append(new LLMenuItemCheckGL("Show Render Info", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderInfo"));
+		sub_menu->append(new LLMenuItemCheckGL("Show Mesh Queue", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowMeshQueue"));
 		sub_menu->append(new LLMenuItemCheckGL("Show Matrices", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowRenderMatrices"));
 		sub_menu->append(new LLMenuItemCheckGL("Show Color Under Cursor", menu_toggle_control, NULL, menu_check_control, (void*)"DebugShowColor"));
 		sub_menu->createJumpKeys();

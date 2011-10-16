@@ -71,7 +71,7 @@ public:
 
 	// Checks if the current tab needs to be applied, and tries to switch to the requested tab.
 	BOOL attemptTransition();
-	
+
 	// Switches to the requested tab (will close() if requested is NULL)
 	void transitionToTab();
 
@@ -122,7 +122,7 @@ public:
 	static void onClickShowAll(void*);
 	void handleClickShowAll();
 
-	virtual void setSearchFilter( const std::string& filter );
+	virtual void setSearchFilter(const std::string& filter);
 
 	virtual void activate();
 	virtual void deactivate();
@@ -148,6 +148,7 @@ public:
 									BOOL is_owner_role);
 
 	void setFooterEnabled(BOOL enable);
+
 protected:
 	LLPanel* mHeader;
 	LLPanel* mFooter;
@@ -310,6 +311,7 @@ public:
 
 	static void onActionSelect(LLUICtrl*, void*);
 	void handleActionSelect();
+
 protected:
 	LLScrollListCtrl*	mActionList;
 	LLScrollListCtrl*	mActionRoles;
@@ -317,6 +319,5 @@ protected:
 
 	LLTextEditor*	mActionDescription;
 };
-
 
 #endif // LL_LLPANELGROUPROLES_H

@@ -122,7 +122,7 @@ LLPanelGroupRoles::~LLPanelGroupRoles()
 {
 	if (mSubTabContainer)
 	{
-		for (int i = 0; i < mSubTabContainer->getTabCount(); ++i)
+		for (S32 i = 0; i < mSubTabContainer->getTabCount(); ++i)
 		{
 			LLPanelGroupSubTab* subtabp = (LLPanelGroupSubTab*) mSubTabContainer->getPanelByIndex(i);
 			subtabp->removeObserver(this);
@@ -188,7 +188,7 @@ BOOL LLPanelGroupRoles::isVisibleByAgent(LLAgent* agentp)
 								   GP_ROLE_CHANGE_ACTIONS |
 								   GP_MEMBER_INVITE |
 								   GP_MEMBER_EJECT |
-								   GP_MEMBER_OPTIONS );
+								   GP_MEMBER_OPTIONS);
 	*/
 	return mAllowEdit && agentp->isInGroup(mGroupID);
 }
@@ -342,7 +342,7 @@ bool LLPanelGroupRoles::apply(std::string& mesg)
 
 	LLPanelGroupTab* panelp = (LLPanelGroupTab*) mSubTabContainer->getCurrentPanel();
 	if (!panelp) return false;
-	
+
 	// Ignore the needs apply message.
 	std::string ignore_mesg;
 	if (!panelp->needsApply(ignore_mesg))
@@ -447,7 +447,7 @@ bool LLPanelGroupRoles::needsApply(std::string& mesg)
 	if (!mSubTabContainer) return false;
 	LLPanelGroupTab* panelp = (LLPanelGroupTab*) mSubTabContainer->getCurrentPanel();
 	if (!panelp) return false;
-		
+
 	return panelp->needsApply(mesg);
 }
 
@@ -504,7 +504,7 @@ BOOL LLPanelGroupSubTab::postBuild()
 	mShowAllButton->setClickedCallback(onClickShowAll);
 	mShowAllButton->setCallbackUserData(this);
 	mShowAllButton->setEnabled(FALSE);
-	
+
 	// Get icons for later use.
 	mActionIcons.clear();
 
@@ -740,7 +740,7 @@ void LLPanelGroupSubTab::buildActionCategory(LLScrollListCtrl* ctrl,
 			if (!category_matches_filter
 				&& !matchesActionSearchFilter((*ra_it)->mDescription))
 			{
-				continue;										
+				continue;
 			}
 
 			items_match_filter = true;
@@ -955,7 +955,7 @@ void LLPanelGroupMembersSubTab::handleMemberSelect()
 	std::vector<LLScrollListItem*>::iterator itor;
 	for (itor = selection.begin(); itor != selection.end(); ++itor)
 	{
-		selected_members.push_back( (*itor)->getUUID() );
+		selected_members.push_back((*itor)->getUUID());
 		// Get this member's power mask including any unsaved changes
 
 		U64 powers = getAgentPowersBasedOnRoleChanges((*itor)->getUUID());
@@ -1065,9 +1065,9 @@ void LLPanelGroupMembersSubTab::handleMemberSelect()
 				// Don't bother showing a count, if there is only 0 or 1.
 				if (count > 1)
 				{
-					label << ": " << count ;
+					label << ": " << count;
 				}
-	
+
 				LLSD row;
 				row["id"] = role_id;
 
@@ -1090,7 +1090,7 @@ void LLPanelGroupMembersSubTab::handleMemberSelect()
 				LLCheckBoxCtrl* check = check_cell->getCheckBox();
 				check->setCommitCallback(onRoleCheck);
 				check->setCallbackUserData(this);
-				check->set( count > 0 );
+				check->set(count > 0);
 				check->setTentative(0 != count &&
 									selected_members.size() != (std::vector<LLUUID>::size_type)count);
 
@@ -1198,16 +1198,16 @@ void LLPanelGroupMembersSubTab::handleRoleCheck(const LLUUID& role_id,
 	U64 powers_all_have  = 0xffffffffffffLL;
 	U64 powers_some_have = 0;
 
-	BOOL   is_owner_role = ( gdatap->mOwnerRole == role_id );
+	BOOL   is_owner_role = (gdatap->mOwnerRole == role_id);
 	LLUUID member_id;
-	
+
 	std::vector<LLScrollListItem*> selection = mMembersList->getAllSelected();
 	if (selection.empty())
 	{
 		return;
 	}
-	
-	for (std::vector<LLScrollListItem*>::iterator itor = selection.begin() ; 
+
+	for (std::vector<LLScrollListItem*>::iterator itor = selection.begin(); 
 		 itor != selection.end(); ++itor)
 	{
 		member_id = (*itor)->getUUID();
@@ -1229,7 +1229,7 @@ void LLPanelGroupMembersSubTab::handleRoleCheck(const LLUUID& role_id,
 			if (role->second != type)
 			{
 				role_change_datap->erase(role_id);
-				if ( is_owner_role ) mNumOwnerAdditions--;
+				if (is_owner_role) mNumOwnerAdditions--;
 			}
 			//else do nothing
 
@@ -1247,7 +1247,7 @@ void LLPanelGroupMembersSubTab::handleRoleCheck(const LLUUID& role_id,
 		{
 			//a previously unchanged role is being changed
 			(*role_change_datap)[role_id] = type;
-			if ( is_owner_role && type == RMC_ADD ) mNumOwnerAdditions++;
+			if (is_owner_role && type == RMC_ADD) mNumOwnerAdditions++;
 		}
 
 		//we need to calculate what powers the selected members
@@ -1421,7 +1421,7 @@ void LLPanelGroupMembersSubTab::applyMemberChanges()
 	}
 	mMemberRoleChangeData.clear();
 
-	LLGroupMgr::getInstance()->sendGroupRoleMemberChanges(mGroupID);	
+	LLGroupMgr::getInstance()->sendGroupRoleMemberChanges(mGroupID);
 	//force a UI update
 	handleMemberSelect();
 
@@ -1468,7 +1468,7 @@ U64 LLPanelGroupMembersSubTab::getAgentPowersBasedOnRoleChanges(const LLUUID& ag
 	}
 
 	LLGroupMemberData* member_data = gdatap->mMembers[agent_id];
-	if ( !member_data )
+	if (!member_data)
 	{
 		LL_WARNS("GroupPanel") << "LLPanelGroupMembersSubTab::getAgentPowersBasedOnRoleChanges() -- No member data for member with UUID " << agent_id << LL_ENDL;
 		return GP_NO_POWERS;
@@ -1553,12 +1553,11 @@ bool LLPanelGroupMembersSubTab::getRoleChangeType(const LLUUID& member_id,
 
 void LLPanelGroupMembersSubTab::draw()
 {
-	LLPanelGroupSubTab::draw();
-
 	if (mPendingMemberUpdate)
 	{
 		updateMembers();
 	}
+	LLPanelGroupSubTab::draw();
 }
 
 void LLPanelGroupMembersSubTab::update(LLGroupChange gc)
@@ -1640,16 +1639,17 @@ void LLPanelGroupMembersSubTab::updateMembers()
 
 	LLGroupMgrGroupData::member_list_t::iterator end = gdatap->mMembers.end();
 
-	for(S32 i = 0; mMemberProgress != end && i < UPDATE_MEMBERS_PER_FRAME;
-		++mMemberProgress, ++i)
+	for (S32 i = 0; mMemberProgress != end && i < UPDATE_MEMBERS_PER_FRAME;
+		 ++mMemberProgress, ++i)
 	{
 		if (!mMemberProgress->second) continue;
 		// Do filtering on name if it is already in the cache.
 		bool add_member = true;
 
-		std::string fullname;
-		if (gCacheName->getFullName(mMemberProgress->first, fullname))
+		LLAvatarName av_name;
+		if (LLAvatarNameCache::get(mMemberProgress->first, &av_name))
 		{
+			std::string fullname = av_name.getLegacyName();	// We are only using legacy names there
 			if (!matchesSearchFilter(fullname))
 			{
 				add_member = false;
@@ -1756,7 +1756,7 @@ BOOL LLPanelGroupRolesSubTab::postBuildSubTab(LLView* root)
 		mCreateRoleButton->setClickedCallback(onCreateRole);
 		mCreateRoleButton->setEnabled(FALSE);
 	}
-	
+
 	mDeleteRoleButton = parent->getChild<LLButton>("role_delete", TRUE, FALSE);
 	if (mDeleteRoleButton)
 	{
@@ -1973,7 +1973,7 @@ void LLPanelGroupRolesSubTab::update(LLGroupChange gc)
 	{
 		LLGroupMgr::getInstance()->sendGroupMembersRequest(mGroupID);
 	}
-	
+
 	if (!gdatap || !gdatap->isRoleMemberDataComplete())
 	{
 		LLGroupMgr::getInstance()->sendGroupRoleMembersRequest(mGroupID);
@@ -2303,13 +2303,14 @@ void LLPanelGroupRolesSubTab::onMemberVisibilityChange(LLUICtrl* ctrl, void* use
 
 void LLPanelGroupRolesSubTab::handleMemberVisibilityChange(bool value)
 {
-	LL_DEBUGS("GroupPanel") << "LLPanelGroupRolesSubTab::handleMemberVisibilityChange()" << LL_ENDL;
+	LL_DEBUGS("GroupPanel") << "LLPanelGroupRolesSubTab::handleMemberVisibilityChange()"
+							<< LL_ENDL;
 
 	LLGroupMgrGroupData* gdatap = LLGroupMgr::getInstance()->getGroupData(mGroupID);
 	if (!gdatap) 
 	{
 		LL_WARNS("GroupPanel") << "LLPanelGroupRolesSubTab::handleRoleSelect() "
-				<< "-- No group data!" << LL_ENDL;
+							   << "-- No group data!" << LL_ENDL;
 		return;
 	}
 
@@ -2424,7 +2425,7 @@ void LLPanelGroupRolesSubTab::saveRoleChanges()
 		gdatap->setRoleData(mSelectedRole,rd);
 
 		mRolesList->deleteSingleItem(mRolesList->getItemIndex(mSelectedRole));
-		
+
 		LLSD row = createRoleItem(mSelectedRole,rd.mRoleName,rd.mRoleTitle,0);
 		LLScrollListItem* item = mRolesList->addElement(row, ADD_BOTTOM, this);
 		item->setSelected(TRUE);
@@ -2443,8 +2444,9 @@ void* LLPanelGroupActionsSubTab::createTab(void* data)
 	return new LLPanelGroupActionsSubTab("panel group actions sub tab", *group_id);
 }
 
-LLPanelGroupActionsSubTab::LLPanelGroupActionsSubTab(const std::string& name, const LLUUID& group_id)
-: LLPanelGroupSubTab(name, group_id)
+LLPanelGroupActionsSubTab::LLPanelGroupActionsSubTab(const std::string& name,
+													 const LLUUID& group_id)
+:	LLPanelGroupSubTab(name, group_id)
 {
 }
 

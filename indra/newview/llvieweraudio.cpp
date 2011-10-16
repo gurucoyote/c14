@@ -266,7 +266,7 @@ void audio_update_wind(bool force_update)
 	static LLCachedControl<F32> sAudioLevelAmbient(gSavedSettings, "AudioLevelAmbient");
 	static LLCachedControl<F32> sAudioLevelRolloff(gSavedSettings, "AudioLevelRolloff");
 
-	if (!gAudiop->isWindEnabled())
+	if (!gAudiop || !gAudiop->isWindEnabled())
 	{
 		return;
 	}

@@ -74,11 +74,13 @@
 			    mouse_opaque="true" name="show_inventory_button_check" radio_style="false"
 			    width="70" />
 			<check_box bottom_delta="-28" control_name="HideMasterRemote" enabled="true"
+				tool_tip="With this setting enabled, the small master volume button above the toolbar is automatically hidden when no voice, no media and no parcel music stream are present."
 				follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 				label="Hide the Master Remote volume control when useless" left="15"
 				mouse_opaque="true" name="hide_master_remote_check" radio_style="false"
 				width="400" />
 			<check_box bottom_delta="-20" control_name="UseOldChatHistory" enabled="true"
+				tool_tip="The old-style chat history does not have a chat input line, gesture combo and Say button (these are already present in the toolbar chat line), letting more room for the actual history."
 		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 	    		label="Use the old style 'Chat history' window (requires a restart)" left="15"
 		    	mouse_opaque="true" name="use_old_chat_history_check" radio_style="false"
@@ -94,6 +96,7 @@
 			    mouse_opaque="true" name="use_old_statusbar_icons_check" radio_style="false"
 			    width="400" />
 			<check_box bottom_delta="-20" control_name="UseOldTrackingDots" enabled="true"
+				tool_tip="With this setting activated, the tiny V-like avatar tracking dots in the mini-map are replaced with larger and more visible T-like dots (inverted T for avatars below your own avatar's altitude, and normal T for avatars above). Note that whether this setting is enabled or not, avatars at the same altitude as yours are represented by a round dot, and avatars with an unknown altitude are represented by a dash-like dot."
 		    	follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 	    		label="Use the old T-like tracking dots in the mini-map" left="15"
 			    mouse_opaque="true" name="use_old_tracking_dots_check" radio_style="false"
@@ -176,11 +179,13 @@
 			<view_border name="toolbar_buttons_border" bevel_style="none" border_thickness="1"
 			 bottom="-54" left="10" height="48" width="415" follows="left|top"/>
 			<check_box bottom_delta="24" control_name="AllowMUpose" enabled="true"
+				tool_tip="On MUCKs/MUXes/MUSHes/MUDs, to 'pose' or 'emote' you simply have to prefix your text with a colon (':'), while on IRC and in SL, you normally need to prefix your text with '/me '. It is of course faster and easier to type ':bows in greetings.' than '/me bows in greetings.'... With this setting activated, you can use either '/me ' or ':' to prefix your poses/emotes in both chat and IMs."
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 	    		label="Allow MU* pose style in chat and IM (with ':' as a synonymous to '/me ')" left="20"
 		    	mouse_opaque="true" name="allow_mu_pose_check" radio_style="false"
 			    width="400" />
 			<check_box bottom_delta="-20" control_name="AutoCloseOOC" enabled="true"
+				tool_tip="By convention and in most MMORPG, text enclosed between double parenthesis is considered Out Of Character text (i.e. text exchanged between players (example: '((Sorry, phone, BRB))'), in contrast with In Character text exchanged between their characters/avatars for the actual role-play). With this setting activated, you can omit the closing double-bracket and the viewer will add it automatically for you."
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 	    		label="Auto-close OOC chat/IM (i.e. add '))' if not found and '((' was used)" left="20"
 			    mouse_opaque="true" name="auto_close_ooc_check" radio_style="false"
@@ -197,13 +202,15 @@
 	    		label="Highlight posts containing your own name/nicknames in group IMs" left="20"
 		    	mouse_opaque="true" name="highlight_own_name_in_im_check" radio_style="false"
 			    width="370" />
-			<text bottom_delta="-25" follows="left|top" font="SansSerifSmall" height="20" left="20"
-				name="nickname_label" width="60">Nicknames:</text>
-			<line_editor bottom_delta="3" bevel_style="in" border_style="line" border_thickness="1"
-				enabled="true" follows="left|top" font="SansSerif"
-				handle_edit_keys_directly="true" height="20" left_delta="70"
-				max_length="512" mouse_opaque="true" name="highlight_nicknames_text"
-				select_all_on_focus_received="true" width="310" word_wrap="false" />
+			<text name="nickname_label" font="SansSerifSmall"
+			 left="20" bottom_delta="-25" width="60" height="20" follows="left|top">
+				Nicknames:
+			</text>
+			<line_editor name="highlight_nicknames_text" font="SansSerif" enabled="true" mouse_opaque="true"
+			 tool_tip="Enter a space or comma separated list of nicknames."
+			 bevel_style="in" border_style="line" border_thickness="1" word_wrap="false"
+			 max_length="512" handle_edit_keys_directly="true" select_all_on_focus_received="true"
+			 left_delta="70" bottom_delta="3" width="310" height="20" follows="left|top"/>
 			<color_swatch bottom_delta="0" border_color="0.45098 0.517647 0.607843 1"
 				can_apply_immediately="true" color="1 1 1 1" control_name="OwnNameChatColor"
 				enabled="true" follows="left|top" height="50" label="color" left="420"
@@ -218,17 +225,19 @@
 			 follows="left|top|right|bottom" label="Miscellaneous" name="Miscellaneous">
 			<check_box bottom_delta="-30" control_name="DoubleClickTeleport" enabled="true"
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
-	    		label="Enable teleporting via double-click in-world" left="15"
+	    		label="Enable teleporting via double-click in-world or in the mini-map" left="15"
 			    mouse_opaque="true" name="double_click_teleport_check" radio_style="false"
 			    width="400" />
 			<check_box bottom_delta="-20" control_name="SpeedRez" enabled="true"
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
 	    		label="Enable speed-rezzing via draw distance stepping" left="15"
+				tool_tip="When activated, this feature automatically reduces the draw distance to 32m before departure when you TP away (or when you log in) and increases it back progressively to its previous value on arrival. This allows the closest objects and avatars to get rezzed first and thus provides a (subjectively) speedier rezzing experience."
 		    	mouse_opaque="true" name="speed_rez_check" radio_style="false"
 			    width="400" />
 			<spinner bottom_delta="-20" control_name="SpeedRezInterval" enabled="true" decimal_digits="0"
 				follows="left|top" font="SansSerifSmall" height="16" left="35" width="230"
 				label="Draw distance stepping interval:" label_width="180"
+				tool_tip="This is the interval of time, in seconds, between each increase of the draw distance (the distance is doubled at each step, till it reaches the value it was set to before the TP or login). The default value is 20s; if your network is slow, you might want to use larger delays (25s or more), while with a fast network shorter delays (15s or less) are best."
 				max_val="60" min_val="5" initial_val="20" increment="5"
 				mouse_opaque="true" name="speed_rez_interval" />
 			<text type="string" length="1" bottom_delta="0" left="270" bg_visible="false"
@@ -245,32 +254,49 @@
 			    width="400" />
 			<check_box bottom_delta="-20" control_name="PrivateLookAt" enabled="true"
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
-	    		label="Do not look at or point to objects beyond 20m (defeats ShowLookAt)" left="15"
+	    		label="Do not look at or point to objects beyond:" left="15"
+				tool_tip="When this setting is enabled, hovering the mouse pointer on or editing an object that is beyond the configured distance does not make your avatar 'looking' or 'pointing' at it, thus not broadcasting this info to surrounding avatars' viewers. This defeats the 'ShowLookAt' and 'ShowPointAt' features/hacks that others could use to find out (or make wrong assumptions about) what you are 'looking at' (when it's most often just your mouse pointer hovering on some random object)."
 			    mouse_opaque="true" name="private_look_at_check" radio_style="false"
 			    width="400" />
+			<spinner bottom_delta="0" control_name="PrivateLookAtLimit" enabled="true" decimal_digits="0"
+				follows="left|top" font="SansSerifSmall" height="16" left="270" width="50"
+				label="" label_width="0" max_val="100" min_val="5" initial_val="20" increment="5"
+				mouse_opaque="true" name="private_look_at_limit" />
+			<text type="string" length="1" bottom_delta="0" left="325" bg_visible="false"
+				border_visible="false" border_drop_shadow_visible="false"
+				drop_shadow_visible="true" enabled="true" follows="left|top"
+	    		font="SansSerifSmall" h_pad="0" halign="left" height="16"
+	     		mouse_opaque="true" name="private_look_at_limit_meters" v_pad="0" width="30">
+				m
+			</text>
 			<check_box bottom_delta="-20" control_name="RevokePermsOnStandUp" enabled="true"
 				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
-				label="On standing up, revoke perms for the object your avatar was sitting on" left="15"
+				label="On standing up, revoke permisssions for the object your avatar was sitting on" left="15"
+				tool_tip="When you sit on a scripted object, it automatically gains some permissions, such as being allowed to animate your avatar. Some buggy scripts do not properly detect the moment when you stand up and may, for example, wrongly keep animating your avatar. This setting prevents this from happening since then all permissions get automatically revoked when you stand up."
 				mouse_opaque="true" name="revoke_perms_on_stand_up_check" radio_style="false"
 				width="400" />
 			<check_box bottom_delta="-20" control_name="TeleportHistoryDeparture" enabled="true"
 				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
 				label="Log the TP departure locations into the Teleport History" left="15"
+				tool_tip="The teleport history always logs the arrival location. With this setting you may as well log the departure location."
 				mouse_opaque="true" name="teleport_history_departure_check" radio_style="false"
 				width="400" />
 			<check_box bottom_delta="-20" control_name="RezWithLandGroup" enabled="true"
 				follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
 				label="Rez objects with land group when possible" left="15"
+				tool_tip="Setting the proper land group on scripted objects is important since failing to do it might restrict the permissions of their scripts (for example, the rezzing permission if the parcel is set to allow only group members to rez). This setting automatically takes care of setting the rezzed objects group to the land group, provided you are a member of that land group."
 				mouse_opaque="true" name="rez_with_land_group_check" radio_style="false"
 				width="400" />
 			<check_box bottom_delta="-20" control_name="FetchInventoryOnLogin" enabled="true"
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="true"
 		    	label="Automatically fetch the inventory in the background after login" left="15"
+				tool_tip="This setting allows to transparently start caching the contents of your inventory after you log in, thus speeding up inventory operations later on. This setting is also automatically enabled when the RestrainedLove features are enabled."
 			    mouse_opaque="true" name="fetch_inventory_on_login_check" radio_style="false"
 		    	width="400" />
 			<check_box bottom_delta="-20" control_name="RestrainedLove" enabled="true"
 			    follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
 	    		label="RestrainedLove (BDSM toys support) mode (requires a restart)" left="15"
+				tool_tip="RestrainedLove allows scripts in your *own* objects to take control on some features of the viewer, and in particular restrict what you can do with it in given situations. This is used by many BDSM scripted toys to try and improve your role-play experience, but may also be used by other scripted objects not related with BDSM (for example, by a scripted outfit manager)."
 		    	mouse_opaque="true" name="restrained_love_check" radio_style="false"
 			    width="400" />
 			<check_box bottom_delta="-20" control_name="AvatarPhysics" enabled="true"
