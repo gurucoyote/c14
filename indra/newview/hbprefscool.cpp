@@ -60,8 +60,6 @@ private:
 	static void onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data);
 	void refreshValues();
 
-	BOOL mDoubleClickTeleport;
-	BOOL mDoubleClickAutoPilot;
 	BOOL mHideMasterRemote;
 	BOOL mShowChatButton;
 	BOOL mShowIMButton;
@@ -103,6 +101,7 @@ private:
 	U32 mSpeedRezInterval;
 	U32 mPrivateLookAtLimit;
 	U32 mDecimalsForTools;
+	U32 mFadeMouselookExitTip;
 	U32 mTimeFormat;
 	U32 mDateFormat;
 };
@@ -228,8 +227,6 @@ void HBPrefsCoolImpl::onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_da
 
 void HBPrefsCoolImpl::refreshValues()
 {
-	mDoubleClickTeleport		= gSavedSettings.getBOOL("DoubleClickTeleport");
-	mDoubleClickAutoPilot		= (mDoubleClickTeleport ? FALSE : gSavedSettings.getBOOL("DoubleClickAutoPilot"));
 	mHideMasterRemote			= gSavedSettings.getBOOL("HideMasterRemote");
 	mShowChatButton				= gSavedSettings.getBOOL("ShowChatButton");
 	mShowIMButton				= gSavedSettings.getBOOL("ShowIMButton");
@@ -282,6 +279,7 @@ void HBPrefsCoolImpl::refreshValues()
 	mTeleportHistoryDeparture	= gSavedSettings.getBOOL("TeleportHistoryDeparture");
 	mAvatarPhysics				= gSavedSettings.getBOOL("AvatarPhysics");
 	mUseNewSLLoginPage			= gSavedSettings.getBOOL("UseNewSLLoginPage");
+	mFadeMouselookExitTip		= gSavedSettings.getU32("FadeMouselookExitTip");
 }
 
 void HBPrefsCoolImpl::refresh()
@@ -362,8 +360,6 @@ void HBPrefsCoolImpl::refresh()
 
 void HBPrefsCoolImpl::cancel()
 {
-	gSavedSettings.setBOOL("DoubleClickTeleport",		mDoubleClickTeleport);
-	gSavedSettings.setBOOL("DoubleClickAutoPilot",		mDoubleClickTeleport ? FALSE : mDoubleClickAutoPilot);
 	gSavedSettings.setBOOL("HideMasterRemote",			mHideMasterRemote);
 	gSavedSettings.setBOOL("ShowChatButton",			mShowChatButton);
 	gSavedSettings.setBOOL("ShowIMButton",				mShowIMButton);
@@ -408,6 +404,7 @@ void HBPrefsCoolImpl::cancel()
 	gSavedSettings.setBOOL("TeleportHistoryDeparture",	mTeleportHistoryDeparture);
 	gSavedSettings.setBOOL("AvatarPhysics",				mAvatarPhysics);
 	gSavedSettings.setBOOL("UseNewSLLoginPage",			mUseNewSLLoginPage);
+	gSavedSettings.setU32("FadeMouselookExitTip",		mFadeMouselookExitTip);
 }
 
 void HBPrefsCoolImpl::apply()

@@ -3593,10 +3593,21 @@
       <key>Value</key>
       <integer>1</integer>
     </map>
-    <key>DoubleClickAutoPilot</key>
+    <key>DoubleClickAction</key>
     <map>
       <key>Comment</key>
-      <string>Enable double-click auto pilot</string>
+      <string>Action for in-world double-click (0 = none, 1 = auto-pilot, 2 = teleport)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>U32</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
+    <key>DoubleClickScriptedObject</key>
+    <map>
+      <key>Comment</key>
+      <string>Allow double-click auto-pilot or teleport on script-touch objects</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -3604,17 +3615,6 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
-	<key>DoubleClickTeleport</key>
-	<map>
-	  <key>Comment</key>
-	  <string>Enable double-click to teleport where allowed</string>
-	  <key>Persist</key>
-	  <integer>1</integer>
-	  <key>Type</key>
-	  <string>Boolean</string>
-	  <key>Value</key>
-	  <integer>0</integer>
-	</map>
 	<key>DragAndDropToolTipDelay</key>
     <map>
       <key>Comment</key>
@@ -7143,6 +7143,17 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
+    <key>FadeMouselookExitTip</key>
+    <map>
+      <key>Comment</key>
+      <string>Time in seconds after which the mouselook mode exit tip starts fading out (0 = never fade, minimum is 5s)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>U32</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
     <key>SpoofMouseLook</key>
     <map>
       <key>Comment</key>
@@ -7906,7 +7917,7 @@
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>1</real>
+      <integer>1</integer>
     </map>
     <key>PinTalkViewOpen</key>
     <map>
@@ -9030,7 +9041,7 @@
     <key>Type</key>
     <string>U32</string>
     <key>Value</key>
-    <real>4</real>
+    <integer>4</integer>
   </map>
   <key>RenderGIBlurSize</key>
   <map>
@@ -9321,7 +9332,7 @@
     <key>Type</key>
     <string>U32</string>
     <key>Value</key>
-    <real>128</real>
+    <integer>128</integer>
   </map>
   <key>RenderSpecularResY</key>
   <map>
@@ -9332,7 +9343,7 @@
     <key>Type</key>
     <string>U32</string>
     <key>Value</key>
-    <real>128</real>
+    <integer>128</integer>
   </map>
   <key>RenderSpecularExponent</key>
   <map>
@@ -10363,7 +10374,7 @@
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>250000</real>
+      <integer>250000</integer>
     </map>
     <key>MeshMetaDataDiscount</key>
     <map>
@@ -10374,7 +10385,7 @@
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>384</real>
+      <integer>384</integer>
     </map>
     <key>MeshMinimumByteSize</key>
     <map>
@@ -10385,7 +10396,7 @@
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>16</real>
+      <integer>16</integer>
     </map>
     <key>MeshBytesPerTriangle</key>
     <map>
@@ -10396,7 +10407,7 @@
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>16</real>
+      <integer>16</integer>
     </map>
     <key>MeshThreadCount</key>
     <map>
@@ -10434,7 +10445,7 @@
     <key>MeshUploadEnable</key>
     <map>
       <key>Comment</key>
-      <string>Enable the mesh upload feature (not yet functionnal)</string>
+      <string>Enable the (not yet functionnal) mesh upload feature for non-Linux systems.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -10474,6 +10485,17 @@
       <string>Boolean</string>
       <key>Value</key>
       <real>1</real>
+    </map>
+    <key>BlockingFilePicker</key>
+    <map>
+      <key>Comment</key>
+      <string>Use a blocking threaded file picker. Requires a restart.</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <real>0</real>
     </map>
     <key>RunMultipleThreads</key>
     <map>
@@ -13686,50 +13708,6 @@
       <integer>1</integer>
       <key>Type</key>
       <string>U32</string>
-      <key>Value</key>
-      <integer>1</integer>
-    </map>
-    <key>VectorizeEnable</key>
-    <map>
-      <key>Comment</key>
-      <string>Enable general vector operations and data alignment.</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>1</integer>
-    </map>
-    <key>VectorizePerfTest</key>
-    <map>
-      <key>Comment</key>
-      <string>Test SSE/vectorization performance and choose fastest version.</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>1</integer>
-    </map>
-    <key>VectorizeProcessor</key>
-    <map>
-      <key>Comment</key>
-      <string>0=Compiler Default, 1=SSE, 2=SSE2, autodetected</string>
-      <key>Persist</key>
-      <integer>0</integer>
-      <key>Type</key>
-      <string>U32</string>
-      <key>Value</key>
-      <integer>0</integer>
-    </map>
-    <key>VectorizeSkin</key>
-    <map>
-      <key>Comment</key>
-      <string>Enable vector operations for avatar skinning.</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Boolean</string>
       <key>Value</key>
       <integer>1</integer>
     </map>

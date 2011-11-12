@@ -110,9 +110,6 @@
 			     mouse_opaque="true" name="Photo:" v_pad="0" width="70">
 				Photo:
 			</text>
-			<button name="view_sl_img" label="View" font="SansSerifSmall" halign="center"
-			     bottom_delta="-20" left_delta="26" follows="left|top" height="18" width="46"
-			     tool_tip="View the profile picture at full size" />
 			<texture_picker allow_no_texture="true" bottom="-179" can_apply_immediately="false"
 			     default_image_name="None" follows="left|top" height="151" label=""
 			     left="79" mouse_opaque="true" name="img"
@@ -376,9 +373,6 @@
 			     mouse_opaque="true" name="Photo:" v_pad="0" width="61">
 				Photo:
 			</text>
-			<button name="view_rl_img" label="View" font="SansSerifSmall" halign="center"
-			     bottom_delta="-20" left_delta="18" follows="left|top" height="18" width="46"
-			     tool_tip="View the real life picture at full size" />
 			<texture_picker allow_no_texture="true" bottom="-171" can_apply_immediately="false"
 			     default_image_name="None" follows="left|top" height="151" label=""
 			     left="70" mouse_opaque="true" name="img"
@@ -459,5 +453,8 @@ Disabled until you leave Orientation Island.
 	</string>
 	<string name="loading">
 		Loading...
+	</string>
+	<string name="click_to_enlarge">
+		Click to view the enlarged picture.
 	</string>
 </panel>

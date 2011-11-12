@@ -35,7 +35,6 @@
 #include "llpanelavatar.h"
 
 #include "llavatarconstants.h"
-#include "llbutton.h"
 #include "llcachename.h"
 #include "llcheckboxctrl.h"
 #include "llclassifiedflags.h"
@@ -47,7 +46,6 @@
 #include "llscrolllistctrl.h"
 #include "lltabcontainer.h"
 #include "lltabcontainervertical.h"
-#include "lltextbox.h"
 #include "lltexturectrl.h"
 #include "lluiconstants.h"
 #include "lluictrlfactory.h"
@@ -68,7 +66,6 @@
 #include "llmutelist.h"
 #include "llpanelclassified.h"
 #include "llpanelpick.h"
-#include "llpreviewtexture.h"
 #include "llstartup.h"				// gIsInSecondLife
 #include "llstatusbar.h"
 #include "lltooldraganddrop.h"
@@ -223,7 +220,6 @@ void LLPanelAvatarSecondLife::clearControls()
 	if (image_ctrl)
 	{
 		image_ctrl->setImageAssetID(LLUUID::null);
-		childSetEnabled("view_sl_img", false);
 	}
 	childSetValue("about", "");
 	childSetValue("born", "");
@@ -255,37 +251,10 @@ void LLPanelAvatarSecondLife::enableControls(BOOL own_avatar)
 }
 
 // static
-void LLPanelAvatarSecondLife::onClickImage(void *data)
-{
-	LLPanelAvatarSecondLife* self = (LLPanelAvatarSecondLife*)data;
-	LLNameEditor* name_ctrl = self->getChild<LLNameEditor>("name");
-	LLTextureCtrl* image_ctrl = self->getChild<LLTextureCtrl>("img");
-	if (name_ctrl && image_ctrl)
-	{
-		LLUUID uuid = image_ctrl->getImageAssetID();
-		if (!LLPreview::show(uuid))
-		{
-			// There isn't one, so make a new preview
-			S32 left, top;
-			gFloaterView->getNewFloaterPosition(&left, &top);
-			LLRect rect = gSavedSettings.getRect("PreviewTextureRect");
-			rect.translate(left - rect.mLeft, top - rect.mTop);
-			std::string title = "Profile picture for " + name_ctrl->getText();
-			LLPreviewTexture* preview = new LLPreviewTexture(title, rect, title, uuid, FALSE);
-			preview->childSetText("desc", title);
-			preview->childSetEnabled("desc", false);
-			preview->setFocus(TRUE);
-		}
-	}
-}
-
-// static
 void LLPanelAvatarSecondLife::onDoubleClickGroup(void* data)
 {
 	LLPanelAvatarSecondLife* self = (LLPanelAvatarSecondLife*)data;
-
-
-	LLScrollListCtrl*	group_list =  self->getChild<LLScrollListCtrl>("groups"); 
+	LLScrollListCtrl* group_list = self->getChild<LLScrollListCtrl>("groups"); 
 	if (group_list)
 	{
 		LLScrollListItem* item = group_list->getFirstSelected();
@@ -349,30 +318,6 @@ void LLPanelAvatarFirstLife::enableControls(BOOL own_avatar)
 	childSetEnabled("about", own_avatar);
 }
 
-// static
-void LLPanelAvatarFirstLife::onClickImage(void *data)
-{
-	LLPanelAvatarFirstLife* self = (LLPanelAvatarFirstLife*)data;
-	LLTextureCtrl* image_ctrl = self->getChild<LLTextureCtrl>("img");
-	if (image_ctrl)
-	{
-		LLUUID uuid = image_ctrl->getImageAssetID();
-		if (!LLPreview::show(uuid))
-		{
-			// There isn't one, so make a new preview
-			S32 left, top;
-			gFloaterView->getNewFloaterPosition(&left, &top);
-			LLRect rect = gSavedSettings.getRect("PreviewTextureRect");
-			rect.translate(left - rect.mLeft, top - rect.mTop);
-			std::string title = "Profile First Life Picture";
-			LLPreviewTexture* preview = new LLPreviewTexture(title, rect, title, uuid, FALSE);
-			preview->childSetText("desc", title);
-			preview->childSetEnabled("desc", false);
-			preview->setFocus(TRUE);
-		}
-	}
-}
-
 //-----------------------------------------------------------------------------
 // postBuild
 //-----------------------------------------------------------------------------
@@ -410,8 +355,6 @@ BOOL LLPanelAvatarSecondLife::postBuild(void)
 	childSetDoubleClickCallback("groups", onDoubleClickGroup, this);
 
 	getChild<LLTextureCtrl>("img")->setFallbackImageName("default_profile_picture.j2c");
-	childSetAction("view_sl_img", onClickImage, this);
-	childSetEnabled("view_sl_img", false);
 
 	return TRUE;
 }
@@ -422,8 +365,6 @@ BOOL LLPanelAvatarFirstLife::postBuild(void)
 	enableControls(own_avatar);
 
 	getChild<LLTextureCtrl>("img")->setFallbackImageName("default_profile_picture.j2c");
-	childSetAction("view_rl_img", onClickImage, this);
-	childSetEnabled("view_rl_img", false);
 
 	return TRUE;
 }
@@ -818,7 +759,6 @@ void LLPanelAvatarNotes::onCommitNotes(LLUICtrl*, void* userdata)
 
 	self->getPanelAvatar()->sendAvatarNotesUpdate();
 }
-
 
 //-----------------------------------------------------------------------------
 // LLPanelAvatarClassified()
@@ -1229,7 +1169,6 @@ bool LLPanelAvatarPicks::callbackDelete(const LLSD& notification,
 	return false;
 }
 
-
 //-----------------------------------------------------------------------------
 // LLPanelAvatar
 //-----------------------------------------------------------------------------
@@ -1430,7 +1369,12 @@ void LLPanelAvatar::setAvatarID(const LLUUID &avatar_id, const std::string &name
 	LLTextureCtrl* image_ctrl = mPanelSecondLife->getChild<LLTextureCtrl>("img");
 	if (image_ctrl)
 	{
-		image_ctrl->setToolTip(avname);
+		std::string tooltip = avname;
+		if (!own_avatar)
+		{
+			tooltip += "\n" + getString("click_to_enlarge");
+		}
+		image_ctrl->setToolTip(tooltip);
 	}
 
 // 	if (avatar_changed)
@@ -1568,7 +1512,12 @@ void LLPanelAvatar::completeNameCallback(const LLUUID& agent_id,
 					LLTextureCtrl* image_ctrl = self->mPanelSecondLife->getChild<LLTextureCtrl>("img");
 					if (image_ctrl)
 					{
-						image_ctrl->setToolTip(avname);
+						std::string tooltip = avname;
+						if (agent_id != gAgent.getID())
+						{
+							tooltip += "\n" + self->getString("click_to_enlarge");
+						}
+						image_ctrl->setToolTip(tooltip);
 					}
 				}
 			}
@@ -1708,7 +1657,6 @@ void LLPanelAvatar::onClickOfferTeleport(void *userdata)
 	handle_lure(self->mAvatarID);
 }
 
-
 // static
 void LLPanelAvatar::onClickPay(void *userdata)
 {
@@ -1815,7 +1763,6 @@ void LLPanelAvatar::sendAvatarNotesUpdate()
 
 	gAgent.sendReliableMessage();
 }
-
 
 // static
 void LLPanelAvatar::processAvatarPropertiesReply(LLMessageSystem *msg, void**)
@@ -1951,7 +1898,6 @@ void LLPanelAvatar::processAvatarPropertiesReply(LLMessageSystem *msg, void**)
 		if (image_ctrl)
 		{
 			image_ctrl->setImageAssetID(image_id);
-			self->childSetEnabled("view_sl_img", !image_id.isNull());
 		}
 
 		LLTextEditor* about_ctrl = self->getChild<LLTextEditor>("about");
@@ -1991,7 +1937,14 @@ void LLPanelAvatar::processAvatarPropertiesReply(LLMessageSystem *msg, void**)
 			if (image_ctrl)
 			{
 				image_ctrl->setImageAssetID(fl_image_id);
-				self->childSetEnabled("view_rl_img", !fl_image_id.isNull());
+				if (avatar_id == gAgent.getID() || fl_image_id.isNull())
+				{
+					image_ctrl->setToolTip(std::string(""));
+				}
+				else
+				{
+					image_ctrl->setToolTip(self->getString("click_to_enlarge"));
+				}
 			}
 
 			self->mPanelSecondLife->childSetValue("allow_publish", allow_publish);
@@ -2445,7 +2398,6 @@ void* LLPanelAvatar::createPanelAvatarInterests(void* data)
 	self->mPanelAdvanced = new LLPanelAvatarAdvanced(std::string("Interests"), LLRect(), self);
 	return self->mPanelAdvanced;
 }
-
 
 void* LLPanelAvatar::createPanelAvatarPicks(void* data)
 {

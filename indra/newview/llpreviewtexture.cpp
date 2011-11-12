@@ -68,7 +68,7 @@ LLPreviewTexture::LLPreviewTexture(const std::string& name,
 								   const LLUUID& item_uuid,
 								   const LLUUID& object_id,
 								   BOOL show_keep_discard)
-:	LLPreview(name, rect, title, item_uuid, object_id, TRUE, PREVIEW_TEXTURE_MIN_WIDTH, PREVIEW_TEXTURE_MIN_HEIGHT ),
+:	LLPreview(name, rect, title, item_uuid, object_id, TRUE, PREVIEW_TEXTURE_MIN_WIDTH, PREVIEW_TEXTURE_MIN_HEIGHT),
 	mShowKeepDiscard(show_keep_discard),
 	mCopyToInv(FALSE),
 	mIsCopyable(FALSE),
@@ -120,7 +120,8 @@ LLPreviewTexture::LLPreviewTexture(const std::string& name,
 								   const std::string& title,
 								   const LLUUID& asset_id,
 								   BOOL copy_to_inv)
-:	LLPreview(name, rect, title, asset_id, LLUUID::null, TRUE, PREVIEW_TEXTURE_MIN_WIDTH, PREVIEW_TEXTURE_MIN_HEIGHT ),
+:	LLPreview(name, rect, title, asset_id, LLUUID::null, TRUE,
+			  PREVIEW_TEXTURE_MIN_WIDTH, PREVIEW_TEXTURE_MIN_HEIGHT),
 	mImageID(asset_id),
 	mShowKeepDiscard(FALSE),
 	mCopyToInv(copy_to_inv),
@@ -156,7 +157,7 @@ LLPreviewTexture::~LLPreviewTexture()
 void LLPreviewTexture::init()
 {
 	LLUICtrlFactory::getInstance()->buildFloater(this,"floater_preview_texture.xml");
-	
+
 	childSetVisible("desc", !mCopyToInv);	// Hide description field for embedded textures
 	childSetVisible("desc txt", !mCopyToInv);
 	childSetVisible("Copy To Inventory", mCopyToInv);
@@ -175,15 +176,15 @@ void LLPreviewTexture::init()
 	else 
 	{
 		// If the buttons are hidden move stuff down to use the space.
-		
+
 		LLRect keep_rect, old_rect, new_rect;
 		S32 diff;
-		
+
 		childGetRect("Keep", keep_rect);
 		childGetRect("combo_aspect_ratio", old_rect);
-		
+
 		diff = old_rect.mBottom - keep_rect.mBottom;
-		
+
 		new_rect.setOriginAndSize(old_rect.mLeft, old_rect.mBottom - diff,
 								  old_rect.getWidth(), old_rect.getHeight());
 		childSetRect("combo_aspect_ratio", new_rect);
@@ -207,7 +208,7 @@ void LLPreviewTexture::init()
 	if (!mCopyToInv) 
 	{
 		const LLInventoryItem* item = getItem();
-		
+
 		if (item)
 		{
 			childSetCommitCallback("desc", LLPreview::onText, this);
@@ -238,13 +239,13 @@ void LLPreviewTexture::draw()
 		interior.stretch(-PREVIEW_BORDER_WIDTH);
 
 		// ...border
-		gl_rect_2d( border, LLColor4(0.f, 0.f, 0.f, 1.f));
+		gl_rect_2d(border, LLColor4(0.f, 0.f, 0.f, 1.f));
 		gl_rect_2d_checkerboard(interior);
 
 		if (mImage.notNull())
 		{
 			// Draw the texture
-			glColor3f( 1.f, 1.f, 1.f );
+			glColor3f(1.f, 1.f, 1.f);
 			gl_draw_scaled_image(interior.mLeft,
 								interior.mBottom,
 								interior.getWidth(),
@@ -310,8 +311,7 @@ void LLPreviewTexture::draw()
 					}
 				}
 			}
-			else
-			if (!mSavedFileTimer.hasExpired())
+			else if (!mSavedFileTimer.hasExpired())
 			{
 				// *TODO: Translate
 				LLFontGL::getFontSansSerif()->renderUTF8(std::string("File Saved"), 0,
@@ -337,7 +337,7 @@ void LLPreviewTexture::saveAs()
 
 	LLFilePicker& file_picker = LLFilePicker::instance();
 	const LLViewerInventoryItem* item = getItem();
-	if (!file_picker.getSaveFile( LLFilePicker::FFSAVE_TGA, item ? LLDir::getScrubbedFileName(item->getName()) : LLStringUtil::null))
+	if (!file_picker.getSaveFile(LLFilePicker::FFSAVE_TGA, item ? LLDir::getScrubbedFileName(item->getName()) : LLStringUtil::null))
 	{
 		// User canceled or we failed to acquire save file.
 		return;
@@ -430,7 +430,7 @@ void LLPreviewTexture::updateDimensions()
 	S32 client_width = image_width;
 	S32 client_height = image_height;
 	S32 horiz_pad = 2 * (LLPANEL_BORDER_WIDTH + PREVIEW_PAD) + PREVIEW_RESIZE_HANDLE_SIZE;
-	S32 vert_pad = PREVIEW_HEADER_SIZE + 2 * CLIENT_RECT_VPAD + LLPANEL_BORDER_WIDTH;	
+	S32 vert_pad = PREVIEW_HEADER_SIZE + 2 * CLIENT_RECT_VPAD + LLPANEL_BORDER_WIDTH;
 	S32 max_client_width = gViewerWindow->getWindowWidth() - horiz_pad;
 	S32 max_client_height = gViewerWindow->getWindowHeight() - vert_pad;
 
@@ -481,9 +481,9 @@ void LLPreviewTexture::updateDimensions()
 		}
 		else
 		{
-			reshape( view_width, view_height );
+			reshape(view_width, view_height);
 			S32 new_bottom = old_top - getRect().getHeight();
-			setOrigin( old_left, new_bottom );
+			setOrigin(old_left, new_bottom);
 			// Try to keep whole view onscreen, don't allow partial offscreen.
 			gFloaterView->adjustToFitScreen(this, FALSE);
 		}
@@ -496,7 +496,7 @@ void LLPreviewTexture::updateDimensions()
 		client_height = llmin(client_height, getRect().getHeight() - PREVIEW_HEADER_SIZE 
 						- (2 * CLIENT_RECT_VPAD) - LLPANEL_BORDER_WIDTH - info_height);
 
-		
+
 	}
 	else
 	{
@@ -536,7 +536,7 @@ void LLPreviewTexture::updateDimensions()
 	window_rect.mTop -= (PREVIEW_HEADER_SIZE + CLIENT_RECT_VPAD);
 	window_rect.mBottom += PREVIEW_BORDER + button_height + CLIENT_RECT_VPAD + info_height + CLIENT_RECT_VPAD;
 
-	mClientRect.setLeftTopAndSize(window_rect.getCenterX() - (client_width / 2), window_rect.mTop, client_width, client_height);	
+	mClientRect.setLeftTopAndSize(window_rect.getCenterX() - (client_width / 2), window_rect.mTop, client_width, client_height);
 
 	// Hide the aspect ratio label if the window is too narrow
 	// Assumes the label should be to the right of the dimensions
@@ -569,16 +569,16 @@ bool LLPreviewTexture::setAspectRatio(const F32 width, const F32 height)
 void LLPreviewTexture::onAspectRatioCommit(LLUICtrl* ctrl, void* userdata)
 {
 	LLPreviewTexture* self = (LLPreviewTexture*) userdata;
-	
+
 	std::string ratio(ctrl->getValue().asString());
 	std::string::size_type separator(ratio.find_first_of(":/\\"));
-	
+
 	if (std::string::npos == separator) {
 		// If there's no separator assume we want an unconstrained ratio
 		self->setAspectRatio(0.0f, 0.0f);
 		return;
 	}
-	
+
 	F32 width, height;
 	std::istringstream numerator(ratio.substr(0, separator));
 	std::istringstream denominator(ratio.substr(separator + 1));

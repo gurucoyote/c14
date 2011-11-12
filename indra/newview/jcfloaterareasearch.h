@@ -87,6 +87,11 @@ private:
 
 	static bool sIsDirty;
 
+	static bool sTracking;
+	static LLUUID sTrackingObjectID;
+	static LLVector3d sTrackingLocation;
+	static std::string sTrackingInfoLine;
+
 	LLTextBox* mCounterText;
 	LLScrollListCtrl* mResultList;
 	LLFrameTimer mLastUpdateTimer;

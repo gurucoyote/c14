@@ -364,11 +364,6 @@ void toggle_cull_small(void *);
 void toggle_show_xui_names(void *);
 BOOL check_show_xui_names(void *);
 
-void run_vectorize_perf_test(void *)
-{
-	gSavedSettings.setBOOL("VectorizePerfTest", TRUE);
-}
-
 // Debug UI
 void handle_web_search_demo(void*);
 void handle_web_browser_test(void*);
@@ -1108,7 +1103,6 @@ extern BOOL gDebugTextEditorTips;
 
 void init_debug_ui_menu(LLMenuGL* menu)
 {
-	menu->append(new LLMenuItemCheckGL("Rotate Mini-Map", menu_toggle_control, NULL, menu_check_control, (void*)"MiniMapRotate"));
 	menu->append(new LLMenuItemCheckGL("Use default system color picker", menu_toggle_control, NULL, menu_check_control, (void*)"UseDefaultColorPicker"));
 	menu->append(new LLMenuItemCheckGL("Show search panel in overlay bar", menu_toggle_control, NULL, menu_check_control, (void*)"ShowSearchBar"));
 	menu->appendSeparator();
@@ -1125,13 +1119,6 @@ void init_debug_ui_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCallGL("Print Selected Object Info",	&print_object_info, NULL, NULL, 'P', MASK_CONTROL|MASK_SHIFT));
 	menu->append(new LLMenuItemCallGL("Print Agent Info",			&print_agent_nvpairs, NULL, NULL, 'P', MASK_SHIFT));
 	menu->append(new LLMenuItemCallGL("Memory Stats",  &output_statistics));
-	menu->append(new LLMenuItemCheckGL("Double-Click Auto-Pilot", 
-		menu_toggle_control, NULL, menu_check_control, 
-		(void*)"DoubleClickAutoPilot"));
-	// add for double click teleport support
-	menu->append(new LLMenuItemCheckGL("Double-Click Teleport", 
-		menu_toggle_control, NULL, menu_check_control, 
-		(void*)"DoubleClickTeleport"));
 	menu->appendSeparator();
 //	menu->append(new LLMenuItemCallGL("Print Packets Lost",			&print_packets_lost, NULL, NULL, 'L', MASK_SHIFT));
 	menu->append(new LLMenuItemCheckGL("Debug SelectMgr", menu_toggle_control, NULL, menu_check_control, (void*)"DebugSelectMgr"));
@@ -1385,8 +1372,6 @@ void init_debug_rendering_menu(LLMenuGL* menu)
 										   &LLPipeline::toggleRenderDebug, NULL,
 										   &LLPipeline::toggleRenderDebugControl,
 										   (void*)LLPipeline::RENDER_DEBUG_SCULPTED));
-
-	sub_menu->append(new LLMenuItemCallGL("Vectorize Perf Test", &run_vectorize_perf_test));
 
 	sub_menu = new LLMenuGL("Render Tests");
 
@@ -5926,7 +5911,7 @@ class LLShowFloater : public view_listener_t
 		}
 		else if (floater_name == "teleport history")
 		{
-			gFloaterTeleportHistory->setVisible(!gFloaterTeleportHistory->getVisible());
+			gFloaterTeleportHistory->toggle();
 		}
 		else if (floater_name == "im")
 		{
@@ -7216,7 +7201,6 @@ BOOL menu_ui_enabled(void *user_data)
 	return !high_res;
 }
 
-// TomY TODO DEPRECATE & REMOVE
 void menu_toggle_control(void* user_data)
 {
 	std::string setting(static_cast<char*>(user_data));
@@ -7225,16 +7209,6 @@ void menu_toggle_control(void* user_data)
 	{
 		// High Res Snapshot active, must uncheck RenderUIInSnapshot
 		gSavedSettings.setBOOL("RenderUIInSnapshot", FALSE);
-	}
-	else if (checked && setting == "DoubleClickAutoPilot")
-	{
-		// Doubleclick actions - there can be only one
-		gSavedSettings.setBOOL("DoubleClickTeleport", FALSE);
-	}
-	else if (checked && setting == "DoubleClickTeleport")
-	{
-		// Doubleclick actions - there can be only one
-		gSavedSettings.setBOOL("DoubleClickAutoPilot", FALSE);
 	}
 	else if (!checked && setting == "RenderDeferredSSAO")
 	{

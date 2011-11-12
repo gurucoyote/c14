@@ -910,7 +910,7 @@ BOOL LLNetMap::handleDoubleClick(S32 x, S32 y, MASK mask)
 		new_target = TRUE;
 	}
 
-	if (gSavedSettings.getBOOL("DoubleClickTeleport")
+	if (mask == MASK_CONTROL
 //MK
 		&& !(gRRenabled && gAgent.mRRInterface.contains("tploc")))
 //mk

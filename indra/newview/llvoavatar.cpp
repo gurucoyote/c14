@@ -3413,7 +3413,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				}
 			}
 
-			BOOL is_away = mSignaledAnimations.find(ANIM_AGENT_AWAY)  != mSignaledAnimations.end();
+			BOOL is_away = mSignaledAnimations.find(ANIM_AGENT_AWAY) != mSignaledAnimations.end();
 			BOOL is_busy = mSignaledAnimations.find(ANIM_AGENT_BUSY) != mSignaledAnimations.end();
 			BOOL is_appearance = mSignaledAnimations.find(ANIM_AGENT_CUSTOMIZE) != mSignaledAnimations.end();
 			bool chat_muted = false;
@@ -3423,7 +3423,9 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 			if (ml && !mIsSelf)
 			{
 				mute_flags = ml->getMuteFlags(getID(), mute_desc);
-				chat_muted = mute_flags == 0 || (mute_flags & LLMute::flagTextChat);
+				chat_muted = mute_flags == 0 ||
+							 (mute_flags != -1 &&
+							  (mute_flags & LLMute::flagTextChat));
 			}
 
 			if (mNameString.empty() || new_name || complete_name != mCompleteName ||
@@ -3436,13 +3438,13 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				if (sRenderGroupTitles && title && title->getString() && title->getString()[0] != '\0')
 				{
 					line += title->getString();
-					LLStringFn::replace_ascii_controlchars(line,LL_UNKNOWN_CHAR);
+					LLStringFn::replace_ascii_controlchars(line, LL_UNKNOWN_CHAR);
 					line += "\n";
 					line += complete_name;
 				}
 				else
 				{
-					line += complete_name;
+					line = complete_name;
 				}
 
 				bool need_comma = false;
@@ -3463,6 +3465,14 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 						line += "Busy";
 						need_comma = true;
 					}
+					if (show_typing && mTyping && !chat_muted)
+					{
+						if (need_comma)
+						{
+							line += ", ";
+						}
+						line += "Typing";
+					}
 					if (mute_flags != -1)
 					{
 						if (need_comma)
@@ -3470,14 +3480,6 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 							line += ", ";
 						}
 						line += mute_desc;
-					}
-					else if (show_typing && mTyping)
-					{
-						if (need_comma)
-						{
-							line += ", ";
-						}
-						line += "Typing";
 					}
 					line += ")";
 				}
@@ -3493,7 +3495,6 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 				mNameAppearance = is_appearance;
 				mTitle = title ? title->getString() : "";
 				mCompleteName = complete_name;
-				LLStringFn::replace_ascii_controlchars(mTitle,LL_UNKNOWN_CHAR);
 				mNameString = utf8str_to_wstring(line);
 				new_name = TRUE;
 			}

@@ -291,7 +291,6 @@ LLPanelLogin::LLPanelLogin(const LLRect &rect,
 	channel_text->setTextArg("[CHANNEL]", channel);
 	channel_text->setTextArg("[VERSION]", version);
 	channel_text->setClickedCallback(onClickVersion);
-	channel_text->setCallbackUserData(this);
 
 	LLTextBox* forgot_password_text = getChild<LLTextBox>("forgot_password_text");
 	forgot_password_text->setClickedCallback(onClickForgotPassword);

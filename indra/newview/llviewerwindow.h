@@ -130,7 +130,7 @@ public:
 
 	void			shutdownViews();
 	void			shutdownGL();
-	
+
 	void			initGLDefaults();
 	void			initBase();
 	void			adjustRectanglesForFirstUse(const LLRect& window);
@@ -173,7 +173,6 @@ public:
 	/*virtual*/ void handlePingWatchdog(LLWindow *window, const char * msg);
 	/*virtual*/ void handlePauseWatchdog(LLWindow *window);
 	/*virtual*/ void handleResumeWatchdog(LLWindow *window);
-
 
 	//
 	// ACCESSORS
@@ -220,7 +219,6 @@ public:
 	LLVector3		mouseDirectionGlobal(const S32 x, const S32 y) const;
 	LLVector3		mouseDirectionCamera(const S32 x, const S32 y) const;
 	LLVector3       mousePointHUD(const S32 x, const S32 y) const;
-		
 
 	// Is window of our application frontmost?
 	BOOL			getActive() const			{ return mActive; }
@@ -230,7 +228,7 @@ public:
 		// there yet, because we may be supressing fullscreen prior to login.
 
 	const std::string&	getInitAlert() { return mInitAlert; }
-	
+
 	//
 	// MANIPULATORS
 	//
@@ -241,7 +239,7 @@ public:
 	void			hideCursor();
 	BOOL            getCursorHidden() { return mCursorHidden; }
 	void			moveCursorToCenter();								// move to center of window
-													
+
 	void			setShowProgress(const BOOL show);
 	BOOL			getShowProgress() const;
 	void			moveProgressViewToFront();
@@ -294,18 +292,17 @@ public:
 	void resetSnapshotLoc();
 
 	void			playSnapshotAnimAndSound();
-	
+
 	// draws selection boxes around selected objects, must call displayObjects first
 	void			renderSelections( BOOL for_gl_pick, BOOL pick_parcel_walls, BOOL for_hud );
 	void			performPick();
 	void			returnEmptyPicks();
 
-
 	void			pickAsync(S32 x, S32 y_from_bot, MASK mask, void (*callback)(const LLPickInfo& pick_info),
 							  BOOL pick_transparent = FALSE, BOOL get_surface_info = FALSE);
 	LLPickInfo		pickImmediate(S32 x, S32 y, BOOL pick_transparent);
 	static void     hoverPickCallback(const LLPickInfo& pick_info);
-	
+
 	LLHUDIcon* cursorIntersectIcon(S32 mouse_x, S32 mouse_y, F32 depth,
 								   LLVector3* intersection);
 
@@ -320,11 +317,10 @@ public:
 									LLVector3 *binormal = NULL,
 									LLVector3* start = NULL,
 									LLVector3* end = NULL);
-	
-	
+
 	// Returns a pointer to the last object hit
-	//LLViewerObject	*getObject();
-	//LLViewerObject  *lastNonFloraObjectHit();
+	//LLViewerObject* getObject();
+	//LLViewerObject* lastNonFloraObjectHit();
 
 	//const LLVector3d& getObjectOffset();
 	//const LLVector3d& lastNonFloraObjectHitOffset();
@@ -338,7 +334,7 @@ public:
 	// Prints window implementation details
 	void			dumpState();
 
-	// Request display setting changes	
+	// Request display setting changes
 	void			toggleFullscreen(BOOL show_progress);
 
 	// handle shutting down GL and bringing it back up
@@ -346,15 +342,17 @@ public:
 	BOOL			checkSettings();
 	void			restartDisplay(BOOL show_progress_bar);
 	BOOL			changeDisplaySettings(BOOL fullscreen, LLCoordScreen size, BOOL disable_vsync, BOOL show_progress_bar);
-	BOOL			getIgnoreDestroyWindow() { return mIgnoreActivate; }
+	BOOL			getIgnoreDestroyWindow() 		{ return mIgnoreActivate; }
 	F32				getDisplayAspectRatio() const;
-	const LLVector2& getDisplayScale() const { return mDisplayScale; }
+	const LLVector2& getDisplayScale() const		{ return mDisplayScale; }
 	void			calcDisplayScale();
 
+	void			resetMouselookFadeTimer()		{ mMouselookTipFadeTimer.reset(); }
+
 private:
-	bool                    shouldShowToolTipFor(LLMouseHandler *mh);
-	static bool onAlert(const LLSD& notify);
-	
+	bool			shouldShowToolTipFor(LLMouseHandler *mh);
+	static bool		onAlert(const LLSD& notify);
+
 	void			switchToolByMask(MASK mask);
 	void			destroyWindow();
 	void			drawMouselookInstructions();
@@ -378,8 +376,8 @@ protected:
 	LLVector2		mDisplayScale;
 
 	LLCoordGL		mCurrentMousePoint;			// last mouse position in GL coords
-	LLCoordGL		mLastMousePoint;		// Mouse point at last frame.
-	LLCoordGL		mCurrentMouseDelta;		//amount mouse moved this frame
+	LLCoordGL		mLastMousePoint;			// Mouse point at last frame.
+	LLCoordGL		mCurrentMouseDelta;			// amount mouse moved this frame
 	LLStat			mMouseVelocityStat;
 	BOOL			mLeftMouseDown;
 	BOOL			mMiddleMouseDown;
@@ -395,37 +393,38 @@ protected:
 	BOOL			mFocusCycleMode;
 
 	// Variables used for tool override switching based on modifier keys.  JC
-	MASK			mLastMask;			// used to detect changes in modifier mask
-	LLTool*			mToolStored;		// the tool we're overriding
-	BOOL			mSuppressToolbox;	// sometimes hide the toolbox, despite
-										// having a camera tool selected
+	MASK			mLastMask;				// used to detect changes in modifier mask
+	LLTool*			mToolStored;			// the tool we're overriding
+	BOOL			mSuppressToolbox;		// sometimes hide the toolbox, despite
+											// having a camera tool selected
 	BOOL			mHideCursorPermanent;	// true during drags, mouselook
 	BOOL            mCursorHidden;
 	LLPickInfo		mLastPick;
 	LLPickInfo		mHoverPick;
 	std::vector<LLPickInfo> mPicks;
-	LLRect			mPickScreenRegion; // area of frame buffer for rendering pick frames (generally follows mouse to avoid going offscreen)
-	LLTimer         mPickTimer;        // timer for scheduling n picks per second
+	LLRect			mPickScreenRegion;		// area of frame buffer for rendering pick frames (generally follows mouse to avoid going offscreen)
+	LLTimer         mPickTimer;				// timer for scheduling n picks per second
+	LLTimer         mMouselookTipFadeTimer;	// timer for fading exit mouselook instructions
 
-	std::string		mOverlayTitle;		// Used for special titles such as "Second Life - Special E3 2003 Beta"
+	std::string		mOverlayTitle;			// Used for special titles such as "Second Life - Special E3 2003 Beta"
 
 	BOOL			mIgnoreActivate;
 
-	std::string		mInitAlert;			// Window / GL initialization requires an alert
-	
-	class LLDebugText* mDebugText; // Internal class for debug text
-	
+	std::string		mInitAlert;				// Window / GL initialization requires an alert
+
+	class LLDebugText* mDebugText; 			// Internal class for debug text
+
 	bool			mResDirty;
 	bool			mStatesDirty;
-	bool			mIsFullscreenChecked; // Did the user check the fullscreen checkbox in the display settings
-	U32			mCurrResolutionIndex;
+	bool			mIsFullscreenChecked;	// Did the user check the fullscreen checkbox in the display settings
+	U32				mCurrResolutionIndex;
 
 protected:
 	static std::string sSnapshotBaseName;
 	static std::string sSnapshotDir;
 
 	static std::string sMovieBaseName;
-};	
+};
 
 class LLBottomPanel : public LLPanel
 {
@@ -445,8 +444,6 @@ void toggle_first_person();
 void toggle_build(void*);
 void reset_viewer_state_on_sim(void);
 void update_saved_window_size(const std::string& control,S32 delta_width, S32 delta_height);
-
-
 
 //
 // Globals

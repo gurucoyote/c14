@@ -47,18 +47,21 @@ class LLFloaterTeleportHistory : public LLFloater
 {
 public:
 	LLFloaterTeleportHistory();
-	virtual ~LLFloaterTeleportHistory();
+	/*virtual*/ ~LLFloaterTeleportHistory();
 
 	// @brief: reimplemented to check for selection changes in the places list scrolllist
-	virtual void onFocusReceived();
+	/*virtual*/ void onFocusReceived();
 
 	// @brief: reimplemented to make the menu toggle work
-	virtual void onClose(bool app_quitting);
+	/*virtual*/ void onClose(bool app_quitting);
 
 	// @brief: reimplemented to prevent this floater from closing while the viewer is shutting down
-	virtual BOOL canClose();
+	/*virtual*/ BOOL canClose();
 
-	BOOL postBuild();
+	/*virtual*/ BOOL postBuild();
+
+	// @brief toggles the floater on and off (i.e. shown and hidden)
+	void toggle();
 
 	// @brief loads the saved teleport history
 	void loadEntries();

@@ -36,11 +36,10 @@
 
 #include "llcoord.h"
 #include "llfloater.h"
+#include "llpermissionsflags.h"
 #include "llstring.h"
 #include "lluictrl.h"
-#include "llpermissionsflags.h"
 
-class LLButton;
 class LLFloaterTexturePicker;
 class LLInventoryItem;
 class LLTextBox;
@@ -66,32 +65,31 @@ public:
 	} ETexturePickOp;
 
 public:
-	LLTextureCtrl(
-		const std::string& name, const LLRect& rect,
-		const std::string& label,
-		const LLUUID& image_id,
-		const LLUUID& default_image_id, 
-		const std::string& default_image_name );
+	LLTextureCtrl(const std::string& name, const LLRect& rect,
+				  const std::string& label, const LLUUID& image_id,
+				  const LLUUID& default_image_id, 
+				  const std::string& default_image_name);
 	virtual ~LLTextureCtrl();
 
 	// LLView interface
 	virtual LLXMLNodePtr getXML(bool save_children = true) const;
-	static LLView* fromXML(LLXMLNodePtr node, LLView *parent, LLUICtrlFactory *factory);
+	static LLView* fromXML(LLXMLNodePtr node, LLView *parent,
+						   LLUICtrlFactory *factory);
 
-	virtual BOOL	handleMouseDown(S32 x, S32 y, MASK mask);
-	virtual BOOL	handleDragAndDrop(S32 x, S32 y, MASK mask,
-						BOOL drop, EDragAndDropType cargo_type, void *cargo_data,
-						EAcceptance *accept,
-						std::string& tooltip_msg);
-	virtual BOOL	handleHover(S32 x, S32 y, MASK mask);
-	virtual BOOL	handleUnicodeCharHere(llwchar uni_char);
+	virtual BOOL handleMouseDown(S32 x, S32 y, MASK mask);
+	virtual BOOL handleDragAndDrop(S32 x, S32 y, MASK mask,
+								   BOOL drop, EDragAndDropType cargo_type,
+								   void *cargo_data, EAcceptance *accept,
+								   std::string& tooltip_msg);
+	virtual BOOL handleHover(S32 x, S32 y, MASK mask);
+	virtual BOOL handleUnicodeCharHere(llwchar uni_char);
 
-	virtual void	draw();
-	virtual void	setVisible( BOOL visible );
-	virtual void	setEnabled( BOOL enabled );
+	virtual void draw();
+	virtual void setVisible(BOOL visible);
+	virtual void setEnabled(BOOL enabled);
 
-	virtual BOOL	isDirty() const;
-	virtual void	resetDirty();
+	virtual BOOL isDirty() const;
+	virtual void resetDirty();
 
 	void			setValid(BOOL valid);
 
@@ -99,47 +97,45 @@ public:
 	virtual void	clear();
 
 	// Takes a UUID, wraps get/setImageAssetID
-	virtual void	setValue(const LLSD& value );
-	virtual LLSD	getValue() const;
+	virtual void setValue(const LLSD& value);
+	virtual LLSD getValue() const;
 
 	// LLTextureCtrl interface
-	void			showPicker(BOOL take_focus);
-	void			setLabel(const std::string& label);
-	const std::string&	getLabel() const							{ return mLabel; }
+	void showPicker(BOOL take_focus);
+	void setLabel(const std::string& label);
+	const std::string& getLabel() const						{ return mLabel; }
 
-	void			setAllowNoTexture( BOOL b )					{ mAllowNoTexture = b; }
-	bool			getAllowNoTexture() const					{ return mAllowNoTexture; }
+	void setAllowNoTexture(BOOL b)							{ mAllowNoTexture = b; }
+	bool getAllowNoTexture() const							{ return mAllowNoTexture; }
 
-	void			setAllowInvisibleTexture(BOOL b)			{ mAllowInvisibleTexture = b; }
-	bool			getAllowInvisibleTexture() const			{ return mAllowInvisibleTexture; }
+	void setAllowInvisibleTexture(BOOL b)					{ mAllowInvisibleTexture = b; }
+	bool getAllowInvisibleTexture() const					{ return mAllowInvisibleTexture; }
 
-	const LLUUID&	getImageItemID() { return mImageItemID; }
+	const LLUUID& getImageItemID()							{ return mImageItemID; }
 
-	void			setImageAssetID(const LLUUID &image_asset_id);
-	const LLUUID&	getImageAssetID() const						{ return mImageAssetID; }
+	void setImageAssetID(const LLUUID &image_asset_id);
+	const LLUUID& getImageAssetID() const					{ return mImageAssetID; }
 
-	void			setDefaultImageAssetID( const LLUUID& id )	{ mDefaultImageAssetID = id; }
-	const LLUUID&	getDefaultImageAssetID() const { return mDefaultImageAssetID; }
+	void setDefaultImageAssetID(const LLUUID& id)			{ mDefaultImageAssetID = id; }
+	const LLUUID& getDefaultImageAssetID() const			{ return mDefaultImageAssetID; }
 
-	const std::string&	getDefaultImageName() const					{ return mDefaultImageName; }
+	const std::string& getDefaultImageName() const			{ return mDefaultImageName; }
 
-	void			setFallbackImageName( const std::string& name ) { mFallbackImageName = name; }			
-	const std::string& 	getFallbackImageName() const { return mFallbackImageName; }	   
+	void setFallbackImageName(const std::string& name)		{ mFallbackImageName = name; }
+	const std::string& getFallbackImageName() const			{ return mFallbackImageName; }	   
 
-	void			setCaption(const std::string& caption);
-	void			setCanApplyImmediately(BOOL b);
+	void setCaption(const std::string& caption);
+	void setCanApplyImmediately(BOOL b);
 
-	void			setImmediateFilterPermMask(PermissionMask mask)
-					{ mImmediateFilterPermMask = mask; }
-	void			setNonImmediateFilterPermMask(PermissionMask mask)
-					{ mNonImmediateFilterPermMask = mask; }
-	PermissionMask	getImmediateFilterPermMask() { return mImmediateFilterPermMask; }
-	PermissionMask	getNonImmediateFilterPermMask() { return mNonImmediateFilterPermMask; }
+	void setImmediateFilterPermMask(PermissionMask mask)	{ mImmediateFilterPermMask = mask; }
+	void setNonImmediateFilterPermMask(PermissionMask mask)	{ mNonImmediateFilterPermMask = mask; }
+	PermissionMask getImmediateFilterPermMask()				{ return mImmediateFilterPermMask; }
+	PermissionMask getNonImmediateFilterPermMask()			{ return mNonImmediateFilterPermMask; }
 
-	void			closeFloater();
+	void closeFloater();
 
-	void			onFloaterClose();
-	void			onFloaterCommit(ETexturePickOp op);
+	void onFloaterClose();
+	void onFloaterCommit(ETexturePickOp op);
 
 	// This call is returned when a drag is detected. Your callback
 	// should return TRUE if the drag is acceptable.
@@ -151,7 +147,7 @@ public:
 	void setDropCallback(drag_n_drop_callback cb)	{ mDropCallback = cb; }
 
 	void setOnCancelCallback(LLUICtrlCallback cb)	{ mOnCancelCallback = cb; }
-	
+
 	void setOnSelectCallback(LLUICtrlCallback cb)	{ mOnSelectCallback = cb; }
 
 	void setShowLoadingPlaceholder(BOOL showLoadingPlaceholder);
@@ -161,33 +157,34 @@ private:
 	BOOL doDrop(LLInventoryItem* item);
 
 private:
-	drag_n_drop_callback	 mDragCallback;
-	drag_n_drop_callback	 mDropCallback;
-	LLUICtrlCallback		 mOnCancelCallback;
-	LLUICtrlCallback		 mOnSelectCallback;
+	drag_n_drop_callback	mDragCallback;
+	drag_n_drop_callback	mDropCallback;
+	LLUICtrlCallback		mOnCancelCallback;
+	LLUICtrlCallback		mOnSelectCallback;
 	LLPointer<LLViewerFetchedTexture> mTexturep;
-	LLColor4				 mBorderColor;
-	LLUUID					 mImageItemID;
-	LLUUID					 mImageAssetID;
-	LLUUID					 mDefaultImageAssetID;
-	std::string				 mFallbackImageName;
-	std::string				 mDefaultImageName;
-	LLHandle<LLFloater>			 mFloaterHandle;
-	LLTextBox*				 mTentativeLabel;
-	LLTextBox*				 mCaption;
-	std::string				 mLabel;
-	BOOL					 mAllowNoTexture; // If true, the user can select "none" as an option
-	BOOL					 mAllowInvisibleTexture; // If true, the user can select "Invisible" as an option
-	LLCoordGL				 mLastFloaterLeftTop;
-	PermissionMask			 mImmediateFilterPermMask;
-	PermissionMask			 mNonImmediateFilterPermMask;
-	BOOL					 mCanApplyImmediately;
-	BOOL					 mNeedsRawImageData;
-	LLViewBorder*			 mBorder;
-	BOOL					 mValid;
-	BOOL					 mDirty;
-	BOOL					 mShowLoadingPlaceholder;
-	std::string				 mLoadingPlaceholderString;
+	LLColor4				mBorderColor;
+	LLUUID					mImageItemID;
+	LLUUID					mImageAssetID;
+	LLUUID					mDefaultImageAssetID;
+	std::string				mFallbackImageName;
+	std::string				mDefaultImageName;
+	LLHandle<LLFloater>		mFloaterHandle;
+	LLTextBox*				mTentativeLabel;
+	LLTextBox*				mCaption;
+	std::string				mLabel;
+	BOOL					mAllowNoTexture; // If true, the user can select "none" as an option
+	BOOL					mAllowInvisibleTexture; // If true, the user can select "Invisible" as an option
+	LLCoordGL				mLastFloaterLeftTop;
+	PermissionMask			mImmediateFilterPermMask;
+	PermissionMask			mNonImmediateFilterPermMask;
+	BOOL					mCanApplyImmediately;
+	BOOL					mNeedsRawImageData;
+	LLViewBorder*			mBorder;
+	BOOL					mValid;
+	BOOL					mDirty;
+	BOOL					mEnabled;
+	BOOL					mShowLoadingPlaceholder;
+	std::string				mLoadingPlaceholderString;
 };
 
 // XUI HACK: When floaters converted, switch this file to lltexturepicker.h/cpp

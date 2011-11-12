@@ -39,24 +39,13 @@
 #include "lluuid.h"
 #include "llmediactrl.h"
 
-class LLButton;
 class LLCheckBoxCtrl;
 class LLDropTarget;
-class LLInventoryItem;
 class LLLineEditor;
-class LLNameEditor;
 class LLPanelAvatar;
-class LLScrollListCtrl;
 class LLTabContainer;
-class LLTextBox;
-class LLTextEditor;
-class LLTextureCtrl;
 class LLUICtrl;
-class LLViewerTexture;
-class LLViewerObject;
 class LLMessageSystem;
-class LLIconCtrl;
-class LLMediaCtrl;
 
 enum EOnlineStatus
 {
@@ -93,7 +82,6 @@ private:
 	bool mDataRequested;
 };
 
-
 class LLPanelAvatarFirstLife : public LLPanelAvatarTab
 {
 public:
@@ -101,11 +89,8 @@ public:
 
 	/*virtual*/ BOOL postBuild(void);
 
-	static void onClickImage(void *userdata);
-
 	void enableControls(BOOL own_avatar);
 };
-
 
 class LLPanelAvatarSecondLife : public LLPanelAvatarTab
 {
@@ -115,7 +100,6 @@ public:
 	/*virtual*/ BOOL postBuild(void);
 	/*virtual*/ void refresh();
 
-	static void onClickImage(void *userdata);
 	static void onClickFriends(void *userdata);
 	static void onDoubleClickGroup(void* userdata);
 	static void onClickPublishHelp(void *userdata);
@@ -134,7 +118,6 @@ public:
 private:
 	LLUUID				mPartnerID;
 };
-
 
 // WARNING!  The order of the inheritance here matters!!  Do not change.  - KLW
 class LLPanelAvatarWeb : public LLPanelAvatarTab, public LLViewerMediaObserver
@@ -169,7 +152,6 @@ private:
 	LLMediaCtrl*		mWebBrowser;
 };
 
-
 class LLPanelAvatarAdvanced : public LLPanelAvatarTab
 {
 public:
@@ -194,7 +176,6 @@ private:
 	LLLineEditor		*mSkillsEdit;
 };
 
-
 class LLPanelAvatarNotes : public LLPanelAvatarTab
 {
 public:
@@ -208,7 +189,6 @@ public:
 
 	static void onCommitNotes(LLUICtrl* field, void* userdata);
 };
-
 
 class LLPanelAvatarClassified : public LLPanelAvatarTab
 {
@@ -242,7 +222,6 @@ private:
 	bool callbackNew(const LLSD& notification, const LLSD& response);
 };
 
-
 class LLPanelAvatarPicks : public LLPanelAvatarTab
 {
 public:
@@ -266,7 +245,6 @@ private:
 
 	bool callbackDelete(const LLSD& notification, const LLSD& response);
 };
-
 
 class LLPanelAvatar : public LLPanel
 {
@@ -384,6 +362,5 @@ private:
 
 // helper funcs
 void add_left_label(LLPanel *panel, const std::string& name, S32 y);
-
 
 #endif // LL_LLPANELAVATAR_H

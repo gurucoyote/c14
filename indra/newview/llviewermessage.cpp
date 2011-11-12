@@ -5020,7 +5020,7 @@ void process_alert_core(const std::string& message, BOOL modal)
 		args["ERROR_MESSAGE"] = message;
 		LLNotifications::instance().add("ErrorMessage", args);
 	}
-	else
+	else if (message != "Autopilot canceled")	// Don't spam us with that !
 	{
 		// *TODO:translate
 		LLSD args;
@@ -5029,8 +5029,8 @@ void process_alert_core(const std::string& message, BOOL modal)
 	}
 }
 
-mean_collision_list_t				gMeanCollisionList;
-time_t								gLastDisplayedTime = 0;
+mean_collision_list_t	gMeanCollisionList;
+time_t					gLastDisplayedTime = 0;
 
 void handle_show_mean_events(void *)
 {

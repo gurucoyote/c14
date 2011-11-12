@@ -104,12 +104,11 @@ class LLFileEnableUploadModel : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-#if LL_LINUX || LL_WINDOWS
-		bool new_value = gSavedSettings.getBOOL("MeshUploadEnable") &&
-						 gMeshRepo.meshUploadEnabled();
-#else
-		bool new_value = false;
+		bool new_value = gMeshRepo.meshUploadEnabled() &&
+#if !LL_LINUX
+						 gSavedSettings.getBOOL("MeshUploadEnable") &&
 #endif
+						 LLFloaterModelPreview::sInstance == NULL;
 		gMenuHolder->findControl(userdata["control"].asString())->setValue(new_value);
 		return true;
 	}
@@ -119,31 +118,29 @@ class LLFileEnableUploadModel : public view_listener_t
 
 LLMutex* LLFilePickerThread::sMutex = NULL;
 std::queue<LLFilePickerThread*> LLFilePickerThread::sDeadQ;
+bool LLFilePickerThread::sBlocking = true;
 
 void LLFilePickerThread::getFile()
 {
-#if LL_WINDOWS
-	start();
-#else
-	run();
-#endif
+	if (sBlocking)
+	{
+		run();
+	}
+	else
+	{
+		start();
+	}
 }
 
 //virtual 
 void LLFilePickerThread::run()
 {
 	LLFilePicker picker;
-#if LL_WINDOWS
-	if (picker.getOpenFile(mFilter, false))
+
+	if (picker.getOpenFile(mFilter, sBlocking))
 	{
 		mFile = picker.getFirstFile();
 	}
-#else
-	if (picker.getOpenFile(mFilter, true))
-	{
-		mFile = picker.getFirstFile();
-	}
-#endif
 
 	{
 		LLMutexLock lock(sMutex);
@@ -357,16 +354,11 @@ class LLFileUploadModel : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-#if LL_LINUX || LL_WINDOWS
-		if (gSavedSettings.getBOOL("MeshUploadEnable"))
+		LLFloaterModelPreview* fmp = new LLFloaterModelPreview("Model Preview");
+		if (fmp)
 		{
-			LLFloaterModelPreview* fmp = new LLFloaterModelPreview("Model Preview");
-			if (fmp)
-			{
-				fmp->loadModel(3);
-			}
+			fmp->loadModel(3);
 		}
-#endif
 		return TRUE;
 	}
 };

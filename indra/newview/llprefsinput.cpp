@@ -38,6 +38,7 @@
 #include "llfloaterjoystick.h"
 #include "llsliderctrl.h"
 #include "lluictrlfactory.h"
+
 #include "llviewercamera.h"
 #include "llviewercontrol.h"
 
@@ -52,11 +53,14 @@ public:
 
 private:
 	static void onClickJoystickSetup(void* user_data);
+	static void onCommitRadioDoubleClickAction(LLUICtrl* ctrl, void* user_data);
 	void refreshValues();
 
 	F32 mMouseSensitivity;
 	F32 mCameraAngle;
 	F32 mCameraOffsetScale;
+	U32 mDoubleClickAction;
+	BOOL mDoubleClickScriptedObject;
 	BOOL mInvertMouse;
 	BOOL mFirstPersonAvatarVisible;
 	BOOL mCameraIgnoreCollisions;
@@ -77,12 +81,14 @@ LLPrefsInputImpl::LLPrefsInputImpl()
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_input.xml");
 	childSetAction("joystick_setup_button", onClickJoystickSetup, (void*)this);
+	childSetCommitCallback("double_click_action", onCommitRadioDoubleClickAction, this);
 	LLSliderCtrl* fov_slider = getChild<LLSliderCtrl>("camera_fov");
 	fov_slider->setCommitCallback(&onFOVAdjust);
 	fov_slider->setMinValue(LLViewerCamera::getInstance()->getMinView());
 	fov_slider->setMaxValue(LLViewerCamera::getInstance()->getMaxView());
 	fov_slider->setValue(LLViewerCamera::getInstance()->getView());
 	refreshValues();
+	childSetEnabled("double_click_scripted_object_check", mDoubleClickAction != 0);
 }
 
 //static
@@ -97,11 +103,24 @@ void LLPrefsInputImpl::onClickJoystickSetup(void* user_data)
 	}
 }
 
+//static
+void LLPrefsInputImpl::onCommitRadioDoubleClickAction(LLUICtrl* ctrl,
+													  void* user_data)
+{
+	LLPrefsInputImpl* self = (LLPrefsInputImpl*)user_data;
+	if (!self) return;
+
+	bool enable = gSavedSettings.getU32("DoubleClickAction") != 0;
+	self->childSetEnabled("double_click_scripted_object_check", enable);
+}
+
 void LLPrefsInputImpl::refreshValues()
 {
 	mCameraAngle				= gSavedSettings.getF32("CameraAngle");
 	mCameraOffsetScale			= gSavedSettings.getF32("CameraOffsetScale");
 	mMouseSensitivity			= gSavedSettings.getF32("MouseSensitivity");
+	mDoubleClickAction			= gSavedSettings.getU32("DoubleClickAction");
+	mDoubleClickScriptedObject	= gSavedSettings.getBOOL("DoubleClickScriptedObject");
 	mInvertMouse				= gSavedSettings.getBOOL("InvertMouse");
 	mFirstPersonAvatarVisible	= gSavedSettings.getBOOL("FirstPersonAvatarVisible");
 	mCameraIgnoreCollisions		= gSavedSettings.getBOOL("CameraIgnoreCollisions");
@@ -123,6 +142,8 @@ void LLPrefsInputImpl::cancel()
 	gSavedSettings.setF32("CameraAngle",				LLViewerCamera::getInstance()->getView());
 	gSavedSettings.setF32("CameraOffsetScale",			mCameraOffsetScale);
 	gSavedSettings.setF32("MouseSensitivity",			mMouseSensitivity);
+	gSavedSettings.setU32("DoubleClickAction",			mDoubleClickAction);
+	gSavedSettings.setBOOL("DoubleClickScriptedObject",	mDoubleClickScriptedObject);
 	gSavedSettings.setBOOL("InvertMouse",				mInvertMouse);
 	gSavedSettings.setBOOL("FirstPersonAvatarVisible",	mFirstPersonAvatarVisible);
 	gSavedSettings.setBOOL("CameraIgnoreCollisions",	mCameraIgnoreCollisions);

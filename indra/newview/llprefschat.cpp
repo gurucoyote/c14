@@ -55,6 +55,7 @@ public:
 private:
 	static void onCommitChatFullWidth(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxedMessages(LLUICtrl* ctrl, void* user_data);
+	static void onCommitCheckChatBubbles(LLUICtrl* ctrl, void* user_data);
 	void refreshValues();
 
 	S32	mChatSize;
@@ -94,9 +95,11 @@ LLPrefsChatImpl::LLPrefsChatImpl()
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_chat.xml");
 	childSetCommitCallback("chat_full_width_check", onCommitChatFullWidth, this);
 	childSetCommitCallback("console_box_per_message_check", onCommitCheckBoxedMessages, this);
+	childSetCommitCallback("bubble_text_chat", onCommitCheckChatBubbles, this);
 	refreshValues(); // initialize member data from saved settings
 	childSetValue("translate_language_combobox", mTranslateLanguage);
 	childSetEnabled("disable_messages_spacing_check", !mConsoleBoxPerMessage);
+	childSetEnabled("show_typing_info_check", !mChatBubbles);
 }
 
 //static
@@ -119,6 +122,17 @@ void LLPrefsChatImpl::onCommitCheckBoxedMessages(LLUICtrl* ctrl, void* user_data
 	if (self && check)
 	{
 		self->childSetEnabled("disable_messages_spacing_check", !check->get());
+	}
+}
+
+//static
+void LLPrefsChatImpl::onCommitCheckChatBubbles(LLUICtrl* ctrl, void* user_data)
+{
+	LLPrefsChatImpl* self = (LLPrefsChatImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (self && check)
+	{
+		self->childSetEnabled("show_typing_info_check", !check->get());
 	}
 }
 

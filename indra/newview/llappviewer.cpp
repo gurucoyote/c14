@@ -446,6 +446,8 @@ static void settings_to_globals()
 	LLFloaterView::setStackMinimizedRightToLeft(gSavedSettings.getBOOL("StackMinimizedRightToLeft"));
 	LLFloaterView::setStackScreenWidthFraction(gSavedSettings.getU32("StackScreenWidthFraction"));
 
+	LLFilePickerThread::setBlocking(gSavedSettings.getBOOL("BlockingFilePicker") != FALSE);
+
 	LLSurface::setTextureSize(gSavedSettings.getU32("RegionTextureSize"));
 	
 	LLImageGL::sGlobalUseAnisotropic	= gSavedSettings.getBOOL("RenderAnisotropic");
@@ -492,39 +494,6 @@ static void settings_modify()
 	gDebugGL = gSavedSettings.getBOOL("RenderDebugGL");
 	gDebugPipeline = gSavedSettings.getBOOL("RenderDebugPipeline");
 	gAuditTexture = gSavedSettings.getBOOL("AuditTexture");
-#if LL_VECTORIZE
-	if (gSysCPU.hasAltivec())
-	{
-		gSavedSettings.setBOOL("VectorizeEnable", TRUE);
-		gSavedSettings.setU32("VectorizeProcessor", 0);
-	}
-	else
-	if (gSysCPU.hasSSE2())
-	{
-		gSavedSettings.setBOOL("VectorizeEnable", TRUE);
-		gSavedSettings.setU32("VectorizeProcessor", 2);
-	}
-	else
-	if (gSysCPU.hasSSE())
-	{
-		gSavedSettings.setBOOL("VectorizeEnable", TRUE);
-		gSavedSettings.setU32("VectorizeProcessor", 1);
-	}
-	else
-	{
-		// Don't bother testing or running if CPU doesn't support it. JC
-		gSavedSettings.setBOOL("VectorizePerfTest", FALSE);
-		gSavedSettings.setBOOL("VectorizeEnable", FALSE);
-		gSavedSettings.setU32("VectorizeProcessor", 0);
-		gSavedSettings.setBOOL("VectorizeSkin", FALSE);
-	}
-#else
-	// This build target doesn't support SSE, don't test/run.
-	gSavedSettings.setBOOL("VectorizePerfTest", FALSE);
-	gSavedSettings.setBOOL("VectorizeEnable", FALSE);
-	gSavedSettings.setU32("VectorizeProcessor", 0);
-	gSavedSettings.setBOOL("VectorizeSkin", FALSE);
-#endif
 }
 
 void LLAppViewer::initGridChoice()
@@ -741,8 +710,6 @@ bool LLAppViewer::init()
 	LLGroupMgr::parseRoleActions("role_actions.xml");
 
 	LLAgent::parseTeleportMessages("teleport_strings.xml");
-
-	LLViewerJointMesh::updateVectorize();
 
 	// load MIME type -> media impl mappings
 #if LL_DARWIN

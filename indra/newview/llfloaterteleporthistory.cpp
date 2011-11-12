@@ -355,6 +355,19 @@ BOOL LLFloaterTeleportHistory::canClose()
 	return !LLApp::isExiting();
 }
 
+void LLFloaterTeleportHistory::toggle()
+{
+	if (getVisible())
+	{
+		setVisible(FALSE);
+	}
+	else
+	{
+		setVisible(TRUE);
+		setFrontmost(TRUE);
+	}
+}
+
 // callbacks
 
 // static

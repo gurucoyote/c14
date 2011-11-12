@@ -65,6 +65,8 @@ public:
 	virtual void			loadAsset();
 	virtual EAssetStatus	getAssetStatus();
 
+	void setNotCopyable()	{ mIsCopyable = FALSE; }
+
 	static void				saveToFile(void* userdata);
 	static void				onFileLoadedForSave(BOOL success,
 												LLViewerFetchedTexture *src_vi,
@@ -74,7 +76,6 @@ public:
 												BOOL final,
 												void* userdata);
 
-
 protected:
 	void				init();
 	bool				setAspectRatio(const F32 width, const F32 height);
@@ -82,7 +83,7 @@ protected:
 	static void			onRefreshBtn(void* data);
 
 	virtual const char*	getTitleName() const { return "Texture"; }
-	
+
 private:
 	void				updateDimensions();
 
