@@ -137,7 +137,6 @@ struct LLStopWhenHandled
     }
 };
 
-	
 typedef enum e_notification_priority
 {
 	NOTIFICATION_PRIORITY_UNSPECIFIED,
@@ -183,9 +182,6 @@ public:
 	{
 		return getKey();
 	}
-
-private:
-
 };
 
 // Contains notification form data, such as buttons and text fields along with
@@ -340,7 +336,7 @@ public:
 
 		// pseudo-param
 		Params& functor(LLNotificationFunctorRegistry::ResponseFunctor f) 
-		{ 	
+		{ 
 			functor_name = LLUUID::generateNewID().asString();
 			LLNotificationFunctorRegistry::instance().registerFunctor(functor_name, f);
 
@@ -364,7 +360,7 @@ public:
 	};
 
 private:
-	
+
 	LLUUID mId;
 	LLSD mPayload;
 	LLSD mSubstitutions;
@@ -375,10 +371,10 @@ private:
 	bool mIgnored;
 	ENotificationPriority mPriority;
 	LLNotificationFormPtr mForm;
-	
+
 	// a reference to the template
 	LLNotificationTemplatePtr mTemplatep;
-	
+
 	/*
 	 We want to be able to store and reload notifications so that they can survive
 	 a shutdown/restart of the client. So we can't simply pass in callbacks;
@@ -387,7 +383,7 @@ private:
 	 in some useful location. So we use LLNotificationFunctorRegistry to manage them.
 	 */
 	 std::string mResponseFunctorName;
-	
+
 	/*
 	 In cases where we want to specify an explict, non-persisted callback, 
 	 we store that in the callback registry under a dynamically generated
@@ -456,7 +452,7 @@ public:
 	// ["responseFunctor"] = name of registered functor that handles responses to notification;
 	LLSD asLLSD();
 
-	void respond(const LLSD& sd);
+	void respond(const LLSD& sd, bool save = true);
 
 	void setIgnored(bool ignore);
 
@@ -479,12 +475,12 @@ public:
 	{
 		return mTemplatep->mName;
 	}
-	
+
 	const LLUUID& id() const
 	{
 		return mId;
 	}
-	
+
 	const LLSD& getPayload() const
 	{
 		return mPayload;
@@ -534,7 +530,7 @@ public:
 	{
 		return mId;
 	}
-	
+
 	// comparing two notifications normally means comparing them by UUID (so we can look them
 	// up quickly this way)
 	bool operator<(const LLNotification& rhs) const
@@ -556,18 +552,18 @@ public:
 	{
 		return this == rhs;
 	}
-	
+
 	// this object has been updated, so tell all our clients
 	void update();
 
 	void updateFrom(LLNotificationPtr other);
-	
+
 	// A fuzzy equals comparator.
 	// true only if both notifications have the same template and 
 	//     1) flagged as unique (there can be only one of these) OR 
 	//     2) all required payload fields of each also exist in the other.
 	bool isEquivalentTo(LLNotificationPtr that) const;
-	
+
 	// if the current time is greater than the expiration, the notification is expired
 	bool isExpired() const
 	{
@@ -575,11 +571,11 @@ public:
 		{
 			return false;
 		}
-		
+
 		LLDate rightnow = LLDate::now();
 		return rightnow > mExpiresAt;
 	}
-	
+
 	std::string summarize() const;
 
 	bool hasUniquenessConstraints() const { return (mTemplatep ? mTemplatep->mUnique : false);}
@@ -609,14 +605,14 @@ namespace LLNotificationFilters
 	{
 		typedef boost::function<T (LLNotificationPtr)>	field_t;
 		typedef typename boost::remove_reference<T>::type		value_t;
-		
+
 		filterBy(field_t field, value_t value, EComparison comparison = EQUAL) 
 			:	mField(field), 
 				mFilterValue(value),
 				mComparison(comparison)
 		{
-		}		
-		
+		}
+
 		bool operator()(LLNotificationPtr p)
 		{
 			switch(mComparison)
@@ -725,7 +721,7 @@ protected:
 	LLStandardSignal mChanged;
 	LLStandardSignal mPassedFilter;
 	LLStandardSignal mFailedFilter;
-	
+
 	// these are action methods that subclasses can override to take action 
 	// on specific types of changes; the management of the mItems list is
 	// still handled by the generic handler.
@@ -778,7 +774,7 @@ public:
     // Channels have a comparator to control sort order;
 	// the default sorts by arrival date
     void setComparator(LLNotificationComparator comparator);
-	
+
 	std::string summarize();
 
 	// factory method for constructing these channels; since they're self-registering,
@@ -786,7 +782,7 @@ public:
 	static LLNotificationChannelPtr buildChannel(const std::string& name, const std::string& parent,
 						LLNotificationFilter filter=LLNotificationFilters::includeEverything, 
 						LLNotificationComparator comparator=LLNotificationComparators::orderByUUID());
-	
+
 protected:
     // Notification Channels have a filter, which determines which notifications
 	// will be added to this channel. 
@@ -801,8 +797,6 @@ private:
 	std::string mParent;
 	LLNotificationComparator mComparator;
 };
-
-
 
 class LLNotifications : 
 	public LLSingleton<LLNotifications>, 
@@ -836,19 +830,19 @@ public:
 	void update(const LLNotificationPtr pNotif);
 
 	LLNotificationPtr find(LLUUID uuid);
-	
+
 	typedef boost::function<void (LLNotificationPtr)> NotificationProcess;
-	
+
 	void forEachNotification(NotificationProcess process);
 
 	// This is all stuff for managing the templates
 	// take your template out
 	LLNotificationTemplatePtr getTemplate(const std::string& name);
-	
+
 	// get the whole collection
 	typedef std::vector<std::string> TemplateNames;
 	TemplateNames getTemplateNames() const;  // returns a list of notification names
-	
+
 	typedef std::map<std::string, LLNotificationTemplatePtr> TemplateMap;
 
 	TemplateMap::const_iterator templatesBegin() { return mTemplates.begin(); }
@@ -868,14 +862,14 @@ public:
 
 	void addChannel(LLNotificationChannelPtr pChan);
 	LLNotificationChannelPtr getChannel(const std::string& channelName);
-	
+
 	std::string getGlobalString(const std::string& key) const;
 
 private:
 	// we're a singleton, so we don't have a public constructor
 	LLNotifications();
 	/*virtual*/ void initSingleton();
-	
+
 	void loadPersistentNotifications();
 
 	bool expirationFilter(LLNotificationPtr pNotification);
@@ -885,22 +879,20 @@ private:
 	bool failedUniquenessTest(const LLSD& payload);
 	LLNotificationChannelPtr pHistoryChannel;
 	LLNotificationChannelPtr pExpirationChannel;
-	
+
 	// put your template in
 	bool addTemplate(const std::string& name, LLNotificationTemplatePtr theTemplate);
 	TemplateMap mTemplates;
 
 	std::string mFileName;
-	
+
 	typedef std::map<std::string, LLXMLNodePtr> XMLTemplateMap;
 	XMLTemplateMap mXmlTemplates;
 
 	LLNotificationMap mUniqueNotifications;
-	
+
 	typedef std::map<std::string, std::string> GlobalStringMap;
 	GlobalStringMap mGlobalStrings;
 };
 
-
 #endif//LL_LLNOTIFICATIONS_H
-

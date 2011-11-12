@@ -55,34 +55,29 @@ std::string sXMLFilename;
 bool LLMIMETypes::parseMIMETypes(const std::string& xml_filename)
 {
 	LLXMLNodePtr root;
-	bool success = LLUICtrlFactory::getLayeredXMLNode(xml_filename, root);
+	std::string settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS,
+																   xml_filename);
+	bool success = LLUICtrlFactory::getLayeredXMLNode(settings_filename, root);
 
+#if LL_WINDOWS && !LL_RELEASE_FOR_DOWNLOAD
+	// On the windows dev builds, unpackaged, the mime_types.xml file will be located in
+	// indra/build-vc**/newview/<config>/app_settings.
 	if (!success)
 	{
-		// If fails, check if we can read the file from the app_settings folder
-		std::string settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, xml_filename);
+		settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_EXECUTABLE,
+														   "app_settings",
+														   xml_filename);
 		success = LLUICtrlFactory::getLayeredXMLNode(settings_filename, root);
-
-		#if LL_WINDOWS
-		// On the windows dev builds, unpackaged, the mime_types.xml file will be located in
-		// indra/build-vc**/newview/<config>/app_settings.
-		if (!success)
-		{
-			settings_filename = gDirUtilp->getExpandedFilename(LL_PATH_EXECUTABLE, "app_settings", xml_filename);
-			success = LLUICtrlFactory::getLayeredXMLNode(settings_filename, root);
-		}
-		#endif
 	}
+#endif
 
-	if ( ! success || root.isNull() || ! root->hasName( "mimetypes" ) )
+	if (!success || root.isNull() || !root->hasName("mimetypes"))
 	{
-		llwarns << "Unable to read MIME type file: "
-			<< xml_filename << llendl;
+		llwarns << "Unable to read MIME type file: " << xml_filename << llendl;
 		return false;
 	}
 
-	for (LLXMLNode* node = root->getFirstChild();
-		 node != NULL;
+	for (LLXMLNode* node = root->getFirstChild(); node != NULL;
 		 node = node->getNextSibling())
 	{
 		if (node->hasName("defaultlabel"))
@@ -102,8 +97,7 @@ bool LLMIMETypes::parseMIMETypes(const std::string& xml_filename)
 			std::string mime_type;
 			node->getAttributeString("name", mime_type);
 			LLMIMEInfo info;
-			for (LLXMLNode* child = node->getFirstChild();
-				 child != NULL;
+			for (LLXMLNode* child = node->getFirstChild(); child != NULL;
 				 child = child->getNextSibling())
 			{
 				if (child->hasName("label"))
@@ -126,9 +120,8 @@ bool LLMIMETypes::parseMIMETypes(const std::string& xml_filename)
 			std::string set_name;
 			node->getAttributeString("name", set_name);
 			LLMIMEWidgetSet info;
-			for (LLXMLNode* child = node->getFirstChild();
-				child != NULL;
-				child = child->getNextSibling())
+			for (LLXMLNode* child = node->getFirstChild(); child != NULL;
+				 child = child->getNextSibling())
 			{
 				if (child->hasName("label"))
 				{
@@ -153,13 +146,13 @@ bool LLMIMETypes::parseMIMETypes(const std::string& xml_filename)
 				if (child->hasName("allow_resize"))
 				{
 					BOOL allow_resize = FALSE;
-					child->getBoolValue( 1, &allow_resize );
+					child->getBoolValue(1, &allow_resize);
 					info.mAllowResize = (bool)allow_resize;
 				}
 				if (child->hasName("allow_looping"))
 				{
 					BOOL allow_looping = FALSE;
-					child->getBoolValue( 1, &allow_looping );
+					child->getBoolValue(1, &allow_looping);
 					info.mAllowLooping = (bool)allow_looping;
 				}
 			}
@@ -219,7 +212,7 @@ std::string LLMIMETypes::findIcon(const std::string& mime_type)
 	std::string icon = "";
 	std::string widget_type = LLMIMETypes::widgetType(mime_type);
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		icon = it->second.mIcon;
 	}
@@ -231,7 +224,7 @@ std::string LLMIMETypes::findDefaultMimeType(const std::string& widget_type)
 {
 	std::string mime_type = "none/none";
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		mime_type = it->second.mDefaultMimeType;
 	}
@@ -244,7 +237,7 @@ std::string LLMIMETypes::findToolTip(const std::string& mime_type)
 	std::string tool_tip = "";
 	std::string widget_type = LLMIMETypes::widgetType(mime_type);
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		tool_tip = it->second.mToolTip;
 	}
@@ -257,7 +250,7 @@ std::string LLMIMETypes::findPlayTip(const std::string& mime_type)
 	std::string play_tip = "";
 	std::string widget_type = LLMIMETypes::widgetType(mime_type);
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		play_tip = it->second.mPlayTip;
 	}
@@ -270,7 +263,7 @@ bool LLMIMETypes::findAllowResize(const std::string& mime_type)
 	bool allow_resize = false;
 	std::string widget_type = LLMIMETypes::widgetType(mime_type);
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		allow_resize = it->second.mAllowResize;
 	}
@@ -283,7 +276,7 @@ bool LLMIMETypes::findAllowLooping(const std::string& mime_type)
 	bool allow_looping = false;
 	std::string widget_type = LLMIMETypes::widgetType(mime_type);
 	mime_widget_set_map_t::iterator it = sWidgetMap.find(widget_type);
-	if(it != sWidgetMap.end())
+	if (it != sWidgetMap.end())
 	{
 		allow_looping = it->second.mAllowLooping;
 	}
@@ -308,4 +301,3 @@ void LLMIMETypes::reload(void*)
 	sWidgetMap.clear();
 	(void)LLMIMETypes::parseMIMETypes(sXMLFilename);
 }
-

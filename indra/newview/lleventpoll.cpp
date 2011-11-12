@@ -57,6 +57,7 @@ namespace
 
 	class LLEventPollResponder : public LLHTTPClient::Responder
 	{
+		LOG_CLASS(LLEventPollResponder);
 	public:
 		
 		static LLHTTPClient::ResponderPtr start(const std::string& pollURL, const LLHost& sender);

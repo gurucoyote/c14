@@ -44,25 +44,12 @@
 #include "llwearable.h"
 #include "lliconctrl.h"
 
-class LLButton;
-class LLIconCtrl;
-class LLColorSwatchCtrl;
-class LLGenePool;
 class LLInventoryObserver;
-class LLJoint;
-class LLLineEditor;
-class LLMakeOutfitDialog;
-class LLRadioGroup;
 class LLScrollableContainerView;
 class LLScrollingPanelList;
-class LLTabContainerVertical;
-class LLTextBox;
-class LLTextureCtrl;
 class LLViewerJointMesh;
 class LLViewerVisualParam;
-class LLVisualParam;
 class LLVisualParamReset;
-class LLWearableSaveAsDialog;
 class LLPanelEditWearable;
 
 /////////////////////////////////////////////////////////////////////
@@ -84,7 +71,6 @@ public:
 	virtual void	draw();
 	/*virtual*/ void open();
 
-
 	// New methods
 	void			clearScrollingPanelList();
 	void			generateVisualParamHints(LLViewerJointMesh* joint_mesh,
@@ -98,20 +84,19 @@ public:
 
 	virtual BOOL	isDirty() const;
 
-	void			askToSaveIfDirty( void(*next_step_callback)(BOOL proceed, void* userdata), void* userdata );
+	void			askToSaveIfDirty(void(*next_step_callback)(BOOL proceed, void* userdata), void* userdata);
 
 	void			switchToDefaultSubpart();
 
-	static void		setCurrentWearableType( EWearableType type );
+	static void		setCurrentWearableType(EWearableType type);
 	static EWearableType getCurrentWearableType()					{ return sCurrentWearableType; }
 
 	// Callbacks
-	static void		onBtnOk( void* userdata );
-	static void		onBtnMakeOutfit( void* userdata );
-	static void		onMakeOutfitCommit( LLMakeOutfitDialog* dialog, void* userdata );
+	static void		onBtnOk(void* userdata);
+	static void		onBtnMakeOutfit(void* userdata);
 
-	static void		onTabChanged( void* userdata, bool from_click );
-	static void		onTabPrecommit( void* userdata, bool from_click );
+	static void		onTabChanged(void* userdata, bool from_click);
+	static void		onTabPrecommit(void* userdata, bool from_click);
 	bool			onSaveDialog(const LLSD& notification, const LLSD& response);
 	static void		onCommitChangeTab(BOOL proceed, void* userdata);
 
@@ -133,16 +118,14 @@ protected:
 	void					(*mNextStepAfterSaveCallback)(BOOL proceed, void* userdata);
 	void*					mNextStepAfterSaveUserdata;
 
-
 protected:
-	
+
 	static void* createWearablePanel(void* userdata);
-	
+
 	void			initWearablePanels();
 	void			initScrollingPanelList();
 };
 
 extern LLFloaterCustomize* gFloaterCustomize;
-
 
 #endif  // LL_LLFLOATERCUSTOMIZE_H

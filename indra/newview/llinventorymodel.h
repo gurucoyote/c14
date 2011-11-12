@@ -235,6 +235,7 @@ public:
 	// cosistent internal state. No cache accounting, observer
 	// notification, or server update is performed.
 	void deleteObject(const LLUUID& id);
+	void removeItem(const LLUUID& item_id);
 
 	// This is a method which collects the descendents of the id
 	// provided. If the category is not found, no action is

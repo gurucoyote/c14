@@ -39,8 +39,6 @@
 
 #include "llfilepicker.h"
 
-#undef MESH_UPLOAD		// #define to enable mesh uploading (not yet working)
-
 class LLTransactionID;
 
 void init_menu_file();

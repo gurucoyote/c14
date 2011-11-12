@@ -570,14 +570,21 @@ LLPluginCookieStore *LLViewerMedia::getCookieStore()
 // static
 void LLViewerMedia::loadCookieFile()
 {
-	// build filename for each user
-	std::string resolved_filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,
-																   PLUGIN_COOKIE_FILE_NAME);
-
+	std::string resolved_filename = gDirUtilp->getLindenUserDir();
 	if (resolved_filename.empty())
 	{
-		llinfos << "Can't get path to plugin cookie file - probably not logged in yet." << llendl;
-		return;
+		// Use the unknown user cookies
+		resolved_filename = gDirUtilp->getOSUserAppDir() +
+							gDirUtilp->getDirDelimiter() +
+							PLUGIN_COOKIE_FILE_NAME;
+		llinfos << "Can't get path to per account settings, falling back to: "
+				<< resolved_filename << llendl;
+	}
+	else
+	{
+		// build filename for each user
+		resolved_filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,
+														   PLUGIN_COOKIE_FILE_NAME);
 	}
 
 	// open the file for reading
@@ -613,14 +620,21 @@ void LLViewerMedia::loadCookieFile()
 // static
 void LLViewerMedia::saveCookieFile()
 {
-	// build filename for each user
-	std::string resolved_filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,
-																   PLUGIN_COOKIE_FILE_NAME);
-
+	std::string resolved_filename = gDirUtilp->getLindenUserDir();
 	if (resolved_filename.empty())
 	{
-		llinfos << "Can't get path to plugin cookie file - probably not logged in yet." << llendl;
-		return;
+		// Set the unknown user cookies
+		resolved_filename = gDirUtilp->getOSUserAppDir() +
+							gDirUtilp->getDirDelimiter() +
+							PLUGIN_COOKIE_FILE_NAME;
+		llinfos << "Can't get path to per account settings, falling back to: "
+				<< resolved_filename << llendl;
+	}
+	else
+	{
+		// build filename for each user
+		resolved_filename = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,
+														   PLUGIN_COOKIE_FILE_NAME);
 	}
 
 	// open a file for writing

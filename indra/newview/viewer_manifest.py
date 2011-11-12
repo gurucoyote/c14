@@ -118,7 +118,7 @@ class ViewerManifest(LLManifest):
     def channel(self):
         return self.args['channel']
     def channel_unique(self):
-        return self.channel().replace("Second Life", "").strip()
+        return self.channel().replace("Cool VL Viewer", "").strip()
     def channel_oneword(self):
         return "".join(self.channel_unique().split())
     def channel_lowerword(self):
@@ -126,9 +126,7 @@ class ViewerManifest(LLManifest):
     def viewer_branding_id(self):
         return self.args['branding_id']
     def installer_prefix(self):
-        mapping={"secondlife":'SecondLife_',
-                 "snowglobe":'Snowglobe_'}
-        return mapping[self.viewer_branding_id()]
+        return "CoolVLViewer_"
 
     def flags_list(self):
         """ Convenience function that returns the command-line flags
@@ -148,16 +146,7 @@ class ViewerManifest(LLManifest):
 
 class WindowsManifest(ViewerManifest):
     def final_exe(self):
-        if self.default_channel() and self.viewer_branding_id()=="secondlife":
-            if self.default_grid():
-                return "SecondLife.exe"
-            else:
-                return "SecondLifePreview.exe"
-        elif(self.viewer_branding_id=="snowglobe"):
-            return "Snowglobe.exe"
-        else:
-            return ''.join(self.channel().split()) + '.exe'
-
+    	return "CoolVLViewer.exe"
 
     def construct(self):
         super(WindowsManifest, self).construct()
@@ -244,9 +233,6 @@ class WindowsManifest(ViewerManifest):
             self.path("qtiff4.dll")
             self.end_prefix()
 
-        # Per platform MIME config on the cheap.  See SNOW-307 / DEV-41388
-        self.path("skins/default/xui/en-us/mime_types_windows.xml", "skins/default/xui/en-us/mime_types.xml")
-
         # These need to be installed as a SxS assembly, currently a 'private' assembly.
         # See http://msdn.microsoft.com/en-us/library/ms235291(VS.80).aspx
         if self.prefix(src=self.args['configuration'], dst=""):
@@ -295,158 +281,9 @@ class WindowsManifest(ViewerManifest):
                 print "Skipping libtcmalloc_minimal.dll"
             self.end_prefix()
 
-    def nsi_file_commands(self, install=True):
-        def wpath(path):
-            if path.endswith('/') or path.endswith(os.path.sep):
-                path = path[:-1]
-            path = path.replace('/', '\\')
-            return path
-
-        result = ""
-        dest_files = [pair[1] for pair in self.file_list if pair[0] and os.path.isfile(pair[1])]
-        # sort deepest hierarchy first
-        dest_files.sort(lambda a,b: cmp(a.count(os.path.sep),b.count(os.path.sep)) or cmp(a,b))
-        dest_files.reverse()
-        out_path = None
-        for pkg_file in dest_files:
-            rel_file = os.path.normpath(pkg_file.replace(self.get_dst_prefix()+os.path.sep,''))
-            installed_dir = wpath(os.path.join('$INSTDIR', os.path.dirname(rel_file)))
-            pkg_file = wpath(os.path.normpath(pkg_file))
-            if installed_dir != out_path:
-                if install:
-                    out_path = installed_dir
-                    result += 'SetOutPath ' + out_path + '\n'
-            if install:
-                result += 'File ' + pkg_file + '\n'
-            else:
-                result += 'Delete ' + wpath(os.path.join('$INSTDIR', rel_file)) + '\n'
-        # at the end of a delete, just rmdir all the directories
-        if not install:
-            deleted_file_dirs = [os.path.dirname(pair[1].replace(self.get_dst_prefix()+os.path.sep,'')) for pair in self.file_list]
-            # find all ancestors so that we don't skip any dirs that happened to have no non-dir children
-            deleted_dirs = []
-            for d in deleted_file_dirs:
-                deleted_dirs.extend(path_ancestors(d))
-            # sort deepest hierarchy first
-            deleted_dirs.sort(lambda a,b: cmp(a.count(os.path.sep),b.count(os.path.sep)) or cmp(a,b))
-            deleted_dirs.reverse()
-            prev = None
-            for d in deleted_dirs:
-                if d != prev:   # skip duplicates
-                    result += 'RMDir ' + wpath(os.path.join('$INSTDIR', os.path.normpath(d))) + '\n'
-                prev = d
-
-        return result
-
     def package_finish(self):
-        # a standard map of strings for replacing in the templates
-        substitution_strings = {
-            'version' : '.'.join(self.args['version']),
-            'version_short' : '.'.join(self.args['version'][:-1]),
-            'version_dashes' : '-'.join(self.args['version']),
-            'final_exe' : self.final_exe(),
-            'grid':self.args['grid'],
-            'grid_caps':self.args['grid'].upper(),
-            # escape quotes becase NSIS doesn't handle them well
-            'flags':self.flags_list().replace('"', '$\\"'),
-            'channel':self.channel(),
-            'channel_oneword':self.channel_oneword(),
-            'channel_unique':self.channel_unique(),
-            }
-
-        version_vars = """
-        !define INSTEXE  "%(final_exe)s"
-        !define VERSION "%(version_short)s"
-        !define VERSION_LONG "%(version)s"
-        !define VERSION_DASHES "%(version_dashes)s"
-        """ % substitution_strings
-        if self.default_channel() and self.viewer_branding_id()=="secondlife":
-            if self.default_grid():
-                # release viewer
-                installer_file = "Second_Life_%(version_dashes)s_Setup.exe"
-                grid_vars_template = """
-                OutFile "%(installer_file)s"
-                !define VIEWERNAME "Second Life"
-                !define INSTFLAGS "%(flags)s"
-                !define INSTNAME   "SecondLife"
-                !define SHORTCUT   "Second Life"
-                !define URLNAME   "secondlife"
-                !define INSTALL_ICON "install_icon.ico"
-                !define UNINSTALL_ICON "uninstall_icon.ico"
-                Caption "Second Life ${VERSION}"
-                """
-            else:
-                # beta grid viewer
-                installer_file = "Second_Life_%(version_dashes)s_(%(grid_caps)s)_Setup.exe"
-                grid_vars_template = """
-                OutFile "%(installer_file)s"
-                !define VIEWERNAME "Second Life"
-                !define INSTFLAGS "%(flags)s"
-                !define INSTNAME   "SecondLife%(grid_caps)s"
-                !define SHORTCUT   "Second Life (%(grid_caps)s)"
-                !define URLNAME   "secondlife%(grid)s"
-                !define INSTALL_ICON "install_icon.ico"
-                !define UNINSTALL_ICON "uninstall_icon.ico"
-                !define UNINSTALL_SETTINGS 1
-                Caption "Second Life %(grid)s ${VERSION}"
-                """
-        elif self.viewer_branding_id()=="snowglobe":
-                installer_file = "Snowglobe_%(version_dashes)s_Setup.exe"
-                grid_vars_template = """
-                OutFile "%(installer_file)s"
-                !define VIEWERNAME "Snowglobe"
-                !define INSTFLAGS "%(flags)s"
-                !define INSTNAME   "Snowglobe"
-                !define SHORTCUT   "Snowglobe"
-                !define URLNAME   "secondlife"
-                !define INSTALL_ICON "install_icon_snowglobe.ico"
-                !define UNINSTALL_ICON "uninstall_icon_snowglobe.ico"
-                Caption "Snowglobe ${VERSION}"
-                """
-        else:
-            # some other channel on some grid
-            installer_file = "Second_Life_%(version_dashes)s_%(channel_oneword)s_Setup.exe"
-            grid_vars_template = """
-            OutFile "%(installer_file)s"
-            !define INSTFLAGS "%(flags)s"
-            !define INSTNAME   "SecondLife%(channel_oneword)s"
-            !define SHORTCUT   "%(channel)s"
-            !define URLNAME   "secondlife"
-            !define UNINSTALL_SETTINGS 1
-            Caption "%(channel)s ${VERSION}"
-            """
-        if 'installer_name' in self.args:
-            installer_file = self.args['installer_name']
-        else:
-            installer_file = installer_file % substitution_strings
-        substitution_strings['installer_file'] = installer_file
-
-        tempfile = "secondlife_setup_tmp.nsi"
-        # the following replaces strings in the nsi template
-        # it also does python-style % substitution
-        self.replace_in("installers/windows/installer_template.nsi", tempfile, {
-                "%%VERSION%%":version_vars,
-                "%%SOURCE%%":self.get_src_prefix(),
-                "%%GRID_VARS%%":grid_vars_template % substitution_strings,
-                "%%INSTALL_FILES%%":self.nsi_file_commands(True),
-                "%%DELETE_FILES%%":self.nsi_file_commands(False)})
-
-        # We use the Unicode version of NSIS, available from
-        # http://www.scratchpaper.com/
-        NSIS_path = 'C:\\Program Files\\NSIS\\Unicode\\makensis.exe'
-        self.run_command('"' + proper_windows_path(NSIS_path) + '" ' + self.dst_path_of(tempfile))
-        # self.remove(self.dst_path_of(tempfile))
-        # If we're on a build machine, sign the code using our Authenticode certificate. JC
-        sign_py = os.path.expandvars("{SIGN_PY}")
-        if sign_py == "" or sign_py == "{SIGN_PY}":
-            sign_py = 'C:\\buildscripts\\code-signing\\sign.py'
-        if os.path.exists(sign_py):
-            self.run_command('python ' + sign_py + ' ' + self.dst_path_of(installer_file))
-        else:
-            print "Skipping code signing,", sign_py, "does not exist"
-        self.created_path(self.dst_path_of(installer_file))
-        self.package_file = installer_file
-
+        # removed: we use InstallJammer to make packages
+		return
 
 class DarwinManifest(ViewerManifest):
     def construct(self):
@@ -470,16 +307,7 @@ class DarwinManifest(ViewerManifest):
                 self.path("licenses-mac.txt", dst="licenses.txt")
                 self.path("featuretable_mac.txt")
                 self.path("SecondLife.nib")
-
-                if self.viewer_branding_id()=='secondlife':
-                    # If we are not using the default channel, use the 'Firstlook
-                    # icon' to show that it isn't a stable release.
-                    if self.default_channel() and self.default_grid():
-                        self.path("secondlife.icns")
-                    else:
-                        self.path("secondlife_firstlook.icns", "secondlife.icns")
-                elif self.viewer_branding_id()=="snowglobe":
-                    self.path("snowglobe.icns")
+                self.path("cool_vl_viewer.icns")
 
                 # Translations
                 self.path("English.lproj")
@@ -581,9 +409,6 @@ class DarwinManifest(ViewerManifest):
 
                     self.end_prefix("llplugin")
 
-                # Per platform MIME config on the cheap.  See SNOW-307 / DEV-41388
-                self.path("skins/default/xui/en-us/mime_types_mac.xml", "skins/default/xui/en-us/mime_types.xml")
-
                 # command line arguments for connecting to the proper grid
                 self.put_in_file(self.flags_list(), 'arguments.txt')
 
@@ -602,14 +427,10 @@ class DarwinManifest(ViewerManifest):
                                  { 'viewer_binary' : self.dst_path_of('Contents/MacOS/'+self.app_name())})
 
     def app_name(self):
-        mapping={"secondlife":"Second Life",
-                 "snowglobe":"Snowglobe"}
-        return mapping[self.viewer_branding_id()]
+        return "Cool VL Viewer"
         
     def info_plist_name(self):
-        mapping={"secondlife":"Info-SecondLife.plist",
-                 "snowglobe":"Info-Snowglobe.plist"}
-        return mapping[self.viewer_branding_id()]
+        return "Info-CoolVLViewer.plist"
 
     def package_finish(self):
         channel_standin = self.app_name()
@@ -658,15 +479,9 @@ class DarwinManifest(ViewerManifest):
         # will use the release .DS_Store, and will look broken.
         # - Ambroff 2008-08-20
 		# Added a .DS_Store for snowglobe - Merov 2009-06-17
-		
-		# We have a single branded installer for all snowglobe channels so snowglobe logic is a bit different
-        if (self.app_name()=="Snowglobe"):
-            dmg_template = os.path.join ('installers', 'darwin', 'snowglobe-dmg')
-        else:
-            dmg_template = os.path.join(
-                'installers', 
-                'darwin',
-                '%s-dmg' % "".join(self.channel_unique().split()).lower())
+        # Using Snowglobe's .DS_Store for the Cool VL Viewer - Henri Beauchamp
+
+        dmg_template = os.path.join ('installers', 'darwin', 'snowglobe-dmg')
 
         if not os.path.exists (self.src_path_of(dmg_template)):
             dmg_template = os.path.join ('installers', 'darwin', 'release-dmg')
@@ -739,27 +554,18 @@ class LinuxManifest(ViewerManifest):
             self.path("../media_plugins/gstreamer010/libmedia_plugin_gstreamer010.so", "libmedia_plugin_gstreamer.so")
             self.end_prefix("bin/llplugin")
 
-        # Per platform MIME config on the cheap.  See SNOW-307 / DEV-41388
-        self.path("skins/default/xui/en-us/mime_types_linux.xml", "skins/default/xui/en-us/mime_types.xml")
-
         self.path("../llcommon/libllcommon.so", "lib/libllcommon.so")
 
         self.path("featuretable_linux.txt")
 
     def wrapper_name(self):
-        mapping={"secondlife":"secondlife",
-                 "snowglobe":"snowglobe"}
-        return mapping[self.viewer_branding_id()]
+        return "cool_vl_viewer"
 
     def binary_name(self):
-        mapping={"secondlife":"do-not-directly-run-secondlife-bin",
-                 "snowglobe":"snowglobe-do-not-run-directly"}
-        return mapping[self.viewer_branding_id()]
+        return "cool_vl_viewer-bin"
     
     def icon_name(self):
-        mapping={"secondlife":"secondlife_icon.png",
-                 "snowglobe":"snowglobe_icon.png"}
-        return mapping[self.viewer_branding_id()]
+    	return "cvlv_icon.png"
 
     def package_finish(self):
         if 'installer_name' in self.args:

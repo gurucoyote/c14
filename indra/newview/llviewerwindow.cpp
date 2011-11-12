@@ -1802,6 +1802,11 @@ void LLViewerWindow::initWorldUI()
 
 	if (gToolBar == NULL)			// Don't re-enter if objects are alreay created
 	{
+		if (gAudiop)
+		{
+			gAudiop->setMuted(TRUE);	// Don't play the floaters opening sound
+		}
+
 		LLRect bar_rect(-1, STATUS_BAR_HEIGHT, width+1, -1);
 		gToolBar = new LLToolBar("toolbar", bar_rect);
 
@@ -1883,6 +1888,11 @@ void LLViewerWindow::initWorldUI()
 
 		// menu holder appears on top to get first pass at all mouse events
 		getRootView()->sendChildToFront(gMenuHolder);
+
+		if (gAudiop)
+		{
+			gAudiop->setMuted(FALSE);
+		}
 	}
 }
 

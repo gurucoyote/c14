@@ -52,6 +52,12 @@
 			</menu_item_call>
 			<menu_item_separator bottom_delta="-8" height="8" left="0" mouse_opaque="true" name="separator3"
 			     width="128" />
+			<menu_item_call bottom_delta="-18" height="18" label="Make New Outfit" left="0" mouse_opaque="true"
+			     name="Make New Outfit" width="128">
+				<on_click filter="" function="Inventory.MakeNewOutfit" userdata="" />
+			</menu_item_call>
+			<menu_item_separator bottom_delta="-8" height="8" left="0" mouse_opaque="true" name="separator3"
+			     width="128" />
 			<menu_item_call bottom_delta="-18" height="18" label="Empty Trash" left="0" mouse_opaque="true"
 			     name="Empty Trash" width="128">
 				<on_click filter="" function="Inventory.EmptyTrash" userdata="" />

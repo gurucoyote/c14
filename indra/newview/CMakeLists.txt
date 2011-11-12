@@ -176,6 +176,7 @@ set(viewer_SOURCE_FILES
     llfloaterlagmeter.cpp
     llfloaterland.cpp
     llfloaterlandholdings.cpp
+    llfloatermakenewoutfit.cpp
     llfloatermap.cpp
     slfloatermediafilter.cpp
     llfloatermemleak.cpp
@@ -612,6 +613,7 @@ set(viewer_HEADER_FILES
     llfloaterlagmeter.h
     llfloaterland.h
     llfloaterlandholdings.h
+    llfloatermakenewoutfit.h
     llfloatermap.h
     slfloatermediafilter.h
     llfloatermemleak.h
@@ -1033,8 +1035,8 @@ if (WINDOWS)
         ${ARTWORK_DIR}/res/lltooltranslate.cur
         ${ARTWORK_DIR}/res/lltoolzoomin.cur
         ${ARTWORK_DIR}/res/lltoolzoomout.cur
-        ${ARTWORK_DIR}/res/snowglobe_icon.BMP
-        ${ARTWORK_DIR}/res/snowglobe_icon.ico
+        ${ARTWORK_DIR}/res/ll_icon.BMP
+        ${ARTWORK_DIR}/res/ll_icon.ico
         ${ARTWORK_DIR}/res/resource.h
         ${ARTWORK_DIR}/res/toolbuy.cur
         ${ARTWORK_DIR}/res/toolopen.cur
@@ -1134,12 +1136,16 @@ set(viewer_APPSETTINGS_FILES
     app_settings/anim.ini
     app_settings/cmd_line.xml
     app_settings/grass.xml
+    app_settings/grids.xml
     app_settings/high_graphics.xml
     app_settings/keys.ini
     app_settings/keywords.ini
     app_settings/logcontrol.xml
     app_settings/low_graphics.xml
     app_settings/mid_graphics.xml
+    app_settings/mime_types_linux.xml
+    app_settings/mime_types_mac.xml
+    app_settings/mime_types_windows.xml
     app_settings/settings.xml
     app_settings/settings_crash_behavior.xml
     app_settings/settings_files.xml
@@ -1541,20 +1547,6 @@ if (WINDOWS)
         COMMENT "Copying Quicktime Plugin to the runtime folder."
         )
 
-  # Copying the mime_types.xml file to app_settings
-  set(mime_types_source "${CMAKE_SOURCE_DIR}/newview/skins/default/xui/en-us")
-  set(mime_types_dest "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/app_settings")
-  add_custom_command(
-      TARGET ${VIEWER_BINARY_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND}
-      ARGS 
-	 -E
-	 copy_if_different
-	 ${mime_types_source}/mime_types_windows.xml 
-	 ${mime_types_dest}/mime_types.xml
-      COMMENT "Copying mime_types_windows.xml to mime_types.xml."
-      )
-  
 endif (WINDOWS)
 
 if (DARWIN)

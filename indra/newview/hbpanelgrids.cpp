@@ -102,6 +102,7 @@ public:
 	static void onClickAddGrid(void *data);
 
 	static void onInputEditorKeystroke(LLLineEditor* caller, void* data);
+	static void onCommitCheckBoxLoginURI(LLUICtrl* ctrl, void* data);
 	static void onCommitCheckBoxNickname(LLUICtrl* ctrl, void* data);
 	static void onSelectGrid(LLUICtrl* ctrl, void* data);
 
@@ -114,7 +115,8 @@ private:
 	std::string mGridDomain;
 	std::string mGridName;
 	std::string mGridNick;
-//	std::string mLoginURI;
+	std::string mEnteredLoginURI;
+	std::string mLoginURI;
 	std::string mHelperURI;
 	std::string mLoginPage;
 	std::string mWebsiteURL;
@@ -248,6 +250,7 @@ HBPanelGridsImpl::HBPanelGridsImpl()
 	editor->setKeystrokeCallback(&onInputEditorKeystroke);
 	editor->setCallbackUserData(this);
 
+	childSetCommitCallback("retrieved_loginuri_check", onCommitCheckBoxLoginURI, this);
 	childSetCommitCallback("prefer_nickname_check", onCommitCheckBoxNickname, this);
 }
 
@@ -365,20 +368,20 @@ void HBPanelGridsImpl::draw()
 
 void HBPanelGridsImpl::getParams()
 {
-	std::string uri = childGetValue("login_uri_editor");
-	if (uri.empty())
+	mEnteredLoginURI = childGetValue("login_uri_editor").asString();
+	if (mEnteredLoginURI.empty())
 	{
 		LLNotifications::instance().add("MandatoryLoginUri");
 		return;
 	}
-	std::string url = uri;
-	if (url.compare(url.length() - 1, 1, "/") != 0)
+	std::string url = mEnteredLoginURI;
+	if (mEnteredLoginURI.compare(url.length() - 1, 1, "/") != 0)
 	{
 		url += '/';
 	}
 	url += "get_grid_info";
 	clearParams(false);
-	LLHTTPClient::get(url, new GridParametersReceived(uri));
+	LLHTTPClient::get(url, new GridParametersReceived(mEnteredLoginURI));
 }
 
 void HBPanelGridsImpl::clearParams(bool clear_name)
@@ -464,7 +467,7 @@ void HBPanelGridsImpl::onXmlCharacterData(void* data, const XML_Char* s, int len
 	{
 		case XML_GRIDNAME:	self->mGridName.assign(s, len);		break;
 		case XML_GRIDNICK:	self->mGridNick.assign(s, len);		break;
-//		case XML_LOGINURI:	self->mLoginURI.assign(s, len);		break;
+		case XML_LOGINURI:	self->mLoginURI.assign(s, len);		break;
 		case XML_HELPERURI:	self->mHelperURI.assign(s, len);	break;
 		case XML_LOGINPAGE:	self->mLoginPage.assign(s, len);	break;
 		case XML_WEBSITE:	self->mWebsiteURL.assign(s, len);	break;
@@ -481,7 +484,7 @@ void HBPanelGridsImpl::updateGridParameters(std::string& result)
 {
 	mGridName.clear();
 	mGridNick.clear();
-//	mLoginURI.clear();
+	mLoginURI.clear();
 	mHelperURI.clear();
 	mLoginPage.clear();
 	mWebsiteURL.clear();
@@ -506,15 +509,28 @@ void HBPanelGridsImpl::updateGridParameters(std::string& result)
 	{
 		mGridName = mGridNick;
 	}
-	if (mGridNick.empty() && !mGridName.empty())
+	if (mGridName.empty())
+	{
+		mGridName = childGetValue("grid_name_editor").asString();
+	}
+	if (mGridNick.empty())
 	{
 		mGridNick = mGridName;
 	}
-
-	std::string name = childGetValue("prefer_nickname_check").asBoolean() ? mGridNick
-																		  : mGridName;
+	std::string name =
+		childGetValue("prefer_nickname_check").asBoolean() ? mGridNick
+														   : mGridName;
 	childSetValue("grid_name_editor", name);
-//	childSetValue("login_uri_editor", mLoginURI);
+
+	if (mLoginURI.empty())
+	{
+		mLoginURI = mEnteredLoginURI;
+	}
+	std::string login_uri =
+		childGetValue("retrieved_loginuri_check").asBoolean() ? mLoginURI
+															  : mEnteredLoginURI;
+	childSetValue("login_uri_editor", login_uri);
+
 	childSetValue("helper_uri_editor", mHelperURI);
 	childSetValue("login_page_editor", mLoginPage);
 	childSetValue("website_editor", mWebsiteURL);
@@ -540,20 +556,27 @@ void HBPanelGridsImpl::copyParams()
 	{
 		mGridName = mGridNick = sGridsList["grids"][i].get("label").asString();
 		childSetValue("grid_name_editor", mGridName);
-		childSetValue("login_uri_editor",
-					  sGridsList["grids"][i].get("login_uri").asString());
-		childSetValue("helper_uri_editor",
-					  sGridsList["grids"][i].get("helper_uri").asString());
-		childSetValue("login_page_editor",
-					  sGridsList["grids"][i].get("login_page").asString());
-		childSetValue("website_editor",
-					  sGridsList["grids"][i].get("website_url").asString());
-		childSetValue("new_account_editor",
-					  sGridsList["grids"][i].get("register_url").asString());
-		childSetValue("support_editor",
-					  sGridsList["grids"][i].get("support_url").asString());
-		childSetValue("forgotten_password_editor",
-					  sGridsList["grids"][i].get("password_url").asString());
+
+		mLoginURI = mEnteredLoginURI = sGridsList["grids"][i].get("login_uri").asString();
+		childSetValue("login_uri_editor", mLoginURI);
+
+		mHelperURI = sGridsList["grids"][i].get("helper_uri").asString();
+		childSetValue("helper_uri_editor", mHelperURI);
+
+		mLoginPage = sGridsList["grids"][i].get("login_page").asString();
+		childSetValue("login_page_editor", mLoginPage);
+
+		mWebsiteURL = sGridsList["grids"][i].get("website_url").asString();
+		childSetValue("website_editor", mWebsiteURL);
+
+		mSupportURL = sGridsList["grids"][i].get("support_url").asString();
+		childSetValue("support_editor", mSupportURL);
+
+		mAccountURL = sGridsList["grids"][i].get("register_url").asString();
+		childSetValue("new_account_editor", mAccountURL);
+
+		mPasswordURL = sGridsList["grids"][i].get("password_url").asString();
+		childSetValue("forgotten_password_editor", mPasswordURL);
 
 		mIsDirty = true;
 	}
@@ -579,39 +602,39 @@ void HBPanelGridsImpl::saveParams()
 			LLNotifications::instance().add("MandatoryGridName");
 			return;
 		}
-		std::string value = childGetValue("login_uri_editor").asString();
-		LLStringUtil::trim(value);
-		if (value.empty())
+		std::string uri = childGetValue("login_uri_editor").asString();
+		LLStringUtil::trim(uri);
+		if (uri.empty())
 		{
 			LLNotifications::instance().add("MandatoryLoginUri");
 			return;
 		}
-		sGridsList["grids"][i]["label"] = name;
-		sGridsList["grids"][i]["login_uri"] = value;
+		sGridsList["grids"][i]["label"] = mGridName = mGridNick = name;
+		sGridsList["grids"][i]["login_uri"] = mLoginURI = mEnteredLoginURI = uri;
 
-		value = childGetValue("helper_uri_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["helper_uri"] = value;
+		mHelperURI = childGetValue("helper_uri_editor").asString();
+		LLStringUtil::trim(mHelperURI);
+		sGridsList["grids"][i]["helper_uri"] = mHelperURI;
 
-		value = childGetValue("login_page_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["login_page"] = value;
+		mLoginPage = childGetValue("login_page_editor").asString();
+		LLStringUtil::trim(mLoginPage);
+		sGridsList["grids"][i]["login_page"] = mLoginPage;
 
-		value = childGetValue("website_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["website_url"] = value;
+		mWebsiteURL = childGetValue("website_editor").asString();
+		LLStringUtil::trim(mWebsiteURL);
+		sGridsList["grids"][i]["website_url"] = mWebsiteURL;
 
-		value = childGetValue("new_account_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["register_url"] = value;
+		mSupportURL = childGetValue("support_editor").asString();
+		LLStringUtil::trim(mSupportURL);
+		sGridsList["grids"][i]["support_url"] = mSupportURL;
 
-		value = childGetValue("support_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["support_url"] = value;
+		mAccountURL = childGetValue("new_account_editor").asString();
+		LLStringUtil::trim(mAccountURL);
+		sGridsList["grids"][i]["register_url"] = mAccountURL;
 
-		value = childGetValue("forgotten_password_editor").asString();
-		LLStringUtil::trim(value);
-		sGridsList["grids"][i]["password_url"] = value;
+		mPasswordURL = childGetValue("forgotten_password_editor").asString();
+		LLStringUtil::trim(mPasswordURL);
+		sGridsList["grids"][i]["password_url"] = mPasswordURL;
 
 		sGridsList["grids"][i]["can_edit"] = "true";
 
@@ -650,13 +673,14 @@ void HBPanelGridsImpl::deleteGrid()
 		EGridInfo j = vl->gridIndexInList(sGridsList, mGridDomain);
 		if (j != -1)
 		{
-			sGridsList["grids"][j]["label"] = grids["grids"][i].get("label");
-			sGridsList["grids"][j]["login_uri"] = grids["grids"][i].get("login_uri");
-			sGridsList["grids"][j]["helper_uri"] = grids["grids"][i].get("helper_uri");
-			sGridsList["grids"][j]["website_url"] = grids["grids"][i].get("website_url");
-			sGridsList["grids"][j]["register_url"] = grids["grids"][i].get("register_url");
-			sGridsList["grids"][j]["support_url"] = grids["grids"][i].get("support_url");
-			sGridsList["grids"][j]["password_url"] = grids["grids"][i].get("password_url");
+			sGridsList["grids"][j]["label"]	= mGridName = mGridNick = grids["grids"][i].get("label").asString();
+			sGridsList["grids"][j]["login_uri"] = mLoginURI = mEnteredLoginURI = grids["grids"][i].get("login_uri").asString();
+			sGridsList["grids"][j]["helper_uri"] = mHelperURI = grids["grids"][i].get("helper_uri").asString();
+			sGridsList["grids"][j]["login_page"] = mLoginPage = grids["grids"][i].get("login_page").asString();
+			sGridsList["grids"][j]["website_url"] = mWebsiteURL = grids["grids"][i].get("website_url").asString();
+			sGridsList["grids"][j]["support_url"] = mSupportURL = grids["grids"][i].get("support_url").asString();
+			sGridsList["grids"][j]["register_url"] = mAccountURL = grids["grids"][i].get("register_url").asString();
+			sGridsList["grids"][j]["password_url"] = mPasswordURL = grids["grids"][i].get("password_url").asString();
 			sGridsList["grids"][j]["can_edit"] = "false";
 		}
 	}
@@ -719,7 +743,8 @@ void HBPanelGridsImpl::addGrid()
 		LLNotifications::instance().add("MandatoryGridName");
 		return;
 	}
-
+	mLoginURI = mEnteredLoginURI = uri;
+	mGridName = mGridNick = name;
 	mHelperURI = childGetValue("helper_uri_editor").asString();
 	LLStringUtil::trim(mHelperURI);
 	mLoginPage = childGetValue("login_page_editor").asString();
@@ -736,7 +761,7 @@ void HBPanelGridsImpl::addGrid()
 	// Create an unique "domain" name that will be used as the key of this
 	// grid in the grids map: this name can also be used as a grid name after
 	// the --grid option in the command line of the viewer.
-	mGridDomain = LLViewerLogin::getDomain(uri);
+	mGridDomain = LLViewerLogin::getDomain(mLoginURI);
 	if (is_ip_address(mGridDomain))
 	{
 		mGridDomain = LLViewerLogin::getDomain(mHelperURI);
@@ -754,7 +779,7 @@ void HBPanelGridsImpl::addGrid()
 						mGridDomain = LLViewerLogin::getDomain(mPasswordURL);
 						if (is_ip_address(mGridDomain))
 						{
-							mGridDomain = sanitize(name);
+							mGridDomain = sanitize(mGridName);
 							if (is_ip_address(mGridDomain))
 							{
 								LLNotifications::instance().add("AddGridFailure");
@@ -793,7 +818,7 @@ void HBPanelGridsImpl::addGrid()
 		return;
 	}
 
-	std::string lc_name = name;
+	std::string lc_name = mGridName;
 	LLStringUtil::toLower(lc_name);
 	if (lc_name == "secondlife" || lc_name == "secondlife beta" ||
 		lc_name == "other" || lc_name == "none")
@@ -821,8 +846,8 @@ void HBPanelGridsImpl::addGrid()
 
 	LLSD entry = sGridsList.emptyMap();
 	entry.insert("name", mGridDomain);
-	entry.insert("label", name);
-	entry.insert("login_uri", uri);
+	entry.insert("label", mGridName);
+	entry.insert("login_uri", mLoginURI);
 	entry.insert("helper_uri", mHelperURI);
 	entry.insert("login_page", mLoginPage);
 	entry.insert("website_url", mWebsiteURL);
@@ -914,6 +939,18 @@ void HBPanelGridsImpl::onInputEditorKeystroke(LLLineEditor* caller, void* data)
 	if (self)
 	{
 		self->setDirty();
+	}
+}
+
+//static
+void HBPanelGridsImpl::onCommitCheckBoxLoginURI(LLUICtrl* ctrl, void* data)
+{
+	HBPanelGridsImpl* self = (HBPanelGridsImpl*)data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (self && check)
+	{
+		self->childSetValue("login_uri_editor", check->get() ? self->mLoginURI
+															 : self->mEnteredLoginURI);
 	}
 }
 

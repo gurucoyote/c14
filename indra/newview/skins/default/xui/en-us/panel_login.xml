@@ -49,7 +49,7 @@
 	     width="120" />
 	<combo_box allow_text_entry="true" bottom="32" follows="left|bottom" height="18"
 	     left_delta="135" max_chars="32" mouse_opaque="true"
-	     name="server_combo" width="150" />
+	     name="server_combo" width="155" />
 	<text bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
 	     bottom="10" drop_shadow_visible="true" follows="left|bottom"
 	     font="SansSerif" h_pad="0" halign="left" height="16"
@@ -59,10 +59,10 @@
 	</text>
 	<combo_box allow_text_entry="true" bevel_style="in" border_style="line" border_thickness="1" 
 	     follows="left|bottom" font="SansSerif" handle_edit_keys_directly="true"
-	     height="18" hidden="false" left_delta="97" bottom="8"  max_chars="256"  mouse_opaque="true"
-	     name="regionuri_edit" select_all_on_focus_received="true" width="240" />
+	     height="18" hidden="false" left_delta="100" bottom="8"  max_chars="256"  mouse_opaque="true"
+	     name="regionuri_edit" select_all_on_focus_received="true" width="155" />
 	<combo_box allow_text_entry="true" bottom="8" follows="left|bottom" height="18"
-	     left="570" max_chars="128" mouse_opaque="true"
+	     left_delta="0" max_chars="128" mouse_opaque="true"
 	     name="start_location_combo" width="155">
 		<combo_item name="MyHome" value="My Home">
 			My Home

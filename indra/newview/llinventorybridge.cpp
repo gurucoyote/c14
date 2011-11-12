@@ -1304,7 +1304,7 @@ BOOL LLItemBridge::isItemPermissive() const
 // |        LLFolderBridge                           |
 // +=================================================+
 
-LLFolderBridge* LLFolderBridge::sSelf=NULL;
+LLFolderBridge* LLFolderBridge::sSelf = NULL;
 
 // Can be moved to another folder
 BOOL LLFolderBridge::isItemMovable()
@@ -3833,6 +3833,10 @@ void rez_attachment(LLViewerInventoryItem* item, LLViewerJointAttachment* attach
 		attach_pt |= ATTACHMENT_ADD;
 	}
 	payload["attachment_point"] = attach_pt;
+	if (attachment)
+	{
+		payload["attachment_name"] = attachment->getName();
+	}
 
 	if (replace && attachment && attachment->getNumObjects() > 0)
 	{
@@ -3872,7 +3876,13 @@ bool confirm_replace_attachment_rez(const LLSD& notification, const LLSD& respon
 	if (option == 0/*YES*/)
 	{
 		LLViewerInventoryItem* itemp = gInventory.getItem(notification["payload"]["item_id"].asUUID());
-		
+		S32 attach_pt = notification["payload"]["attachment_point"].asInteger();
+		if ((attach_pt & ~ATTACHMENT_ADD) > 0)
+		{
+			std::string name = notification["payload"]["attachment_name"].asString();
+			LLFirstUse::useAttach(attach_pt & ~ATTACHMENT_ADD, name);
+		}
+
 		if (itemp)
 		{
 			LLMessageSystem* msg = gMessageSystem;
@@ -3883,7 +3893,7 @@ bool confirm_replace_attachment_rez(const LLSD& notification, const LLSD& respon
 			msg->nextBlockFast(_PREHASH_ObjectData);
 			msg->addUUIDFast(_PREHASH_ItemID, itemp->getUUID());
 			msg->addUUIDFast(_PREHASH_OwnerID, itemp->getPermissions().getOwner());
-			msg->addU8Fast(_PREHASH_AttachmentPt, notification["payload"]["attachment_point"].asInteger());
+			msg->addU8Fast(_PREHASH_AttachmentPt, attach_pt);
 			pack_permissions_slam(msg, itemp->getFlags(), itemp->getPermissions());
 			msg->addStringFast(_PREHASH_Name, itemp->getName());
 			msg->addStringFast(_PREHASH_Description, itemp->getDescription());

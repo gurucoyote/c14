@@ -190,9 +190,34 @@ void LLFirstUse::useOverrideKeys()
 }
 
 // static
-void LLFirstUse::useAttach()
+void LLFirstUse::useAttach(S32 attach_pt, std::string joint)
 {
-	// nothing for now
+	if (attach_pt <= 38)
+	{
+		return;
+	}
+	std::string warning_name = "FirstAttach";
+	if (joint == "Neck")
+	{
+		warning_name += "Neck";
+	}
+	else if (joint == "Avatar Center")
+	{
+		warning_name += "AvatarCenter";
+	}
+
+	LLSD args;
+	args["JOINTNAME"] = joint;
+	if (gSavedSettings.getWarning(warning_name))
+	{
+		gSavedSettings.setWarning(warning_name, FALSE);
+		warning_name = "FirstAttach";
+	}
+	else
+	{
+		warning_name = "AttachOnExtraJoint";
+	}
+	LLNotifications::instance().add(warning_name, args);
 }
 
 // static

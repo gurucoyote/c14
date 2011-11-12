@@ -32,59 +32,18 @@
 
 #include "llviewerprecompiledheaders.h"
 
-#include <utility> // for std::pair<>
-
-#include "llinventoryview.h"
-#include "llpanelinventory.h"
-#include "llinventorybridge.h"
-
-#include "message.h"
-
 #include "llagent.h"
-#include "llcallingcard.h"
-#include "llcheckboxctrl.h"		// for radio buttons
-#include "llradiogroup.h"
-#include "llspinctrl.h"
-#include "lltextbox.h"
-#include "llui.h"
-
-#include "llviewercontrol.h"
-#include "llfirstuse.h"
-#include "llfloateravatarinfo.h"
-#include "llfloaterchat.h"
-#include "llfloatercustomize.h"
-#include "llfloaterproperties.h"
-#include "llfocusmgr.h"
+#include "llfloatermakenewoutfit.h"
 #include "llfolderview.h"
-#include "llgesturemgr.h"
-#include "lliconctrl.h"
-#include "llinventorymodel.h"
-#include "llinventoryclipboard.h"
-#include "lllineeditor.h"
-#include "llmenugl.h"
-#include "llpreviewanim.h"
-#include "llpreviewgesture.h"
-#include "llpreviewlandmark.h"
-#include "llpreviewnotecard.h"
-#include "llpreviewscript.h"
-#include "llpreviewsound.h"
-#include "llpreviewtexture.h"
-#include "llresmgr.h"
-#include "llscrollcontainer.h"
 #include "llimview.h"
-#include "lltooldraganddrop.h"
-#include "llviewertexturelist.h"
+#include "llinventorybridge.h"
+#include "llinventoryclipboard.h"
+#include "llpanelinventory.h"
+#include "llpreview.h"
+#include "llviewercontrol.h"
 #include "llviewerinventory.h"
-#include "llviewerobjectlist.h"
-#include "llviewerwindow.h"
 #include "llvoavatar.h"
 #include "llwearable.h"
-#include "llwearablelist.h"
-#include "llviewermessage.h" 
-#include "llviewerregion.h"
-#include "lltabcontainer.h"
-#include "lluictrlfactory.h"
-#include "llselectmgr.h"
 
 const std::string NEW_LSL_NAME = "New Script"; // *TODO:Translate? (probably not)
 const std::string NEW_NOTECARD_NAME = "New Note"; // *TODO:Translate? (probably not)
@@ -109,7 +68,7 @@ bool doToSelected(LLFolderView* folder, std::string action)
 	}
 
 	if ("copy" == action)
-	{	
+	{
 		LLInventoryClipboard::instance().reset();
 	}
 
@@ -119,7 +78,8 @@ bool doToSelected(LLFolderView* folder, std::string action)
 	LLMultiPreview* multi_previewp = NULL;
 	LLMultiProperties* multi_propertiesp = NULL;
 
-	if (("task_open" == action  || "open" == action) && selected_items.size() > 1)
+	if (("task_open" == action  || "open" == action) &&
+		selected_items.size() > 1)
 	{
 		S32 left, top;
 		gFloaterView->getNewFloaterPosition(&left, &top);
@@ -128,14 +88,16 @@ bool doToSelected(LLFolderView* folder, std::string action)
 		gFloaterView->addChild(multi_previewp);
 
 		LLFloater::setFloaterHost(multi_previewp);
-	
+
 	}
-	else if (("task_properties" == action || "properties" == action) && selected_items.size() > 1)
+	else if (("task_properties" == action || "properties" == action) &&
+			 selected_items.size() > 1)
 	{
 		S32 left, top;
 		gFloaterView->getNewFloaterPosition(&left, &top);
 
-		multi_propertiesp = new LLMultiProperties(LLRect(left, top, left + 100, top - 100));
+		multi_propertiesp = new LLMultiProperties(LLRect(left, top, left + 100,
+														 top - 100));
 		gFloaterView->addChild(multi_propertiesp);
 
 		LLFloater::setFloaterHost(multi_propertiesp);
@@ -143,12 +105,13 @@ bool doToSelected(LLFolderView* folder, std::string action)
 
 	std::set<LLUUID>::iterator set_iter;
 
-	for (set_iter = selected_items.begin(); set_iter != selected_items.end(); ++set_iter)
+	for (set_iter = selected_items.begin(); set_iter != selected_items.end();
+		 ++set_iter)
 	{
 		LLFolderViewItem* folder_item = folder->getItemByID(*set_iter);
-		if(!folder_item) continue;
+		if (!folder_item) continue;
 		LLInvFVBridge* bridge = (LLInvFVBridge*)folder_item->getListener();
-		if(!bridge) continue;
+		if (!bridge) continue;
 
 		bridge->performAction(folder, model, action);
 	}
@@ -173,7 +136,7 @@ class LLDoToSelectedPanel : public object_inventory_listener_t
 		std::string action = userdata.asString();
 		LLPanelInventory *panel = mPtr;
 		LLFolderView* folder = panel->getRootFolder();
-		if(!folder) return true;
+		if (!folder) return true;
 
 		return doToSelected(folder, action);
 	}
@@ -186,7 +149,7 @@ class LLDoToSelectedFloater : public inventory_listener_t
 		std::string action = userdata.asString();
 		LLInventoryPanel *panel = mPtr->getPanel();
 		LLFolderView* folder = panel->getRootFolder();
-		if(!folder) return true;
+		if (!folder) return true;
 
 		return doToSelected(folder, action);
 	}
@@ -199,7 +162,7 @@ class LLDoToSelected : public inventory_panel_listener_t
 		std::string action = userdata.asString();
 		LLInventoryPanel *panel = mPtr;
 		LLFolderView* folder = panel->getRootFolder();
-		if(!folder) return true;
+		if (!folder) return true;
 
 		return doToSelected(folder, action);
 	}
@@ -274,8 +237,12 @@ class LLEmptyTrash : public inventory_panel_listener_t
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		LLInventoryModel* model = mPtr->getModel();
-		if(!model) return false;
-		LLNotifications::instance().add("ConfirmEmptyTrash", LLSD(), LLSD(), boost::bind(&LLEmptyTrash::callback_empty_trash, this, _1, _2));
+		if (!model) return false;
+		LLNotifications::instance().add("ConfirmEmptyTrash",
+										LLSD(),
+										LLSD(),
+										boost::bind(&LLEmptyTrash::callback_empty_trash,
+													this, _1, _2));
 		return true;
 	}
 
@@ -298,8 +265,12 @@ class LLEmptyLostAndFound : public inventory_panel_listener_t
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		LLInventoryModel* model = mPtr->getModel();
-		if(!model) return false;
-		LLNotifications::instance().add("ConfirmEmptyLostAndFound", LLSD(), LLSD(), boost::bind(&LLEmptyLostAndFound::callback_empty_lost_and_found, this, _1, _2));
+		if (!model) return false;
+		LLNotifications::instance().add("ConfirmEmptyLostAndFound",
+										LLSD(),
+										LLSD(),
+										boost::bind(&LLEmptyLostAndFound::callback_empty_lost_and_found,
+													this, _1, _2));
 		return true;
 	}
 
@@ -317,12 +288,21 @@ class LLEmptyLostAndFound : public inventory_panel_listener_t
 	}
 };
 
+class LLMakeNewOutfit : public inventory_listener_t
+{
+	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
+	{
+		LLFloaterMakeNewOutfit::showInstance();
+		return true;
+	}
+};
+
 class LLEmptyTrashFloater : public inventory_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		LLInventoryModel* model = mPtr->getPanel()->getModel();
-		if(!model) return false;
+		if (!model) return false;
 		LLUUID trash_id = model->findCategoryUUIDForType(LLFolderType::FT_TRASH);
 		model->purgeDescendentsOf(trash_id);
 		model->notifyObservers();
@@ -330,132 +310,149 @@ class LLEmptyTrashFloater : public inventory_listener_t
 	}
 };
 
-void do_create(LLInventoryModel *model, LLInventoryPanel *ptr, std::string type, LLFolderBridge *self = NULL)
+void do_create(LLInventoryModel *model, LLInventoryPanel *ptr,
+			   std::string type, LLFolderBridge *self = NULL)
 {
 	if ("category" == type)
 	{
 		LLUUID category;
 		if (self)
 		{
-			category = model->createNewCategory(self->getUUID(), LLFolderType::FT_NONE, LLStringUtil::null);
+			category = model->createNewCategory(self->getUUID(),
+												LLFolderType::FT_NONE,
+												LLStringUtil::null);
 		}
 		else
 		{
 			category = model->createNewCategory(gAgent.getInventoryRootID(),
-												LLFolderType::FT_NONE, LLStringUtil::null);
+												LLFolderType::FT_NONE,
+												LLStringUtil::null);
 		}
 		model->notifyObservers();
 		ptr->setSelection(category, TRUE);
 	}
 	else if ("lsl" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : model->findCategoryUUIDForType(LLFolderType::FT_LSL_TEXT);
-		ptr->createNewItem(NEW_LSL_NAME,
-							parent_id,
-							LLAssetType::AT_LSL_TEXT,
-							LLInventoryType::IT_LSL,
-							PERM_MOVE | PERM_TRANSFER);
+		LLUUID parent_id = self ? self->getUUID()
+								: model->findCategoryUUIDForType(LLFolderType::FT_LSL_TEXT);
+		ptr->createNewItem(NEW_LSL_NAME, parent_id,
+						   LLAssetType::AT_LSL_TEXT,
+						   LLInventoryType::IT_LSL, PERM_MOVE | PERM_TRANSFER);
 	}
 	else if ("notecard" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : model->findCategoryUUIDForType(LLFolderType::FT_NOTECARD);
-		ptr->createNewItem(NEW_NOTECARD_NAME,
-							parent_id,
-							LLAssetType::AT_NOTECARD,
-							LLInventoryType::IT_NOTECARD,
-							PERM_ALL);
+		LLUUID parent_id = self ? self->getUUID()
+								: model->findCategoryUUIDForType(LLFolderType::FT_NOTECARD);
+		ptr->createNewItem(NEW_NOTECARD_NAME, parent_id,
+						   LLAssetType::AT_NOTECARD,
+						   LLInventoryType::IT_NOTECARD, PERM_ALL);
 	}
 	else if ("gesture" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : model->findCategoryUUIDForType(LLFolderType::FT_GESTURE);
-		ptr->createNewItem(NEW_GESTURE_NAME,
-							parent_id,
-							LLAssetType::AT_GESTURE,
-							LLInventoryType::IT_GESTURE,
-							PERM_ALL);
+		LLUUID parent_id = self ? self->getUUID()
+								: model->findCategoryUUIDForType(LLFolderType::FT_GESTURE);
+		ptr->createNewItem(NEW_GESTURE_NAME, parent_id,
+						   LLAssetType::AT_GESTURE,
+						   LLInventoryType::IT_GESTURE, PERM_ALL);
 	}
 	else if ("shirt" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_SHIRT);
 	}
 	else if ("pants" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_PANTS);
 	}
 	else if ("shoes" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_SHOES);
 	}
 	else if ("socks" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_SOCKS);
 	}
 	else if ("jacket" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_JACKET);
 	}
 	else if ("skirt" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_SKIRT);
 	}
 	else if ("gloves" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_GLOVES);
 	}
 	else if ("undershirt" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_UNDERSHIRT);
 	}
 	else if ("underpants" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_UNDERPANTS);
 	}
 	else if ("alpha" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_ALPHA);
 	}
 	else if ("tattoo" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_TATTOO);
 	}
 	else if ("physics" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_CLOTHING);
 		LLFolderBridge::createWearable(parent_id, WT_PHYSICS);
 	}
 	else if ("shape" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
 		LLFolderBridge::createWearable(parent_id, WT_SHAPE);
 	}
 	else if ("skin" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
 		LLFolderBridge::createWearable(parent_id, WT_SKIN);
 	}
 	else if ("hair" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
 		LLFolderBridge::createWearable(parent_id, WT_HAIR);
 	}
 	else if ("eyes" == type)
 	{
-		LLUUID parent_id = self ? self->getUUID() : gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
+		LLUUID parent_id = self ? self->getUUID()
+								: gInventory.findCategoryUUIDForType(LLFolderType::FT_BODYPART);
 		LLFolderBridge::createWearable(parent_id, WT_EYES);
 	}
-	
-	ptr->getRootFolder()->setNeedsAutoRename(TRUE);	
+
+	ptr->getRootFolder()->setNeedsAutoRename(TRUE);
 }
 
 class LLDoCreate : public inventory_panel_listener_t
@@ -463,7 +460,7 @@ class LLDoCreate : public inventory_panel_listener_t
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		LLInventoryModel* model = mPtr->getModel();
-		if(!model) return false;
+		if (!model) return false;
 		std::string type = userdata.asString();
 		do_create(model, mPtr, type, LLFolderBridge::sSelf);
 		return true;
@@ -475,7 +472,7 @@ class LLDoCreateFloater : public inventory_listener_t
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
 		LLInventoryModel* model = mPtr->getPanel()->getModel();
-		if(!model) return false;
+		if (!model) return false;
 		std::string type = userdata.asString();
 		do_create(model, mPtr->getPanel(), type);
 		return true;
@@ -520,7 +517,7 @@ class LLSetSortBy : public inventory_listener_t
 		}
 		mPtr->getActivePanel()->setSortOrder(order);
 		mPtr->updateSortControls();
-	
+
 		return true;
 	}
 };
@@ -544,7 +541,7 @@ class LLBeginIMSession : public inventory_panel_listener_t
 	{
 		LLInventoryPanel *panel = mPtr;
 		LLInventoryModel* model = panel->getModel();
-		if(!model) return true;
+		if (!model) return true;
 		std::set<LLUUID> selected_items;
 		panel->getRootFolder()->getSelectionList(selected_items);
 
@@ -555,22 +552,24 @@ class LLBeginIMSession : public inventory_panel_listener_t
 		EInstantMessage type = IM_SESSION_CONFERENCE_START;
 
 		std::set<LLUUID>::const_iterator iter;
-		for (iter = selected_items.begin(); iter != selected_items.end(); iter++)
+		for (iter = selected_items.begin(); iter != selected_items.end();
+			 iter++)
 		{
 
 			LLUUID item = *iter;
 			LLFolderViewItem* folder_item = panel->getRootFolder()->getItemByID(item);
-			
-			if(folder_item) 
+
+			if (folder_item) 
 			{
 				LLFolderViewEventListener* fve_listener = folder_item->getListener();
-				if (fve_listener && (fve_listener->getInventoryType() == LLInventoryType::IT_CATEGORY))
+				if (fve_listener &&
+					fve_listener->getInventoryType() == LLInventoryType::IT_CATEGORY)
 				{
 
 					LLFolderBridge* bridge = (LLFolderBridge*)folder_item->getListener();
-					if(!bridge) return true;
+					if (!bridge) return true;
 					LLViewerInventoryCategory* cat = bridge->getCategory();
-					if(!cat) return true;
+					if (!cat) return true;
 					name = cat->getName();
 					LLUniqueBuddyCollector is_buddy;
 					LLInventoryModel::cat_array_t cat_array;
@@ -581,18 +580,18 @@ class LLBeginIMSession : public inventory_panel_listener_t
 												LLInventoryModel::EXCLUDE_TRASH,
 												is_buddy);
 					S32 count = item_array.count();
-					if(count > 0)
+					if (count > 0)
 					{
 						// create the session
 						gIMMgr->setFloaterOpen(TRUE);
 						S32 i;
-						
+
 						LLAvatarTracker& at = LLAvatarTracker::instance();
 						LLUUID id;
 						for(i = 0; i < count; ++i)
 						{
 							id = item_array.get(i)->getCreatorUUID();
-							if(at.isBuddyOnline(id))
+							if (at.isBuddyOnline(id))
 							{
 								members.put(id);
 							}
@@ -602,7 +601,7 @@ class LLBeginIMSession : public inventory_panel_listener_t
 				else
 				{
 					LLFolderViewItem* folder_item = panel->getRootFolder()->getItemByID(item);
-					if(!folder_item) return true;
+					if (!folder_item) return true;
 					LLInvFVBridge* listenerp = (LLInvFVBridge*)folder_item->getListener();
 
 					if (listenerp->getInventoryType() == LLInventoryType::IT_CALLINGCARD)
@@ -614,7 +613,7 @@ class LLBeginIMSession : public inventory_panel_listener_t
 							LLAvatarTracker& at = LLAvatarTracker::instance();
 							LLUUID id = inv_item->getCreatorUUID();
 
-							if(at.isBuddyOnline(id))
+							if (at.isBuddyOnline(id))
 							{
 								members.put(id);
 							}
@@ -622,7 +621,7 @@ class LLBeginIMSession : public inventory_panel_listener_t
 					} //if IT_CALLINGCARD
 				} //if !IT_CATEGORY
 			}
-		} //for selected_items	
+		} //for selected_items
 
 		// the session_id is randomly generated UUID which will be replaced later
 		// with a server side generated number
@@ -632,13 +631,8 @@ class LLBeginIMSession : public inventory_panel_listener_t
 			name = llformat("Session %d", session_num++);
 		}
 
+		gIMMgr->addSession(name, type, members[0], members);
 
-		gIMMgr->addSession(
-			name,
-			type,
-			members[0],
-			members);
-		
 		return true;
 	}
 };
@@ -649,7 +643,7 @@ class LLAttachObject : public inventory_panel_listener_t
 	{
 		LLInventoryPanel *panel = mPtr;
 		LLFolderView* folder = panel->getRootFolder();
-		if(!folder) return true;
+		if (!folder) return true;
 
 		std::set<LLUUID> selected_items;
 		folder->getSelectionList(selected_items);
@@ -675,11 +669,11 @@ class LLAttachObject : public inventory_panel_listener_t
 		}
 		LLViewerInventoryItem* item = (LLViewerInventoryItem*)gInventory.getItem(id);
 
-		if(item && gInventory.isObjectDescendentOf(id, gAgent.getInventoryRootID()))
+		if (item && gInventory.isObjectDescendentOf(id, gAgent.getInventoryRootID()))
 		{
 			rez_attachment(item, attachmentp);
 		}
-		else if(item && item->isComplete())
+		else if (item && item->isComplete())
 		{
 			// must be in library. copy it to our inventory and put it on.
 			LLPointer<LLInventoryCallback> cb = new RezAttachmentCallback(attachmentp);
@@ -697,16 +691,6 @@ class LLAttachObject : public inventory_panel_listener_t
 	}
 };
 
-/*
-class LL : public listener_t
-{
-	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
-	{
-		return true;
-	}
-};
-*/
-
 void init_object_inventory_panel_actions(LLPanelInventory *panel)
 {
 	(new LLDoToSelectedPanel())->registerListener(panel, "Inventory.DoToSelected");
@@ -716,6 +700,7 @@ void init_inventory_actions(LLInventoryView *floater)
 {
 	(new LLDoToSelectedFloater())->registerListener(floater, "Inventory.DoToSelected");
 	(new LLCloseAllFoldersFloater())->registerListener(floater, "Inventory.CloseAllFolders");
+	(new LLMakeNewOutfit())->registerListener(floater, "Inventory.MakeNewOutfit");
 	(new LLEmptyTrashFloater())->registerListener(floater, "Inventory.EmptyTrash");
 	(new LLDoCreateFloater())->registerListener(floater, "Inventory.DoCreate");
 

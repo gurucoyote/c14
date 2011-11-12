@@ -98,16 +98,9 @@ set(GRID agni CACHE STRING "Target Grid")
 set(VIEWER ON CACHE BOOL "Build Second Life viewer.")
 set(VIEWER_CHANNEL "CommunityDeveloper" CACHE STRING "Viewer Channel Name")
 set(VIEWER_LOGIN_CHANNEL ${VIEWER_CHANNEL} CACHE STRING "Fake login channel for A/B Testing")
-set(VIEWER_BRANDING_ID "snowglobe" CACHE STRING "Viewer branding id (currently secondlife|snowglobe)")
-
-# *TODO: break out proper Branding-secondlife.cmake, Branding-snowglobe.cmake, etc
-if (${VIEWER_BRANDING_ID} MATCHES "secondlife")
-  set(VIEWER_BRANDING_NAME "Second Life")
-  set(VIEWER_BRANDING_NAME_CAMELCASE "SecondLife")
-elseif (${VIEWER_BRANDING_ID} MATCHES "snowglobe")
-  set(VIEWER_BRANDING_NAME "Snowglobe")
-  set(VIEWER_BRANDING_NAME_CAMELCASE "Snowglobe")
-endif (${VIEWER_BRANDING_ID} MATCHES "secondlife")
+set(VIEWER_BRANDING_ID "cool_vl_viewer" CACHE STRING "Viewer branding id (currently cool_vl_viewer)")
+set(VIEWER_BRANDING_NAME "Cool VL Viewer")
+set(VIEWER_BRANDING_NAME_CAMELCASE "CoolVLViewer")
 
 set(STANDALONE OFF CACHE BOOL "Do not use Linden-supplied prebuilt libraries.")
 

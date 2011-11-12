@@ -1,10 +1,10 @@
 /** 
- * @file hbfloaterrlv.h
- * @brief The HBFloaterRLV class declaration
+ * @file llfloatermakenewoutfit.h
+ * @brief The Make New Outfit floater - header file
  *
- * $LicenseInfo:firstyear=2011&license=viewergpl$
+ * $LicenseInfo:firstyear=2002&license=viewergpl$
  * 
- * Copyright (c) 2011, Henri Beauchamp
+ * Copyright (c) 2002-2009, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,31 +30,36 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_HBFLOATERRLV_H
-#define LL_HBFLOATERRLV_H
+#ifndef LL_LLFLOATERMAKENEWOUTFIT_H
+#define LL_LLFLOATERMAKENEWOUTFIT_H
 
+#include "lldarray.h"
 #include "llfloater.h"
 
-class LLScrollListCtrl;
-
-class HBFloaterRLV : public LLFloater
+class LLFloaterMakeNewOutfit : public LLFloater
 {
 public:
-	HBFloaterRLV();
-	/*virtual*/ ~HBFloaterRLV();
+	LLFloaterMakeNewOutfit();
+	/*virtual*/ ~LLFloaterMakeNewOutfit();
 
 	/*virtual*/ BOOL postBuild();
 	/*virtual*/ void draw();
 
+	void getIncludedItems(LLDynamicArray<S32> &wearables_to_include,
+						  LLDynamicArray<S32> &attachments_to_include);
+
 	static void showInstance();
 
-	static void setDirty(void*);
-	static void onButtonClose(void* data);
+	static void setDirty();
+	static void onCommitCheckBox(LLUICtrl* ctrl, void* data);
+	static void onButtonSave(void* data);
+	static void onButtonCancel(void* data);
 
 private:
-	LLScrollListCtrl* mRestrictions;
 	bool mIsDirty;
+	std::vector<std::pair<std::string, S32> > mCheckBoxList;
 
-	static HBFloaterRLV* sInstance;
+	static LLFloaterMakeNewOutfit* sInstance;
 };
-#endif
+
+#endif	// LL_LLFLOATERMAKENEWOUTFIT_H

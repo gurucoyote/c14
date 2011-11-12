@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Second Life</string>
+	<string>Cool VL Viewer</string>
 	<key>CFBundleIconFile</key>
-	<string>secondlife.icns</string>
+	<string>cool_vl_viewer.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.secondlife.indra.viewer</string>
+	<string>com.secondlife.snowglobe.viewer</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Second Life</string>
+	<string>Cool VL Viewer</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>

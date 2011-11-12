@@ -31,48 +31,49 @@
  */
 
 #include "llviewerprecompiledheaders.h"
-#include "llappviewer.h"
-#include "llprimitive.h"
 
-#include "llversionviewer.h"
-#include "llfeaturemanager.h"
-#include "lluictrlfactory.h"
-#include "lltexteditor.h"
+#include "llappviewer.h"
+
 #include "llalertdialog.h"
-#include "llerrorcontrol.h"
-#include "llviewertexturelist.h"
-#include "llgroupmgr.h"
-#include "llagent.h"
-#include "llwindow.h"
-#include "llviewerstats.h"
-#include "llmd5.h"
-#include "llpumpio.h"
-#include "llimpanel.h"
-#include "llmimetypes.h"
-#include "llstartup.h"
-#include "llfocusmgr.h"
-#include "llviewerjoystick.h"
-#include "llfloaterjoystick.h"
 #include "llares.h" 
 #include "llcurl.h"
+#include "llerrorcontrol.h"
+#include "llfocusmgr.h"
+#include "llfont.h"
+#include "llprimitive.h"
+#include "llpumpio.h"
+#include "llrender.h"
+#include "llsingleton.h"
+#include "lltexteditor.h"
+#include "lluictrlfactory.h"
+#include "llvector4a.h"
+#include "llversionviewer.h"
+#include "llwindow.h"
+
+#include "llagent.h"
+#include "llfeaturemanager.h"
+#include "llfirstuse.h"
+#include "llfloaterjoystick.h"
 #include "llfloatersnapshot.h"
+#include "llgroupmgr.h"
+#include "llimpanel.h"
+#include "llmimetypes.h"
+#include "llmutelist.h"
+#include "llstartup.h"
 #include "lltexturestats.h"
-#include "llviewerwindow.h"
 #include "llviewerdisplay.h"
+#include "llviewerjoystick.h"
 #include "llviewermedia.h"
-#include "llviewerparcelmedia.h"
 #include "llviewermediafocus.h"
 #include "llviewermessage.h"
 #include "llviewerobjectlist.h"
+#include "llviewerparcelmedia.h"
+#include "llviewerstats.h"
+#include "llviewertexturelist.h"
+#include "llviewerwindow.h"
 #include "llworldmap.h"
-#include "llmutelist.h"
 #include "llurldispatcher.h"
 #include "llurlhistory.h"
-#include "llfirstuse.h"
-#include "llrender.h"
-#include "llfont.h"
-#include "llvector4a.h"
-
 #include "llweb.h"
 
 #include <boost/bind.hpp>
@@ -298,6 +299,41 @@ static std::string gLaunchFileOnQuit;
 // Used on Win32 for other apps to identify our window (eg, win_setup)
 const char* const VIEWER_WINDOW_CLASSNAME = "Second Life";
 
+//-- LLDeferredTaskList ------------------------------------------------------
+
+/**
+ * A list of deferred tasks.
+ *
+ * We sometimes need to defer execution of some code until the viewer gets idle,
+ * e.g. removing an inventory item from within notifyObservers() may not work out.
+ *
+ * Tasks added to this list will be executed in the next LLAppViewer::idle() iteration.
+ * All tasks are executed only once.
+ */
+class LLDeferredTaskList: public LLSingleton<LLDeferredTaskList>
+{
+	LOG_CLASS(LLDeferredTaskList);
+
+	friend class LLAppViewer;
+	typedef boost::signals2::signal<void()> signal_t;
+
+	void addTask(const signal_t::slot_type& cb)
+	{
+		mSignal.connect(cb);
+	}
+
+	void run()
+	{
+		if (!mSignal.empty())
+		{
+			mSignal();
+			mSignal.disconnect_all_slots();
+		}
+	}
+
+	signal_t mSignal;
+};
+
 //----------------------------------------------------------------------------
 // File scope definitons
 const char *VFS_DATA_FILE_BASE = "data.db2.x.";
@@ -330,6 +366,22 @@ static void ui_audio_callback(const LLUUID& uuid)
 {
 	if (gAudiop)
 	{
+		if (LLStartUp::getStartupState() != STATE_STARTED)
+		{
+			// If we are not yet connected, we can only play skin sounds,
+			// if any. Else we get a sound loading failure and the viewer
+			// will not retry to load that sound for the rest of the session !
+			std::string uuid_str;
+			uuid.toString(uuid_str);
+			std::string file;
+			file = gDirUtilp->getExpandedFilename(LL_PATH_SKINS, "default",
+												  "sounds", uuid_str) + ".dsf";
+			if (!gDirUtilp->fileExists(file))
+			{
+				return;
+			}
+		}
+
 		gAudiop->triggerSound(uuid, gAgent.getID(), 1.0f, LLAudioEngine::AUDIO_TYPE_UI);
 	}
 }
@@ -693,14 +745,12 @@ bool LLAppViewer::init()
 	LLViewerJointMesh::updateVectorize();
 
 	// load MIME type -> media impl mappings
-#if LL_LINUX
-	LLMIMETypes::parseMIMETypes(std::string("mime_types_linux.xml"));
-#elif LL_DARWIN
+#if LL_DARWIN
 	LLMIMETypes::parseMIMETypes(std::string("mime_types_mac.xml"));
 #elif LL_WINDOWS
 	LLMIMETypes::parseMIMETypes(std::string("mime_types_windows.xml"));
 #else
-	LLMIMETypes::parseMIMETypes(std::string("mime_types.xml"));
+	LLMIMETypes::parseMIMETypes(std::string("mime_types_linux.xml"));
 #endif
 
 	// Copy settings to globals. *TODO: Remove or move to appropriage class initializers
@@ -1904,6 +1954,8 @@ bool LLAppViewer::initConfiguration()
 	LLFirstUse::addConfigVariable("FirstTeleport");
 	LLFirstUse::addConfigVariable("FirstOverrideKeys");
 	LLFirstUse::addConfigVariable("FirstAttach");
+	LLFirstUse::addConfigVariable("FirstAttachNeck");
+	LLFirstUse::addConfigVariable("FirstAttachAvatarCenter");
 	LLFirstUse::addConfigVariable("FirstAppearance");
 	LLFirstUse::addConfigVariable("FirstInventory");
 	LLFirstUse::addConfigVariable("FirstSandbox");
@@ -3197,6 +3249,11 @@ bool LLAppViewer::initCache()
 	}
 }
 
+void LLAppViewer::addOnIdleCallback(const boost::function<void()>& cb)
+{
+	LLDeferredTaskList::instance().addTask(cb);
+}
+
 void LLAppViewer::purgeCache()
 {
 	LL_INFOS("AppCache") << "Purging Cache and Texture Cache..." << LL_ENDL;
@@ -3769,7 +3826,10 @@ void LLAppViewer::idle()
 			gAudiop->idle(max_audio_decode_time);
 		}
 	}
-	
+
+	// Execute deferred tasks.
+	LLDeferredTaskList::instance().run();
+
 	// Handle shutdown process, for example, 
 	// wait for floaters to close, send quit message,
 	// forcibly quit if it has taken too long

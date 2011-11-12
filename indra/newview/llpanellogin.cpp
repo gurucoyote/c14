@@ -415,7 +415,7 @@ void LLPanelLogin::setLoginHistory(LLSavedLogins const& login_history)
 
 	LLComboBox* login_combo = sInstance->getChild<LLComboBox>("first_name_combo");
 	llassert(login_combo);
-	login_combo->clear();
+	login_combo->removeall();
 
 	LLSavedLoginsList const& saved_login_entries(login_history.getEntries());
 	for (LLSavedLoginsList::const_reverse_iterator i = saved_login_entries.rbegin();

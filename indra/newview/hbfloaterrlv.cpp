@@ -44,8 +44,8 @@
 HBFloaterRLV* HBFloaterRLV::sInstance = NULL;
 
 HBFloaterRLV::HBFloaterRLV()
-: LLFloater(std::string("restrained love")),
-  mIsDirty(false)
+:	LLFloater(std::string("restrained love")),
+	mIsDirty(false)
 {
     LLUICtrlFactory::getInstance()->buildFloater(this, "floater_rlv_restrictions.xml");
 }
@@ -56,6 +56,7 @@ HBFloaterRLV::~HBFloaterRLV()
     sInstance = NULL;
 }
 
+//virtual
 BOOL HBFloaterRLV::postBuild()
 {
 	mRestrictions = getChild<LLScrollListCtrl>("restrictions_list");

@@ -50,7 +50,6 @@
 #include "llscrollcontainer.h"
 #include "llscrollingpanellist.h"
 #include "llsliderctrl.h"
-#include "lltabcontainervertical.h"
 #include "lltextbox.h"
 #include "lltextureentry.h"
 #include "llui.h"
@@ -60,11 +59,11 @@
 #include "llappearance.h"
 #include "llcolorswatch.h"
 #include "llfilepicker.h"
+#include "llfloatermakenewoutfit.h"
 #include "llfloatertools.h"
 #include "llinventoryicon.h"	// for getIconName
 #include "llinventorymodel.h"
 #include "llmorphview.h"
-#include "llstartup.h"			// for gIsInSecondLife
 #include "lltexturectrl.h"
 #include "lltoolmorph.h"
 #include "lltoolmgr.h"
@@ -74,6 +73,7 @@
 #include "llviewermenu.h"
 #include "llviewermessage.h"
 #include "llviewertexturelist.h"
+#include "llviewervisualparam.h"
 #include "llviewerwindow.h"
 #include "llvoavatar.h"
 #include "llwearablelist.h"
@@ -172,146 +172,6 @@ BOOL edit_wearable_for_teens(EWearableType type)
 	}
 }
 
-class LLMakeOutfitDialog : public LLModalDialog
-{
-private:
-	std::string	mFolderName;
-	void		(*mCommitCallback)(LLMakeOutfitDialog*,void*);
-	void*		mCallbackUserData;
-	std::vector<std::pair<std::string,S32> > mCheckBoxList;
-
-public:
-	LLMakeOutfitDialog(void(*commit_cb)(LLMakeOutfitDialog*,void*), void* userdata)
-		: LLModalDialog(LLStringUtil::null,515, 510, TRUE),
-		  mCommitCallback(commit_cb),
-		  mCallbackUserData(userdata)
-	{
-		LLUICtrlFactory::getInstance()->buildFloater(this, "floater_new_outfit_dialog.xml");
-		
-		// Build list of check boxes
-		for (S32 i = 0; i < WT_COUNT; i++)
-		{
-			std::string name = std::string("checkbox_") + LLWearable::typeToTypeLabel((EWearableType)i);
-			mCheckBoxList.push_back(std::make_pair(name,i));
-			// Hide teen items
-			if (gAgent.isTeen() &&
-				!edit_wearable_for_teens((EWearableType)i))
-			{
-				// hide wearable checkboxes that don't apply to this account
-				std::string name = std::string("checkbox_") + LLWearable::typeToTypeLabel((EWearableType)i);
-				childSetVisible(name, FALSE);
-			}
-		}
-
-		// NOTE: .xml needs to be updated if attachments are added or their names are changed!
-		LLVOAvatar* avatar = gAgent.getAvatarObject();
-		if (avatar)
-		{
-			for (LLVOAvatar::attachment_map_t::iterator iter = avatar->mAttachmentPoints.begin(); 
-				 iter != avatar->mAttachmentPoints.end(); )
-			{
-				LLVOAvatar::attachment_map_t::iterator curiter = iter++;
-				LLViewerJointAttachment* attachment = curiter->second;
-				S32	attachment_pt = curiter->first;	
-				BOOL object_attached = (attachment->getNumObjects() > 0);
-				std::string name = std::string("checkbox_") + attachment->getName();
-				mCheckBoxList.push_back(std::make_pair(name,attachment_pt));
-				childSetEnabled(name, object_attached);
-				childSetValue(name, object_attached);
-			}
-		}
-
-		if (!gIsInSecondLife && (gSavedSettings.getBOOL("OSAllowInventoryLinks") == FALSE))
-		{
-			childSetEnabled("checkbox_use_links", FALSE);
-			childSetValue("checkbox_use_links", FALSE);
-		}
-
-		childSetAction("Save", onSave, this); 
-		childSetAction("Cancel", onCancel, this); 
-	}
-
-	BOOL getRenameClothing()
-	{
-		return childGetValue("rename").asBoolean();
-
-	}
-
-	virtual void draw()
-	{
-		BOOL one_or_more_items_selected = FALSE;
-		for (S32 i = 0; i < (S32)mCheckBoxList.size(); i++)
-		{
-			if (childGetValue(mCheckBoxList[i].first).asBoolean())
-			{
-				one_or_more_items_selected = TRUE;
-				break;
-			}
-		}
-
-		childSetEnabled("Save", one_or_more_items_selected);
-		
-		LLModalDialog::draw();
-	}
-
-	const std::string& getFolderName() { return mFolderName; }
-
-	void setWearableToInclude(S32 wearable, S32 enabled, S32 selected)
-	{
-		if ((0 <= wearable) && (wearable < WT_COUNT))
-		{
-			std::string name = std::string("checkbox_") + LLWearable::typeToTypeLabel((EWearableType)wearable);
-			childSetEnabled(name, enabled);
-			childSetValue(name, selected);
-		}
-	}
-
-	void getIncludedItems(LLDynamicArray<S32> &wearables_to_include, LLDynamicArray<S32> &attachments_to_include)
-	{
-		for (S32 i = 0; i < (S32)mCheckBoxList.size(); i++)
-		{
-			std::string name = mCheckBoxList[i].first;
-			BOOL checked = childGetValue(name).asBoolean();
-			if (i < WT_COUNT)
-			{
-				if (checked)
-				{
-					wearables_to_include.put(i);
-				}
-			}
-			else
-			{
-				if (checked)
-				{
-					S32 attachment_pt = mCheckBoxList[i].second;
-					attachments_to_include.put(attachment_pt);
-				}
-			}
-		}
-	}
-
-	static void onSave(void* userdata)
-	{
-		LLMakeOutfitDialog* self = (LLMakeOutfitDialog*) userdata;
-		self->mFolderName = self->childGetValue("name ed").asString();
-		LLStringUtil::trim(self->mFolderName);
-		if (!self->mFolderName.empty())
-		{
-			if (self->mCommitCallback)
-			{
-				self->mCommitCallback(self, self->mCallbackUserData);
-			}
-			self->close(); // destroys this object
-		}
-	}
-
-	static void onCancel(void* userdata)
-	{
-		LLMakeOutfitDialog* self = (LLMakeOutfitDialog*) userdata;
-		self->close(); // destroys this object
-	}
-};
-
 /////////////////////////////////////////////////////////////////////
 // LLPanelEditWearable
 
@@ -401,7 +261,7 @@ public:
 	bool				textureIsInvisible(ETextureIndex te);
 	void				initPreviousTextureList();
 	void				initPreviousTextureListEntry(ETextureIndex te);
-	
+
 	virtual void		setVisible(BOOL visible);
 
 	// Callbacks
@@ -476,7 +336,7 @@ LLPanelEditWearable::~LLPanelEditWearable()
 	for (std::map<std::string, S32>::iterator iter = mColorList.begin();
 			 iter != mColorList.end(); ++iter)
 	{
-		childSetCommitCallback(iter->first, NULL, NULL);		
+		childSetCommitCallback(iter->first, NULL, NULL);
 	}
 }
 
@@ -488,7 +348,7 @@ void LLPanelEditWearable::addSubpart(const std::string& name, ESubpart id, LLSub
 		part->mButtonName = name;
 	}
 	mSubpartList[id] = part;
-	
+
 }
 
 // static
@@ -534,7 +394,7 @@ void LLPanelEditWearable::setSubpart(ESubpart subpart)
 		}
 		setUIPermissions(perm_mask, is_complete);
 		BOOL editable = ((perm_mask & PERM_MODIFY) && is_complete) ? TRUE : FALSE;
-		
+
 		for (LLViewerVisualParam* param = (LLViewerVisualParam *)avatar->getFirstVisualParam(); 
 			param; 
 			param = (LLViewerVisualParam *)avatar->getNextVisualParam())
@@ -571,7 +431,7 @@ void LLPanelEditWearable::setSubpart(ESubpart subpart)
 void LLPanelEditWearable::onBtnTakeOff(void* userdata)
 {
 	LLPanelEditWearable* self = (LLPanelEditWearable*) userdata;
-	
+
 	LLWearable* wearable = gAgent.getWearable(self->mType);
 	if (!wearable)
 	{
@@ -931,7 +791,7 @@ void LLPanelEditWearable::draw()
 		// *TODO:Translate
 		childSetVisible("title_no_modify", TRUE);
 		childSetTextArg("title_no_modify", "[DESC]", std::string(LLWearable::typeToTypeLabel(mType)));
-		
+
 		hideTextureControls();
 	}
 	else if (has_wearable && !is_complete)
@@ -939,7 +799,7 @@ void LLPanelEditWearable::draw()
 		// *TODO:Translate
 		childSetVisible("title_loading", TRUE);
 		childSetTextArg("title_loading", "[DESC]", std::string(LLWearable::typeToTypeLabel(mType)));
-			
+
 		std::string path;
 		const LLUUID& item_id = gAgent.getWearableItem(wearable->getType());
 		gInventory.appendPath(item_id, path);
@@ -971,7 +831,7 @@ void LLPanelEditWearable::draw()
 				const LLTextureEntry* te = avatar->getTE(te_index);
 
 				LLUUID new_id;
-				
+
 				if (te && (te->getID() != IMG_DEFAULT_AVATAR))
 				{
 					new_id = te->getID();
@@ -988,7 +848,7 @@ void LLPanelEditWearable::draw()
 					// texture has changed, close the floater to avoid DEV-22461
 					texture_ctrl->closeFloater();
 				}
-				
+
 				texture_ctrl->setImageAssetID(new_id);
 			}
 		}
@@ -1029,7 +889,7 @@ void LLPanelEditWearable::draw()
 
 		hideTextureControls();
 	}
-	
+
 	childSetVisible("icon", has_wearable && is_modifiable);
 
 	LLPanel::draw();
@@ -1222,7 +1082,7 @@ public:
 	LLButton*						mMore;
 
 	static S32 				sUpdateDelayFrames;
-	
+
 protected:
 	LLTimer				mMouseDownTimer;	// timer for how long mouse has been held down on a hint.
 	F32					mLastHeldTime;
@@ -1252,7 +1112,7 @@ LLScrollingPanelParam::LLScrollingPanelParam(const std::string& name, LLViewerJo
 	mHintMax(NULL)
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_scrolling_param.xml");
-	
+
 	// Set up the slider
 	LLSliderCtrl *slider = getChild<LLSliderCtrl>("param slider", TRUE, FALSE);
 	if (slider)
@@ -1372,7 +1232,7 @@ void LLScrollingPanelParam::draw()
 	{
 		return;
 	}
-	
+
 	if (mLess)	mLess->setVisible(mHintMin ? mHintMin->getVisible() : false);
 	if (mMore)	mMore->setVisible(mHintMax ? mHintMax->getVisible() : false);
 
@@ -1492,7 +1352,7 @@ void LLScrollingPanelParam::onHintMaxHeldDown(void* userdata)
 	LLScrollingPanelParam* self = (LLScrollingPanelParam*) userdata;
 	self->onHintHeldDown(self->mHintMax);
 }
-	
+
 void LLScrollingPanelParam::onHintHeldDown(LLVisualParamHint* hint)
 {
 	F32 current_weight = gAgent.getAvatarObject()->getVisualParamWeight(hint->getVisualParam());
@@ -1766,7 +1626,7 @@ void LLFloaterCustomize::onBtnOk(void* userdata)
 	if (avatar)
 	{
 		avatar->invalidateAll();
-		
+
 		avatar->requestLayerSetUploads();
 
 		gAgent.sendAgentSetAppearance();
@@ -1779,43 +1639,7 @@ void LLFloaterCustomize::onBtnOk(void* userdata)
 // static
 void LLFloaterCustomize::onBtnMakeOutfit(void* userdata)
 {
-	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	if (avatar)
-	{
-		LLMakeOutfitDialog* dialog = new LLMakeOutfitDialog(onMakeOutfitCommit, NULL);
-		// LLMakeOutfitDialog deletes itself.
-
-		for (S32 i = 0; i < WT_COUNT; i++)
-		{
-			BOOL enabled = (gAgent.getWearable((EWearableType) i) != NULL);
-			BOOL selected = (enabled && (WT_SHIRT <= i) && (i < WT_COUNT)); // only select clothing by default
-			if (gAgent.isTeen()
-				&& !edit_wearable_for_teens((EWearableType)i))
-			{
-				dialog->setWearableToInclude(i, FALSE, FALSE);
-			}
-			else
-			{
-				dialog->setWearableToInclude(i, enabled, selected);
-			}
-		}
-		dialog->startModal();
-	}
-}
-
-// static
-void LLFloaterCustomize::onMakeOutfitCommit(LLMakeOutfitDialog* dialog, void* userdata)
-{
-	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	if (avatar)
-	{
-		LLDynamicArray<S32> wearables_to_include;
-		LLDynamicArray<S32> attachments_to_include;  // attachment points
-
-		dialog->getIncludedItems(wearables_to_include, attachments_to_include);
-
-		gAgent.makeNewOutfit(dialog->getFolderName(), wearables_to_include, attachments_to_include, dialog->getRenameClothing());
-	}
+	LLFloaterMakeNewOutfit::showInstance();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1842,7 +1666,7 @@ void* LLFloaterCustomize::createWearablePanel(void* userdata)
 void LLFloaterCustomize::initWearablePanels()
 {
 	LLSubpart* part;
-	
+
 	/////////////////////////////////////////
 	// Shape
 	LLPanelEditWearable* panel = mWearablePanelList[WT_SHAPE];
@@ -2347,7 +2171,7 @@ void LLFloaterCustomize::draw()
 	updateAvatarHeightDisplay();
 
 	LLScrollingPanelParam::sUpdateDelayFrames = 0;
-	
+
 	LLFloater::draw();
 }
 
@@ -2465,7 +2289,7 @@ void LLFloaterCustomize::setWearable(EWearableType type, LLWearable* wearable, U
 {
 	llassert(type < WT_COUNT);
 	gSavedSettings.setU32("AvatarSex", (gAgent.getAvatarObject()->getSex() == SEX_MALE));
-	
+
 	LLPanelEditWearable* panel = mWearablePanelList[type];
 	if (panel)
 	{

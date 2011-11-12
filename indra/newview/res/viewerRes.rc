@@ -74,7 +74,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDI_LL_ICON,IDC_STATIC,7,7,20,20
-    LTEXT           "Loading Second Life...",666,36,13,91,8
+    LTEXT           "Loading Cool VL Viewer...",666,36,13,91,8
 END
 
 
@@ -158,8 +158,8 @@ BEGIN
             VALUE "FileDescription", "Cool VL Viewer"
             VALUE "FileVersion", "1.26.2.0"
             VALUE "InternalName", "Second Life"
-            VALUE "LegalCopyright", "Copyright © 2001-2010, Linden Research, Inc. and other Open Source developers"
-            VALUE "OriginalFilename", "Snowglobe.exe"
+            VALUE "LegalCopyright", "Copyright © 2001-2011, Linden Research, Inc., Henri Beauchamp and other Open Source developers"
+            VALUE "OriginalFilename", "CoolVLViewer.exe"
             VALUE "ProductName", "Cool VL Viewer"
             VALUE "ProductVersion", "1.26.2.0"
         END

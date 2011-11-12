@@ -59,9 +59,7 @@
 #include "llfloateranimpreview.h"
 #include "llfloaterbuycurrency.h"
 #include "llfloaterimagepreview.h"
-#ifdef MESH_UPLOAD
 #include "llfloatermodelpreview.h"
-#endif
 #include "llfloaternamedesc.h"
 #include "llfloaterperms.h"
 #include "llfloatersnapshot.h"
@@ -106,8 +104,9 @@ class LLFileEnableUploadModel : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-#ifdef MESH_UPLOAD
-		bool new_value = gMeshRepo.meshUploadEnabled();
+#if LL_LINUX || LL_WINDOWS
+		bool new_value = gSavedSettings.getBOOL("MeshUploadEnable") &&
+						 gMeshRepo.meshUploadEnabled();
 #else
 		bool new_value = false;
 #endif
@@ -358,11 +357,14 @@ class LLFileUploadModel : public view_listener_t
 {
 	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
 	{
-#ifdef MESH_UPLOAD
-		LLFloaterModelPreview* fmp = new LLFloaterModelPreview("Model Preview");
-		if (fmp)
+#if LL_LINUX || LL_WINDOWS
+		if (gSavedSettings.getBOOL("MeshUploadEnable"))
 		{
-			fmp->loadModel(3);
+			LLFloaterModelPreview* fmp = new LLFloaterModelPreview("Model Preview");
+			if (fmp)
+			{
+				fmp->loadModel(3);
+			}
 		}
 #endif
 		return TRUE;

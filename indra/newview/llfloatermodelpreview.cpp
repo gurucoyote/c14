@@ -122,6 +122,8 @@ const S32 SMOOTH_VALUES_NUMBER = 10;
 
 void drawBoxOutline(const LLVector3& pos, const LLVector3& size);
 
+S32 lod_values[NUM_LOD + 1] = { 0, 1, 2, 3, 4 };
+
 std::string lod_name[NUM_LOD + 1] =
 {
 	"lowest",
@@ -296,7 +298,7 @@ bool validate_face(const LLVolumeFace& face)
 		LLVector4a v2; v2.setMul(face.mPositions[idx2], scale);
 		LLVector4a v3; v3.setMul(face.mPositions[idx3], scale);
 
-		if (ll_is_degenerate(v1,v2,v3))
+		if (ll_is_degenerate(v1, v2, v3))
 		{
 			llwarns << "Degenerate face found!" << llendl;
 			return false;
@@ -405,15 +407,16 @@ BOOL LLFloaterModelPreview::postBuild()
 
 	for (S32 lod = 0; lod <= LLModel::LOD_HIGH; ++lod)
 	{
+		S32* lodp = &lod_values[lod];
 		LLComboBox* lod_source_combo = getChild<LLComboBox>("lod_source_" + lod_name[lod]);
 		lod_source_combo->setCommitCallback(onLoDSourceCommit);
-		lod_source_combo->setCallbackUserData((void*)lod);
+		lod_source_combo->setCallbackUserData((void*)lodp);
 		lod_source_combo->setCurrentByIndex(mLODMode[lod]);
 
-		childSetAction("lod_browse_" + lod_name[lod], onBrowseLOD, (void*)lod);
-		childSetCommitCallback("lod_mode_" + lod_name[lod], onLODParamCommit, (void*)lod);
-		childSetCommitCallback("lod_error_threshold_" + lod_name[lod], onLODParamCommit, (void*)lod);
-		childSetCommitCallback("lod_triangle_limit_" + lod_name[lod], onLODParamCommitEnforceTriLimit, (void*)lod);
+		childSetAction("lod_browse_" + lod_name[lod], onBrowseLOD, (void*)lodp);
+		childSetCommitCallback("lod_mode_" + lod_name[lod], onLODParamCommit, (void*)lodp);
+		childSetCommitCallback("lod_error_threshold_" + lod_name[lod], onLODParamCommit, (void*)lodp);
+		childSetCommitCallback("lod_triangle_limit_" + lod_name[lod], onLODParamCommitEnforceTriLimit, (void*)lodp);
 	}
 
 	childSetCommitCallback("upload_skin", toggleCalculateButtonCallBack, this);
@@ -455,28 +458,29 @@ BOOL LLFloaterModelPreview::postBuild()
 	//set callbacks for left click on line editor rows
 	for (U32 i = 0; i <= LLModel::LOD_HIGH; i++)
 	{
+		S32* lodp = &lod_values[i];
 		LLTextBox* text = getChild<LLTextBox>(lod_label_name[i]);
 		if (text)
 		{
-			text->setClickedCallback(onClickTextLOD, (void*)i);
+			text->setClickedCallback(onClickTextLOD, (void*)lodp);
 		}
 
 		text = getChild<LLTextBox>(lod_triangles_name[i]);
 		if (text)
 		{
-			text->setClickedCallback(onClickTextLOD, (void*)i);
+			text->setClickedCallback(onClickTextLOD, (void*)lodp);
 		}
 
 		text = getChild<LLTextBox>(lod_vertices_name[i]);
 		if (text)
 		{
-			text->setClickedCallback(onClickTextLOD, (void*)i);
+			text->setClickedCallback(onClickTextLOD, (void*)lodp);
 		}
 
 		text = getChild<LLTextBox>(lod_status_name[i]);
 		if (text)
 		{
-			text->setClickedCallback(onClickTextLOD, (void*)i);
+			text->setClickedCallback(onClickTextLOD, (void*)lodp);
 		}
 	}
 
@@ -671,7 +675,7 @@ void LLFloaterModelPreview::onPelvisOffsetCommit(LLUICtrl*, void* userdata)
 }
 
 //static
-void LLFloaterModelPreview::onUploadJointsCommit(LLUICtrl*,void* userdata)
+void LLFloaterModelPreview::onUploadJointsCommit(LLUICtrl*, void* userdata)
 {
 	LLFloaterModelPreview *fp =(LLFloaterModelPreview *)userdata;
 
@@ -684,7 +688,7 @@ void LLFloaterModelPreview::onUploadJointsCommit(LLUICtrl*,void* userdata)
 }
 
 //static
-void LLFloaterModelPreview::onUploadSkinCommit(LLUICtrl*,void* userdata)
+void LLFloaterModelPreview::onUploadSkinCommit(LLUICtrl*, void* userdata)
 {
 	LLFloaterModelPreview *fp =(LLFloaterModelPreview *)userdata;
 
@@ -700,7 +704,7 @@ void LLFloaterModelPreview::onUploadSkinCommit(LLUICtrl*,void* userdata)
 // static
 void LLFloaterModelPreview::onClickTextLOD(void* userdata)
 {
-	S32 lod = (S32)userdata;
+	S32 lod = *(S32*)userdata;
 	if (sInstance)
 	{
 		sInstance->mModelPreview->setPreviewLOD(lod);
@@ -763,7 +767,7 @@ void LLFloaterModelPreview::onAutoFillCommit(LLUICtrl* ctrl, void* userdata)
 //static
 void LLFloaterModelPreview::onLODParamCommit(LLUICtrl* ctrl, void* userdata)
 {
-	S32 lod = (S32)userdata;
+	S32 lod = *(S32*)userdata;
 	if (sInstance)
 	{
 		sInstance->mModelPreview->onLODParamCommit(lod, false);
@@ -773,7 +777,7 @@ void LLFloaterModelPreview::onLODParamCommit(LLUICtrl* ctrl, void* userdata)
 //static
 void LLFloaterModelPreview::onLODParamCommitEnforceTriLimit(LLUICtrl* ctrl, void* userdata)
 {
-	S32 lod = (S32)userdata;
+	S32 lod = *(S32*)userdata;
 	if (sInstance)
 	{
 		sInstance->mModelPreview->onLODParamCommit(lod, true);
@@ -1131,6 +1135,7 @@ void LLFloaterModelPreview::initDecompControls()
 	{
 		stage_count = LLConvexDecomposition::getInstance()->getStages(&stage);
 	}
+	LL_DEBUGS("MeshUpload") << "stage_count = " << stage_count << LL_ENDL;
 
 	static const LLCDParam* param = NULL;
 	static S32 param_count = 0;
@@ -1138,6 +1143,7 @@ void LLFloaterModelPreview::initDecompControls()
 	{
 		param_count = LLConvexDecomposition::getInstance()->getParameters(&param);
 	}
+	LL_DEBUGS("MeshUpload") << "param_count = " << param_count << LL_ENDL;
 
 	for (S32 j = stage_count - 1; j >= 0; --j)
 	{
@@ -1147,8 +1153,10 @@ void LLFloaterModelPreview::initDecompControls()
 		// protected against stub by stage_count being 0 for stub above
 		LLConvexDecomposition::getInstance()->registerCallback(j, LLPhysicsDecomp::llcdCallback);
 
-		llinfos << "Physics decomp stage " << stage[j].mName << " (" << j << ") parameters:" << llendl;
-		llinfos << "------------------------------------" << llendl;
+		LL_DEBUGS("MeshUpload") << "Physics decomp stage " << stage[j].mName
+								<< " (" << j << ") parameters:" << LL_ENDL;
+		LL_DEBUGS("MeshUpload") << "------------------------------------"
+								<< LL_ENDL;
 
 		for (S32 i = 0; i < param_count; ++i)
 		{
@@ -1162,16 +1170,20 @@ void LLFloaterModelPreview::initDecompControls()
 
 			std::string type = "unknown";
 
-			llinfos << name << " - " << description << llendl;
+			LL_DEBUGS("MeshUpload") << name << " - " << description << LL_ENDL;
 
 			if (param[i].mType == LLCDParam::LLCD_FLOAT)
 			{
 				mDecompParams[param[i].mName] = LLSD(param[i].mDefault.mFloat);
-				llinfos << "Type: float, Default: " << param[i].mDefault.mFloat << llendl;
+				LL_DEBUGS("MeshUpload") << "Type: float - Default: "
+										<< param[i].mDefault.mFloat << LL_ENDL;
 
 				LLUICtrl* ctrl = getChild<LLUICtrl>(name);
 				if (LLSliderCtrl* slider = dynamic_cast<LLSliderCtrl*>(ctrl))
 				{
+					LL_DEBUGS("MeshUpload") << name
+											<< " corresponds to a slider."
+											<< LL_ENDL;
 					slider->setMinValue(param[i].mDetails.mRange.mLow.mFloat);
 					slider->setMaxValue(param[i].mDetails.mRange.mHigh.mFloat);
 					slider->setIncrement(param[i].mDetails.mRange.mDelta.mFloat);
@@ -1181,6 +1193,9 @@ void LLFloaterModelPreview::initDecompControls()
 				}
 				else if (LLSpinCtrl* spinner = dynamic_cast<LLSpinCtrl*>(ctrl))
 				{
+					LL_DEBUGS("MeshUpload") << name
+											<< " corresponds to a spinner."
+											<< LL_ENDL;
 					bool is_retain_ctrl = "Retain%" == name;
 					double coefficient = is_retain_ctrl ? RETAIN_COEFFICIENT : 1.f;
 
@@ -1193,6 +1208,9 @@ void LLFloaterModelPreview::initDecompControls()
 				}
 				else if (LLComboBox* combo_box = dynamic_cast<LLComboBox*>(ctrl))
 				{
+					LL_DEBUGS("MeshUpload") << name
+											<< " corresponds to a combo box."
+											<< LL_ENDL;
 					float min = param[i].mDetails.mRange.mLow.mFloat;
 					float max = param[i].mDetails.mRange.mHigh.mFloat;
 					float delta = param[i].mDetails.mRange.mDelta.mFloat;
@@ -1214,11 +1232,19 @@ void LLFloaterModelPreview::initDecompControls()
 					combo_box->setCommitCallback(onPhysicsParamCommit);
 					combo_box->setCallbackUserData((void*) &param[i]);
 				}
+				else
+				{
+					LL_DEBUGS("MeshUpload") << "WARNING: " << name
+											<< " does not correspond to any widget !"
+											<< LL_ENDL;
+				}
 			}
 			else if (param[i].mType == LLCDParam::LLCD_INTEGER)
 			{
 				mDecompParams[param[i].mName] = LLSD(param[i].mDefault.mIntOrEnumValue);
-				//llinfos << "Type: integer, Default: " << param[i].mDefault.mIntOrEnumValue << llendl;
+				LL_DEBUGS("MeshUpload") << "Type: integer - Default: "
+										<< param[i].mDefault.mIntOrEnumValue
+										<< LL_ENDL;
 
 				LLUICtrl* ctrl = getChild<LLUICtrl>(name);
 				if (LLSliderCtrl* slider = dynamic_cast<LLSliderCtrl*>(ctrl))
@@ -1243,46 +1269,73 @@ void LLFloaterModelPreview::initDecompControls()
 					combo_box->setCommitCallback(onPhysicsParamCommit);
 					combo_box->setCallbackUserData((void*) &param[i]);
 				}
+				else
+				{
+					LL_DEBUGS("MeshUpload") << "WARNING: " << name
+											<< " does not correspond to any widget !"
+											<< LL_ENDL;
+				}
 			}
 			else if (param[i].mType == LLCDParam::LLCD_BOOLEAN)
 			{
 				mDecompParams[param[i].mName] = LLSD(param[i].mDefault.mBool);
-				//llinfos << "Type: boolean, Default: " << (param[i].mDefault.mBool ? "True" : "False") << llendl;
+				LL_DEBUGS("MeshUpload") << "Type: boolean - Default: "
+										<< (param[i].mDefault.mBool ? "TRUE" : "FALSE")
+										<< LL_ENDL;
 
-				LLCheckBoxCtrl* check_box = getChild<LLCheckBoxCtrl>(name);
+				LLCheckBoxCtrl* check_box = getChild<LLCheckBoxCtrl>(name, TRUE, FALSE);
 				if (check_box)
 				{
 					check_box->setValue(param[i].mDefault.mBool);
 					check_box->setCommitCallback(onPhysicsParamCommit);
 					check_box->setCallbackUserData((void*) &param[i]);
 				}
+				else
+				{
+					LL_DEBUGS("MeshUpload") << "WARNING: " << name
+											<< " does not correspond to any widget !"
+											<< LL_ENDL;
+				}
 			}
 			else if (param[i].mType == LLCDParam::LLCD_ENUM)
 			{
 				mDecompParams[param[i].mName] = LLSD(param[i].mDefault.mIntOrEnumValue);
-				//llinfos << "Type: enum, Default: " << param[i].mDefault.mIntOrEnumValue << llendl;
+				LL_DEBUGS("MeshUpload") << "Type: enum - Default: "
+										<< param[i].mDefault.mIntOrEnumValue
+										<< LL_ENDL;
 
 				{	//plug into combo box
 
-					//llinfos << "Accepted values: " << llendl;
-					LLComboBox* combo_box = getChild<LLComboBox>(name);
-					for (S32 k = 0; k < param[i].mDetails.mEnumValues.mNumEnums; ++k)
+					LL_DEBUGS("MeshUpload") << "Accepted values: " << LL_ENDL;
+					LLComboBox* combo_box = getChild<LLComboBox>(name, TRUE, FALSE);
+					if (combo_box)
 					{
-						//llinfos << param[i].mDetails.mEnumValues.mEnumsArray[k].mValue
-						//	<< " - " << param[i].mDetails.mEnumValues.mEnumsArray[k].mName << llendl;
+						for (S32 k = 0; k < param[i].mDetails.mEnumValues.mNumEnums; ++k)
+						{
+							LL_DEBUGS("MeshUpload") << param[i].mDetails.mEnumValues.mEnumsArray[k].mValue
+													<< " - "
+													<< param[i].mDetails.mEnumValues.mEnumsArray[k].mName
+													<< LL_ENDL;
 
-						std::string name(param[i].mDetails.mEnumValues.mEnumsArray[k].mName);
-						combo_box->add(name,
-									   LLSD::Integer(param[i].mDetails.mEnumValues.mEnumsArray[k].mValue));
+							std::string name(param[i].mDetails.mEnumValues.mEnumsArray[k].mName);
+							combo_box->add(name,
+										   LLSD::Integer(param[i].mDetails.mEnumValues.mEnumsArray[k].mValue));
+						}
+						combo_box->setValue(param[i].mDefault.mIntOrEnumValue);
+						combo_box->setCommitCallback(onPhysicsParamCommit);
+						combo_box->setCallbackUserData((void*) &param[i]);
 					}
-					combo_box->setValue(param[i].mDefault.mIntOrEnumValue);
-					combo_box->setCommitCallback(onPhysicsParamCommit);
-					combo_box->setCallbackUserData((void*) &param[i]);
+					else
+					{
+						LL_DEBUGS("MeshUpload") << "WARNING: " << name
+												<< " does not correspond to any widget !"
+												<< LL_ENDL;
+					}
 				}
 
-				//llinfos << "----" << llendl;
+				LL_DEBUGS("MeshUpload") << "----" << LL_ENDL;
 			}
-			//llinfos << "-----------------------------" << llendl;
+			LL_DEBUGS("MeshUpload") << "-----------------------------" << LL_ENDL;
 		}
 	}
 
@@ -2362,7 +2415,6 @@ void LLModelLoader::processJointToNodeMapping(domNode* pNode)
 		{
 			llinfos << "Node is NULL" << llendl;
 		}
-
 	}
 }
 
@@ -2407,7 +2459,6 @@ void LLModelPreview::critiqueRigForUploadApplicability(const std::vector<std::st
 	{
 		setLegacyRigValid(true);
 	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -4822,7 +4873,7 @@ void LLModelPreview::genBuffers(S32 lod, bool include_skin_weights)
 
 					const LLModel::weight_list& weight_list = base_mdl->getJointInfluences(pos);
 
-					LLVector4 w(0,0,0,0);
+					LLVector4 w(0, 0, 0, 0);
 
 					for (U32 i = 0; i < weight_list.size(); ++i)
 					{
@@ -4911,7 +4962,8 @@ void LLModelPreview::createPreviewAvatar(void)
 
 void LLModelPreview::addEmptyFace(LLModel* pTarget)
 {
-	U32 type_mask = LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0;
+	U32 type_mask = LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL |
+					LLVertexBuffer::MAP_TEXCOORD0;
 
 	LLPointer<LLVertexBuffer> buff = new LLVertexBuffer(type_mask, 0);
 
@@ -4942,7 +4994,9 @@ void LLModelPreview::addEmptyFace(LLModel* pTarget)
 	//resize face array
 	int faceCnt = pTarget->getNumVolumeFaces();
 	pTarget->setNumVolumeFaces(faceCnt + 1);
-	pTarget->setVolumeFaceData(faceCnt + 1, pos, norm, tc, index, buff->getNumVerts(), buff->getNumIndices());
+	pTarget->setVolumeFaceData(faceCnt + 1, pos, norm, tc, index,
+							   buff->getNumVerts(),
+							   buff->getNumIndices());
 }
 
 //-----------------------------------------------------------------------------
@@ -5011,7 +5065,8 @@ BOOL LLModelPreview::render()
 
 	for (LLModelLoader::scene::iterator iter = mScene[mPreviewLOD].begin(); iter != mScene[mPreviewLOD].end(); ++iter)
 	{
-		for (LLModelLoader::model_instance_list::iterator model_iter = iter->second.begin(); model_iter != iter->second.end(); ++model_iter)
+		for (LLModelLoader::model_instance_list::iterator model_iter = iter->second.begin();
+			 model_iter != iter->second.end(); ++model_iter)
 		{
 			LLModelInstance& instance = *model_iter;
 			LLModel* model = instance.mModel;
@@ -5098,9 +5153,10 @@ BOOL LLModelPreview::render()
 	LLQuaternion(mCameraYaw, LLVector3::z_axis);
 
 	LLQuaternion av_rot = camera_rot;
-	camera->setOriginAndLookAt(target_pos + ((LLVector3(mCameraDistance, 0.f, 0.f) + offset) * av_rot),		// camera
-							   LLVector3::z_axis,																	// up
-							   target_pos);			// point of interest
+	camera->setOriginAndLookAt(target_pos +
+								(LLVector3(mCameraDistance, 0.f, 0.f) + offset) * av_rot,	// camera
+							   LLVector3::z_axis,											// up
+							   target_pos);													// point of interest
 
 	z_near = llclamp(z_far * 0.001f, 0.001f, 0.1f);
 
@@ -5112,7 +5168,9 @@ BOOL LLModelPreview::render()
 	const F32 BRIGHTNESS = 0.9f;
 	gGL.color3f(BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);
 
-	const U32 type_mask = LLVertexBuffer::MAP_VERTEX | LLVertexBuffer::MAP_NORMAL | LLVertexBuffer::MAP_TEXCOORD0;
+	const U32 type_mask = LLVertexBuffer::MAP_VERTEX |
+						  LLVertexBuffer::MAP_NORMAL |
+						  LLVertexBuffer::MAP_TEXCOORD0;
 
 	LLGLEnable normalize(GL_NORMALIZE);
 
@@ -5163,7 +5221,8 @@ BOOL LLModelPreview::render()
 
 		if (!skin_weight)
 		{
-			for (LLMeshUploadThread::instance_list::iterator iter = mUploadData.begin(); iter != mUploadData.end(); ++iter)
+			for (LLMeshUploadThread::instance_list::iterator iter = mUploadData.begin();
+				 iter != mUploadData.end(); ++iter)
 			{
 				LLModelInstance& instance = *iter;
 
@@ -5206,7 +5265,7 @@ BOOL LLModelPreview::render()
 					}
 					else
 					{
-						glColor4f(1,1,1,1);
+						glColor4f(1, 1, 1, 1);
 					}
 
 					buffer->drawRange(LLRender::TRIANGLES, 0,
@@ -5305,7 +5364,9 @@ BOOL LLModelPreview::render()
 										}
 
 										glColor4ubv(hull_colors[i].mV);
-										LLVertexBuffer::drawArrays(LLRender::TRIANGLES, physics.mMesh[i].mPositions, physics.mMesh[i].mNormals);
+										LLVertexBuffer::drawArrays(LLRender::TRIANGLES,
+																   physics.mMesh[i].mPositions,
+																   physics.mMesh[i].mNormals);
 
 										if (explode > 0.f)
 										{
@@ -5322,7 +5383,9 @@ BOOL LLModelPreview::render()
 							{
 								genBuffers(LLModel::LOD_PHYSICS, false);
 							}
-							for (U32 i = 0; i < mVertexBuffer[LLModel::LOD_PHYSICS][model].size(); ++i)
+							for (U32 i = 0;
+								 i < mVertexBuffer[LLModel::LOD_PHYSICS][model].size();
+								 ++i)
 							{
 								LLVertexBuffer* buffer = mVertexBuffer[LLModel::LOD_PHYSICS][model][i];
 
@@ -5359,7 +5422,8 @@ BOOL LLModelPreview::render()
 					glColor4f(1.f,0.f,0.f,1.f);
 					const LLVector4a scale(0.5f);
 
-					for (LLMeshUploadThread::instance_list::iterator iter = mUploadData.begin(); iter != mUploadData.end(); ++iter)
+					for (LLMeshUploadThread::instance_list::iterator iter = mUploadData.begin();
+						 iter != mUploadData.end(); ++iter)
 					{
 						LLModelInstance& instance = *iter;
 
@@ -5389,7 +5453,9 @@ BOOL LLModelPreview::render()
 									genBuffers(LLModel::LOD_PHYSICS, false);
 								}
 
-								for (U32 i = 0; i < mVertexBuffer[LLModel::LOD_PHYSICS][model].size(); ++i)
+								for (U32 i = 0;
+									 i < mVertexBuffer[LLModel::LOD_PHYSICS][model].size();
+									 ++i)
 								{
 									LLVertexBuffer* buffer = mVertexBuffer[LLModel::LOD_PHYSICS][model][i];
 
@@ -5408,7 +5474,7 @@ BOOL LLModelPreview::render()
 										LLVector4a v2; v2.setMul(pos[*idx++], scale);
 										LLVector4a v3; v3.setMul(pos[*idx++], scale);
 
-										if (ll_is_degenerate(v1,v2,v3))
+										if (ll_is_degenerate(v1, v2, v3))
 										{
 											buffer->draw(LLRender::LINE_LOOP, 3, i);
 											buffer->draw(LLRender::POINTS, 3, i);
@@ -5431,15 +5497,17 @@ BOOL LLModelPreview::render()
 		{
 			target_pos = getPreviewAvatar()->getPositionAgent();
 
-			camera->setOriginAndLookAt(target_pos + ((LLVector3(mCameraDistance, 0.f, 0.f) + offset) * av_rot),		// camera
-									   LLVector3::z_axis,																	// up
-								       target_pos);		// point of interest
+			camera->setOriginAndLookAt(target_pos +
+										(LLVector3(mCameraDistance, 0.f, 0.f) + offset) * av_rot,	// camera
+									   LLVector3::z_axis,											// up
+								       target_pos);													// point of interest
 			if (joint_positions)
 			{
 				getPreviewAvatar()->renderCollisionVolumes();
 			}
 
-			for (LLModelLoader::scene::iterator iter = mScene[mPreviewLOD].begin(); iter != mScene[mPreviewLOD].end(); ++iter)
+			for (LLModelLoader::scene::iterator iter = mScene[mPreviewLOD].begin();
+				 iter != mScene[mPreviewLOD].end(); ++iter)
 			{
 				for (LLModelLoader::model_instance_list::iterator model_iter = iter->second.begin(); model_iter != iter->second.end(); ++model_iter)
 				{
@@ -5478,7 +5546,10 @@ BOOL LLModelPreview::render()
 							for (U32 j = 0; j < buffer->getRequestedVerts(); ++j)
 							{
 								LLMatrix4 final_mat;
-								final_mat.mMatrix[0][0] = final_mat.mMatrix[1][1] = final_mat.mMatrix[2][2] = final_mat.mMatrix[3][3] = 0.f;
+								final_mat.mMatrix[0][0] = final_mat.mMatrix[1][1]
+														= final_mat.mMatrix[2][2]
+														= final_mat.mMatrix[3][3]
+														= 0.f;
 
 								LLVector4 wght;
 								S32 idx[4];
@@ -5559,7 +5630,8 @@ void LLModelPreview::refresh()
 void LLModelPreview::rotate(F32 yaw_radians, F32 pitch_radians)
 {
 	mCameraYaw = mCameraYaw + yaw_radians;
-	mCameraPitch = llclamp(mCameraPitch + pitch_radians, F_PI_BY_TWO * -0.8f, F_PI_BY_TWO * 0.8f);
+	mCameraPitch = llclamp(mCameraPitch + pitch_radians, F_PI_BY_TWO * -0.8f,
+						   F_PI_BY_TWO * 0.8f);
 }
 
 //-----------------------------------------------------------------------------
@@ -5573,8 +5645,12 @@ void LLModelPreview::zoom(F32 zoom_amt)
 
 void LLModelPreview::pan(F32 right, F32 up)
 {
-	mCameraOffset.mV[VY] = llclamp(mCameraOffset.mV[VY] + right * mCameraDistance / mCameraZoom, -1.f, 1.f);
-	mCameraOffset.mV[VZ] = llclamp(mCameraOffset.mV[VZ] + up * mCameraDistance / mCameraZoom, -1.f, 1.f);
+	mCameraOffset.mV[VY] = llclamp(mCameraOffset.mV[VY] +
+								   right * mCameraDistance / mCameraZoom,
+								   -1.f, 1.f);
+	mCameraOffset.mV[VZ] = llclamp(mCameraOffset.mV[VZ] +
+								   up * mCameraDistance / mCameraZoom,
+								   -1.f, 1.f);
 }
 
 void LLModelPreview::setPreviewLOD(S32 lod)
@@ -5608,11 +5684,11 @@ void LLModelPreview::setPreviewLOD(S32 lod)
 }
 
 //static
-void LLFloaterModelPreview::onBrowseLOD(void* user_data)
+void LLFloaterModelPreview::onBrowseLOD(void* userdata)
 {
 	assert_main_thread();
 
-	S32 lod = (S32)user_data;
+	S32 lod = *(S32*)userdata;
 
 	if (sInstance)
 	{
@@ -5635,7 +5711,7 @@ void LLFloaterModelPreview::onReset(void* user_data)
 	fmp->initModelPreview();
 
 	mp = fmp->mModelPreview;
-	mp->loadModel(filename,3,true);
+	mp->loadModel(filename, 3, true);
 }
 
 //static
@@ -5737,8 +5813,10 @@ void LLFloaterModelPreview::toggleCalculateButton(bool visible)
 	bool uploadingJointPositions = childGetValue("upload_joints").asBoolean();
 	if (uploadingSkin)
 	{
-		//Disable the calculate button *if* the rig is invalid - which is determined during the critiquing process
-		if (uploadingJointPositions && !mModelPreview->isRigValidForJointPositionUpload())
+		// Disable the calculate button *if* the rig is invalid - which is
+		// determined during the critiquing process
+		if (uploadingJointPositions &&
+			!mModelPreview->isRigValidForJointPositionUpload())
 		{
 			mCalculateBtn->setVisible(false);
 		}
@@ -5761,7 +5839,7 @@ void LLFloaterModelPreview::toggleCalculateButton(bool visible)
 //static
 void LLFloaterModelPreview::onLoDSourceCommit(LLUICtrl* ctrl, void* userdata)
 {
-	S32 lod = (S32)userdata;
+	S32 lod = *(S32*)userdata;
 	if (sInstance)
 	{
 		sInstance->mModelPreview->updateLodControls(lod);
@@ -5870,7 +5948,7 @@ void LLFloaterModelPreview::onPermissionsReceived(const LLSD& result)
 	dump_llsd_to_file(result,"perm_received.xml");
 	std::string upload_status = result["mesh_upload_status"].asString();
 	// BAP HACK: handle "" for case that  MeshUploadFlag cap is broken.
-	mHasUploadPerm = (("" == upload_status) || ("valid" == upload_status));
+	mHasUploadPerm = ("" == upload_status || "valid" == upload_status);
 
 	//mUploadBtn->setEnabled(mHasUploadPerm);
 	mUploadBtn->setEnabled(mHasUploadPerm && !mUploadModelUrl.empty());

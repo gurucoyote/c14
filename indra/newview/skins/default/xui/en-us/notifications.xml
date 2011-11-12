@@ -6603,6 +6603,23 @@ This is your inventory, which contains objects, notecards, clothing, and other t
 
   <notification
    icon="notify.tga"
+   name="FirstAttach"
+   type="notify">
+WARNING: You attached an object on the [JOINTNAME].
+This joint is not recognized by older viewers and the object will appear to the residents using such viewers as attached in a wrong place on your avatar.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="AttachOnExtraJoint"
+   duration="10"
+   type="notifytip">
+WARNING: You attached an object on the [JOINTNAME].
+This joint is not recognized by older viewers that residents around you may be using.
+  </notification>
+
+  <notification
+   icon="notify.tga"
    name="FirstSandbox"
    type="notify">
 This is a sandbox region.

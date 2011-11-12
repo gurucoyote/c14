@@ -38,24 +38,19 @@
 #ifndef LL_LLWORLDMAPVIEW_H
 #define LL_LLWORLDMAPVIEW_H
 
+#include "llmapimagetype.h"
 #include "llpanel.h"
 #include "v3math.h"
 #include "v3dmath.h"
 #include "v4color.h"
-#include "llviewertexture.h"
-#include "llmapimagetype.h"
-#include "llworldmap.h"
 
-class LLItemInfo;
+#include "llworldmap.h"
 
 const S32 DEFAULT_TRACKING_ARROW_SIZE = 16;
 
 class LLColor4;
-class LLColor4U;
-class LLCoordGL;
-class LLViewerTexture;
+class LLItemInfo;
 class LLTextBox;
-
 
 class LLWorldMapView : public LLPanel
 {
@@ -63,34 +58,46 @@ public:
 	static void initClass();
 	static void cleanupClass();
 
-	LLWorldMapView(const std::string& name, const LLRect& rect );
+	LLWorldMapView(const std::string& name, const LLRect& rect);
 	virtual ~LLWorldMapView();
 
-	virtual void	reshape(S32 width, S32 height, BOOL called_from_parent = TRUE );
+	virtual void	reshape(S32 width, S32 height, BOOL called_from_parent = TRUE);
 	virtual void	setVisible(BOOL visible);
 
 	virtual BOOL	handleMouseDown(S32 x, S32 y, MASK mask);
 	virtual BOOL	handleMouseUp(S32 x, S32 y, MASK mask);
-	virtual BOOL	handleDoubleClick( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleHover( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleToolTip( S32 x, S32 y, std::string& msg, LLRect* sticky_rect_screen );
+	virtual BOOL	handleDoubleClick(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleHover(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleToolTip(S32 x, S32 y, std::string& msg,
+								  LLRect* sticky_rect_screen);
 
 	bool			checkItemHit(S32 x, S32 y, LLItemInfo& item, LLUUID* id, bool track);
 	void			handleClick(S32 x, S32 y, MASK mask, S32* hit_type, LLUUID* id);
 
 	// Scale and pan are shared across all instances.
-	static void		setScale( F32 scale );
-	static void		translatePan( S32 delta_x, S32 delta_y );
-	static void		setPan( S32 x, S32 y, BOOL snap = TRUE );
+	static void		setScale(F32 scale);
+	static void		translatePan(S32 delta_x, S32 delta_y);
+	static void		setPan(S32 x, S32 y, BOOL snap = TRUE);
 
 	LLVector3		globalPosToView(const LLVector3d& global_pos);
 	LLVector3d		viewPosToGlobal(S32 x,S32 y);
 
 	virtual void	draw();
-	void			drawGenericItems(const LLWorldMap::item_info_list_t& items, LLUIImagePtr image);
+	void			drawGenericItems(const LLWorldMap::item_info_list_t& items,
+									 LLUIImagePtr image);
+
 	void			drawGenericItem(const LLItemInfo& item, LLUIImagePtr image);
-	void			drawImage(const LLVector3d& global_pos, LLUIImagePtr image, const LLColor4& color = LLColor4::white);
-	void			drawImageStack(const LLVector3d& global_pos, LLUIImagePtr image, U32 count, F32 offset, const LLColor4& color);
+
+	void			drawImage(const LLVector3d& global_pos,
+							  LLUIImagePtr image,
+							  const LLColor4& color = LLColor4::white);
+
+	void			drawImageStack(const LLVector3d& global_pos,
+								   LLUIImagePtr image,
+								   U32 count,
+								   F32 offset,
+								   const LLColor4& color);
+
 	void			drawAgents();
 	void			drawEvents();
 	void			drawFrustum();
@@ -99,32 +106,39 @@ public:
 
 	// Draw the tracking indicator, doing the right thing if it's outside
 	// the view area.
-	void			drawTracking( const LLVector3d& pos_global, const LLColor4& color, BOOL draw_arrow = TRUE,
-								  const std::string& label = std::string(), const std::string& tooltip = std::string(),
-								  S32 vert_offset = 0);
+	void			drawTracking(const LLVector3d& pos_global,
+								 const LLColor4& color,
+								 BOOL draw_arrow = TRUE,
+								 const std::string& label = std::string(),
+								 const std::string& tooltip = std::string(),
+								 S32 vert_offset = 0);
+
 	static void		drawTrackingArrow(const LLRect& view_rect, S32 x, S32 y, 
 									  const LLColor4& color,
 									  S32 arrow_size = DEFAULT_TRACKING_ARROW_SIZE);
+
 	static void		drawTrackingDot(F32 x_pixels, 
 									F32 y_pixels, 
 									const LLColor4& color,
 									F32 relative_z = 0.f,
 									F32 dot_radius = 3.f);
 
-	static void		drawTrackingCircle( const LLRect& rect, S32 x, S32 y, 
-										const LLColor4& color, 
-										S32 min_thickness, 
-										S32 overlap );
-	static void		drawAvatar(	F32 x_pixels, 
-								F32 y_pixels, 
-								const LLColor4& color,
-								F32 relative_z = 0.f,
-								F32 dot_radius = 3.f);
+	static void		drawTrackingCircle(const LLRect& rect, S32 x, S32 y, 
+									   const LLColor4& color, 
+									   S32 min_thickness, 
+									   S32 overlap);
+
+	static void		drawAvatar(F32 x_pixels, 
+							   F32 y_pixels, 
+							   const LLColor4& color,
+							   F32 relative_z = 0.f,
+							   F32 dot_radius = 3.f);
+
 	static void		drawIconName(F32 x_pixels, 
-									F32 y_pixels, 
-									const LLColor4& color,
-									const std::string& first_line,
-									const std::string& second_line);
+								 F32 y_pixels, 
+								 const LLColor4& color,
+								 const std::string& first_line,
+								 const std::string& second_line);
 
 	// Prevents accidental double clicks
 	static void		clearLastClick() { sHandledLastClick = FALSE; }
@@ -135,7 +149,7 @@ public:
 	U32				updateVisibleBlocks();
 
 protected:
-	void			setDirectionPos( LLTextBox* text_box, F32 rotation );
+	void			setDirectionPos(LLTextBox* text_box, F32 rotation);
 	void			updateDirections();
 
 public:
@@ -159,8 +173,7 @@ public:
 	static LLUIImagePtr	sForSaleImage;
 	static LLUIImagePtr	sForSaleAdultImage;
 
-	static F32		sThresholdA;
-	static F32		sThresholdB;
+	static F32		sThreshold;
 	static F32		sPixelsPerMeter;		// world meters to map pixels
 
 	static F32		sMapScale;				// scale = size of a region in pixels

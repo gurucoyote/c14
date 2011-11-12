@@ -78,6 +78,7 @@
 #include "llfloatergroupinfo.h"
 #include "llfloatergroups.h"
 #include "llfloaterland.h"
+#include "llfloatermakenewoutfit.h"
 #include "llfloatermap.h"
 #include "llfloatermute.h"
 #include "llfloatersnapshot.h"
@@ -7578,6 +7579,9 @@ void LLAgent::removeWearableFinal(EWearableType type)
 	sendAgentWearablesUpdate(); 
 	sendAgentSetAppearance();
 	gInventory.notifyObservers();
+
+	// Notify the Make New Outfit floater, if opened
+	LLFloaterMakeNewOutfit::setDirty();
 }
 
 void LLAgent::copyWearableToInventory(EWearableType type)
@@ -7835,6 +7839,9 @@ void LLAgent::setWearableFinal(LLInventoryItem* new_item, LLWearable* new_wearab
 	// Update the server
 	sendAgentWearablesUpdate();
 	sendAgentSetAppearance();
+
+	// Notify the Make New Outfit floater, if opened
+	LLFloaterMakeNewOutfit::setDirty();
 }
 
 void LLAgent::queryWearableCache()

@@ -132,7 +132,6 @@ BOOL LLFloaterTeleportHistory::postBuild()
 	childSetAction("copy_slurl", onCopySLURL, this);
 	childSetAction("clear", onClearHistory,this);
 	childSetAction("close", onButtonClose,this);
-	loadEntries();
 
 	return TRUE;
 }
@@ -141,20 +140,67 @@ void LLFloaterTeleportHistory::loadEntries()
 {
 	std::string filename = getHistoryFileName();
 	if (filename.empty()) return;
+
+	mTPlist.clear();
+
 	llifstream file;
 	file.open(filename.c_str());
 	if (file.is_open())
 	{
+		LL_INFOS("Teleport") << "Loading the teleport history from: " << filename
+							 << LL_ENDL;
 		LLSDSerialize::fromXML(mTPlist, file);
 	}
 	file.close();
 
-	for (S32 i = 0; i < (S32)mTPlist.size(); i++)
+	mID = 0;
+	while (mID < (S32)mTPlist.size())
 	{
-		LLSD data = mTPlist[i];
-		mPlacesList->addElement(data, ADD_TOP);
-		mPlacesList->deselectAllItems(TRUE);
-		mID++;
+		LLSD data = mTPlist[mID];
+
+		// Let's validate the data and reject badly formatted entries.
+		bool has_type = false;
+		bool has_parcel = false;
+		bool has_region = false;
+		bool has_position = false;
+		bool has_timestamp = false;
+		bool has_slurl = false;
+		bool has_simstring = false;
+		bool has_other = false;
+		if (data.has("columns"))
+		{
+			for (S32 i = 0; i < (S32)data["columns"].size(); i++)
+			{
+				LLSD map = data["columns"][i];
+				if (map.has("column"))
+				{
+					if (map["column"].asString() == "type")				has_type = true;
+					else if (map["column"].asString() == "parcel")		has_parcel = true;
+					else if (map["column"].asString() == "region")		has_region = true;
+					else if (map["column"].asString() == "position")	has_position = true;
+					else if (map["column"].asString() == "timestamp")	has_timestamp = true;
+					else if (map["column"].asString() == "slurl")		has_slurl = true;
+					else if (map["column"].asString() == "simstring")	has_simstring = true;
+					else												has_other = true;
+				}
+				else
+				{
+					has_other = true;	// Make sure the entry will be removed
+					break;
+				}
+			}
+		}
+		if (!has_other && has_type && has_parcel && has_region &&
+			has_position && has_timestamp && has_slurl && has_simstring)
+		{
+			mPlacesList->addElement(data, ADD_TOP);
+			mPlacesList->deselectAllItems(TRUE);
+			mID++;
+		}
+		else
+		{
+			mTPlist.erase(mID);
+		}
 	}	
 	setButtonsStatus();
 }

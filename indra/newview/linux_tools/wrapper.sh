@@ -107,7 +107,7 @@ fi
 # Re-register the secondlife:// protocol handler every launch, for now.
 ./register_secondlifeprotocol.sh
 
-export VIEWER_BINARY='snowglobe-do-not-run-directly'
+export VIEWER_BINARY='cool_vl_viewer-bin'
 export SL_ENV='LD_LIBRARY_PATH="`pwd`""/lib:${LD_LIBRARY_PATH}"'
 export SL_CMD='$LL_WRAPPER bin/$VIEWER_BINARY'
 export SL_OPT="`cat gridargs.dat` $@"

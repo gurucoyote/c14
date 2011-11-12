@@ -60,6 +60,8 @@ public:
 
 	BOOL postBuild();
 
+	// @brief loads the saved teleport history
+	void loadEntries();
 	// @brief adds the pending teleport destination
 	void addPendingEntry(const std::string& regionName, S16 x, S16 y, S16 z);
 	// @brief adds the destination to the list of visited places
@@ -91,7 +93,6 @@ private:
 	// @brief: enables or disables the "Teleport", "Show On Map" and "Copy To SLURL" buttons
 	void setButtonsStatus();
 
-	void loadEntries();
 	void saveEntry(LLSD entry);
 
 	LLScrollListCtrl* mPlacesList;

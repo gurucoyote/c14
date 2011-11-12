@@ -98,7 +98,7 @@ public:
 	static void useLeftClickNoHit();
 	static void useTeleport();
 	static void useOverrideKeys();
-	static void useAttach();
+	static void useAttach(S32 attach_pt, std::string joint);
 	static void useAppearance();
 	static void useInventory();
 	static void useSandbox();

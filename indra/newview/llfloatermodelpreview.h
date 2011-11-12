@@ -371,9 +371,9 @@ public:
 
 	static void	textureLoadedCallback(BOOL success, LLViewerFetchedTexture *src_vi, LLImageRaw* src, LLImageRaw* src_aux, S32 discard_level, BOOL final, void* userdata);
 
-	boost::signals2::connection setDetailsCallback(const details_signal_t::slot_type& cb){  return mDetailsSignal.connect(cb);  }
-	boost::signals2::connection setModelLoadedCallback(const model_loaded_signal_t::slot_type& cb){  return mModelLoadedSignal.connect(cb);  }
-	boost::signals2::connection setModelUpdatedCallback(const model_updated_signal_t::slot_type& cb){  return mModelUpdatedSignal.connect(cb);  }
+	boost::signals2::connection setDetailsCallback(const details_signal_t::slot_type& cb) { return mDetailsSignal.connect(cb); }
+	boost::signals2::connection setModelLoadedCallback(const model_loaded_signal_t::slot_type& cb) { return mModelLoadedSignal.connect(cb); }
+	boost::signals2::connection setModelUpdatedCallback(const model_updated_signal_t::slot_type& cb) { return mModelUpdatedSignal.connect(cb); }
 
 	void setLoadState(U32 state) { mLoadState = state; }
 	U32 getLoadState() { return mLoadState; }

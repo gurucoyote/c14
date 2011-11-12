@@ -56,6 +56,7 @@
 #include "lldriverparam.h"
 #include "llemote.h"
 #include "llfirstuse.h"
+#include "llfloatermakenewoutfit.h"
 #include "llgesturemgr.h"			// needed to trigger the voice gesticulations
 #include "llhudeffecttrail.h"
 #include "llhudmanager.h"
@@ -2790,6 +2791,9 @@ void LLVOAvatar::checkAttachments()
 			LLSDSerialize::toPrettyXML(list, list_file);
 			list_file.close();
 			//llinfos << "Worn attachments list saved to: " << filename << llendl;
+
+			// Notify the Make New Outfit floater, if opened
+			LLFloaterMakeNewOutfit::setDirty();
 		}
 	}
 	else
