@@ -240,10 +240,10 @@ cp -a skins/default/xui/en-us/panel_overlaybar.xml $temp/skins/default/xui/en-us
 cp -a skins/default/xui/en-us/panel_preferences_audio.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_chat.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_cool.xml $temp/skins/default/xui/en-us/
-cp -a skins/default/xui/en-us/panel_preferences_im.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_general.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_graphics1.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_grids.xml $temp/skins/default/xui/en-us/
+cp -a skins/default/xui/en-us/panel_preferences_im.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_input.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_network.xml $temp/skins/default/xui/en-us/
 cp -a skins/default/xui/en-us/panel_preferences_notifications.xml $temp/skins/default/xui/en-us/

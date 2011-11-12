@@ -1174,6 +1174,18 @@ BOOL deferred_rendering_enabled(void* user_data)
 	}
 }
 
+BOOL wireframe_check(void* user_data)
+{
+	return gUseWireframe;
+}
+
+void handle_toggle_wireframe(void*)
+{
+	gUseWireframe = !gUseWireframe;
+	LLPipeline::updateRenderDeferred();
+	gPipeline.resetVertexBuffers();
+}
+
 void init_debug_rendering_menu(LLMenuGL* menu)
 {
 	LLMenuGL* sub_menu = NULL;
@@ -1436,8 +1448,7 @@ void init_debug_rendering_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCallGL("Reload Selected Texture", reload_selected_texture, NULL, NULL, 'U', MASK_CONTROL|MASK_SHIFT));
 	//menu->append(new LLMenuItemCallGL("Dump Image List", handle_dump_image_list, NULL, NULL, 'I', MASK_CONTROL|MASK_SHIFT));
 
-	menu->append(new LLMenuItemToggleGL("Wireframe", &gUseWireframe, 
-			'R', MASK_CONTROL|MASK_SHIFT));
+	menu->append(new LLMenuItemCheckGL("Wireframe", handle_toggle_wireframe, NULL, wireframe_check, NULL, 'R', MASK_CONTROL|MASK_SHIFT));
 
 	LLMenuItemCheckGL* item;
 	item = new LLMenuItemCheckGL("Debug GL", menu_toggle_control, NULL, menu_check_control, (void*)"RenderDebugGL");
@@ -3233,7 +3244,10 @@ class LLSelfEnableSitOrStand : public view_listener_t
 		{
 			gMenuHolder->childSetText("Self Sit", label);
 		}
-		gMenuHolder->childSetText("Self Sit Attachment", label);
+		if (gMenuHolder->getChild<LLView>("Self Sit Attachment", TRUE, FALSE))
+		{
+			gMenuHolder->childSetText("Self Sit Attachment", label);
+		}
 
 		return true;
 	}
@@ -8417,20 +8431,40 @@ class LLWorldEnvSettings : public view_listener_t
 		if (tod == "editor")
 		{
 			// if not there or is hidden, show it
-			if (	!LLFloaterEnvSettings::isOpen() || 
-				!LLFloaterEnvSettings::instance()->getVisible()) {
-				LLFloaterEnvSettings::show();
-
-			// otherwise, close it button acts like a toggle
-			} 
-			else 
+			if (!LLFloaterEnvSettings::isOpen() || 
+				!LLFloaterEnvSettings::instance()->getVisible())
 			{
-				LLFloaterEnvSettings::instance()->close();
-			}
-			return true;
+				LLFloaterEnvSettings::show();
+			} 
 		}
-
-		if (tod == "sunrise")
+		else if (tod == "day")
+		{
+			// if not there or is hidden, show it
+			if (!LLFloaterDayCycle::isOpen() || 
+				!LLFloaterDayCycle::instance()->getVisible())
+			{
+				LLFloaterDayCycle::show();
+			} 
+		}
+		else if (tod == "sky")
+		{
+			// if not there or is hidden, show it
+			if (!LLFloaterWindLight::isOpen() || 
+				!LLFloaterWindLight::instance()->getVisible())
+			{
+				LLFloaterWindLight::show();
+			} 
+		}
+		else if (tod == "water")
+		{
+			// if not there or is hidden, show it
+			if (!LLFloaterWater::isOpen() || 
+				!LLFloaterWater::instance()->getVisible())
+			{
+				LLFloaterWater::show();
+			} 
+		}
+		else if (tod == "sunrise")
 		{
 			// set the value, turn off animation
 			LLWLParamManager::instance()->mAnimator.setDayTime(0.25);
@@ -8483,32 +8517,6 @@ class LLWorldEnvSettings : public view_listener_t
 	}
 };
 
-/// Water Menu callbacks
-class LLWorldWaterSettings : public view_listener_t
-{
-	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
-	{
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsSetenv)
-		{
-			return true;
-		}
-//mk
-		// if not there or is hidden, show it
-		if (	!LLFloaterWater::isOpen() || 
-			!LLFloaterWater::instance()->getVisible()) {
-			LLFloaterWater::show();
-
-		// otherwise, close it button acts like a toggle
-		} 
-		else 
-		{
-			LLFloaterWater::instance()->close();
-		}
-		return true;
-	}
-};
-
 /// Post-Process callbacks
 class LLWorldPostProcess : public view_listener_t
 {
@@ -8521,22 +8529,6 @@ class LLWorldPostProcess : public view_listener_t
 		}
 //mk
 		LLFloaterPostProcess::show();
-		return true;
-	}
-};
-
-/// Day Cycle callbacks
-class LLWorldDayCycle : public view_listener_t
-{
-	bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata)
-	{
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsSetenv)
-		{
-			return true;
-		}
-//mk
-		LLFloaterDayCycle::show();
 		return true;
 	}
 };
@@ -8660,9 +8652,7 @@ void initialize_menus()
 	addMenu(new LLWorldCheckAlwaysRun(), "World.CheckAlwaysRun");
 
 	(new LLWorldEnvSettings())->registerListener(gMenuHolder, "World.EnvSettings");
-	(new LLWorldWaterSettings())->registerListener(gMenuHolder, "World.WaterSettings");
 	(new LLWorldPostProcess())->registerListener(gMenuHolder, "World.PostProcess");
-	(new LLWorldDayCycle())->registerListener(gMenuHolder, "World.DayCycle");
 
 	// Tools menu
 	addMenu(new LLToolsBuildMode(), "Tools.BuildMode");

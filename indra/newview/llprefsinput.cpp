@@ -62,6 +62,7 @@ private:
 	BOOL mCameraIgnoreCollisions;
 	BOOL mEditCameraMovement;
 	BOOL mAppearanceCameraMovement;
+	BOOL mSitCameraFrontView;
 	BOOL mAutomaticFly;
 	BOOL mArrowKeysMoveAvatar;
 };
@@ -106,6 +107,7 @@ void LLPrefsInputImpl::refreshValues()
 	mCameraIgnoreCollisions		= gSavedSettings.getBOOL("CameraIgnoreCollisions");
 	mEditCameraMovement			= gSavedSettings.getBOOL("EditCameraMovement");
 	mAppearanceCameraMovement	= gSavedSettings.getBOOL("AppearanceCameraMovement");
+	mSitCameraFrontView			= gSavedSettings.getBOOL("SitCameraFrontView");
 	mAutomaticFly				= gSavedSettings.getBOOL("AutomaticFly");
 	mArrowKeysMoveAvatar		= gSavedSettings.getBOOL("ArrowKeysMoveAvatar");
 }
@@ -126,6 +128,7 @@ void LLPrefsInputImpl::cancel()
 	gSavedSettings.setBOOL("CameraIgnoreCollisions",	mCameraIgnoreCollisions);
 	gSavedSettings.setBOOL("EditCameraMovement",		mEditCameraMovement);
 	gSavedSettings.setBOOL("AppearanceCameraMovement",	mAppearanceCameraMovement);
+	gSavedSettings.setBOOL("SitCameraFrontView",		mSitCameraFrontView);
 	gSavedSettings.setBOOL("AutomaticFly",				mAutomaticFly);
 	gSavedSettings.setBOOL("ArrowKeysMoveAvatar",		mArrowKeysMoveAvatar);
 }

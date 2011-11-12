@@ -2253,7 +2253,6 @@ bool LLViewerFetchedTexture::doLoadedCallbacks()
 		best_aux_discard = 0;
 	}
 
-
 	//
 	// See if any of the callbacks would actually run using the data that we can provide,
 	// and also determine if we need to perform any readbacks or decodes.
@@ -2320,6 +2319,7 @@ bool LLViewerFetchedTexture::doLoadedCallbacks()
 		{
 			llwarns << "LLViewerTexture::doLoadedCallbacks: mRawImage is null. Removing callbacks." << llendl;
 			clearCallbackEntryList();
+			mNeedsCreateTexture = mIsRawImageValid = FALSE;
 			return false;
 		}
 		if (mNeedsAux && mAuxRawImage.isNull())

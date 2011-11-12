@@ -2,7 +2,7 @@ This is the edited version of the original readme file by Marine Kelley.
 The file has been edited to take into account the improvements by Henri Beauchamp, as well as the Cool VL Viewer.
 
 -------------
-Version 2.07.03.05
+Version 2.07.03.06
 
 
 WHAT IS IT ?
@@ -155,6 +155,14 @@ Since v1.23d you may set the RestrainedLoveAddReplace advanced setting to TRUE s
 
 RELEASE NOTES :
 ---------------
+2.07.03.06 (@versionnum = 2070306) by Henri Beauchamp:
+- Inclusion of Marine Kelley's (upcoming) change:
+	- added : Make gestures activate/deactivate when wearing/removing items respectively through a script.
+- Fixed: @setenv_*i commands now work properly and set the intensity in the same way as the corresponding intensity sliders in the Windlight settings floater.
+- Fixed: when open, the Windlight settings and Day Cycle editor floaters are now properly updated each time a @setenv_* command is issued.
+- Some code cleanup.
+
+
 2.07.03.05 (@versionnum = 2070305) by Henri Beauchamp:
 - changed: when deafened and RestrainedLoveShowEllipsis is FALSE, fully skip chat lines instead of displaying empty lines.
 
@@ -179,15 +187,15 @@ RELEASE NOTES :
 
 
 2.07.02.02 (@versionnum = 2070202) by Henri Beauchamp:
-- Fixed : a crash bug, introduced in v2.07.02.00, which occured when right-clicking immediately on a newly created/accepted/copied/moved object in the inventory.
-- Fixed : a crash bug when trying to teleport two or more friends at once.
+- Fixed: a crash bug, introduced in v2.07.02.00, which occured when right-clicking immediately on a newly created/accepted/copied/moved object in the inventory.
+- Fixed: a crash bug when trying to teleport two or more friends at once.
 
 
 2.07.02.01 (@versionnum = 2070201) by Henri Beauchamp (equivalent to Marine's v2.07.02.00):
 - Inclusion of Marine Kelley's change:
 	- changed : "Dummy names" ("a person", "this individual"...) are now scrambled every few hours when @shownames=n is in force. This allows even a close friend whose dummy name is well known to still be able to surprise you during roleplay. They are not scrambled at every relog though, to avoid confusing the user under crashy conditions.
 	- fixed : Copy/pasting items from/to a locked folder (a folder to which a lock or an exception to a lock has been issued). Renaming folders and moving objects from an unshared folder to another one is ok though.
-- Fixed : issues with *_sec variants and @permissive.
+- Fixed: issues with *_sec variants and @permissive.
 
 
 2.07.00.02 (@versionnum = 2070002) by Henri Beauchamp:

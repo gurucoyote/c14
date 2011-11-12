@@ -617,6 +617,18 @@
 			     mouse_opaque="true" name="Environment Editor" width="169">
 				<on_click function="World.EnvSettings" userdata="editor" />
 			</menu_item_call>
+			<menu_item_call bottom="-151" enabled="false" height="19" label="Day Cycle Editor" left="0"
+			     mouse_opaque="true" name="Advanced Sky" width="169">
+				<on_click function="World.EnvSettings" userdata="day" />
+			</menu_item_call>
+			<menu_item_call bottom="-151" enabled="false" height="19" label="Advanced Sky Editor" left="0"
+			     mouse_opaque="true" name="Advanced Sky" width="169">
+				<on_click function="World.EnvSettings" userdata="sky" />
+			</menu_item_call>
+			<menu_item_call bottom="-170" enabled="false" height="19" label="Advanced Water Editor" left="0"
+			     mouse_opaque="true" name="Advanced Water" width="169">
+				<on_click function="World.EnvSettings" userdata="water" />
+			</menu_item_call>
 		</menu>
 	</menu>
 	<menu bottom="-18" create_jump_keys="true" drop_shadow="true" enabled="true"

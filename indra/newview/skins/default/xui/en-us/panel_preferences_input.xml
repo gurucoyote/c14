@@ -30,6 +30,7 @@
 	 enabled="true" mouse_opaque="true" min_val=".5" max_val="3" increment=".025" show_text="false"
 	 bottom_delta="-20" left_delta="0" height="16" width="260" label_width="125" follows="left|top" />
 	<check_box name="camera_ignore_collisions" label="Do not move the camera out of objects on collision" control_name="CameraIgnoreCollisions"
+	 tool_tip="When the following-up position of the camera would cause the latter to collide with or enter an object, the camera is normally automatically 'pushed' towards the avatar till the surface of the colliding object is behind it. This may cause spurious zoom-in/zoom-out camera movements when colliding with transparent objects or with objects which bounding box is much larger than their actual, visible size (this is the case with many sculpties, for example). Checking this setting prevents the automatic move to happen, letting you the responsibility to zoom-in yourself (with the mouse scroll wheel, for example) and as you deem appropriate."
 	 radio_style="false" enabled="true" mouse_opaque="true" font="SansSerifSmall"
 	 bottom_delta="-20" left="130" height="16" width="370" follows="left|top" />
 	<check_box name="edit_camera_movement" label="Automatic Edit Camera Movement" control_name="EditCameraMovement"
@@ -39,6 +40,10 @@
 	<check_box name="edit_camera_movement" label="Automatic Appearance Camera Movement" control_name="AppearanceCameraMovement"
 	 radio_style="false" enabled="true" mouse_opaque="true" font="SansSerifSmall"
 	 tool_tip="Use automatic camera positioning while in avatar appearance edit mode"
+	 bottom_delta="-20" left_delta="0" height="16" width="370" follows="left|top" />
+	<check_box name="front_camera_on_sit" label="Automatically switch to front camera view on sitting" control_name="SitCameraFrontView"
+	 radio_style="false" enabled="true" mouse_opaque="true" font="SansSerifSmall"
+	 tool_tip="Automatically switch the camera to the front view when your avatar sits down on an object, and automatically disable the front view on standing up."
 	 bottom_delta="-20" left_delta="0" height="16" width="370" follows="left|top" />
 	<text name="keyboard_options" type="string" length="1" enabled="true" mouse_opaque="true"
 	 bg_visible="false" border_drop_shadow_visible="false" border_visible="false" drop_shadow_visible="true"

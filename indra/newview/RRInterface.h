@@ -4,10 +4,10 @@
  * @brief The header for all RLV features
  *
  * RLV Source Code
- * The source code in this file ("Source Code") is provided by Marine Kelley
+ * The source code in this file("Source Code") is provided by Marine Kelley
  * to you under the terms of the GNU General Public License, version 2.0
- * ("GPL"), unless you have obtained a separate licensing agreement
- * ("Other License"), formally executed by you and Marine Kelley.  Terms of
+ *("GPL"), unless you have obtained a separate licensing agreement
+ *("Other License"), formally executed by you and Marine Kelley.  Terms of
  * the GPL can be found in doc/GPL-license.txt in the distribution of the
  * original source of the Second Life Viewer, or online at 
  * http://secondlifegrid.net/programs/open_source/licensing/gplv2
@@ -26,8 +26,8 @@
 
 #define RR_VIEWER_NAME "RestrainedLife"
 #define RR_VIEWER_NAME_NEW "RestrainedLove"
-#define RR_VERSION_NUM "2070305"
-#define RR_VERSION "2.07.03.05"
+#define RR_VERSION_NUM "2070306"
+#define RR_VERSION "2.07.03.06"
 #define RR_SLV_VERSION "Cool VL Viewer v1.26.2"
 
 #define RR_PREFIX "@"
@@ -86,7 +86,7 @@ typedef struct AssetAndTarget {
 	std::string attachpt;
 } AssetAndTarget;
 
-// How to call @attach:outfit=force (useful for multi-attachments and multi-wearables
+// How to call @attach:outfit=force(useful for multi-attachments and multi-wearables
 typedef enum AttachHow {
 	AttachHow_replace			= 0, // default behavior
 	AttachHow_under				= 1, // unusued for now
@@ -98,7 +98,7 @@ typedef enum AttachHow {
 // Type of the lock of a folder
 typedef enum FolderLock {
 	FolderLock_unlocked					= 0, // not locked
-	FolderLock_locked_with_except		= 1, // locked but with exception (i.e. will be treated as unlocked)
+	FolderLock_locked_with_except		= 1, // locked but with exception(i.e. will be treated as unlocked)
 	FolderLock_locked_without_except	= 2, // locked without exception
 	FolderLock_count					= 3
 } FolderLock;
@@ -107,100 +107,100 @@ class RRInterface
 {
 public:
 	
-	RRInterface ();
-	~RRInterface ();
+	RRInterface();
+	~RRInterface();
 
 	void refreshTPflag(bool save);
-	std::string getVersion (); // returns "RestrainedLife Viewer blah blah"
-	std::string getVersion2 (); // returns "RestrainedLove Viewer blah blah"
-	BOOL isAllowed (LLUUID object_uuid, std::string action, BOOL log_it = TRUE);
-	BOOL contains (std::string action); // return TRUE if the action is contained
-	BOOL containsSubstr (std::string action);
-	BOOL containsWithoutException (std::string action, std::string except = ""); // return TRUE if the action or action+"_sec" is contained, and either there is no global exception, or there is no local exception if we found action+"_sec"
+	std::string getVersion(); // returns "RestrainedLife Viewer blah blah"
+	std::string getVersion2(); // returns "RestrainedLove Viewer blah blah"
+	BOOL isAllowed(LLUUID object_uuid, std::string action, BOOL log_it = TRUE);
+	BOOL contains(std::string action); // return TRUE if the action is contained
+	BOOL containsSubstr(std::string action);
+	BOOL containsWithoutException(std::string action, std::string except = ""); // return TRUE if the action or action+"_sec" is contained, and either there is no global exception, or there is no local exception if we found action+"_sec"
 	bool isFolderLocked(LLInventoryCategory* cat); // return true if cat has a lock specified for it or one of its parents, or not shared and @unshared is active
-	FolderLock isFolderLockedWithoutException (LLInventoryCategory* cat, std::string attach_or_detach); // attach_or_detach must be equal to either "attach" or "detach"
-	FolderLock isFolderLockedWithoutExceptionAux (LLInventoryCategory* cat, std::string attach_or_detach, std::deque<std::string> list_of_restrictions); // auxiliary function to isFolderLockedWithoutException
+	FolderLock isFolderLockedWithoutException(LLInventoryCategory* cat, std::string attach_or_detach); // attach_or_detach must be equal to either "attach" or "detach"
+	FolderLock isFolderLockedWithoutExceptionAux(LLInventoryCategory* cat, std::string attach_or_detach, std::deque<std::string> list_of_restrictions); // auxiliary function to isFolderLockedWithoutException
 
-	BOOL add (LLUUID object_uuid, std::string action, std::string option);
-	BOOL remove (LLUUID object_uuid, std::string action, std::string option);
-	BOOL clear (LLUUID object_uuid, std::string command="");
-	void replace (LLUUID what, LLUUID by);
-	BOOL garbageCollector (BOOL all=TRUE); // if false, don't clear rules attached to NULL_KEY as they are issued from external objects (only cleared when changing parcel)
-	std::deque<std::string> parse (std::string str, std::string sep); // utility function
-	void notify (LLUUID object_uuid, std::string action, std::string suffix); // scan the list of restrictions, when finding "notify" say the action on the specified channel
+	BOOL add(LLUUID object_uuid, std::string action, std::string option);
+	BOOL remove(LLUUID object_uuid, std::string action, std::string option);
+	BOOL clear(LLUUID object_uuid, std::string command="");
+	void replace(LLUUID what, LLUUID by);
+	BOOL garbageCollector(BOOL all=TRUE); // if false, don't clear rules attached to NULL_KEY as they are issued from external objects (only cleared when changing parcel)
+	std::deque<std::string> parse(std::string str, std::string sep); // utility function
+	void notify(LLUUID object_uuid, std::string action, std::string suffix); // scan the list of restrictions, when finding "notify" say the action on the specified channel
 
-	BOOL parseCommand (std::string command, std::string& behaviour, std::string& option, std::string& param);
-	BOOL handleCommand (LLUUID uuid, std::string command);
-	BOOL fireCommands (); // execute commands buffered while the viewer was initializing (mostly useful for force-sit as when the command is sent the object is not necessarily rezzed yet)
-	BOOL force (LLUUID object_uuid, std::string command, std::string option);
-	void removeWearableFromAvatar (EWearableType type);
+	BOOL parseCommand(std::string command, std::string& behaviour, std::string& option, std::string& param);
+	BOOL handleCommand(LLUUID uuid, std::string command);
+	BOOL fireCommands(); // execute commands buffered while the viewer was initializing (mostly useful for force-sit as when the command is sent the object is not necessarily rezzed yet)
+	BOOL force(LLUUID object_uuid, std::string command, std::string option);
+	void removeWearableFromAvatar(EWearableType type);
 
-	BOOL answerOnChat (std::string channel, std::string msg);
-	std::string crunchEmote (std::string msg, unsigned int truncateTo = 0);
+	BOOL answerOnChat(std::string channel, std::string msg);
+	std::string crunchEmote(std::string msg, U32 truncateTo = 0);
 
-	std::string getOutfitLayerAsString (EWearableType layer);
-	EWearableType getOutfitLayerAsType (std::string layer);
-	std::string getOutfit (std::string layer);
-	std::string getAttachments (std::string attachpt);
+	std::string getOutfitLayerAsString(EWearableType layer);
+	EWearableType getOutfitLayerAsType(std::string layer);
+	std::string getOutfit(std::string layer);
+	std::string getAttachments(std::string attachpt);
 
-	std::string getStatus (LLUUID object_uuid, std::string rule); // if object_uuid is null, return all
-	BOOL forceDetach (std::string attachpt);
-	BOOL forceDetachByUuid (std::string object_uuid);
+	std::string getStatus(LLUUID object_uuid, std::string rule); // if object_uuid is null, return all
+	BOOL forceDetach(std::string attachpt);
+	BOOL forceDetachByUuid(std::string object_uuid);
 
-	BOOL hasLockedHuds ();
-	std::deque<LLInventoryItem*> getListOfLockedItems (LLInventoryCategory* root);
-	std::deque<std::string> getListOfRestrictions (LLUUID object_uuid, std::string rule = "");
-	std::string getInventoryList (std::string path, BOOL withWornInfo = FALSE);
-	std::string getWornItems (LLInventoryCategory* cat);
-	LLInventoryCategory* getRlvShare (); // return pointer to #RLV folder or null if does not exist
-	BOOL isUnderRlvShare (LLInventoryItem* item);
-	BOOL isUnderRlvShare (LLInventoryCategory* cat);
-	BOOL isUnderFolder (LLInventoryCategory* cat_parent, LLInventoryCategory* cat_child); // true if cat_child is a child of cat_parent
-//	void renameAttachment (LLInventoryItem* item, LLViewerJointAttachment* attachment); // DEPRECATED
-	LLInventoryCategory* getCategoryUnderRlvShare (std::string catName, LLInventoryCategory* root = NULL);
-	LLInventoryCategory* findCategoryUnderRlvShare (std::string catName, LLInventoryCategory* root = NULL);
-	std::string findAttachmentNameFromPoint (LLViewerJointAttachment* attachpt);
+	BOOL hasLockedHuds();
+	std::deque<LLInventoryItem*> getListOfLockedItems(LLInventoryCategory* root);
+	std::deque<std::string> getListOfRestrictions(LLUUID object_uuid, std::string rule = "");
+	std::string getInventoryList(std::string path, BOOL withWornInfo = FALSE);
+	std::string getWornItems(LLInventoryCategory* cat);
+	LLInventoryCategory* getRlvShare(); // return pointer to #RLV folder or null if does not exist
+	BOOL isUnderRlvShare(LLInventoryItem* item);
+	BOOL isUnderRlvShare(LLInventoryCategory* cat);
+	BOOL isUnderFolder(LLInventoryCategory* cat_parent, LLInventoryCategory* cat_child); // true if cat_child is a child of cat_parent
+//	void renameAttachment(LLInventoryItem* item, LLViewerJointAttachment* attachment); // DEPRECATED
+	LLInventoryCategory* getCategoryUnderRlvShare(std::string catName, LLInventoryCategory* root = NULL);
+	LLInventoryCategory* findCategoryUnderRlvShare(std::string catName, LLInventoryCategory* root = NULL);
+	std::string findAttachmentNameFromPoint(LLViewerJointAttachment* attachpt);
 	LLViewerJointAttachment* findAttachmentPointFromName(std::string objectName, bool exactName = false);
-	LLViewerJointAttachment* findAttachmentPointFromParentName (LLInventoryItem* item);
-	S32 findAttachmentPointNumber (LLViewerJointAttachment* attachment);
+	LLViewerJointAttachment* findAttachmentPointFromParentName(LLInventoryItem* item);
+	S32 findAttachmentPointNumber(LLViewerJointAttachment* attachment);
 	void detachObject(LLViewerObject* object);
 	void detachAllObjectsFromAttachment(LLViewerJointAttachment* attachment);
 	bool canDetachAllObjectsFromAttachment(LLViewerJointAttachment* attachment, BOOL handle_nostrip = TRUE);
-	void fetchInventory (LLInventoryCategory* root = NULL);
+	void fetchInventory(LLInventoryCategory* root = NULL);
 
-	BOOL forceAttach (std::string category, BOOL recursive, AttachHow how);
-	BOOL forceDetachByName (std::string category, BOOL recursive, BOOL handle_nostrip);
+	BOOL forceAttach(std::string category, BOOL recursive, AttachHow how);
+	BOOL forceDetachByName(std::string category, BOOL recursive, BOOL handle_nostrip);
 
 	BOOL getAllowCancelTp() { return mAllowCancelTp; }
 	void setAllowCancelTp(BOOL newval) { mAllowCancelTp = newval; }
 
-	std::string getParcelName () { return mParcelName; }
-	void setParcelName (std::string newval) { mParcelName = newval; }
+	std::string getParcelName() { return mParcelName; }
+	void setParcelName(std::string newval) { mParcelName = newval; }
 
-	BOOL forceTeleport (std::string location);
+	BOOL forceTeleport(std::string location);
 
-	std::string stringReplace (std::string s, std::string what, std::string by, BOOL caseSensitive = FALSE);
+	std::string stringReplace(std::string s, std::string what, std::string by, BOOL caseSensitive = FALSE);
 
-	std::string getDummyName (std::string name, EChatAudible audible = CHAT_AUDIBLE_FULLY); // return "someone", "unknown" etc according to the length of the name (when shownames is on)
-	std::string getCensoredMessage (std::string str); // replace names by dummy names
+	std::string getDummyName(std::string name, EChatAudible audible = CHAT_AUDIBLE_FULLY); // return "someone", "unknown" etc according to the length of the name(when shownames is on)
+	std::string getCensoredMessage(std::string str); // replace names by dummy names
 
-	LLUUID getSitTargetId () { return mSitTargetId; }
-	void setSitTargetId (LLUUID newval) { mSitTargetId = newval; }
+	LLUUID getSitTargetId() { return mSitTargetId; }
+	void setSitTargetId(LLUUID newval) { mSitTargetId = newval; }
 
-	BOOL forceEnvironment (std::string command, std::string option); // command is "setenv_<something>", option is a list of floats (separated by "/")
-	std::string getEnvironment (std::string command); // command is "getenv_<something>"
+	BOOL forceEnvironment(std::string command, std::string option); // command is "setenv_<something>", option is a list of floats(separated by "/")
+	std::string getEnvironment(std::string command); // command is "getenv_<something>"
 	
-	std::string getLastLoadedPreset () { return mLastLoadedPreset; }
-	void setLastLoadedPreset (std::string newval) { mLastLoadedPreset = newval; }
+	std::string getLastLoadedPreset() { return mLastLoadedPreset; }
+	void setLastLoadedPreset(std::string newval) { mLastLoadedPreset = newval; }
 
-	BOOL forceDebugSetting (std::string command, std::string option); // command is "setdebug_<something>", option is a list of values (separated by "/")
-	std::string getDebugSetting (std::string command); // command is "getdebug_<something>"
+	BOOL forceDebugSetting(std::string command, std::string option); // command is "setdebug_<something>", option is a list of values(separated by "/")
+	std::string getDebugSetting(std::string command); // command is "getdebug_<something>"
 
-	std::string getFullPath (LLInventoryCategory* cat);
-	std::string getFullPath (LLInventoryItem* item, std::string option = "", bool full_list = true);
-	LLInventoryItem* getItemAux (LLViewerObject* attached_object, LLInventoryCategory* root);
-	LLInventoryItem* getItem (LLUUID wornObjectUuidInWorld);
-	void attachObjectByUUID (LLUUID assetUUID, int attachPtNumber = 0);
+	std::string getFullPath(LLInventoryCategory* cat);
+	std::string getFullPath(LLInventoryItem* item, std::string option = "", bool full_list = true);
+	LLInventoryItem* getItemAux(LLViewerObject* attached_object, LLInventoryCategory* root);
+	LLInventoryItem* getItem(LLUUID wornObjectUuidInWorld);
+	void attachObjectByUUID(LLUUID assetUUID, S32 attachPtNumber = 0);
 
 	bool canDetachAllSelectedObjects();
 	bool isSittingOnAnySelectedObject();
@@ -251,7 +251,7 @@ public:
 	static std::string sRecvimMessage; // message to replace an incoming IM, when under recvim
 	static std::string sSendimMessage; // message to replace an outgoing IM, when under sendim
 
-	// Allowed debug settings (initialized in the ctor)
+	// Allowed debug settings(initialized in the ctor)
 	std::string mAllowedU32;
 	std::string mAllowedS32;
 	std::string mAllowedF32;

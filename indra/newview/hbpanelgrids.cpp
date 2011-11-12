@@ -261,44 +261,12 @@ void HBPanelGridsImpl::draw()
 {
 	if (mIsDirty)
 	{
-		// Enable/disable the various UI elements as appropriate
-		bool uri_ok = !childGetValue("login_uri_editor").asString().empty();
-		bool name_ok = !childGetValue("grid_name_editor").asString().empty();
-		if (!name_ok)
-		{
-			mGridsScrollList->deselectAllItems();
-		}
-		bool grid_ok = !mIsDirtyList && mGridsScrollList->getFirstSelected() != NULL;
-		if (grid_ok)
-		{
-			grid_ok = mGridsScrollList->getValue().asString().find("@@|") == std::string::npos;
-		}
-		childSetEnabled("update_button", !mQueryActive && uri_ok && name_ok);
-		childSetEnabled("delete_button", !mQueryActive && grid_ok);
-		childSetEnabled("add_button", !mQueryActive && uri_ok && name_ok);
-		childSetEnabled("get_param_button", !mQueryActive && uri_ok);
-		childSetEnabled("clear_param_button", !mQueryActive);
-
-		childSetVisible("retreiving", mQueryActive);
-		if (mQueryActive)
-		{
-			childSetVisible("domain", false);
-		}
-		else if (!mGridDomain.empty())
-		{
-			LLTextBox* domain_text = getChild<LLTextBox>("domain");
-			domain_text->setTextArg("[DOMAIN]", mGridDomain);
-			domain_text->setVisible(true);
-		}
-		else
-		{
-			childSetVisible("domain", false);
-		}
-
 		// Grids list
 		if (mIsDirtyList)
 		{
+			S32 old_count = mGridsScrollList->getItemCount();
 			S32 scrollpos = mGridsScrollList->getScrollPos();
+			S32 selected = mGridsScrollList->getFirstSelectedIndex();
 			mGridsScrollList->deleteAllItems();
 
 			for (LLSD::map_iterator grid_itr = sGridsList.beginMap();
@@ -330,10 +298,64 @@ void HBPanelGridsImpl::draw()
 				}
 			}
 
+			S32 new_count = mGridsScrollList->getItemCount();
+			if (old_count > new_count)
+			{
+				// A grid was just deleted
+				if (selected > 0)
+				{
+					scrollpos = --selected;
+				}
+				else
+				{
+					scrollpos = selected = 0;
+				}
+			}
+			else if (old_count < new_count &&
+					 old_count > 0) // count == 0 when first initializing the list
+			{
+				// An item was just added. Let's select it and scroll to it.
+				selected = scrollpos = new_count - 1;
+			}
 			mGridsScrollList->setScrollPos(scrollpos);
+			if (selected >= 0)
+			{
+				mGridsScrollList->selectNthItem(selected);
+			}
 			mIsDirtyList = false;
 		}
 		mGridsScrollList->setEnabled(!mQueryActive);
+
+		// Enable/disable the various UI elements as appropriate
+
+		bool uri_ok = !childGetValue("login_uri_editor").asString().empty();
+		bool name_ok = !childGetValue("grid_name_editor").asString().empty();
+		bool grid_ok = !mIsDirtyList && mGridsScrollList->getFirstSelected() != NULL;
+		childSetEnabled("update_button", !mQueryActive && uri_ok && name_ok && grid_ok);
+		if (grid_ok)
+		{
+			grid_ok = mGridsScrollList->getValue().asString().find("@@|") == std::string::npos;
+		}
+		childSetEnabled("delete_button", !mQueryActive && grid_ok);
+		childSetEnabled("add_button", !mQueryActive && uri_ok && name_ok);
+		childSetEnabled("get_param_button", !mQueryActive && uri_ok);
+		childSetEnabled("clear_param_button", !mQueryActive);
+
+		childSetVisible("retreiving", mQueryActive);
+		if (mQueryActive)
+		{
+			childSetVisible("domain", false);
+		}
+		else if (!mGridDomain.empty())
+		{
+			LLTextBox* domain_text = getChild<LLTextBox>("domain");
+			domain_text->setTextArg("[DOMAIN]", mGridDomain);
+			domain_text->setVisible(true);
+		}
+		else
+		{
+			childSetVisible("domain", false);
+		}
 
 		// Updates done
 		mIsDirty = false;
@@ -620,6 +642,7 @@ void HBPanelGridsImpl::deleteGrid()
 		// No such grid: just delete it
 		i = vl->gridIndexInList(sGridsList, mGridDomain);
 		sGridsList["grids"].erase(i);
+		mGridDomain.clear();
 	}
 	else
 	{

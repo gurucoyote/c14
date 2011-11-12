@@ -1650,6 +1650,17 @@
       <key>Value</key>
       <real>0</real>
     </map>
+    <key>SitCameraFrontView</key>
+    <map>
+      <key>Comment</key>
+      <string>TRUE to automatically switch the agent camera to front view when sitting down</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <real>0</real>
+    </map>
     <key>CameraPositionSmoothing</key>
     <map>
       <key>Comment</key>

@@ -1490,7 +1490,14 @@ const LLVector3 LLVOAvatar::getRenderPosition() const
 	}
 	else
 	{
-		return getPosition() * mDrawable->getParent()->getRenderMatrix();
+		if (mDrawable->getParent())
+		{
+			return getPosition() * mDrawable->getParent()->getRenderMatrix();
+		}
+		else
+		{
+			return getPositionAgent();
+		}
 	}
 }
 
@@ -6846,6 +6853,10 @@ void LLVOAvatar::sitOnObject(LLViewerObject *sit_object)
 		gAgent.setThirdPersonHeadOffset(LLVector3::zero);
 		//interpolate to new camera position
 		gAgent.startCameraAnimation();
+		if (gSavedSettings.getBOOL("SitCameraFrontView"))
+		{
+			gSavedSettings.setBOOL("CameraFrontView", TRUE);
+		}
 		// make sure we are not trying to autopilot
 		gAgent.stopAutoPilot();
 		gAgent.setupSitCamera();
@@ -6919,6 +6930,11 @@ void LLVOAvatar::getOffObject()
 		//reset orientation
 //		mRoot.setRotation(avWorldRot);
 		gAgent.setThirdPersonHeadOffset(LLVector3(0.f, 0.f, 1.f));
+
+		if (gSavedSettings.getBOOL("SitCameraFrontView"))
+		{
+			gSavedSettings.setBOOL("CameraFrontView", FALSE);
+		}
 
 		gAgent.setSitCamera(LLUUID::null);
 
