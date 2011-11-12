@@ -1,10 +1,11 @@
 /** 
- * @file llversionviewer.h
- * @brief
+ * @file hbpanelgrids.h
+ * @author Henri Beauchamp
+ * @brief Grid parameters configuration panel
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2011&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2011, Henri Beauchamp.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +31,26 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#ifndef LL_HBPANELGRIDS_H
+#define LL_HBPANELGRIDS_H
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 2;
-const S32 LL_VERSION_BUILD = 2;
+#include "llpanel.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+class HBPanelGridsImpl;
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
+class HBPanelGrids : public LLPanel
+{
+public:
+	HBPanelGrids();
+	/*virtual*/ ~HBPanelGrids();
+
+	void apply();
+	void cancel();
+
+	LLPanel* getPanel();
+
+private:
+	HBPanelGridsImpl& impl;
+};
 
 #endif

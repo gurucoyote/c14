@@ -56,6 +56,8 @@ public:
 	virtual void draw();
 	virtual void setFocus( BOOL b );
 
+	static LLPanelLogin* getInstance() { return sInstance; }
+
 	static void show(const LLRect &rect, BOOL show_server, 
 		void (*callback)(S32 option, void* user_data), 
 		void* callback_data);
@@ -78,6 +80,7 @@ public:
 	 */
 	static void setFields(const LLSavedLoginEntry& entry, bool takeFocus = true);
 
+	static void clearServers();
 	static void addServer(const std::string& server, S32 domain_name);
 	static void refreshLocation( bool force_visible );
 

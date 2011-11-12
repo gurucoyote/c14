@@ -53,6 +53,7 @@
 #include "llfloaterhardwaresettings.h"
 #include "llpanelaudioprefs.h"
 #include "llpaneldisplay.h"
+#include "hbpanelgrids.h"
 #include "llpanellogin.h"
 #include "llpanelLCD.h"
 #include "llpanelskins.h"
@@ -179,6 +180,12 @@ LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container,
 							   FALSE, onTabChanged, mTabContainer);
 	mPrefsCool->getPanel()->setDefaultBtn(default_btn);
 
+	mPrefsGrids = new HBPanelGrids();
+	mTabContainer->addTabPanel(mPrefsGrids->getPanel(),
+							   mPrefsGrids->getPanel()->getLabel(),
+							   FALSE, onTabChanged, mTabContainer);
+	mPrefsGrids->getPanel()->setDefaultBtn(default_btn);
+
 	if (!mTabContainer->selectTab(gSavedSettings.getS32("LastPrefTab")))
 	{
 		mTabContainer->selectFirstTab();
@@ -237,6 +244,11 @@ LLPreferenceCore::~LLPreferenceCore()
 		delete mPrefsCool;
 		mPrefsCool = NULL;
 	}
+	if (mPrefsGrids)
+	{
+		delete mPrefsGrids;
+		mPrefsGrids = NULL;
+	}
 }
 
 void LLPreferenceCore::apply()
@@ -252,6 +264,7 @@ void LLPreferenceCore::apply()
 	mPrefsNotifications->apply();
 	mSkinsPanel->apply();
 	mPrefsCool->apply();
+	mPrefsGrids->apply();
 
 	// hardware menu apply
 	LLFloaterHardwareSettings::instance()->apply();
@@ -278,6 +291,7 @@ void LLPreferenceCore::cancel()
 	mPrefsNotifications->cancel();
 	mSkinsPanel->cancel();
 	mPrefsCool->cancel();
+	mPrefsGrids->cancel();
 
 	// cancel hardware menu
 	LLFloaterHardwareSettings::instance()->cancel();

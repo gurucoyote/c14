@@ -34,12 +34,10 @@
 #ifndef LL_LLVIEWERNETWORK_H
 #define LL_LLVIEWERNETWORK_H
 
-#define DYNAMIC_GRIDS
-
 class LLHost;
 class LLSD;
 
-#define EGridInfo int
+#define EGridInfo S32
 
 /**
  * @brief A class to manage the viewer's login state.
@@ -59,7 +57,7 @@ public:
 	* @brief Get the enumeration of the grid choice.
 	* Should only return values > 0 && <= GRID_INFO_OTHER
 	**/
-	EGridInfo getGridChoice() const { return mGridChoice; }
+	EGridInfo getGridChoice() const				{ return mGridChoice; }
 
 	/**
 	* @brief Get a readable label for the grid choice.
@@ -74,23 +72,41 @@ public:
 	const std::string getStaticGridHelperURI(const EGridInfo grid) const;
 
 	const std::string getCurrentGridURI();
-	std::string getCurrentGridIP();
+	const std::string getCurrentGridIP();
 	bool tryNextURI();
 
 	const std::vector<std::string>& getCommandLineURIs();
 	const std::vector<std::string>& getGridURIs();
+
 	const std::string getHelperURI() const;
 	void setHelperURI(const std::string& uri);
+
 	const std::string getLoginPageURI() const;
 	void setLoginPageURI(const std::string& uri);
-	void setNameEditted(bool value) { mNameEditted = value; }
+
+	const std::string getWebsiteURL() const		{ return mWebsiteURL; }
+	const std::string getSupportURL() const		{ return mSupportURL; }
+	const std::string getAccountURL() const		{ return mAccountURL; }
+	const std::string getPasswordURL() const	{ return mPasswordURL; }
+
+	void setNameEditted(bool value)				{ mNameEditted = value; }
+	bool nameEditted(void) const				{ return mNameEditted; }
 
 	bool isInProductionGrid();
-	bool nameEditted(void) const { return mNameEditted; }
 
 	void setMenuColor() const;
 
-	void loadGridsLLSD(std::string filename);
+	void loadGridsList();
+	const EGridInfo gridIndexInList(LLSD& grids,
+									std::string name,
+									std::string label = "");
+	void loadGridsLLSD(LLSD& grids,
+					   std::string filename,
+					   bool can_edit = false);
+
+	LLSD getGridsList()							{ return mGridList; }
+
+	const static std::string getDomain(const std::string& url);
 
 private:
 	void parseCommandLineURIs();
@@ -100,11 +116,16 @@ private:
 	std::string mGridName;
 	std::string mHelperURI;
 	std::string mLoginPageURI;
+	std::string mWebsiteURL;
+	std::string mSupportURL;
+	std::string mAccountURL;
+	std::string mPasswordURL;
 	std::vector<std::string> mCommandLineURIs;
 	std::vector<std::string> mGridURIs;
 
-	int mCurrentURI;	// Index into mGridURIs.
+	S32 mCurrentURI;	// Index into mGridURIs.
 	bool mNameEditted;	// Set if the user edits/sets the First or Last name field.
+	bool mVerbose;
 };
 
 const EGridInfo DEFAULT_GRID_CHOICE = 1;

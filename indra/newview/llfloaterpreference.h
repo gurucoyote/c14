@@ -45,6 +45,7 @@
 class LLMessageSystem;
 class LLPanelAudioPrefs;
 class LLPanelDisplay;
+class HBPanelGrids;
 class LLPanelLCD;
 class LLPrefsNetwork;
 class LLPanelSkins;
@@ -90,6 +91,7 @@ private:
 	LLPrefsInput			*mPrefsInput;
 	LLPrefsNotifications	*mPrefsNotifications;
 	HBPrefsCool				*mPrefsCool;
+	HBPanelGrids			*mPrefsGrids;
 };
 
 // Floater to control preferences (display, audio, bandwidth, general.

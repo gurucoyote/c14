@@ -122,6 +122,8 @@ public:
 
 	static bool startLLProxy(); // Initialize the SOCKS 5 proxy
 
+	static void refreshLoginPanel();
+
 private:
 	static std::string startupStateToString(EStartupState state);
 	static EStartupState gStartupState; // Do not set directly, use LLStartup::setStartupState

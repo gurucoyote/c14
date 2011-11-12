@@ -1,10 +1,10 @@
 /** 
- * @file llversionviewer.h
- * @brief
+ * @file llpanelweb.h
+ * @brief Web browser preferences panel
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2005&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2005-2009, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,28 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#ifndef LL_LLPANELWEB_H
+#define LL_LLPANELWEB_H
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 2;
-const S32 LL_VERSION_BUILD = 2;
+#include "llpanel.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+class LLPanelWeb : public LLPanel
+{
+public:
+	LLPanelWeb();
+	~LLPanelWeb();
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
+	BOOL postBuild();
+
+	void apply();
+	void cancel();
+
+private:
+	static void onClickClearCache(void*);
+	static void onClickClearCookies(void*);
+	static bool callback_clear_browser_cache(const LLSD& notification, const LLSD& response);
+	static bool callback_clear_cookies(const LLSD& notification, const LLSD& response);
+	static void onCommitWebProxyEnabled(LLUICtrl* ctrl, void* data);
+};
 
 #endif

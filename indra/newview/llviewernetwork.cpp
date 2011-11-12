@@ -38,7 +38,10 @@
 #include "llhost.h"
 #include "llsd.h"
 #include "llsdserialize.h"
+#include "llsecondlifeurls.h"
+#include "llstring.h"
 
+#include "llstartup.h"
 #include "llviewercontrol.h"
 #include "llviewermenu.h"
 
@@ -46,11 +49,26 @@ unsigned char gMACAddress[MAC_ADDRESS_BYTES];		/* Flawfinder: ignore */
 
 EGridInfo GRID_INFO_OTHER;
 
-LLViewerLogin::LLViewerLogin() :
-	mGridChoice(DEFAULT_GRID_CHOICE),
+LLViewerLogin::LLViewerLogin()
+:	mGridChoice(DEFAULT_GRID_CHOICE),
 	mCurrentURI(0),
 	mNameEditted(false)
 {
+	loadGridsList();
+	parseCommandLineURIs();
+}
+
+void LLViewerLogin::loadGridsList()
+{
+	if (LLStartUp::getStartupState() == STATE_STARTED)
+	{
+		// Never change the grids list once started, else bad things will
+		// happen because the grid choice is done on an index in the list...
+		return;
+	}
+
+	mGridList.clear();
+
 	LLSD array = mGridList.emptyArray();
 	LLSD entry = mGridList.emptyMap();
 	entry.insert("label", "None");
@@ -58,43 +76,119 @@ LLViewerLogin::LLViewerLogin() :
 	entry.insert("login_uri", "");
 	entry.insert("helper_uri", "");
 	entry.insert("login_page", "");
+	entry.insert("can_edit", "never");
 	array.append(entry);
+
 	// Add SecondLife servers (main and beta grid):
+
+	std::string login_page;
+	if (gSavedSettings.getBOOL("UseNewSLLoginPage"))
+	{
+		login_page = gSavedSettings.getString("NewSLLoginPage");
+	}
+	if (login_page.empty())
+	{
+		login_page = SL_LOGIN_PAGE_URL;
+	}
+
 	entry = mGridList.emptyMap();
 	entry.insert("label", "SecondLife");
-	entry.insert("name", "util.agni.lindenlab.com");
-	entry.insert("login_uri", "https://login.agni.lindenlab.com/cgi-bin/login.cgi");
-	entry.insert("helper_uri", "https://secondlife.com/helpers/");
-	entry.insert("login_page", "http://secondlife.com/app/login/");
+	entry.insert("name", "agni.lindenlab.com");
+	entry.insert("login_uri", AGNI_LOGIN_URI);
+	entry.insert("helper_uri", AGNI_HELPER_URI);
+	entry.insert("support_url", SUPPORT_URL);
+	entry.insert("register_url", CREATE_ACCOUNT_URL);
+	entry.insert("password_url", FORGOTTEN_PASSWORD_URL);
+	entry.insert("login_page", login_page);
+	entry.insert("can_edit", "never");
 	array.append(entry);
+
 	entry = mGridList.emptyMap();
 	entry.insert("label", "SecondLife Beta");
-	entry.insert("name", "util.aditi.lindenlab.com");
-	entry.insert("login_uri", "https://login.aditi.lindenlab.com/cgi-bin/login.cgi");
-	entry.insert("helper_uri", "http://aditi-secondlife.webdev.lindenlab.com/helpers/");
-	entry.insert("login_page", "http://secondlife.com/app/login/");
+	entry.insert("name", "aditi.lindenlab.com");
+	entry.insert("login_uri", ADITI_LOGIN_URI);
+	entry.insert("helper_uri", ADITI_HELPER_URI);
+	entry.insert("support_url", SUPPORT_URL);
+	entry.insert("register_url", CREATE_ACCOUNT_URL);
+	entry.insert("password_url", FORGOTTEN_PASSWORD_URL);
+	entry.insert("login_page", login_page);
+	entry.insert("can_edit", "never");
 	array.append(entry);
 
 	mGridList.insert("grids", array);
 
-	// load the alternate grids if available
-	loadGridsLLSD(gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "grids.xml"));
+	mVerbose = true;
 	// see if we have a grids_custom.xml file to append
-	loadGridsLLSD(gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "grids_custom.xml"));
+	loadGridsLLSD(mGridList,
+				  gDirUtilp->getExpandedFilename(LL_PATH_USER_SETTINGS,
+												 "grids_custom.xml"),
+				  true);
+	// load the additional grids if available
+	loadGridsLLSD(mGridList,
+				  gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS,
+												 "grids.xml"));
+	mVerbose = false;
 
 	entry = mGridList.emptyMap();
 	entry.insert("label", "Other");
 	entry.insert("name", "");
 	entry.insert("login_uri", "");
 	entry.insert("helper_uri", "");
+	entry.insert("can_edit", "never");
 	mGridList["grids"].append(entry);
 
-	GRID_INFO_OTHER = (EGridInfo)mGridList.get("grids").size() - 1;
-
-	parseCommandLineURIs();
+	GRID_INFO_OTHER = (EGridInfo)mGridList["grids"].size() - 1;
 }
 
-void LLViewerLogin::loadGridsLLSD(std::string xml_filename)
+const EGridInfo LLViewerLogin::gridIndexInList(LLSD& grids,
+											   std::string name,
+											   std::string label)
+{
+	bool has_name = !name.empty();
+	bool has_label = !label.empty();
+
+	if (!has_name && !has_label) return -1;
+
+	LLStringUtil::toLower(name);
+	LLStringUtil::toLower(label);
+
+	for (LLSD::map_iterator grid_itr = grids.beginMap();
+		 grid_itr != grids.endMap(); grid_itr++)
+	{
+		LLSD::String key_name = grid_itr->first;
+		LLSD grid_array = grid_itr->second;
+		if (key_name == "grids" && grid_array.isArray())
+		{
+			std::string temp;
+			for (S32 i = 0; i < grid_array.size(); i++)
+			{
+				if (has_name)
+				{
+					temp = grid_array[i]["name"].asString();
+					LLStringUtil::toLower(temp);
+					if (temp == name)
+					{
+						return i;
+					}
+				}
+				if (has_label)
+				{
+					temp = grid_array[i]["label"].asString();
+					LLStringUtil::toLower(temp);
+					if (temp == label)
+					{
+						return i;
+					}
+				}
+			}
+		}
+	}
+	return -1;
+}
+
+void LLViewerLogin::loadGridsLLSD(LLSD& grids,
+								  std::string xml_filename,
+								  bool can_edit)
 {
 	LLSD other_grids;
 	llifstream llsd_xml;
@@ -102,45 +196,72 @@ void LLViewerLogin::loadGridsLLSD(std::string xml_filename)
 
 	if (llsd_xml.is_open())
 	{
-		llinfos << "Reading grid info: " << xml_filename << llendl;
+		if (mVerbose)
+		{
+			llinfos << "Reading grid info: " << xml_filename << llendl;
+		}
 		LLSDSerialize::fromXML(other_grids, llsd_xml);
 		for (LLSD::map_iterator grid_itr = other_grids.beginMap(); 
 			 grid_itr != other_grids.endMap(); grid_itr++)
 		{
 			LLSD::String key_name = grid_itr->first;
 			LLSD grid_array = grid_itr->second;
-			llinfos << "reading: " << key_name << llendl;
-			if (grid_array.isArray())
+			if (mVerbose)
 			{
-				for (int i = 0; i < grid_array.size(); i++)
+				llinfos << "reading: " << key_name << llendl;
+			}
+			if (key_name == "grids" && grid_array.isArray())
+			{
+				for (S32 i = 0; i < grid_array.size(); i++)
 				{
 					LLSD gmap = grid_array[i];
 					if (gmap.has("name") && gmap.has("label") && 
 						gmap.has("login_uri") && gmap.has("helper_uri"))
 					{
-						mGridList["grids"].append(gmap);
-						llinfos << "Added grid: " << gmap.get("name") << llendl;
-					}
-					else
-					{
-						if (gmap.has("name"))
+						if (gridIndexInList(grids, gmap["name"].asString(),
+											gmap["label"].asString()) != -1)
 						{
-							llwarns << "Incomplete grid definition: " << gmap.get("name") << llendl;													
+							if (mVerbose)
+							{
+								llinfos << "Skipping overridden grid parameters for: "
+										<< gmap.get("name") << llendl;
+							}
 						}
 						else
 						{
-							llwarns << "Incomplete grid definition: no name specified" << llendl;					
+							gmap.insert("can_edit", can_edit ? "true" : "false");
+							grids["grids"].append(gmap);
+							if (mVerbose)
+							{
+								llinfos << "Added grid: " << gmap.get("name") << llendl;
+							}
+						}
+					}
+					else
+					{
+						if (mVerbose)
+						{
+							if (gmap.has("name"))
+							{
+								llwarns << "Incomplete grid definition for: "
+										<< gmap.get("name") << llendl;
+							}
+							else
+							{
+								llwarns << "Incomplete grid definition: no name specified"
+										<< llendl;
+							}
 						}
 					}
 				}
 			}
-			else
+			else if (mVerbose)
 			{
-				llwarns << "\"grids\" is not an array" << llendl;										
+				llwarns << "\"" << key_name << "\" is not an array" << llendl;
 			}
 		}
 		llsd_xml.close();
-	}	
+	}
 }
 
 void LLViewerLogin::setMenuColor() const
@@ -152,13 +273,13 @@ void LLViewerLogin::setMenuColor() const
 		LLColor4::parseColor(colorName.c_str(), &color4);
 		if (color4 != LLColor4::black)
 		{
-			gMenuBarView->setBackgroundColor(color4);			
+			gMenuBarView->setBackgroundColor(color4);
 		}
 	}
 }
 
 void LLViewerLogin::setGridChoice(EGridInfo grid)
-{	
+{
 	if (grid < 0 || grid > GRID_INFO_OTHER)
 	{
 		llwarns << "Invalid grid index specified." << llendl;
@@ -166,23 +287,25 @@ void LLViewerLogin::setGridChoice(EGridInfo grid)
 	}
 
 	mGridChoice = grid;
-	std::string name = mGridList.get("grids")[grid].get("label").asString();
+	std::string name = mGridList["grids"][grid].get("label").asString();
 	LLStringUtil::toLower(name);
-	if (name.find("local") == 0)
-	{
-		mGridName = LOOPBACK_ADDRESS_STRING;
-	}
-	else if (name == "other")
+	if (name == "other")
 	{
 		// *FIX: Mani - could this possibly be valid?
 		mGridName = "other";
+		setHelperURI("");
+		setLoginPageURI("");
 	}
 	else
 	{
-		mGridName = mGridList.get("grids")[grid].get("label").asString();
-		setGridURI(mGridList.get("grids")[grid].get("login_uri").asString());
-		setHelperURI(mGridList.get("grids")[grid].get("helper_uri").asString());
-		setLoginPageURI(mGridList.get("grids")[grid].get("login_page").asString());
+		mGridName = mGridList["grids"][grid].get("label").asString();
+		setGridURI(mGridList["grids"][grid].get("login_uri").asString());
+		setHelperURI(mGridList["grids"][grid].get("helper_uri").asString());
+		setLoginPageURI(mGridList["grids"][grid].get("login_page").asString());
+		mWebsiteURL = mGridList["grids"][grid].get("website_url").asString();
+		mSupportURL = mGridList["grids"][grid].get("support_url").asString();
+		mAccountURL = mGridList["grids"][grid].get("register_url").asString();
+		mPasswordURL = mGridList["grids"][grid].get("password_url").asString();
 	}
 
 	gSavedSettings.setS32("ServerChoice", mGridChoice);
@@ -237,11 +360,11 @@ void LLViewerLogin::setGridURIs(const std::vector<std::string>& urilist)
 
 std::string LLViewerLogin::getGridLabel()
 {
-	if(mGridChoice == GRID_INFO_NONE)
+	if (mGridChoice == GRID_INFO_NONE)
 	{
 		return "None";
 	}
-	else if(mGridChoice < GRID_INFO_OTHER)
+	else if (mGridChoice < GRID_INFO_OTHER)
 	{
 		return mGridList["grids"][mGridChoice].get("label").asString();
 	}
@@ -259,9 +382,9 @@ std::string LLViewerLogin::getKnownGridLabel(EGridInfo grid) const
 {
 	if (grid > GRID_INFO_NONE && grid < GRID_INFO_OTHER)
 	{
-		return mGridList.get("grids")[grid].get("label").asString();
+		return mGridList["grids"][grid].get("label").asString();
 	}
-	return mGridList.get("grids")[GRID_INFO_NONE].get("label").asString();
+	return mGridList["grids"][GRID_INFO_NONE].get("label").asString();
 }
 
 const std::vector<std::string>& LLViewerLogin::getCommandLineURIs()
@@ -278,19 +401,19 @@ void LLViewerLogin::parseCommandLineURIs()
 {
 	// return the login uri set on the command line.
 	LLControlVariable* c = gSavedSettings.getControl("CmdLineLoginURI");
-	if(c)
+	if (c)
 	{
 		LLSD v = c->getValue();
 		if (!v.isUndefined())
 		{
 			bool foundRealURI = false;
-			if(v.isArray())
+			if (v.isArray())
 			{
-				for(LLSD::array_const_iterator itr = v.beginArray();
-					itr != v.endArray(); ++itr)
+				for (LLSD::array_const_iterator itr = v.beginArray();
+					 itr != v.endArray(); ++itr)
 				{
 					std::string uri = itr->asString();
-					if(!uri.empty())
+					if (!uri.empty())
 					{
 						foundRealURI = true;
 						mCommandLineURIs.push_back(uri);
@@ -300,7 +423,7 @@ void LLViewerLogin::parseCommandLineURIs()
 			else if (v.isString())
 			{
 				std::string uri = v.asString();
-				if(!uri.empty())
+				if (!uri.empty())
 				{
 					foundRealURI = true;
 					mCommandLineURIs.push_back(uri);
@@ -322,12 +445,12 @@ void LLViewerLogin::parseCommandLineURIs()
 
 const std::string LLViewerLogin::getCurrentGridURI()
 {
-	return (((int)(mGridURIs.size()) > mCurrentURI) ? mGridURIs[mCurrentURI] : std::string());
+	return (mGridURIs.size() > mCurrentURI ? mGridURIs[mCurrentURI] : std::string());
 }
 
 bool LLViewerLogin::tryNextURI()
 {
-	if (++mCurrentURI < (int)(mGridURIs.size()))
+	if (++mCurrentURI < mGridURIs.size())
 	{
 		return true;
 	}
@@ -342,7 +465,7 @@ const std::string LLViewerLogin::getStaticGridHelperURI(const EGridInfo grid) co
 {
 	std::string helper_uri;
 	// grab URI from selected grid
-	if(grid > GRID_INFO_NONE && grid < GRID_INFO_OTHER)
+	if (grid > GRID_INFO_NONE && grid < GRID_INFO_OTHER)
 	{
 		helper_uri = mGridList["grids"][grid].get("helper_uri").asString();
 	}
@@ -387,7 +510,7 @@ const std::string LLViewerLogin::getStaticGridURI(const EGridInfo grid) const
 	// else try the grid name.
 	if (grid > GRID_INFO_NONE && grid < GRID_INFO_OTHER)
 	{
-		return mGridList.get("grids")[grid].get("login_uri").asString();
+		return mGridList["grids"][grid].get("login_uri").asString();
 	}
 	else
 	{
@@ -395,48 +518,61 @@ const std::string LLViewerLogin::getStaticGridURI(const EGridInfo grid) const
 	}
 }
 
-std::string LLViewerLogin::getCurrentGridIP()
+const std::string LLViewerLogin::getCurrentGridIP()
 {
-	std::string uri = getCurrentGridURI();
-	LLStringUtil::toLower(uri);
+	std::string domain = getDomain(getCurrentGridURI());
 
-	size_t pos = uri.find("//");
+	// Get the IP
+	LLHost host;
+	host.setHostByName(domain);
+	return host.getIPString();
+}
+
+//static
+const std::string LLViewerLogin::getDomain(const std::string& url)
+{
+	if (url.empty())
+	{
+		return url;
+	}
+
+	std::string domain = url;
+	LLStringUtil::toLower(domain);
+
+	size_t pos = domain.find("//");
 
 	if (pos != std::string::npos)
 	{
-		size_t count = uri.size() - pos + 2;
-		uri = uri.substr(pos + 2, count);
+		size_t count = domain.size() - pos + 2;
+		domain = domain.substr(pos + 2, count);
 	}
 
 	// Check that there is at least one slash in the URL and add a trailing
 	// one if not
-	if (uri.find('/') == std::string::npos)
+	if (domain.find('/') == std::string::npos)
 	{
-		uri += '/';
+		domain += '/';
 	}
 
 	// Paranoia: If there's a user:password@ part, remove it
-	pos = uri.find('@');
-	if (pos != std::string::npos && pos < uri.find('/'))	// if '@' is not before the first '/', then it's not a user:password
+	pos = domain.find('@');
+	if (pos != std::string::npos && pos < domain.find('/'))	// if '@' is not before the first '/', then it's not a user:password
 	{
-		size_t count = uri.size() - pos + 1;
-		uri = uri.substr(pos + 1, count);
+		size_t count = domain.size() - pos + 1;
+		domain = domain.substr(pos + 1, count);
 	}
 
-	pos = uri.find(':');  
-	if (pos != std::string::npos && pos < uri.find('/'))
+	pos = domain.find(':');  
+	if (pos != std::string::npos && pos < domain.find('/'))
 	{
 		// Keep anything before the port number and strip the rest off
-		uri = uri.substr(0, pos);
+		domain = domain.substr(0, pos);
 	}
 	else
 	{
-		pos = uri.find('/');	// We earlier made sure that there's one
-		uri = uri.substr(0, pos);
+		pos = domain.find('/');	// We earlier made sure that there's one
+		domain = domain.substr(0, pos);
 	}
 
-	// Get the IP
-	LLHost host;
-	host.setHostByName(uri);
-	return host.getIPString();
+	return domain;
 }

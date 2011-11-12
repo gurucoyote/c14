@@ -108,6 +108,58 @@ Error details: The alert called &apos;[_NAME]&apos; was not found in notificatio
 
   <notification
    icon="alertmodal.tga"
+   name="ExistingGridName"
+   type="alertmodal">
+Grid [NAME] already exists !
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="AddGridFailure"
+   type="alertmodal">
+Sorry, I cannot make out a domain name from the provided grid name.
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="MandatoryGridName"
+   type="alertmodal">
+You must specify a grid name...
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="MandatoryLoginUri"
+   type="alertmodal">
+You must specify a login URI...
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="GetGridParametersFailure"
+   type="alertmodal">
+Failed to retrieve the parameters from grid URI: [URI]
+Reason: [REASON]
+Status code: [STATUS]
+    <usetemplate
+     name="okbutton"
+     yestext="OK"/>
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
    name="FloaterNotFound"
    type="alertmodal">
 Floater error: Could not find the following controls:

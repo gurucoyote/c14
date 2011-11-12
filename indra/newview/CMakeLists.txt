@@ -66,6 +66,7 @@ include_directories(
     ${LSCRIPT_INCLUDE_DIRS}/lscript_compile
     ${LIBS_PREBUILT_DIR}/include/collada
     ${LIBS_PREBUILT_DIR}/include/collada/1.4
+	${HACD_INCLUDE_DIR}
     )
 
 set(viewer_SOURCE_FILES
@@ -287,6 +288,7 @@ set(viewer_SOURCE_FILES
     llpaneldisplay.cpp
     llpanelevent.cpp
     llpanelface.cpp
+    hbpanelgrids.cpp
     llpanelgroup.cpp
     llpanelgroupgeneral.cpp
     llpanelgroupinvite.cpp
@@ -721,6 +723,7 @@ set(viewer_HEADER_FILES
     llpaneldisplay.h
     llpanelevent.h
     llpanelface.h
+    hbpanelgrids.h
     llpanelgroup.h
     llpanelgroupgeneral.h
     llpanelgroupinvite.h
@@ -1359,6 +1362,7 @@ target_link_libraries(${VIEWER_BINARY_NAME}
     ${ELFIO_LIBRARIES}
     ${LLCONVEXDECOMP_LIBRARY}
     ${TCMALLOC_LIBRARIES}
+    ${HACD_LIBRARY}
     )
 
 if (LINUX)

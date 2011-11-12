@@ -72,7 +72,6 @@
 #include "llsdserialize.h"
 #include "llsdutil.h"
 #include "llsdutil_math.h"
-#include "llsecondlifeurls.h"
 #include "llstring.h"
 #include "llui.h"
 #include "lluserrelations.h"
@@ -143,7 +142,6 @@
 #include "llpreviewscript.h"
 #include "llproductinforequest.h"
 #include "llsdhttpserver.h"			// OGPX might not need when EVENTHACK is sorted
-#include "llsecondlifeurls.h"
 #include "llselectmgr.h"
 #include "llsky.h"
 #include "llsrv.h"
@@ -1120,11 +1118,7 @@ bool idle_startup()
 			pass.hex_digest(md5pass);
 			password = md5pass;
 			
-#ifdef USE_VIEWER_AUTH
-			show_connect_box = true;
-#else
 			show_connect_box = false;
-#endif
 			gSavedSettings.setBOOL("AutoLogin", TRUE);
         }
 		else if (gSavedSettings.getBOOL("AutoLogin"))
@@ -1134,11 +1128,7 @@ bool idle_startup()
 			password = LLStartUp::loadPasswordFromDisk();
 			gSavedSettings.setBOOL("RememberPassword", TRUE);
 			
-#ifdef USE_VIEWER_AUTH
-			show_connect_box = true;
-#else
 			show_connect_box = false;
-#endif
 		}
 		else
 		{
@@ -3533,6 +3523,13 @@ bool idle_startup()
 	return TRUE;
 }
 
+void LLStartUp::refreshLoginPanel()
+{
+	LLSavedLogins login_history = LLPanelLogin::getLoginHistory();
+	LLPanelLogin::clearServers();
+	login_show(login_history);
+}
+
 //
 // local function definition
 //
@@ -3541,9 +3538,12 @@ bool login_show(LLSavedLogins const& saved_logins)
 {
 	LL_INFOS("AppInit") << "Initializing Login Screen" << LL_ENDL;
 
-	// This creates the LLPanelLogin instance.
-	LLPanelLogin::show(gViewerWindow->getVirtualWindowRect(),
-					   FALSE, login_callback, NULL);
+	if (!LLPanelLogin::getInstance())
+	{
+		// This creates the LLPanelLogin instance.
+		LLPanelLogin::show(gViewerWindow->getVirtualWindowRect(),
+						   FALSE, login_callback, NULL);
+	}
 
 	// Now that the LLPanelLogin instance is created,
 	// store the login history there.
@@ -3562,7 +3562,8 @@ bool login_show(LLSavedLogins const& saved_logins)
 	LLSavedLoginsList const& saved_login_entries = saved_logins.getEntries();
 	LLViewerLogin* vl = LLViewerLogin::getInstance();
 	std::vector<std::string> const& commandLineURIs(vl->getCommandLineURIs());
-	for (std::vector<std::string>::const_iterator iter = commandLineURIs.begin(); iter != commandLineURIs.end(); ++iter)
+	for (std::vector<std::string>::const_iterator iter = commandLineURIs.begin();
+		 iter != commandLineURIs.end(); ++iter)
 	{
 	  	LLURI cli_uri(*iter);
 		std::string cli_grid_name = cli_uri.hostName();
@@ -3767,7 +3768,11 @@ bool first_run_dialog_callback(const LLSD& notification, const LLSD& response)
 	if (0 == option)
 	{
 		LL_DEBUGS("AppInit") << "First run dialog cancelling" << LL_ENDL;
-		LLWeb::loadURL( CREATE_ACCOUNT_URL );
+		std::string new_account = LLViewerLogin::getInstance()->getAccountURL();
+		if (!new_account.empty())
+		{
+			LLWeb::loadURLExternal(new_account);
+		}
 	}
 
 	LLPanelLogin::giveFocus();
@@ -3788,18 +3793,26 @@ bool login_alert_status(const LLSD& notification, const LLSD& response)
 {
 	S32 option = LLNotification::getSelectedOption(notification, response);
     // Buttons
-    switch( option )
+    switch (option)
     {
         case 0:     // OK
             break;
         case 1:     // Help
-            LLWeb::loadURL( SUPPORT_URL );
+		{
+			std::string support = LLViewerLogin::getInstance()->getSupportURL();
+			if (!support.empty())
+			{
+				LLWeb::loadURL(support);
+			}
             break;
+		}
         case 2:     // Teleport
+		{
             // Restart the login process, starting at our home locaton
             LLURLSimString::setString(LLURLSimString::sLocationStringHome);
-            LLStartUp::setStartupState( STATE_LOGIN_CLEANUP );
+            LLStartUp::setStartupState(STATE_LOGIN_CLEANUP);
             break;
+		}
         default:
             LL_WARNS("AppInit") << "Missing case in login_alert_status switch" << LL_ENDL;
     }

@@ -96,6 +96,7 @@ private:
 	BOOL mHighlightDisplayName;
 	BOOL mTeleportHistoryDeparture;
 	BOOL mAvatarPhysics;
+	BOOL mUseNewSLLoginPage;
 	LLColor4 mOwnNameChatColor;
 	std::string mHighlightNicknames;
 	U32 mStackScreenWidthFraction;
@@ -129,6 +130,7 @@ HBPrefsCoolImpl::HBPrefsCoolImpl()
 	childSetCommitCallback("use_old_chat_history_check",		onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("im_tabs_vertical_stacking_check",	onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("use_old_statusbar_icons_check",		onCommitCheckBoxAfterRestart, this);
+	childSetCommitCallback("use_new_sl_login_page_check",		onCommitCheckBoxAfterRestart, this);
 	refresh();
 }
 
@@ -163,7 +165,10 @@ void HBPrefsCoolImpl::onCommitCheckBoxRestrainedLove(LLUICtrl* ctrl, void* user_
 	{
 		self->childEnable("fetch_inventory_on_login_check");
 	}
-	LLNotifications::instance().add("InEffectAfterRestart");
+	if (self->mRestrainedLove != check->get())
+	{
+		LLNotifications::instance().add("InEffectAfterRestart");
+	}
 }
 
 //static
@@ -210,6 +215,10 @@ void HBPrefsCoolImpl::onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_da
 	else if (control == "UseOldStatusBarIcons")
 	{
 		saved = self->mUseOldStatusBarIcons;
+	}
+	else if (control == "UseNewSLLoginPage")
+	{
+		saved = self->mUseNewSLLoginPage;
 	}
  	if (saved != check->get())
 	{
@@ -272,6 +281,7 @@ void HBPrefsCoolImpl::refreshValues()
 	}
 	mTeleportHistoryDeparture	= gSavedSettings.getBOOL("TeleportHistoryDeparture");
 	mAvatarPhysics				= gSavedSettings.getBOOL("AvatarPhysics");
+	mUseNewSLLoginPage			= gSavedSettings.getBOOL("UseNewSLLoginPage");
 }
 
 void HBPrefsCoolImpl::refresh()
@@ -397,6 +407,7 @@ void HBPrefsCoolImpl::cancel()
 	}
 	gSavedSettings.setBOOL("TeleportHistoryDeparture",	mTeleportHistoryDeparture);
 	gSavedSettings.setBOOL("AvatarPhysics",				mAvatarPhysics);
+	gSavedSettings.setBOOL("UseNewSLLoginPage",			mUseNewSLLoginPage);
 }
 
 void HBPrefsCoolImpl::apply()

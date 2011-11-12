@@ -68,6 +68,7 @@
 #include "llpreviewscript.h"
 #include "llselectmgr.h"
 #include "lltexturectrl.h"
+#include "lltooldraganddrop.h"
 #include "lltool.h"
 #include "lltoolcomp.h"
 #include "lltoolmgr.h"
@@ -118,9 +119,28 @@ BOOL LLPanelVolume::postBuild()
 		LLTextureCtrl* LightTexPicker = getChild<LLTextureCtrl>("light texture control");
 		if (LightTexPicker)
 		{
+			LightTexPicker->setCommitCallback(onCommitLight);
+			LightTexPicker->setCallbackUserData(this);
 			LightTexPicker->setOnCancelCallback(onLightCancelTexture);
 			LightTexPicker->setOnSelectCallback(onLightSelectTexture);
-			childSetCommitCallback("light texture control", onCommitLight, this);
+			LightTexPicker->setDragCallback(onDragTexture);
+			// Don't allow (no copy) or (no transfer) textures to be selected during immediate mode
+			LightTexPicker->setImmediateFilterPermMask(PERM_COPY | PERM_TRANSFER);
+			// Allow any texture to be used during non-immediate mode.
+			LightTexPicker->setNonImmediateFilterPermMask(PERM_NONE);
+			LLAggregatePermissions texture_perms;
+			if (LLSelectMgr::getInstance()->selectGetAggregateTexturePermissions(texture_perms))
+			{
+				BOOL can_copy = texture_perms.getValue(PERM_COPY) == LLAggregatePermissions::AP_EMPTY ||
+								texture_perms.getValue(PERM_COPY) == LLAggregatePermissions::AP_ALL;
+				BOOL can_transfer = texture_perms.getValue(PERM_TRANSFER) == LLAggregatePermissions::AP_EMPTY || 
+									texture_perms.getValue(PERM_TRANSFER) == LLAggregatePermissions::AP_ALL;
+				LightTexPicker->setCanApplyImmediately(can_copy && can_transfer);
+			}
+			else
+			{
+				LightTexPicker->setCanApplyImmediately(FALSE);
+			}
 		}
 
 		childSetCommitCallback("Light Intensity", onCommitLight, this);
@@ -757,6 +777,24 @@ void LLPanelVolume::onLightSelectTexture(LLUICtrl* ctrl, void* userdata)
 		volobjp->setLightTextureID(id);
 		self->mLightSavedTexture = id;
 	}
+}
+
+// static
+BOOL LLPanelVolume::onDragTexture(LLUICtrl* ctrl, LLInventoryItem* item, void* userdata)
+{
+	BOOL accept = TRUE;
+	for (LLObjectSelection::root_iterator iter = LLSelectMgr::getInstance()->getSelection()->root_begin();
+		 iter != LLSelectMgr::getInstance()->getSelection()->root_end(); iter++)
+	{
+		LLSelectNode* node = *iter;
+		LLViewerObject* obj = node->getObject();
+		if (!LLToolDragAndDrop::isInventoryDropAcceptable(obj, item))
+		{
+			accept = FALSE;
+			break;
+		}
+	}
+	return accept;
 }
 
 // static

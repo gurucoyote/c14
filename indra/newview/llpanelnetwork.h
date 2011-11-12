@@ -1,10 +1,10 @@
 /** 
- * @file llversionviewer.h
- * @brief
+ * @file llpanelnetwork.h
+ * @brief Network preferences panel
  *
- * $LicenseInfo:firstyear=2002&license=viewergpl$
+ * $LicenseInfo:firstyear=2001&license=viewergpl$
  * 
- * Copyright (c) 2002-2009, Linden Research, Inc.
+ * Copyright (c) 2001-2009, Linden Research, Inc.
  * 
  * Second Life Viewer Source Code
  * The source code in this file ("Source Code") is provided by Linden Lab
@@ -30,18 +30,36 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLVERSIONVIEWER_H
-#define LL_LLVERSIONVIEWER_H
+#ifndef LL_LLPANELNETWORK_H
+#define LL_LLPANELNETWORK_H
 
-const S32 LL_VERSION_MAJOR = 1;
-const S32 LL_VERSION_MINOR = 26;
-const S32 LL_VERSION_PATCH = 2;
-const S32 LL_VERSION_BUILD = 2;
+#include "llpanel.h"
 
-const char * const LL_CHANNEL = "Cool VL Viewer";
+class LLPanelNetwork : public LLPanel
+{
+public:
+	LLPanelNetwork();
+	~LLPanelNetwork();
 
-#if LL_DARWIN
-const char * const LL_VERSION_BUNDLE_ID = "com.secondlife.snowglobe.viewer";
-#endif
+	BOOL postBuild();
+
+	void apply();
+	void cancel();
+
+private:
+	static void onHttpTextureFetchToggled(LLUICtrl* ctrl, void* data);
+	static void onClickClearCache(void*);
+	static void onClickSetCache(void*);
+	static void onClickResetCache(void*);
+	static void onCommitPort(LLUICtrl* ctrl, void*);
+	static void onCommitSocks5ProxyEnabled(LLUICtrl* ctrl, void* data);
+	static void onClickTestProxy(void* user_data);
+	static void onSocksSettingsModified(LLUICtrl* ctrl, void* data);
+	static void onSocksAuthChanged(LLUICtrl* ctrl, void* data);
+	static void updateProxyEnabled(LLPanelNetwork * self, bool enabled, std::string authtype);
+	
+	static bool sSocksSettingsChanged;
+
+};
 
 #endif

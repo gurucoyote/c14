@@ -69,6 +69,7 @@
 #include "llmatrix4a.h"
 #include "llnotifications.h"
 #include "llrender.h"
+#include "llsecondlifeurls.h"
 #include "llsdserialize.h"
 #include "llsdutil_math.h"
 #include "llsliderctrl.h"
@@ -400,7 +401,7 @@ BOOL LLFloaterModelPreview::postBuild()
 	childSetCommitCallback("crease_angle", onGenerateNormalsCommit, this);
 	childSetCommitCallback("gen_normals", toggleGenerateNormals, this);
 
-	childSetCommitCallback("lod_generate", onAutoFillCommit, this);
+	//childSetCommitCallback("lod_generate", onAutoFillCommit, this);
 
 	for (S32 lod = 0; lod <= LLModel::LOD_HIGH; ++lod)
 	{
@@ -451,22 +452,63 @@ BOOL LLFloaterModelPreview::postBuild()
 
 	initModelPreview();
 
+	//set callbacks for left click on line editor rows
+	for (U32 i = 0; i <= LLModel::LOD_HIGH; i++)
+	{
+		LLTextBox* text = getChild<LLTextBox>(lod_label_name[i]);
+		if (text)
+		{
+			text->setClickedCallback(onClickTextLOD, (void*)i);
+		}
+
+		text = getChild<LLTextBox>(lod_triangles_name[i]);
+		if (text)
+		{
+			text->setClickedCallback(onClickTextLOD, (void*)i);
+		}
+
+		text = getChild<LLTextBox>(lod_vertices_name[i]);
+		if (text)
+		{
+			text->setClickedCallback(onClickTextLOD, (void*)i);
+		}
+
+		text = getChild<LLTextBox>(lod_status_name[i]);
+		if (text)
+		{
+			text->setClickedCallback(onClickTextLOD, (void*)i);
+		}
+	}
+
 	std::string validate_url;
+	LLViewerLogin* vl = LLViewerLogin::getInstance();
 	if (gIsInSecondLife)
 	{
-		if (LLViewerLogin::getInstance()->isInProductionGrid())
+		if (vl->isInProductionGrid())
 		{
-			validate_url = "http://secondlife.com/my/account/mesh.php";
+			validate_url = AGNI_VALIDATE_MESH_UPLOAD_PAGE_URL;
 		}
 		else
 		{
-			validate_url = "http://secondlife.aditi.lindenlab.com/my/account/mesh.php";
+			validate_url = ADITI_VALIDATE_MESH_UPLOAD_PAGE_URL;
 		}
 	}
 	else
 	{
 		// Let's point to a known valid website page for OpenSim grids...
-		validate_url = LLViewerLogin::getInstance()->getLoginPageURI();
+		validate_url = vl->getAccountURL();					// Sounds reasonable
+		if (validate_url.empty())
+		{
+			validate_url = vl->getSupportURL();				// Then try support
+			if (validate_url.empty())
+			{
+				validate_url = vl->getWebsiteURL();			// Then try website
+				if (validate_url.empty())
+				{
+					validate_url = vl->getLoginPageURI();	// Last chance !
+				}
+			}
+		}
 	}
 	getChild<LLTextBox>("warning_message")->setTextArg("[VURL]", validate_url);
 
@@ -655,6 +697,16 @@ void LLFloaterModelPreview::onUploadSkinCommit(LLUICtrl*,void* userdata)
 	fp->mModelPreview->clearBuffers();
 }
 
+// static
+void LLFloaterModelPreview::onClickTextLOD(void* userdata)
+{
+	S32 lod = (S32)userdata;
+	if (sInstance)
+	{
+		sInstance->mModelPreview->setPreviewLOD(lod);
+	}
+}
+
 //static
 void LLFloaterModelPreview::onPreviewLODCommit(LLUICtrl* ctrl, void* userdata)
 {
@@ -688,6 +740,7 @@ void LLFloaterModelPreview::toggleGenerateNormals(LLUICtrl* ctrl, void* userdata
 	LLFloaterModelPreview* fp = (LLFloaterModelPreview*) userdata;
 
 	bool enabled = fp->childGetValue("gen_normals").asBoolean();
+	fp->childSetEnabled("crease_label", enabled);
 	fp->childSetEnabled("crease_angle", enabled);
 }
 
@@ -758,10 +811,10 @@ void LLFloaterModelPreview::draw()
 		}
 	}
 
-	childSetTextArg("prim_cost", "[PRIM_COST]",
-					llformat("%d", mModelPreview->mResourceCost));
-	childSetTextArg("description_label", "[TEXTURES]",
-					llformat("%d", mModelPreview->mTextureSet.size()));
+	//childSetTextArg("prim_cost", "[PRIM_COST]",
+	//				llformat("%d", mModelPreview->mResourceCost));
+	//childSetTextArg("description_label", "[TEXTURES]",
+	//				llformat("%d", mModelPreview->mTextureSet.size()));
 
 	if (mModelPreview)
 	{
@@ -905,7 +958,8 @@ void LLFloaterModelPreview::onPhysicsParamCommit(LLUICtrl* ctrl, void* data)
 {
 	if (LLConvexDecomposition::getInstance() == NULL)
 	{
-		llinfos << "Convex decomposition tool is a stub on this platform. cannot get decomp." << llendl;
+		llinfos << "Convex decomposition tool is a stub on this platform. cannot get decomp."
+				<< llendl;
 		return;
 	}
 
@@ -959,7 +1013,9 @@ void LLFloaterModelPreview::onPhysicsStageExecute(LLUICtrl* ctrl, void* data)
 
 		if (sInstance->mModelPreview)
 		{
-			for (S32 i = 0; i < sInstance->mModelPreview->mModel[LLModel::LOD_PHYSICS].size(); ++i)
+			for (S32 i = 0;
+				 i < sInstance->mModelPreview->mModel[LLModel::LOD_PHYSICS].size();
+				 ++i)
 			{
 				LLModel* mdl = sInstance->mModelPreview->mModel[LLModel::LOD_PHYSICS][i];
 				DecompRequest* request = new DecompRequest(stage, mdl);
@@ -1091,8 +1147,8 @@ void LLFloaterModelPreview::initDecompControls()
 		// protected against stub by stage_count being 0 for stub above
 		LLConvexDecomposition::getInstance()->registerCallback(j, LLPhysicsDecomp::llcdCallback);
 
-		//llinfos << "Physics decomp stage " << stage[j].mName << " (" << j << ") parameters:" << llendl;
-		//llinfos << "------------------------------------" << llendl;
+		llinfos << "Physics decomp stage " << stage[j].mName << " (" << j << ") parameters:" << llendl;
+		llinfos << "------------------------------------" << llendl;
 
 		for (S32 i = 0; i < param_count; ++i)
 		{
@@ -1111,7 +1167,7 @@ void LLFloaterModelPreview::initDecompControls()
 			if (param[i].mType == LLCDParam::LLCD_FLOAT)
 			{
 				mDecompParams[param[i].mName] = LLSD(param[i].mDefault.mFloat);
-				//llinfos << "Type: float, Default: " << param[i].mDefault.mFloat << llendl;
+				llinfos << "Type: float, Default: " << param[i].mDefault.mFloat << llendl;
 
 				LLUICtrl* ctrl = getChild<LLUICtrl>(name);
 				if (LLSliderCtrl* slider = dynamic_cast<LLSliderCtrl*>(ctrl))
@@ -1417,7 +1473,8 @@ void stretch_extents(LLModel* model, LLMatrix4a& mat, LLVector4a& min, LLVector4
 	}
 }
 
-void stretch_extents(LLModel* model, LLMatrix4& mat, LLVector3& min, LLVector3& max, BOOL& first_transform)
+void stretch_extents(LLModel* model, LLMatrix4& mat, LLVector3& min,
+					 LLVector3& max, BOOL& first_transform)
 {
 	LLVector4a mina, maxa;
 	LLMatrix4a mata;
@@ -1435,7 +1492,7 @@ void stretch_extents(LLModel* model, LLMatrix4& mat, LLVector3& min, LLVector3& 
 void LLModelLoader::run()
 {
 	doLoadModel();
-	doOnIdleOneTime(boost::bind(&LLModelLoader::loadModelCallback,this));
+	doOnIdleOneTime(boost::bind(&LLModelLoader::loadModelCallback, this));
 }
 
 bool LLModelLoader::doLoadModel()
@@ -1462,8 +1519,8 @@ bool LLModelLoader::doLoadModel()
 					{	//slm successfully loaded, if this fails, fall through and
 						//try loading from dae
 
-						mLod = -1; //successfully loading from an slm implicitly sets all 
-									//LoDs
+						mLod = -1;	// successfully loading from an slm
+									// implicitly sets all LoDs
 						return true;
 					}
 				}
@@ -1477,14 +1534,15 @@ bool LLModelLoader::doLoadModel()
 
 	if (!dom)
 	{
-		llinfos<<" Error with dae - traditionally indicates a corrupt file."<<llendl;
+		llinfos << " Error with dae - traditionally indicates a corrupt file."
+				<< llendl;
 		setLoadState(ERROR_PARSING);
 		return false;
 	}
 	//Dom version
 	daeString domVersion = dae.getDomVersion();
 	std::string sldom(domVersion);
-	llinfos<<"Collada Importer Version: "<<sldom<<llendl;
+	llinfos << "Collada Importer Version: " << sldom << llendl;
 	//Dae version
 	domVersionType docVersion = dom->getVersion();
 	//0=1.4
@@ -1494,7 +1552,7 @@ bool LLModelLoader::doLoadModel()
 	{ 
 		docVersion = VERSIONTYPE_COUNT;
 	}
-	llinfos<<"Dae version "<<colladaVersion[docVersion]<<llendl;
+	llinfos << "Dae version " << colladaVersion[docVersion] << llendl;
 
 	daeDatabase* db = dae.getDatabase();
 
@@ -1677,7 +1735,8 @@ bool LLModelLoader::doLoadModel()
 							daeElement* pScene = root->getDescendant("visual_scene");
 							if (!pScene)
 							{
-								llwarns<<"No visual scene - unable to parse bone offsets "<<llendl;
+								llwarns << "No visual scene - unable to parse bone offsets "
+										<< llendl;
 								missingSkeletonOrScene = true;
 							}
 							else
@@ -1715,7 +1774,7 @@ bool LLModelLoader::doLoadModel()
 									//Build a joint for the resolver to work with
 									char str[64]={0};
 									sprintf(str,"./%s",(*jointIt).first.c_str());
-									//llwarns<<"Joint "<< str <<llendl;
+									//llwarns << "Joint " << str << llendl;
 
 									//Setup the resolver
                                     daeSIDResolver resolver(pSkeletonRootNode, str);
@@ -1748,7 +1807,8 @@ bool LLModelLoader::doLoadModel()
 											daeElement* pTranslateElement = getChildFromElement(pJoint, "translate");
 											if (pTranslateElement && pTranslateElement->typeID() != domTranslate::ID())
 											{
-												llwarns<< "The found element is not a translate node" <<llendl;
+												llwarns	<< "The found element is not a translate node"
+														<< llendl;
 												missingSkeletonOrScene = true;
 											}
 											else
@@ -1874,15 +1934,15 @@ bool LLModelLoader::doLoadModel()
 							//The joints are reset in the dtor
 							if (mPreview->getRigWithSceneParity())
 							{
-								std::map<std::string, std::string> :: const_iterator masterJointIt = mJointMap.begin();
-								std::map<std::string, std::string> :: const_iterator masterJointItEnd = mJointMap.end();
+								std::map<std::string, std::string>::const_iterator masterJointIt = mJointMap.begin();
+								std::map<std::string, std::string>::const_iterator masterJointItEnd = mJointMap.end();
 								for ( ;masterJointIt!=masterJointItEnd;++masterJointIt)
 								{
 									std::string lookingForJoint = (*masterJointIt).first.c_str();
 
 									if (mJointList.find(lookingForJoint) != mJointList.end())
 									{
-										//llinfos<<"joint "<<lookingForJoint.c_str()<<llendl;
+										//llinfos << "joint " << lookingForJoint.c_str() << llendl;
 										LLMatrix4 jointTransform = mJointList[lookingForJoint];
 										LLJoint* pJoint = mPreview->getPreviewAvatar()->getJoint(lookingForJoint);
 										if (pJoint)
@@ -1898,7 +1958,7 @@ bool LLModelLoader::doLoadModel()
 									}
 								}
 							}
-						} //missingSkeletonOrScene
+						}	//missingSkeletonOrScene
 
 						//We need to construct the alternate bind matrix (which contains the new joint positions)
 						//in the same order as they were stored in the joint buffer. The joints associated
@@ -2300,7 +2360,7 @@ void LLModelLoader::processJointToNodeMapping(domNode* pNode)
 		}
 		else 
 		{
-			llinfos<<"Node is NULL"<<llendl;
+			llinfos << "Node is NULL" << llendl;
 		}
 
 	}
@@ -2373,7 +2433,8 @@ void LLModelPreview::critiqueJointToNodeMappingFromScene(void)
 			}
 			else
 			{
-				llinfos<<"critiqueJointToNodeMappingFromScene is missing a: "<<name<<llendl;
+				llinfos << "critiqueJointToNodeMappingFromScene is missing a: "
+						<< name << llendl;
 				result = false;
 			}
 		}
@@ -2508,17 +2569,17 @@ bool LLModelLoader::isNodeAJoint(domNode* pNode)
 {
 	if (!pNode)
 	{
-		llinfos<<"Created node is NULL"<<llendl;
+		llinfos << "Created node is NULL" << llendl;
 		return false;
 	}
 
 	if (pNode->getName() == NULL)
 	{
-		llinfos<<"Parsed node has no name "<<llendl;
+		llinfos << "Parsed node has no name " << llendl;
 		//Attempt to write the node id, if possible (aids in debugging the visual scene)
 		if (pNode->getId())
 		{
-			llinfos<<"Parsed node ID: "<<pNode->getId()<<llendl;
+			llinfos << "Parsed node ID: " << pNode->getId() << llendl;
 		}
 		return false;
 	}
@@ -2538,7 +2599,8 @@ bool LLModelPreview::verifyCount(int expected, int result)
 {
 	if (expected != result)
 	{
-		llinfos<< "Error: (expected/got)"<<expected<<"/"<<result<<"verts"<<llendl;
+		llinfos << "Error: (expected/got)" << expected << "/" << result
+				<< "verts" << llendl;
 		return false;
 	}
 	return true;
@@ -2560,7 +2622,7 @@ bool LLModelPreview::verifyController(domController* pController)
 
 		if (!pElement)
 		{
-			llinfos<<"Can't resolve skin source"<<llendl;
+			llinfos << "Can't resolve skin source" << llendl;
 			return false;
 		}
 
@@ -2579,7 +2641,7 @@ bool LLModelPreview::verifyController(domController* pController)
 				domVertices* pVertices = pMesh->getVertices();
 				if (!pVertices)
 				{ 
-					llinfos<<"No vertices!"<<llendl;
+					llinfos << "No vertices!" << llendl;
 					return false;
 				}
 
@@ -2667,7 +2729,7 @@ void LLModelLoader::extractTranslationViaSID(daeElement* pElement, LLMatrix4& tr
 	}
 	else
 	{
-		llwarns<<"Element is nonexistent - empty/unsupported node."<<llendl;
+		llwarns << "Element is nonexistent - empty/unsupported node." << llendl;
 	}
 }
 
@@ -2682,7 +2744,7 @@ void LLModelLoader::processJointNode(domNode* pNode, JointTransformMap& jointTra
 		return;
 	}
 
-	//llwarns<<"ProcessJointNode# Node:" <<pNode->getName()<<llendl;
+	//llwarns << "ProcessJointNode# Node:" << pNode->getName() << llendl;
 
 	//1. handle the incoming node - extract out translation via SID or element
 
@@ -2710,12 +2772,12 @@ void LLModelLoader::processJointNode(domNode* pNode, JointTransformMap& jointTra
 		daeElement* pTranslateElement = getChildFromElement(pNode, "translate");
 		if (!pTranslateElement || pTranslateElement->typeID() != domTranslate::ID())
 		{
-			//llwarns<< "The found element is not a translate node" <<llendl;
+			//llwarns << "The found element is not a translate node" << llendl;
 			daeSIDResolver jointResolver(pNode, "./matrix");
 			domMatrix* pMatrix = daeSafeCast<domMatrix>(jointResolver.getElement());
 			if (pMatrix)
 			{
-				//llinfos<<"A matrix SID was however found!"<<llendl;
+				//llinfos << "A matrix SID was however found!" << llendl;
 				domFloat4x4 domArray = pMatrix->getValue();
 				for (int i = 0; i < 4; i++)
 				{
@@ -2727,7 +2789,8 @@ void LLModelLoader::processJointNode(domNode* pNode, JointTransformMap& jointTra
 			}
 			else
 			{
-				llwarns<< "The found element is not translate or matrix node - most likely a corrupt export!" <<llendl;
+				llwarns << "The found element is not translate or matrix node - most likely a corrupt export!"
+						<< llendl;
 			}
 		}
 		else
@@ -2876,7 +2939,7 @@ void LLModelLoader::processElement(daeElement* element, bool& badElement)
 		}
 		else 
 		{
-			llinfos<<"Unable to resolve geometry URL."<<llendl;
+			llinfos << "Unable to resolve geometry URL." << llendl;
 			badElement = true;
 		}
 	}
@@ -3427,7 +3490,9 @@ void LLModelPreview::saveUploadData(bool save_skinweights, bool save_joint_posit
 	}
 }
 
-void LLModelPreview::saveUploadData(const std::string& filename, bool save_skinweights, bool save_joint_positions)
+void LLModelPreview::saveUploadData(const std::string& filename,
+									bool save_skinweights,
+									bool save_joint_positions)
 {
 	if (!gSavedSettings.getBOOL("MeshImportUseSLM"))
 	{
@@ -3466,14 +3531,14 @@ void LLModelPreview::saveUploadData(const std::string& filename, bool save_skinw
 				instance.mLOD[LLModel::LOD_PHYSICS]->mPhysics : 
 				instance.mModel->mPhysics;
 
-			LLModel::writeModel(str, 
-				instance.mLOD[LLModel::LOD_PHYSICS], 
-				instance.mLOD[LLModel::LOD_HIGH], 
-				instance.mLOD[LLModel::LOD_MEDIUM], 
-				instance.mLOD[LLModel::LOD_LOW], 
-				instance.mLOD[LLModel::LOD_IMPOSTOR], 
-				decomp, 
-				save_skinweights, save_joint_positions, FALSE, TRUE);
+			LLModel::writeModel(str,
+								instance.mLOD[LLModel::LOD_PHYSICS],
+								instance.mLOD[LLModel::LOD_HIGH], 
+								instance.mLOD[LLModel::LOD_MEDIUM], 
+								instance.mLOD[LLModel::LOD_LOW], 
+								instance.mLOD[LLModel::LOD_IMPOSTOR], 
+								decomp, save_skinweights, save_joint_positions,
+								FALSE, TRUE);
 
 			data["mesh"][instance.mModel->mLocalID] = str.str();
 		}
@@ -3770,7 +3835,6 @@ void LLModelPreview::loadModelCallback(S32 lod)
 	mLoading = false;
 	if (mFMP)
 	{
-		mFMP->getChild<LLCheckBoxCtrl>("confirm_checkbox")->set(FALSE);
 		if (!mBaseModel.empty())
 		{
 			if (mFMP->getChild<LLUICtrl>("description_form")->getValue().asString().empty())
@@ -4237,7 +4301,8 @@ void LLModelPreview::updateStatusMessages()
 		}
 	}
 
-	mFMP->childSetTextArg("submeshes_info", "[SUBMESHES]", llformat("%d", total_submeshes[LLModel::LOD_HIGH]));
+	//mFMP->childSetTextArg("submeshes_info", "[SUBMESHES]",
+	//						llformat("%d", total_submeshes[LLModel::LOD_HIGH]));
 
 	std::string mesh_status_na = mFMP->getString("mesh_status_na");
 
@@ -4457,20 +4522,20 @@ void LLModelPreview::updateStatusMessages()
 		//enable/disable "analysis" UI
 		LLPanel* panel = fmp->getChild<LLPanel>("physics analysis");
 		LLView* child = panel->getFirstChild();
-//		while (child)
+		while (child)
 		{
 			child->setEnabled(enable);
-//			child = panel->findNextSibling(child);
+			child = panel->findNextSibling(child);
 		}
 
 		enable = phys_hulls > 0 && fmp->mCurRequest.empty();
 		//enable/disable "simplification" UI
 		panel = fmp->getChild<LLPanel>("physics simplification");
 		child = panel->getFirstChild();
-//		while (child)
+		while (child)
 		{
 			child->setEnabled(enable);
-//			child = panel->findNextSibling(child);
+			child = panel->findNextSibling(child);
 		}
 
 		if (fmp->mCurRequest.empty())
@@ -4839,7 +4904,8 @@ void LLModelPreview::createPreviewAvatar(void)
 	}
 	else
 	{
-		llinfos<<"Failed to create preview avatar for upload model window"<<llendl;
+		llinfos << "Failed to create preview avatar for upload model window" 
+				<< llendl;
 	}
 }
 
@@ -5689,11 +5755,6 @@ void LLFloaterModelPreview::toggleCalculateButton(bool visible)
 		childSetTextArg("server_weight", "[SIM]", tbd);
 		childSetTextArg("physics_weight", "[PH]", tbd);
 		childSetTextArg("upload_fee", "[FEE]", tbd);
-		childSetTextArg("price_breakdown", "[STREAMING]", tbd);
-		childSetTextArg("price_breakdown", "[PHYSICS]", tbd);
-		childSetTextArg("price_breakdown", "[INSTANCES]", tbd);
-		childSetTextArg("price_breakdown", "[TEXTURES]", tbd);
-		childSetTextArg("price_breakdown", "[MODEL]", tbd);
 	}
 }
 
@@ -5712,7 +5773,7 @@ void LLFloaterModelPreview::resetDisplayOptions()
 {
 	std::map<std::string,bool>::iterator option_it = mModelPreview->mViewOption.begin();
 
-	for ( ;option_it != mModelPreview->mViewOption.end(); ++option_it)
+	for ( ; option_it != mModelPreview->mViewOption.end(); ++option_it)
 	{
 		LLUICtrl* ctrl = getChild<LLUICtrl>(option_it->first);
 		ctrl->setValue(false);
@@ -5737,13 +5798,7 @@ void LLFloaterModelPreview::handleModelPhysicsFeeReceived()
 	childSetTextArg("server_weight", "[SIM]", llformat("%0.3f", result["simulation_cost"].asReal()));
 	childSetTextArg("physics_weight", "[PH]", llformat("%0.3f", result["physics_cost"].asReal()));
 	childSetTextArg("upload_fee", "[FEE]", llformat("%d", result["upload_price"].asInteger()));
-	childSetTextArg("price_breakdown", "[STREAMING]", llformat("%d", result["upload_price_breakdown"]["mesh_streaming"].asInteger()));
-	childSetTextArg("price_breakdown", "[PHYSICS]", llformat("%d", result["upload_price_breakdown"]["mesh_physics"].asInteger()));
-	childSetTextArg("price_breakdown", "[INSTANCES]", llformat("%d", result["upload_price_breakdown"]["mesh_instance"].asInteger()));
-	childSetTextArg("price_breakdown", "[TEXTURES]", llformat("%d", result["upload_price_breakdown"]["texture"].asInteger()));
-	childSetTextArg("price_breakdown", "[MODEL]", llformat("%d", result["upload_price_breakdown"]["model"].asInteger()));
 	childSetVisible("upload_fee", true);
-	childSetVisible("price_breakdown", true);
 	mUploadBtn->setEnabled(mHasUploadPerm && !mUploadModelUrl.empty());
 }
 
