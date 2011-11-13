@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<panel border="true" bottom="-409" enabled="true" follows="left|top|right|bottom"
+     height="408" label="Web" left="102" mouse_opaque="true" name="web"
+     width="517">
+	<radio_group bottom="-45" draw_border="false" follows="top|left" height="40" left="12"
+	 name="use_external_browser" width="480">
+		<radio_item bottom="-20" height="20" left="0" name="external" width="480" 
+		 tool_tip="Use the default system web browser for help, web links, etc. This won't affect the SL web-based profiles and search which always use the built-in browser in their own floater.">
+			Use external web browser (Firefox, Chrome, Opera, etc)
+		</radio_item>
+		<radio_item bottom="-40" height="20" left="0" name="internal" width="480" 
+		 tool_tip="Use the built-in web browser for help, web links, etc. This browser opens as a new window inside the viewer.">
+			Use the built-in web browser
+		</radio_item>
+	</radio_group>
+	<button name="clear_cache" label="Clear Browser Cache" font="SansSerif" halign="center"
+	 enabled="true" mouse_opaque="true" tool_tip="Clear the built-in web browser cache."
+	 left="320" bottom_delta="0" width="150" height="20" follows="left|top" />
+	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+	 bottom_delta="-30" drop_shadow_visible="true" enabled="true"
+	 follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
+	 height="16" left="15" mouse_opaque="false" name="privacy_label" v_pad="0"
+	 width="150">
+		Privacy/security:
+	</text>
+	<check_box bottom_delta="-2" enabled="true" follows="left|top" 
+	 tool_tip="Enable cookies in the web media plugin (the SL web profiles can't work when this option is disabled)."
+	 font="SansSerifSmall" height="16" initial_value="false"
+	 label="Accept cookies from sites" left="140" mouse_opaque="true"
+	 name="cookies_enabled" radio_style="false" width="180" />
+	<button name="clear_cookies" label="Clear Stored Cookies" font="SansSerif" halign="center"
+	 enabled="true" mouse_opaque="true" tool_tip="Clear the built-in web browser cookies."
+	 left="320" bottom_delta="0" width="150" height="20" follows="left|top" />
+	<check_box bottom_delta="-20" enabled="true" follows="left|top" 
+	 tool_tip="Enable javascript in the web media plugin (the SL web based search can't work when this option is disabled)."
+	 font="SansSerifSmall" height="16" initial_value="false"
+	 label="Enable Javascript" left="140" mouse_opaque="true"
+	 name="javascript_enabled" radio_style="false" width="256" />
+	<check_box bottom_delta="-20" enabled="true" follows="left|top" 
+	 tool_tip="Allow the web media plugin to launch and use other plugins."
+	 font="SansSerifSmall" height="16" initial_value="false"
+	 label="Enable plugins" left="140" mouse_opaque="true"
+	 name="plugins_enabled" radio_style="false" width="256" />
+	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+	 bottom_delta="-30" drop_shadow_visible="true" enabled="true"
+	 follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
+	 height="16" left="15" mouse_opaque="false" name="proxy_label" v_pad="0"
+	 width="128">
+		Web Proxy:
+	</text>
+	<check_box bottom_delta="-2" enabled="true"
+	 follows="left|top" font="SansSerifSmall" height="16" initial_value="false"
+	 label="Use a proxy for the built-in web plugin and browser" left="140" mouse_opaque="true"
+	 name="web_proxy_enabled" radio_style="false" width="360" />
+	<text type="string" length="1" bg_visible="false" border_drop_shadow_visible="false" border_visible="false"
+	 bottom_delta="-22" drop_shadow_visible="true" enabled="true"
+	 follows="left|top" font="SansSerifSmall" h_pad="0" halign="left"
+	 height="16" left="140" mouse_opaque="false" name="proxy_text_label"
+	 v_pad="0" width="160">
+		Address:
+	</text>
+	<line_editor bottom_delta="0" enabled="true" follows="left|top" font="SansSerif"
+	 height="20" left="217" name="web_proxy_editor"
+	 tool_tip="The name or IP address of the proxy you would like to use"
+	 width="200" />
+	<spinner bottom_delta="-25" decimal_digits="0"
+	 enabled="true" follows="left|top" height="16" increment="1"
+	 initial_val="80" label="Port Number:" label_width="75" left="140"
+	 max_val="12000" min_val="10" mouse_opaque="true" name="web_proxy_port"
+	 width="140" />
+</panel>
