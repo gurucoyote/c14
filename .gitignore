@@ -11,9 +11,9 @@ linden/*
 indra/build*
 indra/newview/vivox-runtime/universal-darwin/
 
-indra/newview/skins/
+# indra/newview/skins/
 # do include the default skin's xui
-!indra/newview/skins/default/xui/en-us/
+# !indra/newview/skins/default/xui/en-us/
 
 indra/newview/res*
 indra/newview/character/
