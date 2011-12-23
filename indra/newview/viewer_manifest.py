@@ -258,17 +258,12 @@ class WindowsManifest(ViewerManifest):
             self.path("wrap_oal.dll")
             self.end_prefix()
 
-        # pull in the crash logger and updater from other projects
+        # pull in the crash logger from other projects
         self.path(src=self.find_existing_file( # tag:"crash-logger" here as a cue to the exporter
                 "../win_crash_logger/debug/windows-crash-logger.exe",
                 "../win_crash_logger/release/windows-crash-logger.exe",
                 "../win_crash_logger/relwithdebinfo/windows-crash-logger.exe"),
-                  dst="win_crash_logger.exe")
-        self.path(src=self.find_existing_file(
-                "../win_updater/debug/windows-updater.exe",
-                "../win_updater/release/windows-updater.exe",
-                "../win_updater/relwithdebinfo/windows-updater.exe"),
-                  dst="updater.exe")
+                  dst="windows-crash-logger.exe")
 
         # For google-perftools tcmalloc allocator.
         if self.prefix(src="../../libraries/i686-win32/lib/release", dst=""):
@@ -371,7 +366,6 @@ class DarwinManifest(ViewerManifest):
 
                 # our apps
                 self.path("../mac_crash_logger/" + self.args['configuration'] + "/mac-crash-logger.app", "mac-crash-logger.app")
-                self.path("../mac_updater/" + self.args['configuration'] + "/mac-updater.app", "mac-updater.app")
 
                 # plugin launcher
                 self.path("../llplugin/slplugin/" + self.args['configuration'] + "/SLPlugin.app", "SLPlugin.app")
@@ -379,7 +373,6 @@ class DarwinManifest(ViewerManifest):
                 # our apps dependencies on shared libs
                 if dylibs["llcommon"]:
                     mac_crash_logger_res_path = self.dst_path_of("mac-crash-logger.app/Contents/Resources")
-                    mac_updater_res_path = self.dst_path_of("mac-updater.app/Contents/Resources")
                     slplugin_res_path = self.dst_path_of("SLPlugin.app/Contents/Resources")
                     for libfile in ("libllcommon.dylib",
                                     "libapr-1.0.3.7.dylib",
@@ -391,10 +384,6 @@ class DarwinManifest(ViewerManifest):
                         self.run_command("ln -sf %(target)r %(link)r" % 
                                          {'target': target_lib,
                                           'link' : os.path.join(mac_crash_logger_res_path, libfile)}
-                                         )
-                        self.run_command("ln -sf %(target)r %(link)r" % 
-                                         {'target': target_lib,
-                                          'link' : os.path.join(mac_updater_res_path, libfile)}
                                          )
                         self.run_command("ln -sf %(target)r %(link)r" % 
                                          {'target': target_lib,

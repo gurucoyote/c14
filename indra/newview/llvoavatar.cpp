@@ -9005,11 +9005,24 @@ void LLVOAvatar::useBakedTexture(const LLUUID& id)
 	dirtyMesh();
 }
 
+
 // static
 void LLVOAvatar::dumpArchetypeXML(void*)
 {
+	// Open the file save dialog
+	(new LLSaveFilePicker(LLFilePicker::FFSAVE_XML,
+						  LLVOAvatar::dumpXMLCallback))->getSaveFile("archetype.xml");
+}
+
+// static
+void LLVOAvatar::dumpXMLCallback(LLFilePicker::ESaveFilter type,
+								 std::string& filename,
+								 void* user_data)
+{
+	if (filename.empty()) return;
+
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
-	LLAPRFile outfile(gDirUtilp->getExpandedFilename(LL_PATH_CHARACTER, "new archetype.xml"), LL_APR_WB);
+	LLAPRFile outfile(filename, LL_APR_WB);
 	apr_file_t* file = outfile.getFileHandle();
 	if (!file)
 	{

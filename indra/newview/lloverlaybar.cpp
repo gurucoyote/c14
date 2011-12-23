@@ -38,30 +38,29 @@
 #include "lloverlaybar.h"
 
 #include "llaudioengine.h"
-#include "llrender.h"
-#include "llagent.h"
 #include "llbutton.h"
 #include "llfocusmgr.h"
+#include "llparcel.h"
+#include "llrender.h"
+#include "lltextbox.h"
+#include "lluictrlfactory.h"
+
+#include "llagent.h"
 #include "llimview.h"
+#include "llmediactrl.h"
 #include "llmediaremotectrl.h"
 #include "llpanelaudiovolume.h"
-#include "llparcel.h"
-#include "lltextbox.h"
-#include "llui.h"
-#include "llviewercontrol.h"
-#include "llviewertexturelist.h"
+#include "llselectmgr.h"
 #include "llviewerjoystick.h"
 #include "llviewermedia.h"
-#include "llviewermenu.h"	// handle_reset_view()
+#include "llviewermenu.h"			// handle_reset_view()
 #include "llviewerparcelmedia.h"
 #include "llviewerparcelmgr.h"
-#include "lluictrlfactory.h"
+#include "llviewertexturelist.h"
 #include "llviewerwindow.h"
-#include "llvoiceclient.h"
 #include "llvoavatar.h"
+#include "llvoiceclient.h"
 #include "llvoiceremotectrl.h"
-#include "llmediactrl.h"
-#include "llselectmgr.h"
 
 //
 // Globals
@@ -78,7 +77,7 @@ extern S32 MENU_BAR_HEIGHT;
 //static
 void* LLOverlayBar::createMasterRemote(void* userdata)
 {
-	LLOverlayBar *self = (LLOverlayBar*)userdata;	
+	LLOverlayBar *self = (LLOverlayBar*)userdata;
 	self->mMasterRemote =  new LLMediaRemoteCtrl("master_volume", LLRect(),
 												 "panel_master_volume.xml",
 												 LLMediaRemoteCtrl::REMOTE_VOLUME);
@@ -88,7 +87,7 @@ void* LLOverlayBar::createMasterRemote(void* userdata)
 //static
 void* LLOverlayBar::createMediaRemote(void* userdata)
 {
-	LLOverlayBar *self = (LLOverlayBar*)userdata;	
+	LLOverlayBar *self = (LLOverlayBar*)userdata;
 	self->mMediaRemote =  new LLMediaRemoteCtrl("media_remote", LLRect(),
 												"panel_media_remote.xml",
 												LLMediaRemoteCtrl::REMOTE_MEDIA);
@@ -108,19 +107,20 @@ void* LLOverlayBar::createMusicRemote(void* userdata)
 //static
 void* LLOverlayBar::createVoiceRemote(void* userdata)
 {
-	LLOverlayBar *self = (LLOverlayBar*)userdata;	
+	LLOverlayBar *self = (LLOverlayBar*)userdata;
 	self->mVoiceRemote = new LLVoiceRemoteCtrl(std::string("voice_remote"));
 	return self->mVoiceRemote;
 }
 
 LLOverlayBar::LLOverlayBar(const std::string& name, const LLRect& rect)
-	:	LLPanel(name, rect, FALSE),		// not bordered
-		mMasterRemote(NULL),
-		mMusicRemote(NULL),
-		mMediaRemote(NULL),
-		mVoiceRemote(NULL),
-		mMediaState(STOPPED),
-		mMusicState(STOPPED)
+:	LLPanel(name, rect, FALSE),		// not bordered
+	mMasterRemote(NULL),
+	mMusicRemote(NULL),
+	mMediaRemote(NULL),
+	mVoiceRemote(NULL),
+	mMediaState(STOPPED),
+	mMusicState(STOPPED),
+	mStatusBarPad(LLCachedControl<S32>(gSavedSettings, "StatusBarPad"))
 {
 	setMouseOpaque(FALSE);
 	setIsChrome(TRUE);
@@ -132,17 +132,28 @@ LLOverlayBar::LLOverlayBar(const std::string& name, const LLRect& rect)
 	factory_map["media_remote"] = LLCallbackMap(LLOverlayBar::createMediaRemote, this);
 	factory_map["music_remote"] = LLCallbackMap(LLOverlayBar::createMusicRemote, this);
 	factory_map["voice_remote"] = LLCallbackMap(LLOverlayBar::createVoiceRemote, this);
-	
+
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_overlaybar.xml", &factory_map);
-	
-	childSetAction("IM Received",onClickIMReceived,this);
-	childSetAction("Set Not Busy",onClickSetNotBusy,this);
-	childSetAction("Mouselook",onClickMouselook,this);
-	childSetAction("Stand Up",onClickStandUp,this);
- 	childSetAction("Flycam",onClickFlycam,this);
+
+	mBtnIMReceiced = getChild<LLButton>("IM Received");
+	mBtnIMReceiced->setClickedCallback(onClickIMReceived, this);
+
+	mBtnSetNotBusy = getChild<LLButton>("Set Not Busy");
+	mBtnSetNotBusy->setClickedCallback(onClickSetNotBusy, this);
+
+	mBtnMouseLook = getChild<LLButton>("Mouselook");
+	mBtnMouseLook->setClickedCallback(onClickMouselook, this);
+
+	mBtnStandUp = getChild<LLButton>("Stand Up");
+	mBtnStandUp->setClickedCallback(onClickStandUp, this);
+
+	mBtnFlyCam = getChild<LLButton>("Flycam");
+	mBtnFlyCam->setClickedCallback(onClickFlycam, this);
 
 	setFocusRoot(TRUE);
 	mBuilt = true;
+
+	mRoundedSquare = LLUI::getUIImage("rounded_square.tga");
 
 	// make overlay bar conform to window size
 	setRect(rect);
@@ -171,7 +182,6 @@ void LLOverlayBar::layoutButtons()
 	if (width > 1024) width = 1024;
 
 	S32 count = getChildCount();
-	const S32 PAD = gSavedSettings.getS32("StatusBarPad");
 
 	const S32 num_media_controls = 3;
 	media_remote_width = mMediaRemote ? mMediaRemote->getRect().getWidth() : 0;
@@ -181,12 +191,12 @@ void LLOverlayBar::layoutButtons()
 
 	// total reserved width for all media remotes
 	const S32 ENDPAD = 8;
-	S32 remote_total_width = media_remote_width + PAD + music_remote_width + PAD + voice_remote_width + PAD + master_remote_width + ENDPAD;
+	S32 remote_total_width = media_remote_width + mStatusBarPad + music_remote_width + mStatusBarPad + voice_remote_width + mStatusBarPad + master_remote_width + ENDPAD;
 
 	// calculate button widths
 	F32 segment_width = (F32)(width - remote_total_width) / (F32)(count - num_media_controls);
 
-	S32 btn_width = lltrunc(segment_width - PAD);
+	S32 btn_width = lltrunc(segment_width - mStatusBarPad);
 
 	// Evenly space all views
 	LLRect r;
@@ -196,10 +206,9 @@ void LLOverlayBar::layoutButtons()
 	{
 		LLView *view = *child_iter;
 		r = view->getRect();
-		r.mLeft = (width) - llround(remote_total_width + (i-num_media_controls+1)*segment_width);
+		r.mLeft = (width) - llround(remote_total_width + (i++ - num_media_controls + 1) * segment_width);
 		r.mRight = r.mLeft + btn_width;
 		view->setRect(r);
-		i++;
 	}
 
 	// Fix up remotes to have constant width because they can't shrink
@@ -209,7 +218,7 @@ void LLOverlayBar::layoutButtons()
 		r = mMasterRemote->getRect();
 		r.mRight = right;
 		r.mLeft = right - master_remote_width;
-		right = r.mLeft - PAD;
+		right = r.mLeft - mStatusBarPad;
 		mMasterRemote->setRect(r);
 	}
 	if (mMusicRemote)
@@ -217,7 +226,7 @@ void LLOverlayBar::layoutButtons()
 		r = mMusicRemote->getRect();
 		r.mRight = right;
 		r.mLeft = right - music_remote_width;
-		right = r.mLeft - PAD;
+		right = r.mLeft - mStatusBarPad;
 		mMusicRemote->setRect(r);
 	}
 	if (mMediaRemote)
@@ -225,7 +234,7 @@ void LLOverlayBar::layoutButtons()
 		r = mMediaRemote->getRect();
 		r.mRight = right;
 		r.mLeft = right - media_remote_width;
-		right = r.mLeft - PAD;
+		right = r.mLeft - mStatusBarPad;
 		mMediaRemote->setRect(r);
 	}
 	if (mVoiceRemote)
@@ -241,35 +250,31 @@ void LLOverlayBar::layoutButtons()
 
 void LLOverlayBar::draw()
 {
-	// retrieve rounded rect image
-	LLUIImagePtr imagep = LLUI::getUIImage("rounded_square.tga");
-
-	if (imagep)
+	if (mRoundedSquare)
 	{
-		const S32 PAD = gSavedSettings.getS32("StatusBarPad");
-
-		gGL.getTexUnit(0)->bind(imagep->getImage());
+		gGL.getTexUnit(0)->bind(mRoundedSquare->getImage());
 
 		// draw rounded rect tabs behind all children
 		LLRect r;
 		// focus highlights
-		LLColor4 color = gColors.getColor("FloaterFocusBorderColor");
+		static LLCachedControl<LLColor4U> floater_focus_border_color(gColors, "FloaterFocusBorderColor");
+		LLColor4 color = LLColor4(floater_focus_border_color);
 		gGL.color4fv(color.mV);
-		if(gFocusMgr.childHasKeyboardFocus(gBottomPanel))
+		if (gFocusMgr.childHasKeyboardFocus(gBottomPanel))
 		{
 			for (child_list_const_iter_t child_iter = getChildList()->begin();
-				child_iter != getChildList()->end(); ++child_iter)
+				 child_iter != getChildList()->end(); ++child_iter)
 			{
 				LLView *view = *child_iter;
-				if(view->getEnabled() && view->getVisible())
+				if (view->getEnabled() && view->getVisible())
 				{
 					r = view->getRect();
-					gl_segmented_rect_2d_tex(r.mLeft - PAD/3 - 1, 
+					gl_segmented_rect_2d_tex(r.mLeft - mStatusBarPad / 3 - 1, 
 											r.mTop + 3, 
-											r.mRight + PAD/3 + 1,
+											r.mRight + mStatusBarPad / 3 + 1,
 											r.mBottom, 
-											imagep->getTextureWidth(), 
-											imagep->getTextureHeight(), 
+											mRoundedSquare->getTextureWidth(), 
+											mRoundedSquare->getTextureHeight(), 
 											16, 
 											ROUNDED_RECT_TOP);
 				}
@@ -278,28 +283,31 @@ void LLOverlayBar::draw()
 
 		// main tabs
 		for (child_list_const_iter_t child_iter = getChildList()->begin();
-			child_iter != getChildList()->end(); ++child_iter)
+			 child_iter != getChildList()->end(); ++child_iter)
 		{
 			LLView *view = *child_iter;
-			if(view->getEnabled() && view->getVisible())
+			if (view->getEnabled() && view->getVisible())
 			{
 				r = view->getRect();
 				// draw a nice little pseudo-3D outline
-				color = gColors.getColor("DefaultShadowDark");
+				static LLCachedControl<LLColor4U> default_shadow_dark(gColors, "DefaultShadowDark");
+				color = LLColor4(default_shadow_dark);
 				gGL.color4fv(color.mV);
-				gl_segmented_rect_2d_tex(r.mLeft - PAD/3 + 1, r.mTop + 2, r.mRight + PAD/3, r.mBottom, 
-										 imagep->getTextureWidth(), imagep->getTextureHeight(), 16, ROUNDED_RECT_TOP);
-				color = gColors.getColor("DefaultHighlightLight");
+				gl_segmented_rect_2d_tex(r.mLeft - mStatusBarPad / 3 + 1, r.mTop + 2, r.mRight + mStatusBarPad / 3, r.mBottom, 
+										 mRoundedSquare->getTextureWidth(), mRoundedSquare->getTextureHeight(), 16, ROUNDED_RECT_TOP);
+				static LLCachedControl<LLColor4U> default_highlight_light(gColors, "DefaultHighlightLight");
+				color = LLColor4(default_highlight_light);
 				gGL.color4fv(color.mV);
-				gl_segmented_rect_2d_tex(r.mLeft - PAD/3, r.mTop + 2, r.mRight + PAD/3 - 3, r.mBottom, 
-										 imagep->getTextureWidth(), imagep->getTextureHeight(), 16, ROUNDED_RECT_TOP);
+				gl_segmented_rect_2d_tex(r.mLeft - mStatusBarPad / 3, r.mTop + 2, r.mRight + mStatusBarPad / 3 - 3, r.mBottom, 
+										 mRoundedSquare->getTextureWidth(), mRoundedSquare->getTextureHeight(), 16, ROUNDED_RECT_TOP);
 				// here's the main background.  Note that it overhangs on the bottom so as to hide the
 				// focus highlight on the bottom panel, thus producing the illusion that the focus highlight
 				// continues around the tabs
-				color = gColors.getColor("FocusBackgroundColor");
+				static LLCachedControl<LLColor4U> focus_background_color(gColors, "FocusBackgroundColor");
+				color = LLColor4(focus_background_color);
 				gGL.color4fv(color.mV);
-				gl_segmented_rect_2d_tex(r.mLeft - PAD/3 + 1, r.mTop + 1, r.mRight + PAD/3 - 1, r.mBottom - 1, 
-										 imagep->getTextureWidth(), imagep->getTextureHeight(), 16, ROUNDED_RECT_TOP);
+				gl_segmented_rect_2d_tex(r.mLeft - mStatusBarPad / 3 + 1, r.mTop + 1, r.mRight + mStatusBarPad / 3 - 1, r.mBottom - 1, 
+										 mRoundedSquare->getTextureWidth(), mRoundedSquare->getTextureHeight(), 16, ROUNDED_RECT_TOP);
 			}
 		}
 	}
@@ -312,22 +320,22 @@ void LLOverlayBar::draw()
 void LLOverlayBar::refresh()
 {
 	BOOL im_received = gIMMgr->getIMReceived();
-	childSetVisible("IM Received", im_received);
-	childSetEnabled("IM Received", im_received);
+	mBtnIMReceiced->setVisible(im_received);
+	mBtnIMReceiced->setEnabled(im_received);
 
 	BOOL busy = gAgent.getBusy();
-	childSetVisible("Set Not Busy", busy);
-	childSetEnabled("Set Not Busy", busy);
+	mBtnSetNotBusy->setVisible(busy);
+	mBtnSetNotBusy->setEnabled(busy);
 
 	BOOL flycam = LLViewerJoystick::getInstance()->getOverrideCamera();
-	childSetVisible("Flycam", flycam);
-	childSetEnabled("Flycam", flycam);
+	mBtnFlyCam->setVisible(flycam);
+	mBtnFlyCam->setEnabled(flycam);
 
 	BOOL mouselook_grabbed;
 	mouselook_grabbed = gAgent.isControlGrabbed(CONTROL_ML_LBUTTON_DOWN_INDEX)
 						|| gAgent.isControlGrabbed(CONTROL_ML_LBUTTON_UP_INDEX);
-	childSetVisible("Mouselook", mouselook_grabbed);
-	childSetEnabled("Mouselook", mouselook_grabbed);
+	mBtnMouseLook->setVisible(mouselook_grabbed);
+	mBtnMouseLook->setEnabled(mouselook_grabbed);
 
 	BOOL sitting = FALSE;
 	if (gAgent.getAvatarObject())
@@ -337,27 +345,26 @@ void LLOverlayBar::refresh()
 		{
 			sitting=FALSE;
 		} else // sitting = true if agent is sitting
-//mk	
+//mk
 		sitting = gAgent.getAvatarObject()->mIsSitting;
-		childSetVisible("Stand Up", sitting);
-		childSetEnabled("Stand Up", sitting);
-		
+		mBtnStandUp->setVisible(sitting);
+		mBtnStandUp->setEnabled(sitting);
+
 	}
 
-	const S32 PAD = gSavedSettings.getS32("StatusBarPad");
 	const S32 ENDPAD = 8;
-	S32 right = getRect().getWidth() - master_remote_width - PAD - ENDPAD;
+	S32 right = getRect().getWidth() - master_remote_width - mStatusBarPad - ENDPAD;
 	LLRect r;
 
-	BOOL master_remote = !gSavedSettings.getBOOL("HideMasterRemote");
+	static LLCachedControl<bool> hide_master_remote(gSavedSettings, "HideMasterRemote");
+	BOOL master_remote = !hide_master_remote;
 
 	LLParcel* parcel = LLViewerParcelMgr::getInstance()->getAgentParcel();
 
 	if (mMusicRemote && gAudiop)
 	{
-		if (!parcel 
-			|| parcel->getMusicURL().empty()
-			|| !gSavedSettings.getBOOL("AudioStreamingMusic"))
+		static LLCachedControl<bool> audio_streaming_music(gSavedSettings, "AudioStreamingMusic");
+		if (!parcel || parcel->getMusicURL().empty() || !audio_streaming_music)
 		{
 			mMusicRemote->setVisible(FALSE);
 			mMusicRemote->setEnabled(FALSE);
@@ -368,7 +375,7 @@ void LLOverlayBar::refresh()
 			r = mMusicRemote->getRect();
 			r.mRight = right;
 			r.mLeft = right - music_remote_width;
-			right = r.mLeft - PAD;
+			right = r.mLeft - mStatusBarPad;
 			mMusicRemote->setRect(r);
 			mMusicRemote->setVisible(TRUE);
 			master_remote = TRUE;
@@ -377,15 +384,15 @@ void LLOverlayBar::refresh()
 
 	if (mMediaRemote)
 	{
-		if (parcel && parcel->getMediaURL()[0] &&
-			gSavedSettings.getBOOL("AudioStreamingVideo"))
+		static LLCachedControl<bool> audio_streaming_video(gSavedSettings, "AudioStreamingVideo");
+		if (parcel && parcel->getMediaURL()[0] && audio_streaming_video)
 		{
 			// display remote control 
 			mMediaRemote->setEnabled(TRUE);
 			r = mMediaRemote->getRect();
 			r.mRight = right;
 			r.mLeft = right - media_remote_width;
-			right = r.mLeft - PAD;
+			right = r.mLeft - mStatusBarPad;
 			mMediaRemote->setRect(r);
 			mMediaRemote->setVisible(TRUE);
 			master_remote = TRUE;
@@ -479,7 +486,7 @@ void LLOverlayBar::onClickStandUp(void*)
 	LLSelectMgr::getInstance()->deselectAllForStandingUp();
 	gAgent.setControlFlags(AGENT_CONTROL_STAND_UP);
 //MK
-	if (gRRenabled && gAgent.mRRInterface.contains ("standtp"))
+	if (gRRenabled && gAgent.mRRInterface.contains("standtp"))
 	{
 		gAgent.mRRInterface.mSnappingBackToLastStandingLocation = TRUE;
 		gAgent.teleportViaLocationLookAt (gAgent.mRRInterface.mLastStandingLocation);
@@ -521,9 +528,7 @@ void LLOverlayBar::mediaPlay(void*)
 	if (parcel)
 	{
 		std::string path("");
-#ifdef MEDIA_FILTERING
 		LLViewerParcelMedia::sIsUserAction = true;
-#endif
 		LLViewerParcelMedia::play(parcel);
 	}
 }
@@ -559,18 +564,14 @@ void LLOverlayBar::musicPlay(void*)
 	if (gAudiop)
 	{
 		LLParcel* parcel = LLViewerParcelMgr::getInstance()->getAgentParcel();
-		if ( parcel )
+		if (parcel)
 		{
 			// this doesn't work properly when crossing parcel boundaries - even when the 
 			// stream is stopped, it doesn't return the right thing - commenting out for now.
-// 			if ( gAudiop->isInternetStreamPlaying() == 0 )
+// 			if (gAudiop->isInternetStreamPlaying() == 0)
 			{
-#ifdef MEDIA_FILTERING
 				LLViewerParcelMedia::sIsUserAction = true;
 				LLViewerParcelMedia::playStreamingMusic(parcel);
-#else
-				gAudiop->startInternetStream(parcel->getMusicURL());
-#endif
 			}
 		}
 	}

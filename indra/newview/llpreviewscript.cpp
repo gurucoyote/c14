@@ -53,6 +53,7 @@
 #include "llagent.h"
 #include "llappviewer.h"
 #include "llassetuploadresponders.h"
+#include "lldirpicker.h"
 #include "llfloatersearchreplace.h"
 #include "llinventorymodel.h"
 #include "llmediactrl.h"
@@ -125,6 +126,8 @@ static bool have_script_upload_cap(LLUUID object_id)
 /// LLScriptEdCore
 /// ---------------------------------------------------------------------------
 
+std::set<LLScriptEdCore*> LLScriptEdCore::sList;
+
 struct LLSECKeywordCompare
 {
 	bool operator()(const std::string& lhs, const std::string& rhs)
@@ -144,6 +147,7 @@ LLScriptEdCore::LLScriptEdCore(const std::string& name,
 							   void* userdata,
 							   S32 bottom_pad)
 :	LLPanel(std::string("name"), rect),
+	mScriptName(std::string("untitled")),
 	mSampleText(sample),
 	mHelpURL(help_url),
 	mEditor(NULL),
@@ -159,6 +163,8 @@ LLScriptEdCore::LLScriptEdCore(const std::string& name,
 	mHasScriptData(FALSE),
 	LLEventTimer(60)
 {
+	sList.insert(this);
+
 	setFollowsAll();
 	setBorderVisible(FALSE);
 
@@ -214,7 +220,7 @@ LLScriptEdCore::LLScriptEdCore(const std::string& name,
 	}
 
 	LLColor3 color(0.5f, 0.0f, 0.15f);
-	mEditor->loadKeywords(gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS,"keywords.ini"), funcs, tooltips, color);
+	mEditor->loadKeywords(gDirUtilp->getExpandedFilename(LL_PATH_APP_SETTINGS, "keywords.ini"), funcs, tooltips, color);
 
 	std::vector<std::string> primary_keywords;
 	std::vector<std::string> secondary_keywords;
@@ -265,6 +271,7 @@ LLScriptEdCore::LLScriptEdCore(const std::string& name,
 LLScriptEdCore::~LLScriptEdCore()
 {
 	deleteBridges();
+	sList.erase(this);
 }
 
 BOOL LLScriptEdCore::tick()
@@ -276,7 +283,15 @@ BOOL LLScriptEdCore::tick()
 void LLScriptEdCore::initMenu()
 {
 
-	LLMenuItemCallGL* menuItem = getChild<LLMenuItemCallGL>("Save");
+	LLMenuItemCallGL* menuItem = getChild<LLMenuItemCallGL>("Load From File");
+	menuItem->setMenuCallback(onBtnLoadFromFile, this);
+	menuItem->setEnabledCallback(enableSaveLoadFile);
+
+	menuItem = getChild<LLMenuItemCallGL>("Save To File");
+	menuItem->setMenuCallback(onBtnSaveToFile, this);
+	menuItem->setEnabledCallback(enableSaveLoadFile);
+
+	menuItem = getChild<LLMenuItemCallGL>("Save To Inventory");
 	menuItem->setMenuCallback(onBtnSave, this);
 	menuItem->setEnabledCallback(hasChanged);
 
@@ -332,6 +347,19 @@ void LLScriptEdCore::setScriptText(const std::string& text, BOOL is_valid)
 		mEditor->setText(text);
 		mHasScriptData = is_valid;
 	}
+}
+
+void LLScriptEdCore::setScriptName(std::string name)
+{
+	if (name.find("Script: ") == 0)
+	{
+		name = name.substr(8);
+	}
+	if (name.empty())
+	{
+		name = "untitled";
+	}
+	mScriptName = name;
 }
 
 BOOL LLScriptEdCore::hasChanged(void* userdata)
@@ -742,11 +770,103 @@ void LLScriptEdCore::doSave(void* userdata, BOOL close_after_save)
 	}
 }
 
+// static 
+BOOL LLScriptEdCore::enableSaveLoadFile(void* userdata)
+{
+	LLScriptEdCore* self = (LLScriptEdCore*)userdata;
+	if (!self || !self->mEditor) return FALSE;
+	return !LLFilePickerThread::isInUse() && !LLDirPickerThread::isInUse()
+		   && self->mHasScriptData;
+}
+
 // static
-void LLScriptEdCore::onBtnSave(void* data)
+void LLScriptEdCore::loadFromFileCallback(LLFilePicker::ELoadFilter type,
+										  std::string& filename,
+										  std::deque<std::string>& files,
+										  void* userdata)
+{
+	LLScriptEdCore* self = (LLScriptEdCore*)userdata;
+	if (!self || !sList.count(self))
+	{
+		LLNotifications::instance().add("LoadScriptAborted");
+		return;
+	}
+	if (!filename.empty())
+	{
+		std::ifstream file(filename.c_str());
+		if (!file.fail())
+		{
+			self->mEditor->clear();
+			std::string line, text;
+			while (!file.eof())
+			{
+				getline(file, line);
+				text += line + "\n";
+			}
+			file.close();
+			LLWString wtext = utf8str_to_wstring(text);
+			LLWStringUtil::replaceTabsWithSpaces(wtext, 4);
+			text = wstring_to_utf8str(wtext);
+			self->setScriptText(text, TRUE);
+			self->enableSave(TRUE);
+		}
+	}
+}
+
+// static
+void LLScriptEdCore::onBtnLoadFromFile(void* userdata)
+{
+	(new LLLoadFilePicker(LLFilePicker::FFLOAD_SCRIPT,
+						  LLScriptEdCore::loadFromFileCallback,
+						  userdata))->getFile();
+}
+
+//static
+void LLScriptEdCore::saveToFileCallback(LLFilePicker::ESaveFilter type,
+										std::string& filename,
+										void* userdata)
+{
+	LLScriptEdCore* self = (LLScriptEdCore*)userdata;
+	if (!self || !sList.count(self))
+	{
+		LLNotifications::instance().add("SaveScriptAborted");
+		return;
+	}
+
+	if (!filename.empty())
+	{
+		std::string lcname = filename;
+		LLStringUtil::toLower(lcname);
+		if (lcname.find(".lsl") != lcname.length() - 4 &&
+			lcname.find(".txt") != lcname.length() - 4)
+		{
+			filename += ".lsl";
+		}
+		std::ofstream file(filename.c_str());
+		if (!file.fail())
+		{
+			file << self->mEditor->getText();
+			file.close();
+		}
+	}
+}
+
+// static
+void LLScriptEdCore::onBtnSaveToFile(void* userdata)
+{
+	LLScriptEdCore* self = (LLScriptEdCore*)userdata;
+	if (!self || !sList.count(self)) return;
+	std::string suggestion = self->mScriptName + ".lsl";
+	(new LLSaveFilePicker(LLFilePicker::FFSAVE_SCRIPT,
+						  LLScriptEdCore::saveToFileCallback,
+						  userdata))->getSaveFile(suggestion);
+}
+
+// static
+void LLScriptEdCore::onBtnSave(void* userdata)
 {
 	// do the save, but don't close afterwards
-	doSave(data, FALSE);
+	doSave(userdata, FALSE);
 }
 
 // static
@@ -1053,6 +1173,7 @@ LLPreviewLSL::LLPreviewLSL(const std::string& name, const LLRect& rect,
 	}
 
 	setTitle(title);
+	mScriptEd->setScriptName(title);
 
 	if (!getHost())
 	{
@@ -1219,7 +1340,7 @@ void LLPreviewLSL::saveIfNeeded()
 	LLTransactionID tid;
 	tid.generate();
 	LLAssetID asset_id = tid.makeAssetID(gAgent.getSecureSessionID());
-	std::string filepath = gDirUtilp->getExpandedFilename(LL_PATH_CACHE,asset_id.asString());
+	std::string filepath = gDirUtilp->getExpandedFilename(LL_PATH_CACHE, asset_id.asString());
 	std::string filename = filepath + ".lsl";
 
 	LLFILE* fp = LLFile::fopen(filename, "wb");
@@ -1577,12 +1698,12 @@ LLLiveLSLEditor::LLLiveLSLEditor(const std::string& name,
 	LLCallbackMap::map_t factory_map;
 	factory_map["script ed panel"] = LLCallbackMap(LLLiveLSLEditor::createScriptEdPanel, this);
 
-	LLUICtrlFactory::getInstance()->buildFloater(this,"floater_live_lsleditor.xml", &factory_map);
+	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_live_lsleditor.xml", &factory_map);
 
 	childSetCommitCallback("running", LLLiveLSLEditor::onRunningCheckboxClicked, this);
 	childSetEnabled("running", false);
 
-	childSetAction("Reset",&LLLiveLSLEditor::onReset,this);
+	childSetAction("Reset", &LLLiveLSLEditor::onReset, this);
 	childSetEnabled("Reset", true);
 
 	mScriptEd->mEditor->makePristine();
@@ -1596,6 +1717,7 @@ LLLiveLSLEditor::LLLiveLSLEditor(const std::string& name,
 	}
 
 	setTitle(title);
+	mScriptEd->setScriptName(title);
 }
 
 LLLiveLSLEditor::~LLLiveLSLEditor()

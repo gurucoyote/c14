@@ -174,7 +174,6 @@ protected:
 
 	virtual std::string generateSerialNumber() = 0; // Platforms specific classes generate this.
 
-
 private:
 
 	bool initThreads(); // Initialize viewer threads, return false on failure.
@@ -243,15 +242,6 @@ private:
 	// for tracking viewer<->region circuit death
 	bool mAgentRegionLastAlive;
 	LLUUID mAgentRegionLastID;
-
-public:
-	//some information for updater
-	typedef struct
-	{
-		std::string mUpdateExePath;
-		std::ostringstream mParams;
-	}LLUpdaterInfo ;
-	static LLUpdaterInfo *sUpdaterInfo ;
 };
 
 // consts from viewer.h

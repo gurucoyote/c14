@@ -33,7 +33,6 @@
 /*
  *
  *  Precompiled prefix file used for
- *		AutoUpdater
  *		crashreporter
  *
  */

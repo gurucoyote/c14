@@ -35,9 +35,6 @@
 
 #include "llviewermedia.h"
 
-// For use by other patches so they know that media filtering is implemented.
-#define MEDIA_FILTERING 1
-
 class LLMessageSystem;
 class LLParcel;
 class LLViewerParcelMediaNavigationObserver;

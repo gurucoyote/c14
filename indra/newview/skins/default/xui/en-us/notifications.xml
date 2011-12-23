@@ -738,6 +738,48 @@ There was a problem uploading a report screenshot due to the following reason: [
   </notification>
 
   <notification
+   icon="notifytip.tga"
+   name="SnapshotAborted"
+   type="notifytip">
+The snapshot floater was closed before the saving could occur. Snapshot aborted.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="LoadScriptAborted"
+   type="notifytip">
+The script editor was closed before the loading could occur. Script loading aborted.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="SaveScriptAborted"
+   type="notifytip">
+The script editor was closed before the saving could occur. Script saving aborted.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="LoadNoteAborted"
+   type="notifytip">
+The note editor was closed before the loading could occur. Note loading aborted.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="SaveNoteAborted"
+   type="notifytip">
+The note editor was closed before the saving could occur. Note saving aborted.
+  </notification>
+
+  <notification
+   icon="alertmodal.tga"
+   name="PreferencesClosed"
+   type="alertmodal">
+The preferences floater has already been closed. Directory change aborted.
+  </notification>
+
+  <notification
    icon="alertmodal.tga"
    name="MustAgreeToLogIn"
    type="alertmodal">
@@ -1501,6 +1543,13 @@ Unknown Vorbis encode failure on: [FILE]
   </notification>
 
   <notification
+   icon="notifytip.tga"
+   name="TextureSavingAborted"
+   type="notifytip">
+The texture preview was closed before the saving could occur. Texture saving aborted.
+  </notification>
+
+  <notification
    icon="alertmodal.tga"
    name="CannotEncodeFile"
    type="alertmodal">
@@ -1618,7 +1667,8 @@ Select objects with scripts.
    icon="alertmodal.tga"
    name="NoFrontmostFloater"
    type="alertmodal">
-No frontmost floater to save.
+No frontmost floater to save or changed frontmost floater.
+Saving aborted. Please retry.
   </notification>
 
   <notification
@@ -2715,86 +2765,10 @@ Finished download of raw terrain file to:
 
   <notification
    icon="alertmodal.tga"
-   name="DownloadWindowsMandatory"
+   name="NeedUpdate"
    type="alertmodal">
-A new version of this viewer is available.
+You need to update this viewer in order to connect to this grid.
 [MESSAGE]
-You must download this update to use [SECOND_LIFE].
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Quit"
-     yestext="Download"/>
-  </notification>
-
-  <notification
-   icon="alertmodal.tga"
-   name="DownloadWindows"
-   type="alertmodal">
-An updated version of this viewer is available.
-[MESSAGE]
-This update is not required, but we suggest you install it to improve performance and stability.
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Continue"
-     yestext="Download"/>
-  </notification>
-
-  <notification
-   icon="alertmodal.tga"
-   name="DownloadWindowsReleaseForDownload"
-   type="alertmodal">
-An updated version of this viewer is available.
-[MESSAGE]
-This update is not required, but we suggest you install it to improve performance and stability.
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Continue"
-     yestext="Download"/>
-  </notification>
-
-  <notification
-   icon="alertmodal.tga"
-   name="DownloadMacMandatory"
-   type="alertmodal">
-A new version of this viewer is available.
-[MESSAGE]
-You must download this update to use [SECOND_LIFE].
-
-Download to your Applications folder?
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Quit"
-     yestext="Download"/>
-  </notification>
-
-  <notification
-   icon="alertmodal.tga"
-   name="DownloadMac"
-   type="alertmodal">
-An updated version of this viewer is available.
-[MESSAGE]
-This update is not required, but we suggest you install it to improve performance and stability.
-
-Download to your Applications folder?
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Continue"
-     yestext="Download"/>
-  </notification>
-
-  <notification
-   icon="alertmodal.tga"
-   name="DownloadMacReleaseForDownload"
-   type="alertmodal">
-An updated version of this viewer is available.
-[MESSAGE]
-This update is not required, but we suggest you install it to improve performance and stability.
-
-Download to your Applications folder?
-    <usetemplate
-     name="okcancelbuttons"
-     notext="Continue"
-     yestext="Download"/>
   </notification>
 
   <notification
@@ -5279,6 +5253,13 @@ Please try again later.
    name="ShareInventory"
    type="alert">
 To share an item (or folder) with this avatar, drag it from your inventory to the 'Drop inventory item here' area in the avatar profile.
+  </notification>
+
+  <notification
+   icon="notifytip.tga"
+   name="ExportAborted"
+   type="notifytip">
+The Object was deselected before the export could occur. Export aborted.
   </notification>
 
   <notification

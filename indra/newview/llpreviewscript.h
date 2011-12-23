@@ -40,6 +40,7 @@
 #include "llinventory.h"
 #include "lltabcontainer.h"
 
+#include "llfilepicker.h"
 #include "llpreview.h"
 
 class LLButton;
@@ -95,10 +96,12 @@ public:
 	static void		onClickForward(void* userdata);
 	static void		onBtnInsertSample(void*);
 	static void		onBtnInsertFunction(LLUICtrl*, void*);
-	static void		doSave( void* userdata, BOOL close_after_save );
+	static void		doSave(void* userdata, BOOL close_after_save);
 	static void		onMonoCheckboxClicked(LLUICtrl*, void* userdata);
-	static void		onBtnSave(void*);
-	static void		onBtnUndoChanges(void*);
+	static void		onBtnLoadFromFile(void* userdata);
+	static void		onBtnSaveToFile(void* userdata);
+	static void		onBtnSave(void* userdata);
+	static void		onBtnUndoChanges(void* userdata);
 	static void		onSearchMenu(void* userdata);
 
 	static void		onUndoMenu(void* userdata);
@@ -117,9 +120,10 @@ public:
 	static BOOL		enableSelectAllMenu(void* userdata);
 	static BOOL		enableDeselectMenu(void* userdata);
 
+	static BOOL		enableSaveLoadFile(void* userdata);
 	static BOOL		hasChanged(void* userdata);
 
-	LLCheckBoxCtrl*	getMonoCheckBox() { return mMonoCheckbox; }
+	LLCheckBoxCtrl*	getMonoCheckBox()			{ return mMonoCheckbox; }
 	BOOL			monoChecked() const;
 
 	void selectFirstError();
@@ -130,7 +134,9 @@ public:
 
 	virtual BOOL tick();
 
-	void enableSave(BOOL b) {mEnableSave = b;}
+	void enableSave(BOOL b)						{ mEnableSave = b; }
+
+	void setScriptName(std::string name);
 
 protected:
 	void deleteBridges();
@@ -139,9 +145,19 @@ protected:
 	void addHelpItemToHistory(const std::string& help_string);
 	static void onErrorList(LLUICtrl*, void* user_data);
 
- 	virtual const char *getTitleName() const { return "Script"; }
+ 	virtual const char *getTitleName() const	{ return "Script"; }
+
+	static void loadFromFileCallback(LLFilePicker::ELoadFilter type,
+									 std::string& filename,
+									 std::deque<std::string>& files,
+									 void* userdata);
+
+	static void saveToFileCallback(LLFilePicker::ESaveFilter type,
+								   std::string& filename,
+								   void* userdata);
 
 private:
+	std::string		mScriptName;
 	std::string		mSampleText;
 	std::string		mAutosaveFilename;
 	std::string		mHelpURL;
@@ -163,6 +179,8 @@ private:
 	S32				mLiveHelpHistorySize;
 	BOOL			mEnableSave;
 	BOOL			mHasScriptData;
+
+	static std::set<LLScriptEdCore*> sList;
 };
 
 
@@ -171,7 +189,7 @@ class LLPreviewLSL : public LLPreview
 {
 public:
 	LLPreviewLSL(const std::string& name, const LLRect& rect, const std::string& title,
-				 const LLUUID& item_uuid );
+				 const LLUUID& item_uuid);
 	virtual void callbackLSLCompileSucceeded();
 	virtual void callbackLSLCompileFailed(const LLSD& compile_errors);
 

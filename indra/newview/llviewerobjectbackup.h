@@ -35,7 +35,8 @@ enum export_states {
 	EXPORT_TEXTURES,
 	EXPORT_LLSD,
 	EXPORT_DONE,
-	EXPORT_FAILED
+	EXPORT_FAILED,
+	EXPORT_ABORTED
 };
 
 class LLObjectBackup : public LLFloater
@@ -45,11 +46,11 @@ public:
 
 	// Floater stuff
 	virtual void show(bool exporting);
-	virtual void draw();
 	virtual void onClose(bool app_quitting);
 
 	// Static accessor
 	static LLObjectBackup* getInstance();
+	static bool instanceExists()	{ return sInstance != NULL; }
 
 	// Export idle callback
 	static void exportWorker(void *userdata);
@@ -67,7 +68,7 @@ public:
 	void uploadNextAsset();
 
 	// Folder public geter
-	std::string getfolder() { return mFolder; };
+	std::string getfolder()			{ return mFolder; };
 
 	// Prim updated callback
 	void primUpdate(LLViewerObject* object);
@@ -107,7 +108,18 @@ private:
 	// Convert a selection list of objects to LLSD
 	LLSD primsToLLSD(LLViewerObject::child_list_t child_list, bool is_attachment);
 
+	// Start the export process
+	void doExportObject(std::string filename);
+	static void exportCallback(LLFilePicker::ESaveFilter type,
+							   std::string& filename,
+							   void* user_data);
+
 	// Start the import process
+	void doImportObject(std::string filename);
+	static void importCallback(LLFilePicker::ELoadFilter type,
+							   std::string& filename,
+							   std::deque<std::string>& files,
+							   void* user_data);
 	void importFirstObject();
 
 	// Move to the next import group

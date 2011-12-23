@@ -43,17 +43,12 @@
 
 class LLButton;
 class LLChat;
-class LLComboBox;
-class LLLineEditor;
-class LLViewerTextEditor;
-class LLMessageSystem;
-class LLUUID;
-class LLCheckBoxCtrl;
+class LLChatBar;
 class LLPanelActiveSpeakers;
-class LLLogChat;
+class LLViewerTextEditor;
 
 class LLFloaterChat
-	:	public LLFloater, public LLUISingleton<LLFloaterChat, LLFloaterChat>
+:	public LLFloater, public LLUISingleton<LLFloaterChat, LLFloaterChat>
 {
 public:
 	LLFloaterChat(const LLSD& seed);
@@ -65,6 +60,7 @@ public:
 	/*virtual*/ void onClose(bool app_quitting);
 	/*virtual*/ void onVisibilityChange(BOOL cur_visibility);
 	/*virtual*/ void setMinimized(BOOL);
+
 	void updateConsoleVisibility();
 	void updateSettings();
 
@@ -80,24 +76,30 @@ public:
 
 	static void triggerAlerts(const std::string& text);
 
-	static void onClickMute(void *data);
-	static void onClickToggleShowMute(LLUICtrl* caller, void *data);
-	static void onClickToggleTranslateChat(LLUICtrl* caller, void *data);
-	static void onClickToggleActiveSpeakers(void* userdata);
 	static void chatFromLogFile(LLLogChat::ELogLineType type,std::string line, void* userdata);
 	static void loadHistory();
-	static void* createSpeakersPanel(void* data);
-	static void* createChatPanel(void* data);
 
 	// visibility policy for LLUISingleton
 	static bool visible(LLFloater* instance, const LLSD& key);
 	static void show(LLFloater* instance, const LLSD& key);
 	static void hide(LLFloater* instance, const LLSD& key);
 
-	LLPanelActiveSpeakers* mPanel;
-
 private:
-	bool mUseOldChatHistory;
+	static void* createSpeakersPanel(void* data);
+	static void* createChatPanel(void* data);
+
+	static void onClickMute(void *data);
+	static void onClickToggleShowMute(LLUICtrl* ctrl, void *data);
+	static void onClickToggleTranslateChat(LLUICtrl* ctrl, void *data);
+	static void onClickToggleActiveSpeakers(void* userdata);
+
+	LLChatBar*				mChatBarPanel;
+	LLPanelActiveSpeakers*	mSpeakerPanel;
+
+	LLButton*				mToggleActiveSpeakersBtn;
+
+	LLViewerTextEditor*		mHistoryWithoutMutes;
+	LLViewerTextEditor*		mHistoryWithMutes;
 };
 
 #endif

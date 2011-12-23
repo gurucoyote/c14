@@ -90,7 +90,9 @@ std::string LLLogChat::timestamp(bool withdate)
 
 	std::string format = "";
 	if (withdate)
+	{
 		format = gSavedSettings.getString("ShortDateFormat") + " ";
+	}
 	if (gSavedPerAccountSettings.getBOOL("LogTimestampSeconds"))
 	{
 		format += gSavedSettings.getString("LongTimeFormat");
@@ -106,7 +108,6 @@ std::string LLLogChat::timestamp(bool withdate)
 
 	return text;
 }
-
 
 //static
 void LLLogChat::saveHistory(std::string filename, std::string line)

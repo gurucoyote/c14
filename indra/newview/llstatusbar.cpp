@@ -37,9 +37,11 @@
 #include "llstatusbar.h"
 
 // library includes
+#include "llbutton.h"
 #include "llframetimer.h"
 #include "llfontgl.h"
 #include "llparcel.h"
+#include "lllineeditor.h"
 #include "llnotifications.h"
 #include "llrect.h"
 #include "llresmgr.h"
@@ -124,38 +126,60 @@ LLStatusBar::LLStatusBar(const std::string& name, const LLRect& rect)
 	setFocusRoot(FALSE);
 
 	mTextParcelName = getChild<LLTextBox>("ParcelNameText");
-	mTextBalance = getChild<LLTextBox>("BalanceText");
+	mTextParcelName->setClickedCallback(onClickParcelInfo);
 
+	mBtnScriptError = getChild<LLButton>("scriptout");
+	mBtnScriptError->setClickedCallback(onClickScriptDebug, this);
+
+	mBtnHealth = getChild<LLButton>("health");
+	mBtnHealth->setClickedCallback(onClickHealth, this);
 	mTextHealth = getChild<LLTextBox>("HealthText");
+
 	mTextTime = getChild<LLTextBox>("TimeText");
 
-	childSetAction("scriptout", onClickScriptDebug, this);
-	childSetAction("health", onClickHealth, this);
-	childSetAction("no_fly", onClickFly, this);
-	childSetAction("buyland", onClickBuyLand, this);
-	childSetAction("buycurrency", onClickBuyCurrency, this);
-	childSetAction("no_build", onClickBuild, this);
-	childSetAction("no_scripts", onClickScripts, this);
-	childSetAction("restrictpush", onClickPush, this);
-	childSetAction("status_no_voice", onClickVoice, this);
-	childSetAction("status_no_see", onClickSee, this);
+	mBtnNoFly = getChild<LLButton>("no_fly");
+	mBtnNoFly->setClickedCallback(onClickFly, this);
 
-	childSetCommitCallback("search_editor", onCommitSearch, this);
-	childSetAction("search_btn", onClickSearch, this);
+	mBtnBuyLand = getChild<LLButton>("buyland");
+	mBtnBuyLand->setClickedCallback(onClickBuyLand, this);
+
+	mBtnNoBuild = getChild<LLButton>("no_build");
+	mBtnNoBuild->setClickedCallback(onClickBuild, this);
+
+	mBtnNoScript = getChild<LLButton>("no_scripts");
+	mBtnNoScript->setClickedCallback(onClickScripts, this);
+
+	mBtnNoPush = getChild<LLButton>("restrictpush");
+	mBtnNoPush->setClickedCallback(onClickPush, this);
+
+	mBtnNoVoice = getChild<LLButton>("status_no_voice");
+	mBtnNoVoice->setClickedCallback(onClickVoice, this);
+
+	mBtnNoSee = getChild<LLButton>("status_no_see");
+	mBtnNoSee->setClickedCallback(onClickSee, this);
+
+	mBtnBuyCurrency = getChild<LLButton>("buycurrency");
+	mBtnBuyCurrency->setClickedCallback(onClickBuyCurrency, this);
+
+	mTextBalance = getChild<LLTextBox>("BalanceText");
+	mTextBalance->setClickedCallback(onClickBalance);
 
 	bool search_bar = gSavedSettings.getBOOL("ShowSearchBar") != FALSE;
-	childSetVisible("search_editor", search_bar);
-	childSetVisible("search_btn", search_bar);
-	childSetVisible("menubar_search_bevel_bg", search_bar);
-
-	childSetActionTextbox("ParcelNameText", onClickParcelInfo);
-	childSetActionTextbox("BalanceText", onClickBalance);
+	mBtnSearch = getChild<LLButton>("search_btn");
+	mBtnSearch->setVisible(search_bar);
+	mBtnSearch->setClickedCallback(onClickSearch, this);
+	mBtnSearchBevel = getChild<LLButton>("menubar_search_bevel_bg");
+	mBtnSearchBevel->setVisible(search_bar);
+	mLineEditSearch = getChild<LLLineEditor>("search_editor");
+	mLineEditSearch->setVisible(search_bar);
+	mLineEditSearch->setCommitCallback(onCommitSearch);
+	mLineEditSearch->setCallbackUserData(this);
 
 	// Adding Net Stat Graph
 	S32 x = getRect().getWidth() - 2;
 	S32 y = 0;
 	LLRect r;
-	r.set( x - SIM_STAT_WIDTH, y + MENU_BAR_HEIGHT - 1, x, y + 1);
+	r.set(x - SIM_STAT_WIDTH, y + MENU_BAR_HEIGHT - 1, x, y + 1);
 	mSGBandwidth = new LLStatGraph("BandwidthGraph", r);
 	mSGBandwidth->setFollows(FOLLOWS_BOTTOM | FOLLOWS_RIGHT);
 	mSGBandwidth->setStat(&LLViewerStats::getInstance()->mKBitStat);
@@ -167,7 +191,7 @@ LLStatusBar::LLStatusBar(const std::string& name, const LLRect& rect)
 	addChild(mSGBandwidth);
 	x -= SIM_STAT_WIDTH + 2;
 
-	r.set( x-SIM_STAT_WIDTH, y+MENU_BAR_HEIGHT-1, x, y+1);
+	r.set(x - SIM_STAT_WIDTH, y + MENU_BAR_HEIGHT - 1, x, y + 1);
 	mSGPacketLoss = new LLStatGraph("PacketLossPercent", r);
 	mSGPacketLoss->setFollows(FOLLOWS_BOTTOM | FOLLOWS_RIGHT);
 	mSGPacketLoss->setStat(&LLViewerStats::getInstance()->mPacketsLostPercentStat);
@@ -184,7 +208,8 @@ LLStatusBar::LLStatusBar(const std::string& name, const LLRect& rect)
 	mSGPacketLoss->mPerSec = FALSE;
 	addChild(mSGPacketLoss);
 
-	childSetActionTextbox("stat_btn", onClickStatGraph);
+	mTextStat = getChild<LLTextBox>("stat_btn");
+	mTextStat->setClickedCallback(onClickStatGraph);
 }
 
 LLStatusBar::~LLStatusBar()
@@ -279,15 +304,15 @@ void LLStatusBar::refresh()
 
 	if (LLHUDIcon::iconsNearby())
 	{
-		childGetRect("scriptout", buttonRect);
+		buttonRect = mBtnScriptError->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("scriptout",r);
-		childSetVisible("scriptout", true);
+		mBtnScriptError->setRect(r);
+		mBtnScriptError->setVisible(TRUE);
 		x += buttonRect.getWidth();
 	}
 	else
 	{
-		childSetVisible("scriptout", false);
+		mBtnScriptError->setVisible(FALSE);
 	}
 
 	bool health = (parcel && parcel->getAllowDamage()) || (region && region->getAllowDamage());
@@ -301,9 +326,9 @@ void LLStatusBar::refresh()
 		}
 
 		// Health
-		childGetRect("health", buttonRect);
+		buttonRect = mBtnHealth->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("health", r);
+		mBtnHealth->setRect(r);
 		x += buttonRect.getWidth();
 
 		const S32 health_width = S32(LLFontGL::getFontSansSerifSmall()->getWidth(std::string("100%")));
@@ -311,80 +336,80 @@ void LLStatusBar::refresh()
 		mTextHealth->setRect(r);
 		x += health_width;
 	}
-	childSetVisible("health", health);
+	mBtnHealth->setVisible(health);
 
 	bool no_fly = (parcel && !parcel->getAllowFly()) || (region && region->getBlockFly());
-	childSetVisible("no_fly", no_fly);
+	mBtnNoFly->setVisible(no_fly);
 	if (no_fly)
 	{
-		childGetRect("no_fly", buttonRect);
+		buttonRect = mBtnNoFly->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("no_fly", r);
+		mBtnNoFly->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool no_build = parcel && !parcel->getAllowModify();
-	childSetVisible("no_build", no_build);
+	mBtnNoBuild->setVisible(no_build);
 	if (no_build)
 	{
-		childGetRect("no_build", buttonRect);
+		buttonRect = mBtnNoBuild->getRect();
 		// No Build Zone
 		r.setOriginAndSize( x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("no_build", r);
+		mBtnNoBuild->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool no_scripts = (parcel && !parcel->getAllowOtherScripts()) ||
 					  (region && (region->getRegionFlags() & (REGION_FLAGS_SKIP_SCRIPTS | REGION_FLAGS_ESTATE_SKIP_SCRIPTS)));
-	childSetVisible("no_scripts", no_scripts);
+	mBtnNoScript->setVisible(no_scripts);
 	if (no_scripts)
 	{
-		childGetRect("no_scripts", buttonRect);
+		buttonRect = mBtnNoScript->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("no_scripts", r);
+		mBtnNoScript->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool no_push = (parcel && parcel->getRestrictPushObject()) || (region && region->getRestrictPushObject());
-	childSetVisible("restrictpush", no_push);
+	mBtnNoPush->setVisible(no_push);
 	if (no_push)
 	{
-		childGetRect("restrictpush", buttonRect);
+		buttonRect = mBtnNoPush->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("restrictpush", r);
+		mBtnNoPush->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool no_voice = parcel && !parcel->getParcelFlagAllowVoice(); 
-	childSetVisible("status_no_voice", no_voice);
+	mBtnNoVoice->setVisible(no_voice);
 	if (no_voice)
 	{
-		childGetRect("status_no_voice", buttonRect);
+		buttonRect = mBtnNoVoice->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("status_no_voice", r);
+		mBtnNoVoice->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool no_see = parcel && parcel->getHaveNewParcelLimitData() && !parcel->getSeeAVs();
-	childSetVisible("status_no_see", no_see);
+	mBtnNoSee->setVisible(no_see);
 	if (no_see)
 	{
-		childGetRect("status_no_see", buttonRect);
+		buttonRect = mBtnNoSee->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("status_no_see", r);
+		mBtnNoSee->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
 	bool canBuyLand = parcel && !parcel->isPublic() &&
 					  LLViewerParcelMgr::getInstance()->canAgentBuyParcel(parcel, false);
-	childSetVisible("buyland", canBuyLand);
+	mBtnBuyLand->setVisible(canBuyLand);
 	if (canBuyLand)
 	{
 		//HACK: layout tweak until this is all xml
 		x += 9;
-		childGetRect("buyland", buttonRect);
+		buttonRect = mBtnBuyLand->getRect();
 		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
-		childSetRect("buyland", r );
+		mBtnBuyLand->setRect(r);
 		x += buttonRect.getWidth();
 	}
 
@@ -514,44 +539,44 @@ void LLStatusBar::refresh()
 
 	S32 new_right = getRect().getWidth();
 
-	childGetRect("stat_btn", r);
+	r = mTextStat->getRect();
 	r.translate( new_right - r.mRight, 0);
-	childSetRect("stat_btn", r);
+	mTextStat->setRect(r);
 	new_right -= r.getWidth() + 12;
 
 	static LLCachedControl<bool> search_visible(gSavedSettings, "ShowSearchBar");
 	if (search_visible)
 	{
-		childGetRect("menubar_search_bevel_bg", r);
+		r = mBtnSearchBevel->getRect();
 		r.translate( new_right - r.mRight, 0);
-		childSetRect("menubar_search_bevel_bg", r);
+		mBtnSearchBevel->setRect(r);
 
-		childGetRect("search_btn", r);
+		r = mBtnSearch->getRect();
 		r.translate( new_right - r.mRight, 0);
-		childSetRect("search_btn", r);
+		mBtnSearch->setRect(r);
 		new_right -= r.getWidth();
 
-		childGetRect("search_editor", r);
+		r = mLineEditSearch->getRect();
 		r.translate( new_right - r.mRight, 0);
-		childSetRect("search_editor", r);
+		mLineEditSearch->setRect(r);
 		new_right -= r.getWidth() + 6;
 	}
 
 	// Set rects of money, buy money, time
-	childGetRect("BalanceText", r);
+	r = mTextBalance->getRect();
 	r.translate(new_right - r.mRight, 0);
-	childSetRect("BalanceText", r);
+	mTextBalance->setRect(r);
 	new_right -= r.getWidth() - 18;
 
-	childGetRect("buycurrency", r);
+	r = mBtnBuyCurrency->getRect();
 	r.translate( new_right - r.mRight, 0);
-	childSetRect("buycurrency", r);
+	mBtnBuyCurrency->setRect(r);
 	new_right -= r.getWidth() + 6;
 
-	childGetRect("TimeText", r);
+	r = mTextTime->getRect();
 	// mTextTime->getTextPixelWidth();
 	r.translate( new_right - r.mRight, 0);
-	childSetRect("TimeText", r);
+	mTextTime->setRect(r);
 	// new_right -= r.getWidth() + MENU_PARCEL_SPACING;
 
 	// Adjust region name and parcel name
@@ -562,21 +587,22 @@ void LLStatusBar::refresh()
 	mTextParcelName->setRect(r);
 
 	// Set search bar visibility
-	childSetVisible("search_editor", search_visible);
-	childSetVisible("search_btn", search_visible);
-	childSetVisible("menubar_search_bevel_bg", search_visible);
-	mSGBandwidth->setVisible(true);
-	mSGPacketLoss->setVisible(true);
-	childSetEnabled("stat_btn", true);
+	mLineEditSearch->setVisible(search_visible);
+	mBtnSearch->setVisible(search_visible);
+	mBtnSearchBevel->setVisible(search_visible);
+	mSGBandwidth->setVisible(TRUE);
+	mSGPacketLoss->setVisible(TRUE);
+	mTextStat->setEnabled(TRUE);
 }
 
 void LLStatusBar::setVisibleForMouselook(bool visible)
 {
 	mTextBalance->setVisible(visible);
 	mTextTime->setVisible(visible);
-	childSetVisible("buycurrency", visible);
-	childSetVisible("search_editor", visible);
-	childSetVisible("search_btn", visible);
+	mBtnBuyCurrency->setVisible(visible);
+	mLineEditSearch->setVisible(visible);
+	mBtnSearch->setVisible(visible);
+	mBtnSearchBevel->setVisible(visible);
 	mSGBandwidth->setVisible(visible);
 	mSGPacketLoss->setVisible(visible);
 	setBackgroundVisible(visible);
@@ -797,7 +823,7 @@ void LLStatusBar::onCommitSearch(LLUICtrl*, void* data)
 void LLStatusBar::onClickSearch(void* data)
 {
 	LLStatusBar* self = (LLStatusBar*)data;
-	std::string search_text = self->childGetText("search_editor");
+	std::string search_text = self->mLineEditSearch->getText();
 	LLFloaterDirectory::showFindAll(search_text);
 }
 

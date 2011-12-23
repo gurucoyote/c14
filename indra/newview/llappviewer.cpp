@@ -51,7 +51,9 @@
 #include "llwindow.h"
 
 #include "llagent.h"
+#include "lldirpicker.h"
 #include "llfeaturemanager.h"
+#include "llfilepicker.h"
 #include "llfirstuse.h"
 #include "llfloaterjoystick.h"
 #include "llfloatersnapshot.h"
@@ -114,7 +116,6 @@
 #include "lltracker.h"
 #include "lltrans.h"
 #include "llviewermenu.h"
-#include "llviewermenufile.h"
 #include "llviewerparcelmgr.h"
 #include "llwaterparammanager.h"
 #include "llwlparammanager.h"
@@ -343,8 +344,6 @@ std::string gLoginPage;
 std::vector<std::string> gLoginURIs;
 static std::string gHelperURI;
 
-LLAppViewer::LLUpdaterInfo *LLAppViewer::sUpdaterInfo = NULL ;
-
 void idle_afk_check()
 {
 	static LLCachedControl<S32> afk_timeout(gSavedSettings, "AFKTimeout");
@@ -447,9 +446,13 @@ static void settings_to_globals()
 	LLFloaterView::setStackScreenWidthFraction(gSavedSettings.getU32("StackScreenWidthFraction"));
 
 #if LL_DARWIN
-	LLFilePickerThread::setBlocking(true);	// Apparently, Darwin doesn't like non-blocking file pickers...
+	// Apparently, Darwin doesn't like non-blocking file pickers...
+	LLFilePickerThread::setBlocking(true);
+	LLDirPickerThread::setBlocking(true);
 #else
-	LLFilePickerThread::setBlocking(gSavedSettings.getBOOL("BlockingFilePicker") == TRUE);
+	bool blocking = (gSavedSettings.getBOOL("NonBlockingFilePicker") == FALSE);
+	LLFilePickerThread::setBlocking(blocking);
+	LLDirPickerThread::setBlocking(blocking);
 #endif
 
 	LLSurface::setTextureSize(gSavedSettings.getU32("RegionTextureSize"));
@@ -1573,6 +1576,7 @@ bool LLAppViewer::cleanup()
 	sTextureFetch->shutDownImageDecodeThread();
 
 	LLFilePickerThread::cleanupClass();
+	LLDirPickerThread::cleanupClass();
 
 	delete sTextureCache;
     sTextureCache = NULL;
@@ -1700,6 +1704,7 @@ bool LLAppViewer::initThreads()
 	gMeshRepo.init();
 
 	LLFilePickerThread::initClass();
+	LLDirPickerThread::initClass();
 
 	// *FIX: no error handling here!
 	return true;
@@ -3441,7 +3446,8 @@ void LLAppViewer::idle()
 	LLEventTimer::updateClass();
 	LLCriticalDamp::updateInterpolants();
 	LLMortician::updateClass();
-	LLFilePickerThread::clearDead();  //calls LLFilePickerThread::notify()
+	LLFilePickerThread::clearDead();	// calls LLFilePickerThread::notify()
+	LLDirPickerThread::clearDead();		// calls LLDirPickerThread::notify()
 
 	F32 dt_raw = idle_timer.getElapsedTimeAndResetF32();
 

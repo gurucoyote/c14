@@ -5547,17 +5547,6 @@
       <key>Value</key>
       <integer>1</integer>
     </map>
-    <key>ForceMandatoryUpdate</key>
-    <map>
-      <key>Comment</key>
-      <string>For QA: On next startup, forces the auto-updater to run</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>0</integer>
-    </map>
     <key>ForwardBtnRect</key>
     <map>
       <key>Comment</key>
@@ -10486,10 +10475,10 @@
       <key>Value</key>
       <real>1</real>
     </map>
-    <key>BlockingFilePicker</key>
+    <key>NonBlockingFilePicker</key>
     <map>
       <key>Comment</key>
-      <string>Use a blocking threaded file picker. Requires a restart. This setting is ignored for Darwin.</string>
+      <string>When TRUE, use a non-blocking file picker. This setting is ignored for Darwin.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>

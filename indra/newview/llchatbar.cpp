@@ -39,39 +39,33 @@
 #include "llchatbar.h"
 
 #include "imageids.h"
-#include "llfontgl.h"
-#include "llrect.h"
-#include "llerror.h"
-#include "llparcel.h"
-#include "llstring.h"
-#include "message.h"
-#include "llfocusmgr.h"
-
-#include "llagent.h"
 #include "llbutton.h"
 #include "llcombobox.h"
-#include "llcommandhandler.h"	// secondlife:///app/chat/ support
-#include "llviewercontrol.h"
-#include "llfloaterchat.h"
-#include "llgesturemgr.h"
+#include "llfocusmgr.h"
+#include "llfontgl.h"
+#include "llframetimer.h"
 #include "llkeyboard.h"
 #include "lllineeditor.h"
-#include "llstatusbar.h"
-#include "lltextbox.h"
+#include "llmultigesture.h"
+#include "llparcel.h"
+#include "llrect.h"
+#include "llstring.h"
+#include "llui.h"
+#include "lluictrlfactory.h"
+#include "message.h"
+
+#include "llagent.h"
+#include "llcommandhandler.h"	// secondlife:///app/chat/ support
+#include "llfloaterchat.h"
+#include "llgesturemgr.h"
+#include "llinventorymodel.h"
 #include "lluiconstants.h"
-#include "llviewergesture.h"			// for triggering gestures
+#include "llviewergesture.h"	// for triggering gestures
+#include "llviewercontrol.h"
 #include "llviewermenu.h"		// for deleting object with DEL key
 #include "llviewerstats.h"
 #include "llviewerwindow.h"
-#include "llframetimer.h"
-#include "llresmgr.h"
 #include "llworld.h"
-#include "llinventorymodel.h"
-#include "llmultigesture.h"
-#include "llui.h"
-#include "llviewermenu.h"
-#include "lluictrlfactory.h"
-
 
 //
 // Globals
@@ -84,7 +78,6 @@ LLChatBar *gChatBar = NULL;
 void toggleChatHistory(void* user_data);
 void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32 channel);
 
-
 class LLChatBarGestureObserver : public LLGestureManagerObserver
 {
 public:
@@ -95,7 +88,6 @@ private:
 	LLChatBar* mChatBar;
 };
 
-
 //
 // Functions
 //
@@ -105,7 +97,7 @@ private:
 LLChatBar::LLChatBar(const std::string& name) 
 :	LLPanel(name, LLRect(), BORDER_NO),
 	mInputEditor(NULL),
-	mSayButton(NULL),
+	mSayFlyoutButton(NULL),
 	mGestureLabelTimer(),
 	mLastSpecialChatChannel(0),
 	mIsBuilt(FALSE),
@@ -118,7 +110,8 @@ LLChatBar::LLChatBar(const std::string& name)
 LLChatBar::LLChatBar(const std::string& name, const LLRect& rect) 
 :	LLPanel(name, rect, BORDER_NO),
 	mInputEditor(NULL),
-	mSayButton(NULL),
+	mHistoryButton(NULL),
+	mSayFlyoutButton(NULL),
 	mGestureLabelTimer(),
 	mLastSpecialChatChannel(0),
 	mIsBuilt(FALSE),
@@ -127,13 +120,13 @@ LLChatBar::LLChatBar(const std::string& name, const LLRect& rect)
 	mObserver(NULL)
 {
 	setIsChrome(TRUE);
-	
+
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_chat_bar.xml");
-	
+
 	setFocusRoot(TRUE);
 
 	setRect(rect); // override xml rect
-	
+
 	setBackgroundOpaque(TRUE);
 	setBackgroundVisible(TRUE);
 
@@ -143,7 +136,6 @@ LLChatBar::LLChatBar(const std::string& name, const LLRect& rect)
 	// Apply custom layout.
 	layout();
 }
-
 
 LLChatBar::~LLChatBar()
 {
@@ -155,26 +147,31 @@ LLChatBar::~LLChatBar()
 
 BOOL LLChatBar::postBuild()
 {
-	childSetAction("History", toggleChatHistory, this);
-
-	mSayButton = getChild<LLFlyoutButton>("Say");
-	if (mSayButton)
+	mHistoryButton = getChild<LLButton>("History", TRUE, FALSE);
+	if (mHistoryButton)
 	{
-		childSetCommitCallback("Say", onClickSay, this);
+		mHistoryButton->setClickedCallback(toggleChatHistory, this);
+	}
+
+	mSayFlyoutButton = getChild<LLFlyoutButton>("Say", TRUE, FALSE);
+	if (mSayFlyoutButton)
+	{
+		mSayFlyoutButton->setCommitCallback(onClickSay);
+		mSayFlyoutButton->setCallbackUserData(this);
 	}
 
 	// attempt to bind to an existing combo box named gesture
-	setGestureCombo(getChild<LLComboBox>("Gesture"));
+	setGestureCombo(getChild<LLComboBox>("Gesture", TRUE, FALSE));
 
-	mInputEditor = getChild<LLLineEditor>("Chat Editor");
+	mInputEditor = getChild<LLLineEditor>("Chat Editor", TRUE, FALSE);
 	if (mInputEditor)
 	{
 		mInputEditor->setCallbackUserData(this);
 		mInputEditor->setKeystrokeCallback(&onInputEditorKeystroke);
 		mInputEditor->setFocusLostCallback(&onInputEditorFocusLost, this);
-		mInputEditor->setFocusReceivedCallback( &onInputEditorGainFocus, this );
-		mInputEditor->setCommitOnFocusLost( FALSE );
-		mInputEditor->setRevertOnEsc( FALSE );
+		mInputEditor->setFocusReceivedCallback(&onInputEditorGainFocus, this);
+		mInputEditor->setCommitOnFocusLost(FALSE);
+		mInputEditor->setRevertOnEsc(FALSE);
 		mInputEditor->setIgnoreTab(TRUE);
 		mInputEditor->setPassDelete(TRUE);
 		mInputEditor->setReplaceNewlinesWithSpaces(FALSE);
@@ -203,12 +200,12 @@ void LLChatBar::reshape(S32 width, S32 height, BOOL called_from_parent)
 }
 
 // virtual
-BOOL LLChatBar::handleKeyHere( KEY key, MASK mask )
+BOOL LLChatBar::handleKeyHere(KEY key, MASK mask)
 {
 	BOOL handled = FALSE;
 
 	// ALT-RETURN is reserved for windowed/fullscreen toggle
-	if( KEY_RETURN == key )
+	if (KEY_RETURN == key)
 	{
 		if (mask == MASK_CONTROL)
 		{
@@ -225,7 +222,7 @@ BOOL LLChatBar::handleKeyHere( KEY key, MASK mask )
 		else if (mask == MASK_NONE)
 		{
 			// say
-			sendChat( CHAT_TYPE_NORMAL );
+			sendChat(CHAT_TYPE_NORMAL);
 			handled = TRUE;
 		}
 	}
@@ -248,10 +245,10 @@ void LLChatBar::layout()
 	S32 rect_width = getRect().getWidth();
 	S32 pad = 4;
 
-	LLRect gesture_rect;
 	S32 gesture_width = 0;
-	if (childGetRect("Gesture", gesture_rect))
+	if (mGestureCombo)
 	{
+		LLRect gesture_rect = mGestureCombo->getRect();
 		gesture_width = gesture_rect.getWidth();
 	}
 	S32 input_width = 0;
@@ -261,34 +258,41 @@ void LLChatBar::layout()
 	S32 y = 3;
 	LLRect r;
 
-	r.setOriginAndSize(x, y, btn_width, BTN_HEIGHT);
-	childSetRect("History", r);
+	if (mHistoryButton)
+	{
+		r.setOriginAndSize(x, y, btn_width, BTN_HEIGHT);
+		mHistoryButton->setRect(r);
+		x += segment_width;
+	}
 
-	x += segment_width;
 	if (mInputEditor)
 	{
 		input_width = rect_width - 2 * segment_width - 3 * pad - gesture_width;
 		r.setOriginAndSize(x, y + 2, input_width, 18);
 		mInputEditor->reshape(r.getWidth(), r.getHeight(), TRUE);
 		mInputEditor->setRect(r);
+		x += input_width + pad;
 	}
 
-	x += input_width + pad;
-	if (mSayButton)
+	if (mSayFlyoutButton)
 	{
 		r.setOriginAndSize(x, y, btn_width, BTN_HEIGHT);
-		mSayButton->reshape(r.getWidth(), r.getHeight(), TRUE);
-		mSayButton->setRect(r);
+		mSayFlyoutButton->reshape(r.getWidth(), r.getHeight(), TRUE);
+		mSayFlyoutButton->setRect(r);
+		x = rect_width - (pad + gesture_width);
 	}
 
-	x = rect_width - (pad + gesture_width);
 	r.setOriginAndSize(x, y, gesture_width, BTN_HEIGHT);
-	childSetRect("Gesture", r);
+	if (mGestureCombo)
+	{
+		mGestureCombo->setRect(r);
+	}
 }
 
 void LLChatBar::refresh()
 {
-	if (!mSecondary) {
+	if (!mSecondary)
+	{
 		// call superclass setVisible so that we don't overwrite the saved setting
 		LLPanel::setVisible(gSavedSettings.getBOOL("ChatVisible"));
 	}
@@ -307,13 +311,14 @@ void LLChatBar::refresh()
 		gAgent.stopTyping();
 	}
 
-	if (!mSecondary) {
-		childSetValue("History", LLFloaterChat::instanceVisible(LLSD()));
+	if (!mSecondary && mHistoryButton)
+	{
+		mHistoryButton->setValue(LLFloaterChat::instanceVisible(LLSD()));
 	}
 
 	if (mInputEditor)
 	{
-		childSetEnabled("Say", mInputEditor->getText().size() > 0);
+		mSayFlyoutButton->setEnabled(mInputEditor->getText().size() > 0);
 	}
 }
 
@@ -349,12 +354,12 @@ void LLChatBar::refreshGestures()
 		{
 			mGestureCombo->addSimpleElement((*it2).first);
 		}
-		
+
 		mGestureCombo->sortByName();
 		// Insert label after sorting, at top, with separator below it
 		mGestureCombo->addSeparator(ADD_TOP);
 		mGestureCombo->addSimpleElement(getString("gesture_label"), ADD_TOP);
-		
+
 		if (!cur_gesture.empty())
 		{ 
 			mGestureCombo->selectByValue(LLSD(cur_gesture));
@@ -386,7 +391,6 @@ void LLChatBar::setKeyboardFocus(BOOL focus)
 		setFocus(FALSE);
 	}
 }
-
 
 // Ignore arrow keys in chat bar
 void LLChatBar::setIgnoreArrowKeys(BOOL b)
@@ -456,7 +460,7 @@ LLWString LLChatBar::stripChannelNumber(const LLWString &mesg, S32* channel)
 			pos++;
 		}
 		while(c && pos < 64 && LLStringOps::isDigit(c));
-		
+
 		// Move the pointer forward to the first non-whitespace char
 		// Check isspace before looping, so we can handle "/33foo"
 		// as well as "/33 foo"
@@ -465,7 +469,7 @@ LLWString LLChatBar::stripChannelNumber(const LLWString &mesg, S32* channel)
 			c = mesg[pos+1];
 			pos++;
 		}
-		
+
 		mLastSpecialChatChannel = strtol(wstring_to_utf8str(channel_string).c_str(), NULL, 10);
 		*channel = mLastSpecialChatChannel;
 		return mesg.substr(pos, mesg.length() - pos);
@@ -478,8 +482,7 @@ LLWString LLChatBar::stripChannelNumber(const LLWString &mesg, S32* channel)
 	}
 }
 
-
-void LLChatBar::sendChat( EChatType type )
+void LLChatBar::sendChat(EChatType type)
 {
 	if (mInputEditor)
 	{
@@ -491,7 +494,7 @@ void LLChatBar::sendChat( EChatType type )
 			// Check if this is destined for another channel
 			S32 channel = 0;
 			stripChannelNumber(text, &channel);
-			
+
 			std::string utf8text = wstring_to_utf8str(text);
 			// Try to trigger a gesture, if not chat to a script.
 			std::string utf8_revised_text;
@@ -531,7 +534,7 @@ void LLChatBar::sendChat( EChatType type )
 ////			gGestureManager.triggerAndReviseString(utf8text, &utf8_revised_text);
 				BOOL found_gesture = gGestureManager.triggerAndReviseString(utf8text, &utf8_revised_text);
 
-				if (gRRenabled && gAgent.mRRInterface.contains ("sendchat") && !gAgent.mRRInterface.containsSubstr ("redirchat:"))
+				if (gRRenabled && gAgent.mRRInterface.contains("sendchat") && !gAgent.mRRInterface.containsSubstr ("redirchat:"))
 				{
 					// user is forbidden to send any chat message on channel 0 except emotes and OOC text
 					utf8_revised_text = gAgent.mRRInterface.crunchEmote (utf8_revised_text, 20);
@@ -575,7 +578,6 @@ void LLChatBar::sendChat( EChatType type )
 	}
 }
 
-
 //-----------------------------------------------------------------------
 // Static functions
 //-----------------------------------------------------------------------
@@ -598,7 +600,6 @@ void LLChatBar::startChat(const char* line)
 		gChatBar->mInputEditor->setCursorToEnd();
 	}
 }
-
 
 // Exit "chat mode" and do the appropriate focus changes
 // static
@@ -631,7 +632,7 @@ void LLChatBar::setVisible(BOOL visible)
 }
 
 // static
-void LLChatBar::onInputEditorKeystroke( LLLineEditor* caller, void* userdata )
+void LLChatBar::onInputEditorKeystroke(LLLineEditor* caller, void* userdata)
 {
 	LLChatBar* self = (LLChatBar *)userdata;
 
@@ -644,7 +645,7 @@ void LLChatBar::onInputEditorKeystroke( LLLineEditor* caller, void* userdata )
 
 	S32 length = raw_text.length();
 
-	if( (length > 0) && (raw_text[0] != '/') )  // forward slash is used for escape (eg. emote) sequences
+	if((length > 0) && (raw_text[0] != '/'))  // forward slash is used for escape (eg. emote) sequences
 	{
 //MK
 		if (!gRRenabled || !gAgent.mRRInterface.containsSubstr ("redirchat:"))
@@ -655,21 +656,6 @@ void LLChatBar::onInputEditorKeystroke( LLLineEditor* caller, void* userdata )
 	{
 		gAgent.stopTyping();
 	}
-
-	/* Doesn't work -- can't tell the difference between a backspace
-	   that killed the selection vs. backspace at the end of line.
-	if (length > 1 
-		&& text[0] == '/'
-		&& key == KEY_BACKSPACE)
-	{
-		// the selection will already be deleted, but we need to trim
-		// off the character before
-		std::string new_text = raw_text.substr(0, length-1);
-		self->mInputEditor->setText( new_text );
-		self->mInputEditor->setCursorToEnd();
-		length = length - 1;
-	}
-	*/
 
 	KEY key = gKeyboard->currentKey();
 
@@ -690,35 +676,30 @@ void LLChatBar::onInputEditorKeystroke( LLLineEditor* caller, void* userdata )
 				std::string rest_of_match = utf8_out_str.substr(utf8_trigger.size());
 				self->mInputEditor->setText(utf8_trigger + rest_of_match); // keep original capitalization for user-entered part
 				S32 outlength = self->mInputEditor->getLength(); // in characters
-			
+
 				// Select to end of line, starting from the character
 				// after the last one the user typed.
 				self->mInputEditor->setSelection(length, outlength);
 			}
 		}
-
-		//llinfos << "GESTUREDEBUG " << trigger 
-		//	<< " len " << length
-		//	<< " outlen " << out_str.getLength()
-		//	<< llendl;
 	}
 }
 
 // static
-void LLChatBar::onInputEditorFocusLost( LLFocusableElement* caller, void* userdata)
+void LLChatBar::onInputEditorFocusLost(LLFocusableElement* caller, void* userdata)
 {
 	// stop typing animation
 	gAgent.stopTyping();
 }
 
 // static
-void LLChatBar::onInputEditorGainFocus( LLFocusableElement* caller, void* userdata )
+void LLChatBar::onInputEditorGainFocus(LLFocusableElement* caller, void* userdata)
 {
 	LLFloaterChat::setHistoryCursorAndScrollToEnd();
 }
 
 // static
-void LLChatBar::onClickSay( LLUICtrl* ctrl, void* userdata )
+void LLChatBar::onClickSay(LLUICtrl* ctrl, void* userdata)
 {
 	e_chat_type chat_type = CHAT_TYPE_NORMAL;
 	if (ctrl->getValue().asString() == "shout")
@@ -760,20 +741,20 @@ void LLChatBar::sendChatFromViewer(const LLWString &wtext, EChatType type, BOOL 
 	if (gRRenabled && channel == 0)
 	{
 		// transform the type according to chatshout, chatnormal and chatwhisper restrictions
-		if (type == CHAT_TYPE_WHISPER && gAgent.mRRInterface.contains ("chatwhisper"))
+		if (type == CHAT_TYPE_WHISPER && gAgent.mRRInterface.contains("chatwhisper"))
 		{
 			type = CHAT_TYPE_NORMAL;
 		}
-		if (type == CHAT_TYPE_SHOUT && gAgent.mRRInterface.contains ("chatshout"))
+		if (type == CHAT_TYPE_SHOUT && gAgent.mRRInterface.contains("chatshout"))
 		{
 			type = CHAT_TYPE_NORMAL;
 		}
 		if ((type == CHAT_TYPE_SHOUT || type == CHAT_TYPE_NORMAL)
-			&& gAgent.mRRInterface.contains ("chatnormal"))
+			&& gAgent.mRRInterface.contains("chatnormal"))
 		{
 			type = CHAT_TYPE_WHISPER;
 		}
-		
+
 		if (gAgent.mRRInterface.containsSubstr ("redirchat:"))
 		{
 			animate = false;
@@ -834,12 +815,12 @@ void LLChatBar::sendChatFromViewer(const LLWString &wtext, EChatType type, BOOL 
 void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32 channel)
 {
 //MK
-	if (gRRenabled && channel >= 2147483647 && gAgent.mRRInterface.contains ("sendchat"))
+	if (gRRenabled && channel >= 2147483647 && gAgent.mRRInterface.contains("sendchat"))
 	{
 		// When prevented from talking, remove the ability to talk on the DEBUG_CHANNEL altogether, since it is a way of cheating
 		return;
 	}
-	
+
 	if (gRRenabled && channel == 0)
 	{
 		std::string restriction;
@@ -902,7 +883,7 @@ void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32
 	}
 
 	std::string crunchedText = utf8_out_text;
-	
+
 	// There is a redirection in order but this particular message is an emote or an OOC text, so we didn't
 	// redirect it. However it has not gone through crunchEmote yet, so we need to do this here to prevent
 	// cheated, emote-like chat (true emotes must however go through untouched).
@@ -911,7 +892,7 @@ void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32
 		crunchedText = gAgent.mRRInterface.crunchEmote(crunchedText);
 	}
 //mk
-	
+
 	LLMessageSystem* msg = gMessageSystem;
 	msg->newMessageFast(_PREHASH_ChatFromViewer);
 	msg->nextBlockFast(_PREHASH_AgentData);
@@ -919,7 +900,7 @@ void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32
 	msg->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
 	msg->nextBlockFast(_PREHASH_ChatData);
 ////	msg->addStringFast(_PREHASH_Message, utf8_out_text);
-//MK	
+//MK
 	msg->addStringFast(_PREHASH_Message, crunchedText);
 //mk
 	msg->addU8Fast(_PREHASH_Type, type);
@@ -930,12 +911,12 @@ void send_chat_from_viewer(const std::string& utf8_out_text, EChatType type, S32
 	LLViewerStats::getInstance()->incStat(LLViewerStats::ST_CHAT_COUNT);
 }
 
-
 // static
 void LLChatBar::onCommitGesture(LLUICtrl* ctrl, void* data)
 {
 	LLChatBar* self = (LLChatBar*)data;
-	LLCtrlListInterface* gestures = self->mGestureCombo ? self->mGestureCombo->getListInterface() : NULL;
+	LLCtrlListInterface* gestures = self->mGestureCombo ? self->mGestureCombo->getListInterface()
+														: NULL;
 	if (gestures)
 	{
 		S32 index = gestures->getFirstSelectedIndex();
@@ -946,7 +927,7 @@ void LLChatBar::onCommitGesture(LLUICtrl* ctrl, void* data)
 		const std::string& trigger = gestures->getSelectedValue().asString();
 
 //MK
-		if (!gRRenabled || !gAgent.mRRInterface.contains ("sendchat"))
+		if (!gRRenabled || !gAgent.mRRInterface.contains("sendchat"))
 		{
 //mk
 			// pretend the user chatted the trigger string, to invoke
@@ -978,7 +959,6 @@ void toggleChatHistory(void* user_data)
 	LLFloaterChat::toggleInstance(LLSD());
 }
 
-
 class LLChatHandler : public LLCommandHandler
 {
 public:
@@ -994,7 +974,7 @@ public:
 		std::string mesg = tokens[1].asString();
 		EChatType type = CHAT_TYPE_NORMAL;
 //MK
-		if (gRRenabled && channel == 0 && gAgent.mRRInterface.contains ("chatnormal"))
+		if (gRRenabled && channel == 0 && gAgent.mRRInterface.contains("chatnormal"))
 		{
 			type = CHAT_TYPE_WHISPER;
 		}

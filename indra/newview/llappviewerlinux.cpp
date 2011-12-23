@@ -63,6 +63,10 @@
 # include "ELFIO/ELFIO.h"		// for better backtraces
 #endif
 
+#if LL_GTK
+# include "gtk/gtk.h"
+#endif
+
 #if LL_DBUS_ENABLED
 # include "llappviewerlinux_api_dbus.h"
 
@@ -347,7 +351,13 @@ bool LLAppViewerLinux::init()
 	// before any mutexes are held, *and* some of our third-party
 	// libraries likes to use glib functions; in short, do this here
 	// really early in app startup!
-	if (!g_thread_supported ()) g_thread_init (NULL);
+	if (!g_thread_supported())
+	{
+		g_thread_init(NULL);
+#if LL_GTK
+		gdk_threads_init();
+#endif
+	}
 	
 	return LLAppViewer::init();
 }

@@ -209,7 +209,6 @@ set(viewer_SOURCE_FILES
     llfloatertelehub.cpp
     llfloaterteleporthistory.cpp
     llfloaterteleport.cpp
-    llfloatertest.cpp
     llfloatertools.cpp
     llfloatertopobjects.cpp
     llfloatertos.cpp
@@ -629,7 +628,6 @@ set(viewer_HEADER_FILES
     llfloatertelehub.h
     llfloaterteleporthistory.h
     llfloaterteleport.h
-    llfloatertest.h
     llfloatertools.h
     llfloatertopobjects.h
     llfloatertos.h
@@ -1310,7 +1308,7 @@ if (WINDOWS)
 
     if (PACKAGE)
       add_custom_target(package ALL DEPENDS ${CMAKE_CFG_INTDIR}/touched.bat)
-      add_dependencies(package windows-updater windows-crash-logger)
+      add_dependencies(package windows-crash-logger)
     endif (PACKAGE)
 endif (WINDOWS)
 
@@ -1429,7 +1427,7 @@ if (DARWIN)
 
   if (PACKAGE)
       add_custom_target(package ALL DEPENDS ${VIEWER_BINARY_NAME}) 
-      add_dependencies(package mac-updater mac-crash-logger)
+      add_dependencies(package mac-crash-logger)
 
       add_custom_command(
         TARGET package POST_BUILD

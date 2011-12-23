@@ -36,12 +36,12 @@
 #include "lltoolbar.h"
 
 #include "imageids.h"
+#include "llbutton.h"
 #include "llfontgl.h"
 #include "llrect.h"
 #include "llparcel.h"
 
 #include "llagent.h"
-#include "llbutton.h"
 #include "llfocusmgr.h"
 #include "llviewercontrol.h"
 #include "llmenucommands.h"
@@ -66,24 +66,24 @@
 
 #if LL_DARWIN
 
-	#include "llresizehandle.h"
+#include "llresizehandle.h"
 
-	// This class draws like an LLResizeHandle but has no interactivity.
-	// It's just there to provide a cue to the user that the lower right corner of the window functions as a resize handle.
-	class LLFakeResizeHandle : public LLResizeHandle
+// This class draws like an LLResizeHandle but has no interactivity.
+// It's just there to provide a cue to the user that the lower right corner of the window functions as a resize handle.
+class LLFakeResizeHandle : public LLResizeHandle
+{
+public:
+	LLFakeResizeHandle(const std::string& name, const LLRect& rect,
+					   S32 min_width, S32 min_height,
+					   ECorner corner = RIGHT_BOTTOM)
+	:	LLResizeHandle(name, rect, min_width, min_height, corner)
 	{
-	public:
-		LLFakeResizeHandle(const std::string& name, const LLRect& rect, S32 min_width, S32 min_height, ECorner corner = RIGHT_BOTTOM )
-		: LLResizeHandle(name, rect, min_width, min_height, corner )
-		{
-			
-		}
+	}
 
-		virtual BOOL	handleHover(S32 x, S32 y, MASK mask)   { return FALSE; };
-		virtual BOOL	handleMouseDown(S32 x, S32 y, MASK mask)  { return FALSE; };
-		virtual BOOL	handleMouseUp(S32 x, S32 y, MASK mask)   { return FALSE; };
-
-	};
+	virtual BOOL handleHover(S32 x, S32 y, MASK mask)		{ return FALSE; };
+	virtual BOOL handleMouseDown(S32 x, S32 y, MASK mask)	{ return FALSE; };
+	virtual BOOL handleMouseUp(S32 x, S32 y, MASK mask)		{ return FALSE; };
+};
 
 #endif // LL_DARWIN
 
@@ -115,68 +115,74 @@ LLToolBar::LLToolBar(const std::string& name, const LLRect& r)
 	setFocusRoot(TRUE);
 }
 
-
 BOOL LLToolBar::postBuild()
 {
-	childSetAction("communicate_btn", onClickCommunicate, this);
-	childSetControlName("communicate_btn", "ShowCommunicate");
+	mChatButton = getChild<LLButton>("chat_btn");
+	mChatButton->setClickedCallback(onClickChat, this);
+	mChatButton->setControlName("ChatVisible", NULL);
 
-	childSetAction("chat_btn", onClickChat, this);
-	childSetControlName("chat_btn", "ChatVisible");
+	mIMButton = getChild<LLButton>("communicate_btn");
+	mIMButton->setClickedCallback(onClickIM, this);
+	mIMButton->setControlName("ShowCommunicate", NULL);
 
-	childSetAction("friends_btn", onClickFriends, this);
-	childSetControlName("friends_btn", "ShowFriends");
+	mFriendsButton = getChild<LLButton>("friends_btn");
+	mFriendsButton->setClickedCallback(onClickFriends, this);
+	mFriendsButton->setControlName("ShowFriends", NULL);
 
-	childSetAction("groups_btn", onClickGroups, this);
-	childSetControlName("groups_btn", "ShowGroups");
+	mGroupsButton = getChild<LLButton>("groups_btn");
+	mGroupsButton->setClickedCallback(onClickGroups, this);
+	mGroupsButton->setControlName("ShowGroups", NULL);
 
-	childSetAction("fly_btn", onClickFly, this);
-	childSetControlName("fly_btn", "FlyBtnState");
+	mFlyButton = getChild<LLButton>("fly_btn");
+	mFlyButton->setClickedCallback(onClickFly, this);
+	mFlyButton->setControlName("FlyBtnState", NULL);
 
-	childSetAction("snapshot_btn", onClickSnapshot, this);
-	childSetControlName("snapshot_btn", "");
+	mSnapshotButton = getChild<LLButton>("snapshot_btn");
+	mSnapshotButton->setClickedCallback(onClickSnapshot, this);
+	mSnapshotButton->setControlName("", NULL);
 
-	childSetAction("directory_btn", onClickDirectory, this);
-	childSetControlName("directory_btn", "ShowDirectory");
+	mSearchButton = getChild<LLButton>("directory_btn");
+	mSearchButton->setClickedCallback(onClickSearch, this);
+	mSearchButton->setControlName("ShowDirectory", NULL);
 
-	childSetAction("build_btn", onClickBuild, this);
-	childSetControlName("build_btn", "BuildBtnState");
+	mBuildButton = getChild<LLButton>("build_btn");
+	mBuildButton->setClickedCallback(onClickBuild, this);
+	mBuildButton->setControlName("BuildBtnState", NULL);
 
-	childSetAction("minimap_btn", onClickMiniMap, this);
-	childSetControlName("minimap_btn", "ShowMiniMap");
+	mRadarButton = getChild<LLButton>("radar_btn");
+	mRadarButton->setClickedCallback(onClickRadar, this);
+	mRadarButton->setControlName("ShowRadar", NULL);
 
-	childSetAction("radar_btn", onClickRadar, this);
-	childSetControlName("radar_btn", "ShowRadar");
+	mMiniMapButton = getChild<LLButton>("minimap_btn");
+	mMiniMapButton->setClickedCallback(onClickMiniMap, this);
+	mMiniMapButton->setControlName("ShowMiniMap", NULL);
 
-	childSetAction("map_btn", onClickMap, this);
-	childSetControlName("map_btn", "ShowWorldMap");
+	mMapButton = getChild<LLButton>("map_btn");
+	mMapButton->setClickedCallback(onClickMap, this);
+	mMapButton->setControlName("ShowWorldMap", NULL);
 
-	childSetAction("inventory_btn", onClickInventory, this);
-	childSetControlName("inventory_btn", "ShowInventory");
-#if 0
-	childSetAction("appearance_btn", onClickAppearance, this);
-	childSetControlName("appearance_btn", "");
-
-	childSetAction("sit_btn", onClickSit, this);
-	childSetControlName("sit_btn", "SitBtnState");
-#endif
+	mInventoryButton = getChild<LLButton>("inventory_btn");
+	mInventoryButton->setClickedCallback(onClickInventory, this);
+	mInventoryButton->setControlName("ShowInventory", NULL);
 
 	for (child_list_const_iter_t child_iter = getChildList()->begin();
 		 child_iter != getChildList()->end(); ++child_iter)
 	{
 		LLView *view = *child_iter;
 		LLButton* buttonp = dynamic_cast<LLButton*>(view);
-		if(buttonp)
+		if (buttonp)
 		{
 			buttonp->setSoundFlags(LLView::SILENT);
 		}
 	}
 
 #if LL_DARWIN
-	if(mResizeHandle == NULL)
+	if (mResizeHandle == NULL)
 	{
 		LLRect rect(0, 0, RESIZE_HANDLE_WIDTH, RESIZE_HANDLE_HEIGHT);
-		mResizeHandle = new LLFakeResizeHandle(std::string(""), rect, RESIZE_HANDLE_WIDTH, RESIZE_HANDLE_HEIGHT);
+		mResizeHandle = new LLFakeResizeHandle(std::string(""), rect,
+											   RESIZE_HANDLE_WIDTH,
+											   RESIZE_HANDLE_HEIGHT);
 		this->addChildAtEnd(mResizeHandle);
 	}
 #endif // LL_DARWIN
@@ -191,28 +197,24 @@ LLToolBar::~LLToolBar()
 	// LLView destructor cleans up children
 }
 
-
 BOOL LLToolBar::handleDragAndDrop(S32 x, S32 y, MASK mask, BOOL drop,
 									 EDragAndDropType cargo_type,
 									 void* cargo_data,
 									 EAcceptance* accept,
 									 std::string& tooltip_msg)
 {
-	LLButton* inventory_btn = getChild<LLButton>("inventory_btn");
-	if (!inventory_btn) return FALSE;
-
 	LLInventoryView* active_inventory = LLInventoryView::getActiveInventory();
 
-	if(active_inventory && active_inventory->getVisible())
+	if (active_inventory && active_inventory->getVisible())
 	{
 		mInventoryAutoOpen = FALSE;
 	}
-	else if (inventory_btn->getRect().pointInRect(x, y))
+	else if (mInventoryButton->getRect().pointInRect(x, y))
 	{
 		if (mInventoryAutoOpen)
 		{
-			if (!(active_inventory && active_inventory->getVisible()) && 
-			mInventoryAutoOpenTimer.getElapsedTimeF32() > sInventoryAutoOpenTime)
+			if (!(active_inventory && active_inventory->getVisible()) &&
+				mInventoryAutoOpenTimer.getElapsedTimeF32() > sInventoryAutoOpenTime)
 			{
 				LLInventoryView::showAgentInventory();
 			}
@@ -235,13 +237,11 @@ void LLToolBar::toggle(void*)
 	gToolBar->setVisible(!show);
 }
 
-
 // static
 BOOL LLToolBar::visible(void*)
 {
 	return gToolBar->getVisible();
 }
-
 
 void LLToolBar::layoutButtons()
 {
@@ -251,41 +251,53 @@ void LLToolBar::layoutButtons()
 	S32 width = gViewerWindow->getWindowWidth() + FUDGE_WIDTH_OF_SCREEN;    
 	S32 count = getChildCount();
 	if (!count) return;
+
 	BOOL show = gSavedSettings.getBOOL("ShowChatButton");
-	childSetVisible("chat_btn", show);
+	mChatButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowIMButton");
-	childSetVisible("communicate_btn", show);
+	mIMButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowFriendsButton");
-	childSetVisible("friends_btn", show);
+	mFriendsButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowGroupsButton");
-	childSetVisible("groups_btn", show);
+	mGroupsButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowFlyButton");
-	childSetVisible("fly_btn", show);
+	mFlyButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowSnapshotButton");
-	childSetVisible("snapshot_btn", show);
+	mSnapshotButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowSearchButton");
-	childSetVisible("directory_btn", show);
+	mSearchButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowBuildButton");
-	childSetVisible("build_btn", show);
+	mBuildButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowRadarButton");
-	childSetVisible("radar_btn", show);
+	mRadarButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowMiniMapButton");
-	childSetVisible("minimap_btn", show);
+	mMiniMapButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowMapButton");
-	childSetVisible("map_btn", show);
+	mMapButton->setVisible(show);
 	if (!show) count--;
+
 	show = gSavedSettings.getBOOL("ShowInventoryButton");
-	childSetVisible("inventory_btn", show);
+	mInventoryButton->setVisible(show);
 	if (!show) count--;
 
 	if (count < 1)
@@ -297,12 +309,12 @@ void LLToolBar::layoutButtons()
 
 #if LL_DARWIN
 	// this function may be called before postBuild(), in which case mResizeHandle won't have been set up yet.
-	if(mResizeHandle != NULL)
+	if (mResizeHandle != NULL)
 	{
 		// a resize handle has been added as a child, increasing the count by one.
 		count--;
-		
-		if(!gViewerWindow->getWindow()->getFullscreen())
+
+		if (!gViewerWindow->getWindow()->getFullscreen())
 		{
 			// Only when running in windowed mode on the Mac, leave room for a resize widget on the right edge of the bar.
 			width -= RESIZE_HANDLE_WIDTH;
@@ -351,7 +363,6 @@ void LLToolBar::layoutButtons()
 	}                                                                       
 }
 
-
 // virtual
 void LLToolBar::reshape(S32 width, S32 height, BOOL called_from_parent)
 {
@@ -359,7 +370,6 @@ void LLToolBar::reshape(S32 width, S32 height, BOOL called_from_parent)
 
 	layoutButtons();
 }
-
 
 // Per-frame updates of visibility
 void LLToolBar::refresh()
@@ -386,38 +396,37 @@ void LLToolBar::refresh()
 	{
 		sitting = gAgent.getAvatarObject()->mIsSitting;
 	}
-	childSetEnabled("fly_btn", (gAgent.canFly() || gAgent.getFlying()) && !sitting);
+	mFlyButton->setEnabled(!sitting && (gAgent.canFly() || gAgent.getFlying()));
  
 //MK
 	if (gRRenabled)
 	{
-		childSetEnabled("build_btn", LLViewerParcelMgr::getInstance()->agentCanBuild() && !gAgent.mRRInterface.mContainsRez && !gAgent.mRRInterface.mContainsEdit);
-		childSetEnabled("minimap_btn", !gAgent.mRRInterface.mContainsShowminimap);
-		childSetEnabled("radar_btn", !gAgent.mRRInterface.mContainsShownames);
-		childSetEnabled("map_btn", !gAgent.mRRInterface.mContainsShowworldmap && !gAgent.mRRInterface.mContainsShowloc);
-		childSetEnabled("inventory_btn", !gAgent.mRRInterface.mContainsShowinv);
+		mBuildButton->setEnabled(LLViewerParcelMgr::getInstance()->agentCanBuild() &&
+								 !gAgent.mRRInterface.mContainsRez &&
+								 !gAgent.mRRInterface.mContainsEdit);
+		mRadarButton->setEnabled(!gAgent.mRRInterface.mContainsShownames);
+		mMiniMapButton->setEnabled(!gAgent.mRRInterface.mContainsShowminimap);
+		mMapButton->setEnabled(!gAgent.mRRInterface.mContainsShowworldmap &&
+							   !gAgent.mRRInterface.mContainsShowloc);
+		mInventoryButton->setEnabled(!gAgent.mRRInterface.mContainsShowinv);
 	}
 	else
 //mk
-		childSetEnabled("build_btn", LLViewerParcelMgr::getInstance()->agentCanBuild());
+		mBuildButton->setEnabled(LLViewerParcelMgr::getInstance()->agentCanBuild());
 
-	// Check to see if we're in build mode
+	// Check to see if we are in build mode
 	BOOL build_mode = LLToolMgr::getInstance()->inEdit();
 	// And not just clicking on a scripted object
 	if (LLToolGrab::getInstance()->getHideBuildHighlight())
 	{
 		build_mode = FALSE;
 	}
-	gSavedSettings.setBOOL("BuildBtnState", build_mode);
+	static LLCachedControl<bool> build_btn_state(gSavedSettings, "BuildBtnState");
+	if ((bool)build_mode != build_btn_state)
+	{
+		gSavedSettings.setBOOL("BuildBtnState", build_mode);
+	}
 }
-
-
-// static
-void LLToolBar::onClickCommunicate(void* user_data)
-{
-	LLFloaterChatterBox::toggleInstance(LLSD());
-}
-
 
 // static
 void LLToolBar::onClickChat(void* user_data)
@@ -426,55 +435,16 @@ void LLToolBar::onClickChat(void* user_data)
 }
 
 // static
+void LLToolBar::onClickIM(void* user_data)
+{
+	LLFloaterChatterBox::toggleInstance(LLSD());
+}
+
+// static
 void LLToolBar::onClickFly(void*)
 {
 	gAgent.toggleFlying();
 }
-
-#if 0
-// static
-void LLToolBar::onClickAppearance(void*)
-{
-	if (gAgent.areWearablesLoaded())
-	{
-		gAgent.changeCameraToCustomizeAvatar();
-	}
-}
-
-// static
-void LLToolBar::onClickSit(void*)
-{
-	if (!(gAgent.getControlFlags() & AGENT_CONTROL_SIT_ON_GROUND))
-	{
-		// sit down
-		gAgent.setFlying(FALSE);
-		gAgent.setControlFlags(AGENT_CONTROL_SIT_ON_GROUND);
-
-		// Might be first sit
-		LLFirstUse::useSit();
-	}
-	else
-	{
-		// stand up
-		gAgent.setFlying(FALSE);
-//MK
-		if (gRRenabled && gAgent.mRRInterface.mContainsUnsit)
-		{
-			return;
-		}
-//mk
-		gAgent.setControlFlags(AGENT_CONTROL_STAND_UP);
-//MK
-		if (gRRenabled && gAgent.mRRInterface.contains ("standtp"))
-		{
-			gAgent.mRRInterface.mSnappingBackToLastStandingLocation = TRUE;
-			gAgent.teleportViaLocationLookAt (gAgent.mRRInterface.mLastStandingLocation);
-			gAgent.mRRInterface.mSnappingBackToLastStandingLocation = FALSE;
-		}
-//mk
-	}
-}
-#endif
 
 // static
 void LLToolBar::onClickSnapshot(void*)
@@ -482,13 +452,11 @@ void LLToolBar::onClickSnapshot(void*)
 	LLFloaterSnapshot::show (0);
 }
 
-
 // static
-void LLToolBar::onClickDirectory(void*)
+void LLToolBar::onClickSearch(void*)
 {
 	handle_find(NULL);
 }
-
 
 // static
 void LLToolBar::onClickBuild(void*)
@@ -496,13 +464,11 @@ void LLToolBar::onClickBuild(void*)
 	toggle_build_mode();
 }
 
-
 // static
 void LLToolBar::onClickMiniMap(void*)
 {
 	handle_mini_map(NULL);
 }
-
 
 // static
 void LLToolBar::onClickRadar(void*)
@@ -510,13 +476,11 @@ void LLToolBar::onClickRadar(void*)
 	LLFloaterAvatarList::toggle(NULL);
 }
 
-
 // static
 void LLToolBar::onClickMap(void*)
 {
 	handle_map(NULL);
 }
-
 
 // static
 void LLToolBar::onClickFriends(void*)
@@ -524,17 +488,14 @@ void LLToolBar::onClickFriends(void*)
 	LLFloaterFriends::toggle();
 }
 
-
 // static
 void LLToolBar::onClickGroups(void*)
 {
 	LLFloaterGroups::toggle();
 }
 
-
 // static
 void LLToolBar::onClickInventory(void*)
 {
 	handle_inventory(NULL);
 }
-

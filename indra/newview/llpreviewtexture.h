@@ -33,9 +33,11 @@
 #ifndef LL_LLPREVIEWTEXTURE_H
 #define LL_LLPREVIEWTEXTURE_H
 
-#include "llpreview.h"
 #include "llbutton.h"
 #include "llframetimer.h"
+
+#include "llfilepicker.h"
+#include "llpreview.h"
 #include "llviewertexture.h"
 
 class LLComboBox;
@@ -45,42 +47,45 @@ class LLPreviewTexture : public LLPreview
 {
 public:
 	LLPreviewTexture(const std::string& name,
-					const LLRect& rect,
-					const std::string& title,
-					const LLUUID& item_uuid,
-					const LLUUID& object_id,
-					BOOL show_keep_discard = FALSE);
+					 const LLRect& rect,
+					 const std::string& title,
+					 const LLUUID& item_uuid,
+					 const LLUUID& object_id,
+					 BOOL show_keep_discard = FALSE);
 	LLPreviewTexture(const std::string& name,
-					const LLRect& rect,
-					const std::string& title,
-					const LLUUID& asset_id,
-					BOOL copy_to_inv = FALSE);
+					 const LLRect& rect,
+					 const std::string& title,
+					 const LLUUID& asset_id,
+					 BOOL copy_to_inv = FALSE);
 	~LLPreviewTexture();
 
-	virtual void			draw();
+	virtual void draw();
 
-	virtual BOOL			canSaveAs() const;
-	virtual void			saveAs();
+	virtual BOOL canSaveAs() const;
+	virtual void saveAs();
 
-	virtual void			loadAsset();
-	virtual EAssetStatus	getAssetStatus();
+	virtual void loadAsset();
+	virtual EAssetStatus getAssetStatus();
 
 	void setNotCopyable()	{ mIsCopyable = FALSE; }
 
-	static void				saveToFile(void* userdata);
-	static void				onFileLoadedForSave(BOOL success,
-												LLViewerFetchedTexture *src_vi,
-												LLImageRaw* src, 
-												LLImageRaw* aux_src,
-												S32 discard_level, 
-												BOOL final,
-												void* userdata);
+	static void saveAsCallback(LLFilePicker::ESaveFilter type,
+							   std::string& filename,
+							   void* user_data);
+
+	static void onFileLoadedForSave(BOOL success,
+									LLViewerFetchedTexture *src_vi,
+									LLImageRaw* src, 
+									LLImageRaw* aux_src,
+									S32 discard_level, 
+									BOOL final,
+									void* userdata);
 
 protected:
-	void				init();
-	bool				setAspectRatio(const F32 width, const F32 height);
-	static void			onAspectRatioCommit(LLUICtrl*,void* userdata);
-	static void			onRefreshBtn(void* data);
+	void		init();
+	bool		setAspectRatio(const F32 width, const F32 height);
+	static void	onAspectRatioCommit(LLUICtrl*, void* userdata);
+	static void	onRefreshBtn(void* data);
 
 	virtual const char*	getTitleName() const { return "Texture"; }
 
@@ -105,6 +110,8 @@ private:
 	F32 mAspectRatio;	// 0 = Unconstrained
 
 	LLLoadedCallbackEntry::source_callback_list_t mCallbackTextureList; 
+
+	static std::set<LLPreviewTexture*> sList;
 };
 
 #endif  // LL_LLPREVIEWTEXTURE_H

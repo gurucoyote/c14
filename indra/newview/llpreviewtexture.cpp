@@ -38,7 +38,6 @@
 #include "llappviewer.h"
 #include "llbutton.h"
 #include "llcombobox.h"
-#include "llfilepicker.h"
 #include "llimagetga.h"
 #include "llinventoryview.h"
 #include "llinventory.h"
@@ -62,6 +61,8 @@ const S32 CLIENT_RECT_VPAD = 4;
 
 const F32 SECONDS_TO_SHOW_FILE_SAVED_MSG = 8.f;
 
+std::set<LLPreviewTexture*> LLPreviewTexture::sList;
+
 LLPreviewTexture::LLPreviewTexture(const std::string& name,
 								   const LLRect& rect,
 								   const std::string& title,
@@ -79,6 +80,7 @@ LLPreviewTexture::LLPreviewTexture(const std::string& name,
 	mImage(NULL),
 	mImageOldBoostLevel(LLViewerTexture::BOOST_NONE)
 {
+	sList.insert(this);
 	const LLInventoryItem *item = getItem();
 	if (item)
 	{
@@ -133,6 +135,7 @@ LLPreviewTexture::LLPreviewTexture(const std::string& name,
 	mImage(NULL),
 	mImageOldBoostLevel(LLViewerTexture::BOOST_NONE)
 {
+	sList.insert(this);
 	init();
 
 	setTitle(title);
@@ -152,6 +155,7 @@ LLPreviewTexture::~LLPreviewTexture()
 
 	mImage->setBoostLevel(mImageOldBoostLevel);
 	mImage = NULL;
+	sList.erase(this);
 }
 
 void LLPreviewTexture::init()
@@ -330,34 +334,51 @@ BOOL LLPreviewTexture::canSaveAs() const
 	return mIsCopyable && !mLoadingFullImage && mImage.notNull() && !mImage->isMissingAsset();
 }
 
+// static
+void LLPreviewTexture::saveAsCallback(LLFilePicker::ESaveFilter type,
+									  std::string& filename, void* user_data)
+{
+	LLPreviewTexture* self = (LLPreviewTexture*)user_data;
+	if (!self || !sList.count(self))
+	{
+		LLNotifications::instance().add("TextureSavingAborted");
+		return;
+	}
+
+	if (filename.empty()) return;
+
+	// remember the user-approved/edited file name.
+	self->mSaveFileName = filename;
+	LLStringUtil::toLower(filename);
+	if (filename.find(".tga") != filename.length() - 4)
+	{
+		self->mSaveFileName += ".tga";
+	}
+	self->mLoadingFullImage = true;
+	self->getWindow()->incBusyCount();
+
+	self->mImage->forceToSaveRawImage(0);	//re-fetch the raw image if the old one is removed.
+	self->mImage->setLoadedCallback(LLPreviewTexture::onFileLoadedForSave, 
+									0, TRUE, FALSE, new LLUUID(self->mItemUUID),
+									&self->mCallbackTextureList);
+}
+
 // virtual
 void LLPreviewTexture::saveAs()
 {
 	if (mLoadingFullImage) return;
 
-	LLFilePicker& file_picker = LLFilePicker::instance();
+	std::string suggestion;
 	const LLViewerInventoryItem* item = getItem();
-	if (!file_picker.getSaveFile(LLFilePicker::FFSAVE_TGA, item ? LLDir::getScrubbedFileName(item->getName()) : LLStringUtil::null))
+	if (item)
 	{
-		// User canceled or we failed to acquire save file.
-		return;
+		suggestion = LLDir::getScrubbedFileName(item->getName());
 	}
-	// remember the user-approved/edited file name.
-	mSaveFileName = file_picker.getFirstFile();
-	std::string filename = mSaveFileName;
-	LLStringUtil::toLower(filename);
-	if (filename.find(".tga") != filename.length() - 4)
-	{
-		mSaveFileName += ".tga";
-	}
-	mLoadingFullImage = true;
-	getWindow()->incBusyCount();
 
-	mImage->forceToSaveRawImage(0);	//re-fetch the raw image if the old one is removed.
-	mImage->setLoadedCallback(LLPreviewTexture::onFileLoadedForSave, 
-							  0, TRUE, FALSE, new LLUUID(mItemUUID), &mCallbackTextureList);
+	(new LLSaveFilePicker(LLFilePicker::FFSAVE_TGA,
+						  LLPreviewTexture::saveAsCallback,
+						  this))->getSaveFile(suggestion);
 }
-
 
 // static
 void LLPreviewTexture::onFileLoadedForSave(BOOL success,

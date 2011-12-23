@@ -33,9 +33,11 @@
 #ifndef LL_LLPREVIEWNOTECARD_H
 #define LL_LLPREVIEWNOTECARD_H
 
-#include "llpreview.h"
 #include "llassetstorage.h"
 #include "lliconctrl.h"
+
+#include "llfilepicker.h"
+#include "llpreview.h"
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Class LLPreviewNotecard
@@ -91,6 +93,8 @@ protected:
 	virtual void loadAsset();
 	bool saveIfNeeded(LLInventoryItem* copyitem = NULL);
 
+	void setNoteName(std::string name);
+
 	static LLPreviewNotecard* getInstance(const LLUUID& uuid);
 
 	static void onLoadComplete(LLVFS *vfs,
@@ -110,6 +114,17 @@ protected:
 
 	void			initMenu();
 
+	static void		onLoadFromFile(void* userdata);
+	static void		loadFromFileCallback(LLFilePicker::ELoadFilter type,
+										 std::string& filename,
+										 std::deque<std::string>& files,
+										 void* userdata);
+
+	static void		onSaveToFile(void* userdata);
+	static void		saveToFileCallback(LLFilePicker::ESaveFilter type,
+									   std::string& filename,
+									   void* userdata);
+
 	static void		onSearchMenu(void* userdata);
 	static void		onUndoMenu(void* userdata);
 	static void		onRedoMenu(void* userdata);
@@ -118,6 +133,9 @@ protected:
 	static void		onPasteMenu(void* userdata);
 	static void		onSelectAllMenu(void* userdata);
 	static void		onDeselectMenu(void* userdata);
+
+	static BOOL		hasChanged(void* userdata);
+	static BOOL		enableSaveLoadFile(void* userdata);
 
 	static BOOL		enableUndoMenu(void* userdata);
 	static BOOL		enableRedoMenu(void* userdata);
@@ -133,6 +151,10 @@ protected:
 	LLUUID mAssetID;
 	LLUUID mNotecardItemID;
 	LLUUID mObjectID;
+
+	std::string mNoteName;
+
+	static std::set<LLPreviewNotecard*> sList;
 };
 
 

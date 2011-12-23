@@ -40,8 +40,9 @@
 // "Constants" loaded from settings.xml at start time
 extern S32 TOOL_BAR_HEIGHT;
 
+class LLButton;
 #if LL_DARWIN
-	class LLFakeResizeHandle;
+class LLFakeResizeHandle;
 #endif // LL_DARWIN
 
 class LLToolBar
@@ -71,26 +72,35 @@ public:
 	void refresh();
 
 	// callbacks
-	static void onClickCommunicate(void*);
 	static void onClickChat(void* data);
+	static void onClickIM(void*);
 	static void onClickFriends(void* data);
 	static void onClickGroups(void* data);
 	static void onClickFly(void*);
 	static void onClickSnapshot(void* data);
-	static void onClickDirectory(void* data);
+	static void onClickSearch(void* data);
 	static void onClickBuild(void* data);
-	static void onClickMiniMap(void* data);
 	static void onClickRadar(void* data);
+	static void onClickMiniMap(void* data);
 	static void onClickMap(void* data);
 	static void onClickInventory(void* data);
-#if 0
-	static void onClickSit(void*);
-	static void onClickAppearance(void* data);
-#endif
 
 	static F32 sInventoryAutoOpenTime;
 
 private:
+	LLButton*	mChatButton;
+	LLButton*	mIMButton;
+	LLButton*	mFriendsButton;
+	LLButton*	mGroupsButton;
+	LLButton*	mFlyButton;
+	LLButton*	mSnapshotButton;
+	LLButton*	mSearchButton;
+	LLButton*	mBuildButton;
+	LLButton*	mRadarButton;
+	LLButton*	mMiniMapButton;
+	LLButton*	mMapButton;
+	LLButton*	mInventoryButton;
+
 	BOOL		mInventoryAutoOpen;
 	LLFrameTimer mInventoryAutoOpenTimer;
 	S32			mNumUnreadIMs;

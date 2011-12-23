@@ -36,15 +36,17 @@
 
 // Library includes
 #include "indra_constants.h"
+
+#include "llbutton.h"
 #include "llspinctrl.h"
+#include "lluictrlfactory.h"
 
 // Viewer includes
 #include "llagent.h"
-#include "llviewercontrol.h"
-#include "llbutton.h"
-#include "llviewerwindow.h"
 #include "lljoystickbutton.h"
-#include "lluictrlfactory.h"
+#include "llviewercontrol.h"
+#include "llviewerwindow.h"
+#include "llvoavatar.h"
 
 //
 // Constants
@@ -64,8 +66,7 @@ LLFloaterMove::LLFloaterMove(const LLSD& key)
 {
 	setIsChrome(TRUE);
 
-	const BOOL DONT_OPEN = FALSE;
-	LLUICtrlFactory::getInstance()->buildFloater(this,"floater_moveview.xml", NULL, DONT_OPEN); 
+	LLUICtrlFactory::getInstance()->buildFloater(this,"floater_moveview.xml", NULL, FALSE); 
 
 	getChild<LLSpinCtrl>("z_offset")->setToolTip(getString("z_offset_tooltip"));
 
@@ -83,31 +84,43 @@ LLFloaterMove::LLFloaterMove(const LLSD& key)
 
 	mTurnLeftButton = getChild<LLButton>("turn left btn"); 
 	mTurnLeftButton->setHeldDownDelay(MOVE_BUTTON_DELAY);
-	mTurnLeftButton->setHeldDownCallback( turnLeft );
+	mTurnLeftButton->setHeldDownCallback(turnLeft);
 
 	mTurnRightButton = getChild<LLButton>("turn right btn"); 
 	mTurnRightButton->setHeldDownDelay(MOVE_BUTTON_DELAY);
-	mTurnRightButton->setHeldDownCallback( turnRight );
+	mTurnRightButton->setHeldDownCallback(turnRight);
 
 	mMoveUpButton = getChild<LLButton>("move up btn"); 
 	childSetAction("move up btn",moveUp,NULL);
 	mMoveUpButton->setHeldDownDelay(MOVE_BUTTON_DELAY);
-	mMoveUpButton->setHeldDownCallback( moveUp );
+	mMoveUpButton->setHeldDownCallback(moveUp);
 
 	mMoveDownButton = getChild<LLButton>("move down btn"); 
-	childSetAction("move down btn",moveDown,NULL);	
+	childSetAction("move down btn",moveDown,NULL);
 	mMoveDownButton->setHeldDownDelay(MOVE_BUTTON_DELAY);
-	mMoveDownButton->setHeldDownCallback( moveDown );
+	mMoveDownButton->setHeldDownCallback(moveDown);
 
 	mFlyButton = getChild<LLButton>("fly btn"); 
-	childSetAction("fly btn",onFlyButtonClicked,NULL);
+	childSetAction("fly btn", onFlyButtonClicked, NULL);
+}
+
+// virtual
+void LLFloaterMove::draw()
+{
+	BOOL sitting = FALSE;
+	if (gAgent.getAvatarObject())
+	{
+		sitting = gAgent.getAvatarObject()->mIsSitting;
+	}
+	mFlyButton->setEnabled(!sitting && (gAgent.canFly() || gAgent.getFlying()));
+	LLFloater::draw();
 }
 
 // virtual
 void LLFloaterMove::onClose(bool app_quitting)
 {
 	LLFloater::onClose(app_quitting);
-	
+
 	if (!app_quitting)
 	{
 		gSavedSettings.setBOOL("ShowMovementControls", FALSE);
@@ -131,9 +144,9 @@ void LLFloaterMove::onFlyButtonClicked(void *)
 }
 
 // protected static 
-F32 LLFloaterMove::getYawRate( F32 time )
+F32 LLFloaterMove::getYawRate(F32 time)
 {
-	if( time < NUDGE_TIME )
+	if (time < NUDGE_TIME)
 	{
 		F32 rate = YAW_NUDGE_RATE + time * (1 - YAW_NUDGE_RATE)/ NUDGE_TIME;
 		return rate;
@@ -148,14 +161,14 @@ F32 LLFloaterMove::getYawRate( F32 time )
 void LLFloaterMove::turnLeft(void *)
 {
 	F32 time = getInstance()->mTurnLeftButton->getHeldDownTime();
-	gAgent.moveYaw( getYawRate( time ) );
+	gAgent.moveYaw(getYawRate(time));
 }
 
 // protected static 
 void LLFloaterMove::turnRight(void *)
 {
 	F32 time = getInstance()->mTurnRightButton->getHeldDownTime();
-	gAgent.moveYaw( -getYawRate( time ) );
+	gAgent.moveYaw(-getYawRate(time));
 }
 
 // protected static 

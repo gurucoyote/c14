@@ -34,28 +34,21 @@
 #define LL_LLOVERLAYBAR_H
 
 #include "llpanel.h"
+#include "llui.h"
+
+#include "llviewercontrol.h"
 
 // "Constants" loaded from settings.xml at start time
 extern S32 STATUS_BAR_HEIGHT;
 
 class LLButton;
-class LLLineEditor;
 class LLMediaRemoteCtrl;
-class LLMessageSystem;
-class LLTextBox;
-class LLTextEditor;
-class LLUICtrl;
-class LLUUID;
-class LLFrameTimer;
-class LLStatGraph;
-class LLSlider;
 class LLVoiceRemoteCtrl;
 
-class LLOverlayBar
-:	public LLPanel
+class LLOverlayBar : public LLPanel
 {
 public:
-	LLOverlayBar(const std::string& name, const LLRect& rect );
+	LLOverlayBar(const std::string& name, const LLRect& rect);
 	~LLOverlayBar();
 
 	/*virtual*/ void refresh();
@@ -65,9 +58,9 @@ public:
 	void layoutButtons();
 
 	// helpers for returning desired state
-	BOOL mediaPlaying() { return mMediaState == PLAYING; }
-	BOOL musicPlaying() { return mMusicState == PLAYING; }
-	
+	BOOL mediaPlaying()	{ return mMediaState == PLAYING; }
+	BOOL musicPlaying()	{ return mMusicState == PLAYING; }
+
 	static void onClickIMReceived(void* data);
 	static void onClickSetNotBusy(void* data);
 	static void onClickMouselook(void* data);
@@ -82,14 +75,14 @@ public:
 	static void mediaPlay(void*);
 	static void mediaPause(void*);
 	static void mediaStop(void*);
-	
+
 	static void musicPlay(void*);
 	static void musicPause(void*);
 	static void musicStop(void*);
 
 	static void toggleAudioVolumeFloater(void*);
-	
-protected:	
+
+protected:
 	static void* createMasterRemote(void* userdata);
 	static void* createMusicRemote(void* userdata);
 	static void* createMediaRemote(void* userdata);
@@ -101,9 +94,19 @@ protected:
 	LLMediaRemoteCtrl*	mMediaRemote;
 	LLVoiceRemoteCtrl*	mVoiceRemote;
 	bool mBuilt;	// dialog constructed yet?
-	enum { STOPPED=0, PLAYING=1, PAUSED=2 };
+	enum { STOPPED = 0, PLAYING = 1, PAUSED = 2 };
 	BOOL mMediaState;
 	BOOL mMusicState;
+
+	LLButton*	mBtnIMReceiced;
+	LLButton*	mBtnSetNotBusy;
+	LLButton*	mBtnMouseLook;
+	LLButton*	mBtnStandUp;
+	LLButton*	mBtnFlyCam;
+
+	LLUIImagePtr	mRoundedSquare;
+
+	LLCachedControl<S32> mStatusBarPad;
 
 private:
 	S32 media_remote_width;

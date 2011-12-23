@@ -53,6 +53,9 @@ DefaultLanguage
 DefaultToSystemLanguage
 {No}
 
+Destination
+{}
+
 DownloadCaption
 {Some proprietary (not freely redistributable) components that are required to enable all the features of the Cool VL Viewer must now be recovered from Linden Lab's official Snowglobe v1.4.2 distribution. The corresponding package is being fetched from Linden Lab's site.}
 
@@ -96,7 +99,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.6}
+{1.26.2.7}
 
 Language,ca
 {No}
@@ -253,13 +256,13 @@ debugconsole
 {ShowConsole Switch Yes No {} {run installer with a debug console open}}
 
 destination
-{InstallDir String No No {} {set the installation directory}}
+{Destination String No No {} {set the installation directory}}
 
 mode
 {InstallMode Choice No No {Console Default Silent Standard} {set the mode to run the installer in}}
 
 prefix
-{InstallDir String No Yes {} {set the installation directory}}
+{Destination String No Yes {} {set the installation directory}}
 
 snowglobe
 {SnowglobeDir String No No {} {set the location for the Snowglobe archive}}
@@ -283,7 +286,7 @@ test
 
 }
 FileGroup 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F -active Yes -name {Program Files} -parent FileGroups -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows TarArchive ZipArchive} -setup Install
-File 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F -active Yes -name {C:/Documents and Settings/root/Mes documents/CV-1.26.2/.} -type dir -parent 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F
+File 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F -active Yes -name {C:/Documents and Settings/root/Mes documents/Visual Studio 2005/Projects/SL12620/indra/viewer-win32-release/.} -type dir -parent 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F
 File 8C1A9F11-C286-4837-B273-6E5FFF168272 -active Yes -name CoolVLViewerReadme.txt -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 1812C32D-2BEC-4E8D-BB5D-FAE84EBE3519 -active Yes -name featuretable.txt -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File A7D0F7F4-1238-4818-BE1A-66668679178E -active Yes -name gpu_table.txt -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
@@ -1905,13 +1908,13 @@ File 10C0EA4B-1E66-42AA-ADCD-80746E76A062 -active Yes -name ortp.dll -parent 7B6
 File C6C863BE-09F2-4267-AFCE-A36BA0FB45F5 -active No -name SLVoice.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File D24425FC-60BF-4D91-95F7-143D8D0D511C -active No -name vivoxsdk.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 1C5C0B57-FB95-4B30-8380-E6FBF19A7E19 -active Yes -name wrap_oal.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File D2DD3655-A2DD-495A-A73B-209D918783A1 -active Yes -name win_crash_logger.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 850C3392-1E92-411B-B3A4-7DCBBC32382F -active Yes -name CoolVLViewer.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 14046145-2C48-4D89-916B-F2BC6CDCC660 -active Yes -name 7z.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 5DA0748F-30E3-4548-A52A-8B2BE8977946 -active Yes -name 7z.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 02298333-9D63-481C-919D-A99C5F82A531 -active Yes -name glod.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 03DADA3F-5A61-4F99-A71F-14CD0BDE45A6 -active Yes -name libcollada14dom22.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 59429C30-48CB-4FD6-99B7-5CAA41210F94 -active Yes -name libtcmalloc_minimal.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File C7C1E657-EEDA-498D-A702-E6CF2E3059FD -active Yes -name windows-crash-logger.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 Component C534F619-7737-408C-9AE4-16221BEC8C2D -active Yes -name {Default Component} -parent Components -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
 SetupType 6152CCF8-42C8-49B7-9C4D-337AF8F4C351 -active Yes -name Typical -parent SetupTypes -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
 SetupType 9BE97F6C-FBCB-44C2-A69E-F35B87DE5000 -active Yes -name Custom -parent SetupTypes -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
@@ -2031,12 +2034,15 @@ ActionGroup 6F3C5C2F-449D-4F31-83A9-375B01884970 -active Yes -name 6f3c5c2f-449d
 Action 3FF53447-0C8F-4874-B0CC-0163F5E497C3 -active Yes -name 3ff53447-0c8f-4874-b0cc-0163f5e497c3 -type action -parent 6F3C5C2F-449D-4F31-83A9-375B01884970 -setup Install -title {Get InstallDir from Registry} -component GetWindowsRegistryValue
 Condition FDBD8551-78D7-4164-9E2B-C28F306B83CA -active Yes -name fdbd8551-78d7-4164-9e2b-c28f306b83ca -parent 3FF53447-0C8F-4874-B0CC-0163F5E497C3 -setup Install -title {Registry Test Condition} -component RegistryTestCondition
 Action 107C3AE5-D15B-48AA-9B16-7D7C70AF387E -active Yes -name 3ff53447-0c8f-4874-b0cc-0163f5e497c3 -type action -parent 6F3C5C2F-449D-4F31-83A9-375B01884970 -setup Install -title {Get SnowglobeDir from Registry} -component GetWindowsRegistryValue
+Condition 23D56725-7D4C-4B8A-A05D-F3DF8240AFCC -active Yes -name 23d56725-7d4c-4b8a-a05d-f3df8240afcc -parent 107C3AE5-D15B-48AA-9B16-7D7C70AF387E -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 6A11DE12-E032-46B8-B1D8-EFC1E6817B4B -active Yes -name fdbd8551-78d7-4164-9e2b-c28f306b83ca -parent 107C3AE5-D15B-48AA-9B16-7D7C70AF387E -setup Install -title {Registry Test Condition} -component RegistryTestCondition
 Action 16C32C3D-F54A-4DF9-9E15-13EFE5207CF7 -active Yes -name 16c32c3d-f54a-4df9-9e15-13efe5207cf7 -type action -parent 6F3C5C2F-449D-4F31-83A9-375B01884970 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Condition 1B499581-0B67-419B-A76D-8723372B34B0 -active Yes -name 1b499581-0b67-419b-a76d-8723372b34b0 -parent 16C32C3D-F54A-4DF9-9E15-13EFE5207CF7 -setup Install -title {String Match Condition} -component StringMatchCondition
 Condition 9389289D-9A13-40E7-A916-D0540CEC2CF6 -active Yes -name 9389289d-9a13-40e7-a916-d0540cec2cf6 -parent 16C32C3D-F54A-4DF9-9E15-13EFE5207CF7 -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action 59DC3836-1EB3-4381-A197-12CEC794C459 -active Yes -name 59dc3836-1eb3-4381-a197-12cec794c459 -type action -parent 6F3C5C2F-449D-4F31-83A9-375B01884970 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Condition BFC5A35A-C4D5-43CE-BB52-869EB24AFB0A -active Yes -name bfc5a35a-c4d5-43ce-bb52-869eb24afb0a -parent 59DC3836-1EB3-4381-A197-12CEC794C459 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Action 62D6AE71-10E9-437D-BB26-BE846A9E0AA6 -active Yes -name 62d6ae71-10e9-437d-bb26-be846a9e0aa6 -type action -parent 6F3C5C2F-449D-4F31-83A9-375B01884970 -setup Install -title {Set Virtual Text} -component SetVirtualText
+Condition 33F69FDB-E407-4AE5-88E9-8F1A2E4C5FA9 -active Yes -name 33f69fdb-e407-4ae5-88e9-8f1a2e4c5fa9 -parent 62D6AE71-10E9-437D-BB26-BE846A9E0AA6 -setup Install -title {String Equal Condition} -component StringEqualCondition
 ActionGroup 80ACC115-0DE1-4AAE-B4D6-4232728C81EB -active Yes -name 80acc115-0de1-4aae-b4d6-4232728c81eb -type actiongroup -parent ActionGroupsInstall -setup Install -title {Startup Actions}
 Action 08919EE0-21F7-4260-9564-55A9C822F13B -active Yes -name 08919ee0-21f7-4260-9564-55a9c822f13b -type action -parent 80ACC115-0DE1-4AAE-B4D6-4232728C81EB -setup Install -title {Create Install Panes} -component CreateInstallPanes
 ActionGroup 3C21DA1A-D305-47D2-838F-CA155241BD62 -active Yes -name 3c21da1a-d305-47d2-838f-ca155241bd62 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Install Actions}
@@ -2065,6 +2071,8 @@ Action 1E702AA7-96E1-4D16-8E37-231BCD8035C5 -active Yes -name 1e702aa7-96e1-4d16
 Condition 08193CA7-5B7D-44A9-AD72-81A3C4250A42 -active Yes -name 08193ca7-5b7d-44a9-ad72-81a3c4250a42 -parent 1E702AA7-96E1-4D16-8E37-231BCD8035C5 -setup Install -title {String Is Condition} -component StringIsCondition
 Action 9458B859-AB20-42E9-80B0-639BB6A74119 -active Yes -name 9458b859-ab20-42e9-80b0-639bb6a74119 -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Copy 7zip to Temp} -component CopyFile
 Action DD955477-004B-48F7-ACF9-13A503388F7D -active Yes -name dd955477-004b-48f7-acf9-13a503388f7d -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete 7zip original copy} -component DeleteFile
+Action 17BC28A6-13BC-460F-AE5A-E0BCF7C8CF22 -active Yes -name 17bc28a6-13bc-460f-ae5a-e0bcf7c8cf22 -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete old crash logger} -component DeleteFile
+Condition 6A01C55A-DFE4-46CA-A37B-10068168A8D3 -active Yes -name 6a01c55a-dfe4-46ca-a37b-10068168a8d3 -parent 17BC28A6-13BC-460F-AE5A-E0BCF7C8CF22 -setup Install -title {File Exists Condition} -component FileExistsCondition
 ActionGroup 899C40A6-424B-4146-B482-A7A14C6C93C8 -active Yes -name 899c40a6-424b-4146-b482-a7a14c6c93c8 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Check Actions}
 Action 3403FC28-506E-4DE9-A478-821A8B55AB9C -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Action 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -operator OR -component SetVirtualText
@@ -2294,6 +2302,9 @@ array set Properties {
 16C32C3D-F54A-4DF9-9E15-13EFE5207CF7,VirtualText
 {SnowglobeDir}
 
+17BC28A6-13BC-460F-AE5A-E0BCF7C8CF22,Files
+{<%InstallDir%>/win_crash_logger.exe}
+
 17F77AC0-5973-4A67-81A4-B9FCED1D5260,CheckCondition
 {Before Action is Executed}
 
@@ -2383,6 +2394,12 @@ array set Properties {
 
 22623DC3-639D-46D5-AFFE-30F3AA0D1EB2,ExitType
 {Finish}
+
+23D56725-7D4C-4B8A-A05D-F3DF8240AFCC,CheckCondition
+{Before Action is Executed}
+
+23D56725-7D4C-4B8A-A05D-F3DF8240AFCC,String1
+{<%SnowglobeDir%>}
 
 24574442-313A-4410-A0A4-0EAA25A75511,Action
 {Setup Actions}
@@ -2488,6 +2505,15 @@ array set Properties {
 
 32EF8810-D8CB-4190-89B0-8714F22CC477,Y
 {200}
+
+33F69FDB-E407-4AE5-88E9-8F1A2E4C5FA9,CheckCondition
+{Before Action is Executed}
+
+33F69FDB-E407-4AE5-88E9-8F1A2E4C5FA9,Operator
+{does not equal}
+
+33F69FDB-E407-4AE5-88E9-8F1A2E4C5FA9,String1
+{<%Destination%>}
 
 3403FC28-506E-4DE9-A478-821A8B55AB9C,Value
 {no}
@@ -2598,7 +2624,7 @@ array set Properties {
 {<%InstallDir%>}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,FileSize
-{75289067}
+{75303280}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,Name
 {Program Files}
@@ -2804,6 +2830,15 @@ array set Properties {
 62B693A5-4215-46F9-B6D9-899D0612744A,URL
 {<%SnowglobeURL%>}
 
+62D6AE71-10E9-437D-BB26-BE846A9E0AA6,SubstituteValue
+{Yes}
+
+62D6AE71-10E9-437D-BB26-BE846A9E0AA6,Value
+{<%Destination%>}
+
+62D6AE71-10E9-437D-BB26-BE846A9E0AA6,VirtualText
+{InstallDir}
+
 632B9CD6-A6CC-47FC-B718-188A4683C17C,Action
 {Check Actions}
 
@@ -2821,6 +2856,12 @@ array set Properties {
 
 64C8BAA8-D636-4FFF-996B-0ED728F6B664,VirtualText
 {NeedProprietaryComponents}
+
+6A01C55A-DFE4-46CA-A37B-10068168A8D3,CheckCondition
+{Before Action is Executed}
+
+6A01C55A-DFE4-46CA-A37B-10068168A8D3,Filename
+{<%InstallDir%>/win_crash_logger.exe}
 
 6A11DE12-E032-46B8-B1D8-EFC1E6817B4B,CheckCondition
 {Before Action is Executed}

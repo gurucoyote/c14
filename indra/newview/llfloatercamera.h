@@ -35,6 +35,7 @@
 
 #include "llfloater.h"
 
+class LLCheckBoxCtrl;
 class LLJoystickCameraRotate;
 class LLJoystickCameraZoom;
 class LLJoystickCameraTrack;
@@ -59,6 +60,9 @@ public:
 	LLJoystickCameraRotate* mRotate;
 	LLJoystickCameraZoom*	mZoom;
 	LLJoystickCameraTrack*	mTrack;
+
+private:
+	LLCheckBoxCtrl* 		mFrontViewCheck;
 };
 
 #endif

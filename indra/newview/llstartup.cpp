@@ -242,8 +242,6 @@ void show_first_run_dialog();
 bool first_run_dialog_callback(const LLSD& notification, const LLSD& response);
 void set_startup_status(const F32 frac, const std::string& string, const std::string& msg);
 bool login_alert_status(const LLSD& notification, const LLSD& response);
-void update_app(BOOL mandatory, const std::string& message);
-bool update_dialog_callback(const LLSD& notification, const LLSD& response);
 void login_packet_failed(void**, S32 result);
 void use_circuit_callback(void**, S32 result);
 void register_viewer_callbacks(LLMessageSystem* msg);
@@ -1787,7 +1785,6 @@ bool idle_startup()
 		LL_DEBUGS("AppInit") << "STATE_LOGIN_PROCESS_RESPONSE" << LL_ENDL;
 		std::ostringstream emsg;
 		bool quit = false;
-		bool update = false;
 		std::string login_response;
 		std::string reason_response;
 		std::string message_response;
@@ -1902,22 +1899,20 @@ bool idle_startup()
 					// Clear the password
 					password = "";
 				}
+				if (reason_response == "optional")
+				{
+					gSkipOptionalUpdate = TRUE;
+					LLStartUp::setStartupState(STATE_LOGIN_AUTH_INIT);
+					return false;
+				}
 				if (reason_response == "update")
 				{
 					auth_message = LLUserAuth::getInstance()->getResponse("message");
-					update = true;
-				}
-				if (reason_response == "optional")
-				{
-					LL_DEBUGS("AppInit") << "Login got optional update" << LL_ENDL;
-					auth_message = LLUserAuth::getInstance()->getResponse("message");
-					if (show_connect_box)
-					{
-						update_app(FALSE, auth_message);
-						LLStartUp::setStartupState(STATE_UPDATE_CHECK);
-						gSkipOptionalUpdate = TRUE;
-						return false;
-					}
+					LLSD args;
+					args["MESSAGE"] = "(" + auth_message + ")";
+					LLNotifications::instance().add("NeedUpdate", args);
+					LLStartUp::setStartupState(STATE_UPDATE_CHECK);
+					return false;
 				}
 			}
 			break;
@@ -1943,7 +1938,7 @@ bool idle_startup()
 				{
 					LLStartUp::setStartupState(STATE_XMLRPC_LEGACY_LOGIN);
 				}
-				return FALSE;
+				return false;
 			}
 			else
 			{
@@ -1953,15 +1948,6 @@ bool idle_startup()
 			break;
 		}
 
-		if (update || gSavedSettings.getBOOL("ForceMandatoryUpdate"))
-		{
-			gSavedSettings.setBOOL("ForceMandatoryUpdate", FALSE);
-			update_app(TRUE, auth_message);
-			LLStartUp::setStartupState(STATE_UPDATE_CHECK);
-			return false;
-		}
-
-		// Version update and we're not showing the dialog
 		if (quit)
 		{
 			LLUserAuth::getInstance()->reset();
@@ -2656,12 +2642,10 @@ bool idle_startup()
 		{
 			LLFloaterMove::showInstance();
 		}
-
 		if (gSavedSettings.getBOOL("ShowActiveSpeakers"))
 		{
 			LLFloaterActiveSpeakers::showInstance();
 		}
-
 		if (gSavedSettings.getBOOL("BeaconAlwaysOn"))
 		{
 			LLFloaterBeacons::showInstance();
@@ -3175,8 +3159,6 @@ bool idle_startup()
 		// We're successfully logged in.
 		gSavedSettings.setBOOL("FirstLoginThisInstall", FALSE);
 
-		// based on the comments, we've successfully logged in so we can delete the 'forced'
-		// URL that the updater set in settings.ini (in a mostly paranoid fashion)
 		std::string nextLoginLocation = gSavedSettings.getString("NextLoginLocation");
 		if (nextLoginLocation.length())
 		{
@@ -3819,214 +3801,6 @@ bool login_alert_status(const LLSD& notification, const LLSD& response)
     }
 
 	LLPanelLogin::giveFocus();
-	return false;
-}
-
-void update_app(BOOL mandatory, const std::string& auth_msg)
-{
-	// store off config state, as we might quit soon
-	gSavedSettings.saveToFile(gSavedSettings.getString("ClientSettingsFile"), TRUE);
-
-	std::ostringstream message;
-
-	//*TODO:translate
-	std::string msg;
-	if (!auth_msg.empty())
-	{
-		msg = "(" + auth_msg + ") \n";
-	}
-
-	LLSD args;
-	args["MESSAGE"] = msg;
-
-	LLSD payload;
-	payload["mandatory"] = mandatory;
-
-/*
- We're constructing one of the following 6 strings here:
-	 "DownloadWindowsMandatory"
-	 "DownloadWindowsReleaseForDownload"
-	 "DownloadWindows"
-	 "DownloadMacMandatory"
-	 "DownloadMacReleaseForDownload"
-	 "DownloadMac"
- 
- I've called them out explicitly in this comment so that they can be grepped for.
- 
- Also, we assume that if we're not Windows we're Mac. If we ever intend to support 
- Linux with autoupdate, this should be an explicit #elif LL_DARWIN, but 
- we'd rather deliver the wrong message than no message, so until Linux is supported
- we'll leave it alone.
- */
-	std::string notification_name = "Download";
-
-#if LL_WINDOWS
-	notification_name += "Windows";
-#else
-	notification_name += "Mac";
-#endif
-
-	if (mandatory)
-	{
-		notification_name += "Mandatory";
-	}
-	else
-	{
-#if LL_RELEASE_FOR_DOWNLOAD
-		notification_name += "ReleaseForDownload";
-#endif
-	}
-
-	LLNotifications::instance().add(notification_name, args, payload, update_dialog_callback);
-
-}
-
-bool update_dialog_callback(const LLSD& notification, const LLSD& response)
-{
-	S32 option = LLNotification::getSelectedOption(notification, response);
-	std::string update_exe_path;
-	bool mandatory = notification["payload"]["mandatory"].asBoolean();
-
-#if !LL_RELEASE_FOR_DOWNLOAD
-	if (option == 2)
-	{
-		LLStartUp::setStartupState(STATE_LOGIN_AUTH_INIT); 
-		return false;
-	}
-#endif
-
-	if (option == 1)
-	{
-		// ...user doesn't want to do it
-		if (mandatory)
-		{
-			LLAppViewer::instance()->forceQuit();
-			// Bump them back to the login screen.
-			//reset_login();
-		}
-		else
-		{
-			LLStartUp::setStartupState(STATE_LOGIN_AUTH_INIT);
-		}
-		return false;
-	}
-#if 1
-	else if (option == 2)
-	{
-		OSMessageBox("Automatic updating is not yet implemented for the Cool VL Viewer.\n"
-			"Please download the latest version from http://sldev.free.fr/",
-			LLStringUtil::null, OSMB_OK);
-		LLAppViewer::instance()->forceQuit();
-		return false;
-	}
-#endif
-
-	LLSD query_map = LLSD::emptyMap();
-	// *TODO place os string in a global constant
-#if LL_WINDOWS  
-	query_map["os"] = "win";
-#elif LL_DARWIN
-	query_map["os"] = "mac";
-#elif LL_LINUX
-	query_map["os"] = "lnx";
-#elif LL_SOLARIS
-	query_map["os"] = "sol";
-#endif
-	// *TODO change userserver to be grid on both viewer and sim, since
-	// userserver no longer exists.
-	query_map["userserver"] = LLViewerLogin::getInstance()->getGridLabel();
-	query_map["channel"] = gSavedSettings.getString("VersionChannelName");
-	// *TODO constantize this guy
-	// *NOTE: This URL is also used in win_setup/lldownloader.cpp
-	LLURI update_url = LLURI::buildHTTP("secondlife.com", 80, "update.php", query_map);
-
-	if (LLAppViewer::sUpdaterInfo)
-	{
-		delete LLAppViewer::sUpdaterInfo;
-	}
-	LLAppViewer::sUpdaterInfo = new LLAppViewer::LLUpdaterInfo();
-
-#if LL_WINDOWS
-	LLAppViewer::sUpdaterInfo->mUpdateExePath = gDirUtilp->getTempFilename();
-	if (LLAppViewer::sUpdaterInfo->mUpdateExePath.empty())
-	{
-		delete LLAppViewer::sUpdaterInfo;
-		LLAppViewer::sUpdaterInfo = NULL;
-
-		// We're hosed, bail
-		LL_WARNS("AppInit") << "LLDir::getTempFilename() failed" << LL_ENDL;
-		LLAppViewer::instance()->forceQuit();
-		return false;
-	}
-
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += ".exe";
-
-	std::string updater_source = gDirUtilp->getAppRODataDir();
-	updater_source += gDirUtilp->getDirDelimiter();
-	updater_source += "updater.exe";
-
-	LL_DEBUGS("AppInit") << "Calling CopyFile source: " << updater_source
-						 << " dest: " << LLAppViewer::sUpdaterInfo->mUpdateExePath
-						 << LL_ENDL;
-
-	if (!CopyFileA(updater_source.c_str(),
-		LLAppViewer::sUpdaterInfo->mUpdateExePath.c_str(), FALSE))
-	{
-		delete LLAppViewer::sUpdaterInfo;
-		LLAppViewer::sUpdaterInfo = NULL;
-
-		LL_WARNS("AppInit") << "Unable to copy the updater!" << LL_ENDL;
-		LLAppViewer::instance()->forceQuit();
-		return false;
-	}
-
-	// if a sim name was passed in via command line parameter (typically through a SLURL)
-//MK
-	if (!gRRenabled && LLURLSimString::sInstance.mSimString.length())
-//mk
-	{
-		// record the location to start at next time
-		gSavedSettings.setString("NextLoginLocation", LLURLSimString::sInstance.mSimString); 
-	}
-
-	LLAppViewer::sUpdaterInfo->mParams << "-url \"" << update_url.asString() << "\"";
-
-	LL_DEBUGS("AppInit") << "Calling updater: " << LLAppViewer::sUpdaterInfo->mUpdateExePath << " " << LLAppViewer::sUpdaterInfo->mParams.str() << LL_ENDL;
-
-	//Explicitly remove the marker file, otherwise we pass the lock onto the child process and things get weird.
-	LLAppViewer::instance()->removeMarkerFile(); // In case updater fails
-
-#elif LL_DARWIN
-	// if a sim name was passed in via command line parameter (typically through a SLURL)
-//MK
-	if (!gRRenabled && LLURLSimString::sInstance.mSimString.length())
-//mk
-	{
-		// record the location to start at next time
-		gSavedSettings.setString("NextLoginLocation", LLURLSimString::sInstance.mSimString); 
-	}
-
-	LLAppViewer::sUpdaterInfo->mUpdateExePath = "'";
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += gDirUtilp->getAppRODataDir();
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += "/mac-updater.app/Contents/MacOS/mac-updater' -url \"";
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += update_url.asString();
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += "\" -name \"";
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += LLAppViewer::instance()->getSecondLifeTitle();
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += "\" -bundleid \"";
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += LL_VERSION_BUNDLE_ID;
-	LLAppViewer::sUpdaterInfo->mUpdateExePath += "\" &";
-
-	LL_DEBUGS("AppInit") << "Calling updater: " << LLAppViewer::sUpdaterInfo->mUpdateExePath << LL_ENDL;
-
-	// Run the auto-updater.
-	system(LLAppViewer::sUpdaterInfo->mUpdateExePath.c_str()); /* Flawfinder: ignore */
-
-#elif LL_LINUX || LL_SOLARIS
-	OSMessageBox("Automatic updating is not yet implemented for Linux.\n"
-		"Please download the latest version from www.secondlife.com.",
-		LLStringUtil::null, OSMB_OK);
-#endif
-	LLAppViewer::instance()->forceQuit();
 	return false;
 }
 

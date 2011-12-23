@@ -104,6 +104,8 @@ LLFloaterCamera::LLFloaterCamera(const LLSD& val)
 	addChild(mTrack);
 
 	getChild<LLSpinCtrl>("draw_distance")->setToolTip(getString("draw_distance_tooltip"));
+
+	mFrontViewCheck = getChild<LLCheckBoxCtrl>("front_view");
 }
 
 // virtual
@@ -133,8 +135,8 @@ void LLFloaterCamera::draw()
 	if (current_mode != mode)
 	{
 		mode = current_mode;
-		childSetEnabled("front_view", mode != CAMERA_MODE_MOUSELOOK &&
-									  mode != CAMERA_MODE_CUSTOMIZE_AVATAR);
+		mFrontViewCheck->setEnabled(mode != CAMERA_MODE_MOUSELOOK &&
+									mode != CAMERA_MODE_CUSTOMIZE_AVATAR);
 	}
 
 	LLFloater::draw();

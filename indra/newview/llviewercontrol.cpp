@@ -48,10 +48,12 @@
 #include "llavatarnamecache.h"
 #include "llcallingcard.h"
 #include "llconsole.h"
+#include "lldirpicker.h"
 #include "lldrawpoolbump.h"
 #include "lldrawpoolterrain.h"
 #include "llerrorcontrol.h"
 #include "llfeaturemanager.h"
+#include "llfilepicker.h"
 #include "llflexibleobject.h"
 #include "llfloater.h"
 #include "llfloaterchat.h"
@@ -63,6 +65,7 @@
 #include "llvieweraudio.h"
 #include "llviewerjoystick.h"
 #include "llviewermenu.h"
+#include "llviewermenufile.h"
 #include "llviewerparcelmedia.h"
 #include "llviewerparcelmgr.h"
 #include "llviewershadermgr.h"
@@ -626,6 +629,17 @@ static bool handleUseDebugMenusChanged(const LLSD& newvalue)
 	return true;
 }
 
+static bool handleNonBlockingFilePickerChanged(const LLSD& newvalue)
+{
+	LLTracker::sCheesyBeacon = newvalue.asBoolean();
+#if !LL_DARWIN
+	bool blocking = (newvalue.asBoolean() == FALSE);
+	LLFilePickerThread::setBlocking(blocking);
+	LLDirPickerThread::setBlocking(blocking);
+#endif
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 
 void settings_setup_listeners()
@@ -805,4 +819,5 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("ShowInventoryButton")->getSignal()->connect(boost::bind(&handleToolbarButtonsChanged, _2));	
 	gSavedSettings.getControl("CheesyBeacon")->getSignal()->connect(boost::bind(&handleCheesyBeaconChanged, _2));	
 	gSavedSettings.getControl("UseDebugMenus")->getSignal()->connect(boost::bind(&handleUseDebugMenusChanged, _2));	
+	gSavedSettings.getControl("NonBlockingFilePicker")->getSignal()->connect(boost::bind(&handleNonBlockingFilePickerChanged, _2));	
 }

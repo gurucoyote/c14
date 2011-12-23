@@ -49,6 +49,7 @@
 #include "llagent.h"
 #include "llappviewer.h"				// abortQuit();
 #include "llassetuploadresponders.h"
+#include "lldirpicker.h"
 #include "llfloatersearchreplace.h"
 #include "llinventorymodel.h"
 #include "llselectmgr.h"
@@ -75,6 +76,8 @@ const S32 PREVIEW_MIN_HEIGHT =	2 * PREVIEW_BORDER +
 /// Class LLPreviewNotecard
 ///----------------------------------------------------------------------------
 
+std::set<LLPreviewNotecard*> LLPreviewNotecard::sList;
+
 // Default constructor
 LLPreviewNotecard::LLPreviewNotecard(const std::string& name,
 									 const LLRect& rect,
@@ -91,6 +94,8 @@ LLPreviewNotecard::LLPreviewNotecard(const std::string& name,
 	mObjectID(object_id),
 	mEditor(NULL)
 {
+	sList.insert(this);
+
 	LLRect curRect = rect;
 
 	if (show_keep_discard)
@@ -119,6 +124,7 @@ LLPreviewNotecard::LLPreviewNotecard(const std::string& name,
 	}
 
 	setTitle(title);
+	setNoteName(title);
 
 	gAgent.changeCameraToDefault();
 }
@@ -126,6 +132,7 @@ LLPreviewNotecard::LLPreviewNotecard(const std::string& name,
 // virtual
 LLPreviewNotecard::~LLPreviewNotecard()
 {
+	sList.erase(this);
 }
 
 // virtual
@@ -169,6 +176,19 @@ void LLPreviewNotecard::draw()
 	}
 
 	LLPreview::draw();
+}
+
+void LLPreviewNotecard::setNoteName(std::string name)
+{
+	if (name.find("Note: ") == 0)
+	{
+		name = name.substr(6);
+	}
+	if (name.empty())
+	{
+		name = "untitled";
+	}
+	mNoteName = name;
 }
 
 bool LLPreviewNotecard::saveItem(LLPointer<LLInventoryItem>* itemptr)
@@ -657,7 +677,19 @@ LLTextEditor* LLPreviewNotecard::getEditor()
 
 void LLPreviewNotecard::initMenu()
 {
-	LLMenuItemCallGL* menuItem = getChild<LLMenuItemCallGL>("Undo");
+	LLMenuItemCallGL* menuItem = getChild<LLMenuItemCallGL>("Load From File");
+	menuItem->setMenuCallback(onLoadFromFile, this);
+	menuItem->setEnabledCallback(enableSaveLoadFile);
+
+	menuItem = getChild<LLMenuItemCallGL>("Save To File");
+	menuItem->setMenuCallback(onSaveToFile, this);
+	menuItem->setEnabledCallback(enableSaveLoadFile);
+
+	menuItem = getChild<LLMenuItemCallGL>("Save To Inventory");
+	menuItem->setMenuCallback(onClickSave, this);
+	menuItem->setEnabledCallback(hasChanged);
+
+	menuItem = getChild<LLMenuItemCallGL>("Undo");
 	menuItem->setMenuCallback(onUndoMenu, this);
 	menuItem->setEnabledCallback(enableUndoMenu);
 
@@ -688,6 +720,116 @@ void LLPreviewNotecard::initMenu()
 	menuItem = getChild<LLMenuItemCallGL>("Search / Replace...");
 	menuItem->setMenuCallback(onSearchMenu, this);
 	menuItem->setEnabledCallback(NULL);
+}
+
+//static
+BOOL LLPreviewNotecard::hasChanged(void* userdata)
+{
+	LLPreviewNotecard* self = (LLPreviewNotecard*)userdata;
+	if (self && self->mEditor)
+	{
+		return !self->mEditor->isPristine() && self->getEnabled();
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+//static
+BOOL LLPreviewNotecard::enableSaveLoadFile(void* userdata)
+{
+	LLPreviewNotecard* self = (LLPreviewNotecard*)userdata;
+	if (self && self->mEditor)
+	{
+		return !LLFilePickerThread::isInUse() && !LLDirPickerThread::isInUse()
+			   && self->getEnabled();
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+// static
+void LLPreviewNotecard::loadFromFileCallback(LLFilePicker::ELoadFilter type,
+											 std::string& filename,
+											 std::deque<std::string>& files,
+											 void* userdata)
+{
+	LLPreviewNotecard* self = (LLPreviewNotecard*)userdata;
+	if (!self || !sList.count(self))
+	{
+		LLNotifications::instance().add("LoadNoteAborted");
+		return;
+	}
+	if (!filename.empty())
+	{
+		std::ifstream file(filename.c_str());
+		if (!file.fail())
+		{
+			self->mEditor->clear();
+			std::string line, text;
+			while (!file.eof())
+			{
+				getline(file, line);
+				text += line + "\n";
+			}
+			file.close();
+			LLWString wtext = utf8str_to_wstring(text);
+			LLWStringUtil::replaceTabsWithSpaces(wtext, 4);
+			text = wstring_to_utf8str(wtext);
+			self->mEditor->setText(text);
+		}
+	}
+}
+
+// static
+void LLPreviewNotecard::onLoadFromFile(void* userdata)
+{
+	(new LLLoadFilePicker(LLFilePicker::FFLOAD_TEXT,
+						  LLPreviewNotecard::loadFromFileCallback,
+						  userdata))->getFile();
+}
+
+//static
+void LLPreviewNotecard::saveToFileCallback(LLFilePicker::ESaveFilter type,
+										   std::string& filename,
+										   void* userdata)
+{
+	LLPreviewNotecard* self = (LLPreviewNotecard*)userdata;
+	if (!self || !sList.count(self))
+	{
+		LLNotifications::instance().add("SaveNoteAborted");
+		return;
+	}
+
+	if (!filename.empty())
+	{
+		std::string lcname = filename;
+		LLStringUtil::toLower(lcname);
+		if (lcname.find(".txt") != lcname.length() - 4)
+		{
+			filename += ".txt";
+		}
+		std::ofstream file(filename.c_str());
+		if (!file.fail())
+		{
+			file << self->mEditor->getText();
+			file.close();
+		}
+	}
+}
+
+// static
+void LLPreviewNotecard::onSaveToFile(void* userdata)
+{
+	LLPreviewNotecard* self = (LLPreviewNotecard*)userdata;
+	if (!self || !sList.count(self)) return;
+	std::string suggestion = self->mNoteName + ".txt";
+	(new LLSaveFilePicker(LLFilePicker::FFSAVE_TEXT,
+						  LLPreviewNotecard::saveToFileCallback,
+						  userdata))->getSaveFile(suggestion);
 }
 
 // static 

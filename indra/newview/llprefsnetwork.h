@@ -39,9 +39,10 @@ class LLPrefsNetwork : public LLPanel
 {
 public:
 	LLPrefsNetwork();
-	~LLPrefsNetwork();
+	/*virtual*/ ~LLPrefsNetwork();
 
-	BOOL postBuild();
+	/*virtual*/ BOOL postBuild();
+	/*virtual*/ void draw();
 
 	void apply();
 	void cancel();
@@ -63,8 +64,12 @@ private:
 	static bool callback_clear_browser_cache(const LLSD& notification, const LLSD& response);
 	static bool callback_clear_cookies(const LLSD& notification, const LLSD& response);
 	static void onCommitWebProxyEnabled(LLUICtrl* ctrl, void* data);
-	
+
+	static void setCacheCallback(std::string& dir_name, void* data);
+
 	static bool sSocksSettingsChanged;
+
+	static LLPrefsNetwork* sInstance;
 };
 
 #endif

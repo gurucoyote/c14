@@ -37,14 +37,13 @@
 #include "llframetimer.h"
 #include "llchat.h"
 
-class LLLineEditor;
-class LLMessageSystem;
-class LLUICtrl;
-class LLUUID;
+class LLButton;
 class LLFrameTimer;
 class LLChatBarGestureObserver;
 class LLComboBox;
 class LLFlyoutButton;
+class LLLineEditor;
+class LLUICtrl;
 
 class LLChatBar
 :	public LLPanel
@@ -88,9 +87,9 @@ public:
 	LLWString stripChannelNumber(const LLWString &mesg, S32* channel);
 
 	// callbacks
-	static void	onClickSay( LLUICtrl*, void* userdata );
+	static void	onClickSay(LLUICtrl*, void* userdata);
 
-	static void	onTabClick( void* userdata );
+	static void	onTabClick(void* userdata);
 	static void	onInputEditorKeystroke(LLLineEditor* caller, void* userdata);
 	static void	onInputEditorFocusLost(LLFocusableElement* caller,void* userdata);
 	static void	onInputEditorGainFocus(LLFocusableElement* caller,void* userdata);
@@ -111,7 +110,9 @@ protected:
 
 	LLLineEditor*	mInputEditor;
 
-	LLFlyoutButton* mSayButton;
+	LLButton*		mHistoryButton;
+
+	LLFlyoutButton* mSayFlyoutButton;
 
 	LLFrameTimer	mGestureLabelTimer;
 

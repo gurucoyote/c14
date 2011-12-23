@@ -48,12 +48,13 @@ class LLFloaterMove
 	public LLFloaterSingleton<LLFloaterMove>
 {
 	friend class LLUISingleton<LLFloaterMove, VisibilityPolicy<LLFloater> >;
-	
+
 protected:
 	LLFloaterMove(const LLSD& key);
 	~LLFloaterMove() {}
 
 public:
+	/*virtual*/ void draw();
 	/*virtual*/ void onOpen();
 	/*virtual*/ void onClose(bool app_quitting);
 	static void onFlyButtonClicked(void* userdata);
@@ -63,7 +64,7 @@ public:
 protected:
 	static void turnLeftNudge(void* userdata);
 	static void turnLeft(void* userdata);
-	
+
 	static void turnRightNudge(void* userdata);
 	static void turnRight(void* userdata);
 
@@ -81,6 +82,5 @@ public:
 	LLButton*				mMoveDownButton;
 	LLButton*				mFlyButton;
 };
-
 
 #endif

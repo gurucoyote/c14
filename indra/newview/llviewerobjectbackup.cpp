@@ -109,9 +109,8 @@ void setDefaultTextures()
 class importResponder: public LLNewAgentInventoryResponder
 {
 public:
-
 	importResponder(const LLSD& post_data, const LLUUID& vfile_id, LLAssetType::EType asset_type)
-	: LLNewAgentInventoryResponder(post_data, vfile_id, asset_type)
+	:	LLNewAgentInventoryResponder(post_data, vfile_id, asset_type)
 	{
 	}
 
@@ -158,16 +157,16 @@ public:
 			S32 creation_date_now = time_corrected();
 			LLPointer<LLViewerInventoryItem> item
 				= new LLViewerInventoryItem(content["new_inventory_item"].asUUID(),
-										mPostData["folder_id"].asUUID(),
-										perm,
-										content["new_asset"].asUUID(),
-										asset_type,
-										inventory_type,
-										mPostData["name"].asString(),
-										mPostData["description"].asString(),
-										LLSaleInfo::DEFAULT,
-										LLInventoryItem::II_FLAGS_NONE,
-										creation_date_now);
+											mPostData["folder_id"].asUUID(),
+											perm,
+											content["new_asset"].asUUID(),
+											asset_type,
+											inventory_type,
+											mPostData["name"].asString(),
+											mPostData["description"].asString(),
+											LLSaleInfo::DEFAULT,
+											LLInventoryItem::II_FLAGS_NONE,
+											creation_date_now);
 			gInventory.updateItem(item);
 			gInventory.notifyObservers();
 		}
@@ -188,10 +187,11 @@ class CacheReadResponder : public LLTextureCache::ReadResponder
 {
 public:
 	CacheReadResponder(const LLUUID& id, LLImageFormatted* image)
-		: mFormattedImage(image), mID(id)
+	:	mFormattedImage(image), mID(id)
 	{
 		setImage(image);
 	}
+
 	void setData(U8* data, S32 datasize, S32 imagesize, S32 imageformat, BOOL imagelocal)
 	{
 		if (imageformat == IMG_CODEC_TGA && mFormattedImage->getCodec() == IMG_CODEC_J2C)
@@ -250,21 +250,23 @@ public:
 		//JUST SAY NO TO APR DEADLOCKING
 		//LLObjectBackup::getInstance()->exportNextTexture();
 	}
+
 private:
 	LLPointer<LLImageFormatted> mFormattedImage;
 	LLUUID mID;
 };
 
 LLObjectBackup::LLObjectBackup()
-: LLFloater(std::string("Object Backup Floater"), std::string("FloaterObjectBackuptRect"), LLStringUtil::null)
+: LLFloater("Object Backup")
 {
-	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_object_backup.xml");
+	LLUICtrlFactory::getInstance()->buildFloater(this,
+												 "floater_object_backup.xml",
+												 NULL, FALSE);	// Don't open
 	mRunning = false;
 	mTexturesList.clear();
 	mAssetMap.clear();
 	mCurrentAsset = LLUUID::null;
 	mRetexture = false;
-	close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,20 +274,15 @@ LLObjectBackup::LLObjectBackup()
 LLObjectBackup* LLObjectBackup::getInstance()
 {
     if (!sInstance)
+	{
         sInstance = new LLObjectBackup();
+	}
 	return sInstance;
 }
 
 LLObjectBackup::~LLObjectBackup()
 {
-	// save position of floater
-	gSavedSettings.setRect("FloaterObjectBackuptRect", getRect());
 	sInstance = NULL;
-}
-
-void LLObjectBackup::draw()
-{
-	LLFloater::draw();
 }
 
 void LLObjectBackup::show(bool exporting)
@@ -311,9 +308,9 @@ void LLObjectBackup::show(bool exporting)
 
 void LLObjectBackup::onClose(bool app_quitting)
 {
+	// Do not destroy the floater on user close action to avoid getting things
+	// messed up during import/export.
 	setVisible(false);
-	// HACK for fast XML iteration replace with:
-	// destroy();
 }
 
 void LLObjectBackup::updateExportNumbers()
@@ -353,27 +350,49 @@ void LLObjectBackup::updateImportNumbers()
 	ctrl->setValue(LLSD("Text") = sstr.str());
 }
 
+//static
+void LLObjectBackup::exportCallback(LLFilePicker::ESaveFilter type,
+									std::string& filename,
+									void* user_data)
+{
+	if (!filename.empty())
+	{
+		if (sInstance)
+		{
+			LLViewerObject* object = LLSelectMgr::getInstance()->getSelection()->getPrimaryObject();
+			if (object)
+			{
+				sInstance->doExportObject(filename);
+			}
+			else
+			{
+				LLNotifications::instance().add("ExportAborted");
+				sInstance->destroy();
+			}
+		}
+	}
+	else
+	{
+		sInstance->destroy();
+	}
+}
+
 void LLObjectBackup::exportObject()
 {
+	// Open the file save dialog
+	(new LLSaveFilePicker(LLFilePicker::FFSAVE_XML,
+						  LLObjectBackup::exportCallback))->getSaveFile();
+}
+
+void LLObjectBackup::doExportObject(std::string filename)
+{
+	mFileName = filename;
+	mFolder = gDirUtilp->getDirName(mFileName);
 	mTexturesList.clear();
 	mLLSD.clear();
 	mThisGroup.clear();
-
 	setDefaultTextures();
-
-	// Open the file save dialog
-	LLFilePicker& file_picker = LLFilePicker::instance();
-	if (!file_picker.getSaveFile(LLFilePicker::FFSAVE_XML))
-	{
-		// User canceled save.
-		return;
-	}
-
-	mFileName = file_picker.getCurFile();
-	mFolder = gDirUtilp->getDirName(mFileName);
-
 	mNonExportedTextures = TEXTURE_OK;
-
 	mExportState = EXPORT_INIT;
 	gIdleCallbacks.addFunction(exportWorker, NULL);
 }
@@ -424,10 +443,10 @@ LLUUID LLObjectBackup::validateTextureID(LLUUID asset_id)
 	LLViewerInventoryItem::item_array_t items;
 	LLAssetIDMatches asset_id_matches(asset_id);
 	gInventory.collectDescendentsIf(LLUUID::null,
-							cats,
-							items,
-							LLInventoryModel::INCLUDE_TRASH,
-							asset_id_matches);
+									cats,
+									items,
+									LLInventoryModel::INCLUDE_TRASH,
+									asset_id_matches);
 
 	if (items.count())
 	{
@@ -450,100 +469,123 @@ LLUUID LLObjectBackup::validateTextureID(LLUUID asset_id)
 }
 
 void LLObjectBackup::exportWorker(void *userdata)
-{	
-	LLObjectBackup::getInstance()->updateExportNumbers();
+{
+	getInstance()->updateExportNumbers();
 
-	switch (LLObjectBackup::getInstance()->mExportState)
+	switch (sInstance->mExportState)
 	{
 		case EXPORT_INIT:
-			{
-				LLObjectBackup::getInstance()->show(true);		
-				LLSelectMgr::getInstance()->getSelection()->ref();
-				struct ff : public LLSelectedNodeFunctor
-				{
-					virtual bool apply(LLSelectNode* node)
-					{
-						return LLObjectBackup::getInstance()->validatePerms(node->mPermissions);
-					}
-				} func;
+		{
+			LLSelectMgr* selmgr = LLSelectMgr::getInstance();
+			sInstance->show(true);		
+			selmgr->getSelection()->ref();
 
-				if (LLSelectMgr::getInstance()->getSelection()->applyToNodes(&func, false))
+			struct ff : public LLSelectedNodeFunctor
+			{
+				virtual bool apply(LLSelectNode* node)
 				{
-					LLObjectBackup::getInstance()->mExportState = EXPORT_STRUCTURE;
+					return sInstance->validatePerms(node->mPermissions);
+				}
+			} func;
+
+			LLViewerObject* object = selmgr->getSelection()->getPrimaryObject();
+			if (object)
+			{
+				if (selmgr->getSelection()->applyToNodes(&func, false))
+				{
+					sInstance->mExportState = EXPORT_STRUCTURE;
 				}
 				else
 				{
 					LL_WARNS("ObjectBackup") << "Incorrect permission to export" << LL_ENDL;
-					LLObjectBackup::getInstance()->mExportState = EXPORT_FAILED;
-					LLSelectMgr::getInstance()->getSelection()->unref();
+					sInstance->mExportState = EXPORT_FAILED;
+					selmgr->getSelection()->unref();
 				}
 			}
-			break;
-
-		case EXPORT_STRUCTURE:
+			else
 			{
-				struct ff : public LLSelectedObjectFunctor
-				{
-					virtual bool apply(LLViewerObject* object)
-					{
-						bool is_attachment = object->isAttachment();
-						object->boostTexturePriority(TRUE);
-						LLViewerObject::child_list_t children = object->getChildren();
-						children.push_front(object); //push root onto list
-						LLSD prim_llsd = LLObjectBackup::getInstance()->primsToLLSD(children, is_attachment);				
-						LLSD stuff;
-						if (is_attachment)
-						{
-							stuff["root_position"] = object->getPositionEdit().getValue();
-							stuff["root_rotation"] = ll_sd_from_quaternion(object->getRotationEdit());
-						}
-						else
-						{
-							stuff["root_position"] = object->getPosition().getValue();
-							stuff["root_rotation"] = ll_sd_from_quaternion(object->getRotation());
-						}
-						stuff["group_body"] = prim_llsd;
-						LLObjectBackup::getInstance()->mLLSD["data"].append(stuff);
-						return true;
-					}
-				} func;
-
-				LLObjectBackup::getInstance()->mExportState = EXPORT_LLSD;
-				LLSelectMgr::getInstance()->getSelection()->applyToRootObjects(&func, false);
-				LLSelectMgr::getInstance()->getSelection()->unref();
+				sInstance->mExportState = EXPORT_ABORTED;
 			}
 			break;
+		}
+
+		case EXPORT_STRUCTURE:
+		{
+			LLSelectMgr* selmgr = LLSelectMgr::getInstance();
+
+			struct ff : public LLSelectedObjectFunctor
+			{
+				virtual bool apply(LLViewerObject* object)
+				{
+					bool is_attachment = object->isAttachment();
+					object->boostTexturePriority(TRUE);
+					LLViewerObject::child_list_t children = object->getChildren();
+					children.push_front(object); //push root onto list
+					LLSD prim_llsd = sInstance->primsToLLSD(children, is_attachment);				
+					LLSD stuff;
+					if (is_attachment)
+					{
+						stuff["root_position"] = object->getPositionEdit().getValue();
+						stuff["root_rotation"] = ll_sd_from_quaternion(object->getRotationEdit());
+					}
+					else
+					{
+						stuff["root_position"] = object->getPosition().getValue();
+						stuff["root_rotation"] = ll_sd_from_quaternion(object->getRotation());
+					}
+					stuff["group_body"] = prim_llsd;
+					sInstance->mLLSD["data"].append(stuff);
+					return true;
+				}
+			} func;
+
+			LLViewerObject* object = selmgr->getSelection()->getPrimaryObject();
+			if (object)
+			{
+				sInstance->mExportState = EXPORT_LLSD;
+				selmgr->getSelection()->applyToRootObjects(&func, false);
+				selmgr->getSelection()->unref();
+			}
+			else
+			{
+				sInstance->mExportState = EXPORT_ABORTED;
+			}
+			break;
+		}
 
 		case EXPORT_TEXTURES:
-			if (LLObjectBackup::getInstance()->mNextTextureReady == false)
+		{
+			if (sInstance->mNextTextureReady == false)
 				return;
 
 			// Ok we got work to do
-			LLObjectBackup::getInstance()->mNextTextureReady = false;
+			sInstance->mNextTextureReady = false;
 
-			if (LLObjectBackup::getInstance()->mTexturesList.empty())
+			if (sInstance->mTexturesList.empty())
 			{
-				LLObjectBackup::getInstance()->mExportState = EXPORT_DONE;
+				sInstance->mExportState = EXPORT_DONE;
 				return;
 			}
 
-			LLObjectBackup::getInstance()->exportNextTexture();
+			sInstance->exportNextTexture();
 			break;
+		}
 
 		case EXPORT_LLSD:
-			{
-				// Create a file stream and write to it
-				llofstream export_file(LLObjectBackup::getInstance()->mFileName);
-				LLSDSerialize::toPrettyXML(LLObjectBackup::getInstance()->mLLSD, export_file);
-				export_file.close();
-				LLObjectBackup::getInstance()->mNextTextureReady = true;	
-				LLObjectBackup::getInstance()->mExportState = EXPORT_TEXTURES;
-			}
+		{
+			// Create a file stream and write to it
+			llofstream export_file(sInstance->mFileName);
+			LLSDSerialize::toPrettyXML(sInstance->mLLSD, export_file);
+			export_file.close();
+			sInstance->mNextTextureReady = true;	
+			sInstance->mExportState = EXPORT_TEXTURES;
 			break;
+		}
 
 		case EXPORT_DONE:
+		{
 			gIdleCallbacks.deleteFunction(exportWorker);
-			if (LLObjectBackup::getInstance()->mNonExportedTextures == LLObjectBackup::TEXTURE_OK)
+			if (sInstance->mNonExportedTextures == LLObjectBackup::TEXTURE_OK)
 			{
 				LL_INFOS("ObjectBackup") << "Export successful and complete." << LL_ENDL;
 				LLNotifications::instance().add("ExportSuccessful");
@@ -552,23 +594,23 @@ void LLObjectBackup::exportWorker(void *userdata)
 			{
 				LL_INFOS("ObjectBackup") << "Export successful but incomplete: some texture(s) not saved." << LL_ENDL;
 				std::string reason;
-				if (LLObjectBackup::getInstance()->mNonExportedTextures & LLObjectBackup::TEXTURE_BAD_PERM)
+				if (sInstance->mNonExportedTextures & LLObjectBackup::TEXTURE_BAD_PERM)
 				{
 					reason += "\nBad permissions/creator.";
 				}
-				if (LLObjectBackup::getInstance()->mNonExportedTextures & LLObjectBackup::TEXTURE_MISSING)
+				if (sInstance->mNonExportedTextures & LLObjectBackup::TEXTURE_MISSING)
 				{
 					reason += "\nMissing texture (retrying after full rezzing might work).";
 				}
-				if (LLObjectBackup::getInstance()->mNonExportedTextures & LLObjectBackup::TEXTURE_BAD_ENCODING)
+				if (sInstance->mNonExportedTextures & LLObjectBackup::TEXTURE_BAD_ENCODING)
 				{
 					reason += "\nBad texture encoding.";
 				}
-				if (LLObjectBackup::getInstance()->mNonExportedTextures & LLObjectBackup::TEXTURE_IS_NULL)
+				if (sInstance->mNonExportedTextures & LLObjectBackup::TEXTURE_IS_NULL)
 				{
 					reason += "\nNull texture.";
 				}
-				if (LLObjectBackup::getInstance()->mNonExportedTextures & LLObjectBackup::TEXTURE_SAVED_FAILED)
+				if (sInstance->mNonExportedTextures & LLObjectBackup::TEXTURE_SAVED_FAILED)
 				{
 					reason += "\nCould not write to disk.";
 				}
@@ -576,15 +618,27 @@ void LLObjectBackup::exportWorker(void *userdata)
 				args["REASON"] = reason;
 				LLNotifications::instance().add("ExportPartial", args);
 			}
-			LLObjectBackup::getInstance()->close();
+			sInstance->destroy();
 			break;
+		}
 
 		case EXPORT_FAILED:
+		{
+			gIdleCallbacks.deleteFunction(exportWorker);
+			LL_WARNS("ObjectBackup") << "Export process failed." << LL_ENDL;
+			LLNotifications::instance().add("ExportFailed");
+			sInstance->destroy();
+			break;
+		}
+
+		case EXPORT_ABORTED:
+		{
 			gIdleCallbacks.deleteFunction(exportWorker);
 			LL_WARNS("ObjectBackup") << "Export process aborted." << LL_ENDL;
-			LLNotifications::instance().add("ExportFailed");
-			LLObjectBackup::getInstance()->close();
+			LLNotifications::instance().add("ExportAborted");
+			sInstance->destroy();
 			break;
+		}
 	}
 }
 
@@ -681,7 +735,7 @@ LLSD LLObjectBackup::primsToLLSD(LLViewerObject::child_list_t child_list, bool i
 				else
 				{
 					LL_WARNS("ObjectBackup") << "Incorrect permission to export a sculpt texture." << LL_ENDL;
-					LLObjectBackup::getInstance()->mExportState = EXPORT_FAILED;
+					getInstance()->mExportState = EXPORT_FAILED;
 				}
 			}
 		}
@@ -756,10 +810,15 @@ void LLObjectBackup::exportNextTexture()
 			S32 cur_discard = imagep->getDiscardLevel();
 			if (cur_discard > 0)
 			{
-				if (imagep->getBoostLevel() != LLViewerTexture::BOOST_PREVIEW)
+				if (imagep->getBoostLevel() <= LLViewerTexture::BOOST_PREVIEW)
 				{
-					// we want to force discard 0: this one does this.
+					// Boost texture loading
 					imagep->setBoostLevel(LLViewerTexture::BOOST_PREVIEW);
+				}
+				else
+				{
+					// Already boosted: don't discard it as a last ressort
+					imagep->dontDiscard();
 				}
 			}
 			else
@@ -785,7 +844,34 @@ void LLObjectBackup::exportNextTexture()
   	LLAppViewer::getTextureCache()->readFromCache(id, LLWorkerThread::PRIORITY_HIGH, 0, 999999, responder);
 }
 
+//static
+void LLObjectBackup::importCallback(LLFilePicker::ELoadFilter type,
+									std::string& filename,
+									std::deque<std::string>& files,
+									void* user_data)
+{
+	if (!filename.empty())
+	{
+		if (sInstance)
+		{
+			sInstance->doImportObject(filename);
+		}
+	}
+	else
+	{
+		sInstance->destroy();
+	}
+}
+
 void LLObjectBackup::importObject(bool upload)
+{
+	mRetexture = upload;
+
+	(new LLLoadFilePicker(LLFilePicker::FFLOAD_XML,
+						  LLObjectBackup::importCallback))->getFile();
+}
+
+void LLObjectBackup::doImportObject(std::string filename)
 {
 	mTexturesList.clear();
 	mAssetMap.clear();
@@ -793,19 +879,8 @@ void LLObjectBackup::importObject(bool upload)
 
 	setDefaultTextures();
 
-	mRetexture = upload;
-
-	// Open the file open dialog
-	LLFilePicker& file_picker = LLFilePicker::instance();
-	if (!file_picker.getOpenFile(LLFilePicker::FFLOAD_XML))
-	{
-		// User canceled save.
-		return;
-	}
-
-	std::string file_name = file_picker.getFirstFile().c_str();
-	mFolder = gDirUtilp->getDirName(file_name);
-	llifstream import_file(file_name);
+	mFolder = gDirUtilp->getDirName(filename);
+	llifstream import_file(filename);
 	LLSDSerialize::fromXML(mLLSD, import_file);
 	import_file.close();
 	show(false);
@@ -1097,7 +1172,7 @@ void LLObjectBackup::primUpdate(LLViewerObject* object)
 		}
 
 		mRunning = false;
-		close();
+		destroy();
 		return;
 	}
 
@@ -1106,6 +1181,8 @@ void LLObjectBackup::primUpdate(LLViewerObject* object)
 	if (mToSelect.empty())
 	{
 		LL_WARNS("ObjectBackup") << "error: ran out of objects to mod." << LL_ENDL;
+		mRunning = false;
+		destroy();
 		return;
 	}
 

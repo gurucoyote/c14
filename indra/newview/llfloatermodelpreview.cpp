@@ -816,7 +816,12 @@ void LLFloaterModelPreview::draw()
 
 	if (!mModelPreview->mLoading)
 	{
-		if (mModelPreview->getLoadState() > LLModelLoader::ERROR_PARSING)
+		if (mModelPreview->getLoadState() == LLModelLoader::ERROR_MATERIALS)
+		{
+			childSetTextArg("status", "[STATUS]",
+							getString("status_material_mismatch"));
+		}
+		else if (mModelPreview->getLoadState() > LLModelLoader::ERROR_PARSING)
 		{
 			childSetTextArg("status", "[STATUS]",
 							getString(LLModel::getStatusString(mModelPreview->getLoadState() -
@@ -3510,8 +3515,8 @@ void LLModelPreview::rebuildUploadData()
 
 	F32 max_scale = 0.f;
 
-	//reorder materials to match mBaseModel
-	for (U32 i = 0; i < LLModel::NUM_LODS; i++)
+	// reorder materials to match mBaseModel
+	for (U32 i = 0; i < LLModel::NUM_LODS - 1; i++)
 	{
 		if (mBaseModel.size() == mModel[i].size())
 		{
@@ -5305,7 +5310,7 @@ BOOL LLModelPreview::render()
 		}
 
 		// make sure material lists all match
-		for (U32 i = 0; i < LLModel::NUM_LODS; i++)
+		for (U32 i = 0; i < LLModel::NUM_LODS - 1; i++)
 		{
 			if (mBaseModel.size() == mModel[i].size())
 			{
@@ -5316,6 +5321,7 @@ BOOL LLModelPreview::render()
 
 					if (!mModel[i][j]->matchMaterialOrder(mBaseModel[j], refFaceCnt, modelFaceCnt))
 					{
+						setLoadState(LLModelLoader::ERROR_MATERIALS);
 						mFMP->childDisable("calculate_btn");
 					}
 				}

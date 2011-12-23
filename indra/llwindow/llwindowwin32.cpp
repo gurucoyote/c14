@@ -2819,9 +2819,9 @@ BOOL LLWindowWin32::resetDisplayResolution()
 
 void LLWindowWin32::swapBuffers()
 {
+	glFinish();
 	SwapBuffers(mhDC);
 }
-
 
 //
 // LLSplashScreenImp

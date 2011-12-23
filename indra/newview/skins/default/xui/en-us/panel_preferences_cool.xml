@@ -269,7 +269,7 @@
 		<panel name="RestrainedLove" label="RestrainedLove" border="true" mouse_opaque="true"
 		 left="1" bottom="-440" width="500" height="440" follows="left|top|right|bottom">
 			<check_box name="restrained_love_check" control_name="RestrainedLove"
-			 label="RestrainedLove (BDSM toys support) mode (requires a restart)"
+			 label="RestrainedLove mode (requires a restart)"
 			 tool_tip="RestrainedLove allows scripts in your *own* objects to take control on some features of the viewer, and in particular restrict what you can do with it in given situations. This is used by many BDSM scripted toys to try and improve your role-play experience, but may also be used by other scripted objects not related with BDSM (for example, by a scripted outfit manager)."
 			 font="SansSerifSmall" mouse_opaque="true"  enabled="true"
 			 left="15" bottom_delta="-30" width="400" height="16" follows="left|top" />
@@ -289,7 +289,7 @@
 					BDSM Role-Player
 				</radio_item>
 				<radio_item name="non_bdsm" bottom="-20" left="260" height="20" width="80"
-				 tool_tip="If you are not into BDSM, but wish to benefit from some features RestrainedLove can offer to you (such as allowing scripts to change what your avatar is wearing, or change the Windlight settings of the viewer), but don't wish to get restricted in what you can do in any way, then this profile is for you !">
+				 tool_tip="If you are not into BDSM and yet wish to benefit from some features RestrainedLove can offer to you, such as allowing scripts to change what your avatar is wearing, or to redirect your chat (used by emoters), or to TP you automatically (used by teleporting gates), but don't wish to get restricted in what you can do in any way, then this profile is for you !">
 					Non-BDSM
 				</radio_item>
 				<radio_item name="custom" bottom="-20" left="340" height="20" width="60" visible="false"

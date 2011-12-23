@@ -50,38 +50,48 @@ class LLPrefsIMImpl : public LLPanel
 {
 public:
 	LLPrefsIMImpl();
-	/*virtual*/ ~LLPrefsIMImpl(){};
+	/*virtual*/ ~LLPrefsIMImpl();
 
 	/*virtual*/ BOOL postBuild();
+	/*virtual*/ void draw();
 
 	void apply();
 	void cancel();
 	void setPersonalInfo(const std::string& visibility, bool im_via_email, const std::string& email);
 	void enableHistory();
 
+protected:
+	static void setLogPathCallback(std::string& dir_name, void* user_data);
 	static void onClickLogPath(void* user_data);
 	static void onCommitLogging(LLUICtrl* ctrl, void* user_data);
 	static void onOpenHelp(void *data);
 
-protected:
 	bool mGotPersonalInfo;
 	bool mIMViaEmail;
 	bool mHideOnlineStatus;
 	std::string mDirectoryVisibility;
+
+	static LLPrefsIMImpl* sInstance;
 };
 
+LLPrefsIMImpl* LLPrefsIMImpl::sInstance = NULL;
+
 LLPrefsIMImpl::LLPrefsIMImpl()
-	: LLPanel(std::string("IM Prefs Panel")),
-	  mGotPersonalInfo(false),
-	  mIMViaEmail(false)
+:	LLPanel(std::string("IM Prefs Panel")),
+	mGotPersonalInfo(false),
+	mIMViaEmail(false)
 {
+	sInstance = this;
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_im.xml");
 }
 
-void LLPrefsIMImpl::cancel()
+//virtual
+LLPrefsIMImpl::~LLPrefsIMImpl()
 {
+	sInstance = NULL;
 }
 
+//virtual
 BOOL LLPrefsIMImpl::postBuild()
 {
 	requires("online_visibility");
@@ -136,10 +146,19 @@ BOOL LLPrefsIMImpl::postBuild()
 	return TRUE;
 }
 
+//virtual
+void LLPrefsIMImpl::draw()
+{
+	childSetEnabled("log_path_button",
+					!LLFilePickerThread::isInUse() && !LLDirPickerThread::isInUse());
+	LLPanel::draw();
+}
+
 void LLPrefsIMImpl::enableHistory()
 {
-	
-	if (childGetValue("log_instant_messages").asBoolean() || childGetValue("log_chat").asBoolean())
+
+	if (childGetValue("log_instant_messages").asBoolean() ||
+		childGetValue("log_chat").asBoolean())
 	{
 		childEnable("log_show_history");
 		childEnable("log_path_button");
@@ -149,6 +168,10 @@ void LLPrefsIMImpl::enableHistory()
 		childDisable("log_show_history");
 		childDisable("log_path_button");
 	}
+}
+
+void LLPrefsIMImpl::cancel()
+{
 }
 
 void LLPrefsIMImpl::apply()
@@ -187,10 +210,10 @@ void LLPrefsIMImpl::apply()
 		LLFile::mkdir(gDirUtilp->getPerAccountChatLogsDir());
 
 		bool new_im_via_email = childGetValue("send_im_to_email").asBoolean();
-		bool new_hide_online = childGetValue("online_visibility").asBoolean();		
+		bool new_hide_online = childGetValue("online_visibility").asBoolean();
 
-		if((new_im_via_email != mIMViaEmail)
-		   ||(new_hide_online != mHideOnlineStatus))
+		if (new_im_via_email != mIMViaEmail ||
+			new_hide_online != mHideOnlineStatus)
 		{
 			LLMessageSystem* msg = gMessageSystem;
 			msg->newMessageFast(_PREHASH_UpdateUserInfo);
@@ -204,11 +227,17 @@ void LLPrefsIMImpl::apply()
 			// can only select between 2 values, we represent it as a 	 
 			// checkbox. This breaks down a little bit for liaisons, but 	 
 			// works out in the end. 	 
-			if(new_hide_online != mHideOnlineStatus) 	 
+			if (new_hide_online != mHideOnlineStatus) 	 
 			{ 	 
-				if(new_hide_online) mDirectoryVisibility = VISIBILITY_HIDDEN;
-				else mDirectoryVisibility = VISIBILITY_DEFAULT;
-				//Update showonline value, otherwise multiple applies won't work
+				if (new_hide_online)
+				{
+					mDirectoryVisibility = VISIBILITY_HIDDEN;
+				}
+				else
+				{
+					mDirectoryVisibility = VISIBILITY_DEFAULT;
+				}
+				// Update showonline value, otherwise multiple applies won't work
 				mHideOnlineStatus = new_hide_online;
 			} 	 
 			msg->addString("DirectoryVisibility", mDirectoryVisibility);
@@ -217,7 +246,9 @@ void LLPrefsIMImpl::apply()
 	}
 }
 
-void LLPrefsIMImpl::setPersonalInfo(const std::string& visibility, bool im_via_email, const std::string& email)
+void LLPrefsIMImpl::setPersonalInfo(const std::string& visibility,
+									bool im_via_email,
+									const std::string& email)
 {
 	mGotPersonalInfo = true;
 	mIMViaEmail = im_via_email;
@@ -264,7 +295,7 @@ void LLPrefsIMImpl::setPersonalInfo(const std::string& visibility, bool im_via_e
 	// Truncate the e-mail address if it's too long (to prevent going off
 	// the edge of the dialog).
 	std::string display_email(email);
-	if(display_email.size() > 30)
+	if (display_email.size() > 30)
 	{
 		display_email.resize(30);
 		display_email += "...";
@@ -274,19 +305,29 @@ void LLPrefsIMImpl::setPersonalInfo(const std::string& visibility, bool im_via_e
 }
 
 // static
+void LLPrefsIMImpl::setLogPathCallback(std::string& dir_name, void* user_data)
+{
+	LLPrefsIMImpl* self = (LLPrefsIMImpl*)user_data;
+	if (!self || self != sInstance)
+	{
+		LLNotifications::instance().add("PreferencesClosed");
+		return;
+	}
+	if (!dir_name.empty())
+	{
+		self->childSetText("log_path_string", dir_name);	 
+	}
+}
+
+// static
 void LLPrefsIMImpl::onClickLogPath(void* user_data)
 {
-	LLPrefsIMImpl* self=(LLPrefsIMImpl*)user_data;
-	
-	std::string proposed_name(self->childGetText("log_path_string"));	 
-	
-	LLDirPicker& picker = LLDirPicker::instance();
-	if (!picker.getDir(&proposed_name ) )
-	{
-		return; //Canceled!
-	}
-	
-	self->childSetText("log_path_string", picker.getDirName());	 
+	LLPrefsIMImpl* self = (LLPrefsIMImpl*)user_data;
+
+	std::string suggestion = self->childGetText("log_path_string");
+
+	(new LLCallDirPicker(LLPrefsIMImpl::setLogPathCallback,
+						 user_data))->getDir(&suggestion);
 }
 
 // static
@@ -311,7 +352,8 @@ void LLPrefsIMImpl::onOpenHelp(void* user_data)
 
 LLPrefsIM::LLPrefsIM()
 :	impl(* new LLPrefsIMImpl())
-{ }
+{
+}
 
 LLPrefsIM::~LLPrefsIM()
 {

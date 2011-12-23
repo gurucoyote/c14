@@ -37,6 +37,7 @@
 #include "llcheckboxctrl.h"
 #include "llradiogroup.h"
 #include "lldirpicker.h"
+#include "llfilepicker.h"
 #include "llpluginclassmedia.h"
 #include "lluictrlfactory.h"
 
@@ -47,11 +48,21 @@
 
 bool LLPrefsNetwork::sSocksSettingsChanged;
 
+LLPrefsNetwork* LLPrefsNetwork::sInstance = NULL;
+
 LLPrefsNetwork::LLPrefsNetwork()
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_network.xml");
+	sInstance = this;
 }
 
+//virtual
+LLPrefsNetwork::~LLPrefsNetwork()
+{
+	sInstance = NULL;
+}
+
+//virtual
 BOOL LLPrefsNetwork::postBuild()
 {
 	BOOL http_fetch_enabled = gSavedSettings.getBOOL("ImagePipelineUseHTTP");
@@ -63,11 +74,11 @@ BOOL LLPrefsNetwork::postBuild()
 
 	std::string cache_location = gDirUtilp->getExpandedFilename(LL_PATH_CACHE, "");
 	childSetText("cache_location", cache_location);
-		
+
 	childSetAction("clear_disk_cache", onClickClearDiskCache, this);
 	childSetAction("set_cache", onClickSetCache, this);
 	childSetAction("reset_cache", onClickResetCache, this);
-	
+
 	childSetEnabled("connection_port", gSavedSettings.getBOOL("ConnectionPortEnabled"));
 	childSetCommitCallback("connection_port_enabled", onCommitPort, this);
 
@@ -119,7 +130,7 @@ BOOL LLPrefsNetwork::postBuild()
 	childSetCommitCallback("socks5_proxy_port", onSocksSettingsModified, this);
 	childSetCommitCallback("socks5_proxy_username", onSocksSettingsModified, this);
 	childSetCommitCallback("socks5_proxy_password", onSocksSettingsModified, this);
-	
+
 	// Socks 5 settings, Set all controls and labels enabled state
 	updateProxyEnabled(this, gSavedSettings.getBOOL("Socks5ProxyEnabled"),
 					   gSavedSettings.getString("Socks5AuthType"));
@@ -129,9 +140,12 @@ BOOL LLPrefsNetwork::postBuild()
 	return TRUE;
 }
 
-LLPrefsNetwork::~LLPrefsNetwork()
+//virtual
+void LLPrefsNetwork::draw()
 {
-	// Children all cleaned up by default view destructor.
+	childSetEnabled("set_cache",
+					!LLFilePickerThread::isInUse() && !LLDirPickerThread::isInUse());
+	LLPanel::draw();
 }
 
 void sendMediaSettings()
@@ -157,7 +171,7 @@ void LLPrefsNetwork::apply()
 	gSavedSettings.setBOOL("ConnectionPortEnabled", childGetValue("connection_port_enabled"));
 	gSavedSettings.setU32("ConnectionPort", childGetValue("connection_port").asInteger());
 
-	gSavedSettings.setBOOL("Socks5ProxyEnabled", childGetValue("socks5_proxy_enabled"));		
+	gSavedSettings.setBOOL("Socks5ProxyEnabled", childGetValue("socks5_proxy_enabled"));
 	gSavedSettings.setString("Socks5ProxyHost", childGetValue("socks5_proxy_host"));
 	gSavedSettings.setU32("Socks5ProxyPort", childGetValue("socks5_proxy_port").asInteger());
 
@@ -212,37 +226,36 @@ void LLPrefsNetwork::onClickClearDiskCache(void*)
 }
 
 // static
-void LLPrefsNetwork::onClickSetCache(void* user_data)
+void LLPrefsNetwork::setCacheCallback(std::string& dir_name, void* data)
 {
-	LLPrefsNetwork* self = (LLPrefsNetwork*)user_data;
-
-	std::string cur_name(gSavedSettings.getString("CacheLocation"));
-	std::string proposed_name(cur_name);
-	
-	LLDirPicker& picker = LLDirPicker::instance();
-	if (! picker.getDir(&proposed_name ) )
+	LLPrefsNetwork* self = (LLPrefsNetwork*)data;
+	if (!self || self != sInstance)
 	{
-		return; //Canceled!
+		LLNotifications::instance().add("PreferencesClosed");
+		return;
 	}
-
-	std::string dir_name = picker.getDirName();
+	std::string cur_name = gSavedSettings.getString("CacheLocation");
 	if (!dir_name.empty() && dir_name != cur_name)
 	{
 		self->childSetText("cache_location", dir_name);
 		LLNotifications::instance().add("CacheWillBeMoved");
 		gSavedSettings.setString("NewCacheLocation", dir_name);
 	}
-	else
-	{
-		std::string cache_location = gDirUtilp->getCacheDir();
-		self->childSetText("cache_location", cache_location);
-	}
 }
 
 // static
-void LLPrefsNetwork::onClickResetCache(void* user_data)
+void LLPrefsNetwork::onClickSetCache(void* data)
 {
- 	LLPrefsNetwork* self = (LLPrefsNetwork*)user_data;
+	std::string suggestion = gSavedSettings.getString("CacheLocation");
+
+	(new LLCallDirPicker(LLPrefsNetwork::setCacheCallback,
+						 data))->getDir(&suggestion);
+}
+
+// static
+void LLPrefsNetwork::onClickResetCache(void* data)
+{
+ 	LLPrefsNetwork* self = (LLPrefsNetwork*)data;
 	if (!gSavedSettings.getString("CacheLocation").empty())
 	{
 		gSavedSettings.setString("NewCacheLocation", "");
@@ -272,7 +285,7 @@ void LLPrefsNetwork::onCommitSocks5ProxyEnabled(LLUICtrl* ctrl, void* data)
 	if (!self || !check) return;
 
 	sSocksSettingsChanged = true;
-	
+
 	updateProxyEnabled(self, check->get(), self->childGetValue("socks5_auth"));
 }
 

@@ -20,7 +20,19 @@
 	<menu_bar bottom="-56" drop_shadow="false" enabled="true" follows="left|top|right"
 	     height="18" left="8" mouse_opaque="false" name="motecard_menu" opaque="false"
 	     tear_off="false" width="220">
-		<menu bottom_delta="16" left="0" drop_shadow="true" enabled="true" height="198" width="150"
+		<menu bottom_delta="16" drop_shadow="true" enabled="true" height="62"
+		     left="0" mouse_opaque="false" name="File" opaque="true" tear_off="false"
+		     width="150">
+			<menu_item_call bottom_delta="-30" height="20" label="Load From File" left="0" mouse_opaque="true"
+			     name="Load From File" width="150" />
+			<menu_item_call bottom_delta="-30" height="20" label="Save To File" left="0" mouse_opaque="true"
+			     name="Save To File" width="150" />
+			<menu_item_separator bottom_delta="-38" height="8" left="0" mouse_opaque="true" name="separator1"
+			     width="150" />
+			<menu_item_call bottom_delta="-30" height="20" label="Save To Inventory" left="0" mouse_opaque="true"
+			     name="Save To Inventory" width="150" />
+		</menu>
+		<menu bottom_delta="0" left_delta="200" drop_shadow="true" enabled="true" height="198" width="150"
 		     mouse_opaque="false" name="Edit" opaque="true" tear_off="false">
 			<menu_item_call bottom_delta="-30" enabled="false" height="20" label="Undo" left="0"
 			     mouse_opaque="true" name="Undo" width="139" />

@@ -90,7 +90,8 @@ static LLWindowSDL *gWindowImplementation = NULL;
 
 void maybe_lock_display(void)
 {
-	if (gWindowImplementation && gWindowImplementation->Lock_Display) {
+	if (gWindowImplementation && gWindowImplementation->Lock_Display)
+	{
 		gWindowImplementation->Lock_Display();
 	}
 }
@@ -98,7 +99,8 @@ void maybe_lock_display(void)
 
 void maybe_unlock_display(void)
 {
-	if (gWindowImplementation && gWindowImplementation->Unlock_Display) {
+	if (gWindowImplementation && gWindowImplementation->Unlock_Display)
+	{
 		gWindowImplementation->Unlock_Display();
 	}
 }
@@ -126,7 +128,11 @@ bool LLWindowSDL::ll_try_gtk_init(void)
 	if (!tried_gtk_init)
 	{
 		tried_gtk_init = TRUE;
-		if (!g_thread_supported ()) g_thread_init (NULL);
+		if (!g_thread_supported())
+		{
+			g_thread_init(NULL);
+			gdk_threads_init();
+		}
 		maybe_lock_display();
 		gtk_is_good = gtk_init_check(NULL, NULL);
 		maybe_unlock_display();
@@ -172,7 +178,8 @@ bool LLWindowSDL::ll_try_gtk_init(void)
 // static
 Window LLWindowSDL::get_SDL_XWindowID(void)
 {
-	if (gWindowImplementation) {
+	if (gWindowImplementation)
+	{
 		return gWindowImplementation->mSDL_XWindowID;
 	}
 	return None;
@@ -181,7 +188,8 @@ Window LLWindowSDL::get_SDL_XWindowID(void)
 //static
 Display* LLWindowSDL::get_SDL_Display(void)
 {
-	if (gWindowImplementation) {
+	if (gWindowImplementation)
+	{
 		return gWindowImplementation->mSDL_Display;
 	}
 	return NULL;
@@ -190,12 +198,13 @@ Display* LLWindowSDL::get_SDL_Display(void)
 
 
 LLWindowSDL::LLWindowSDL(const std::string& title, S32 x, S32 y, S32 width,
-			 S32 height, U32 flags,
-			 BOOL fullscreen, BOOL clearBg,
-			 BOOL disable_vsync, BOOL use_gl,
-			 BOOL ignore_pixel_depth, U32 fsaa_samples)
-	: LLWindow(fullscreen, flags), Lock_Display(NULL),
-	  Unlock_Display(NULL), mGamma(1.0f)
+						 S32 height, U32 flags, BOOL fullscreen, BOOL clearBg,
+						 BOOL disable_vsync, BOOL use_gl,
+						 BOOL ignore_pixel_depth, U32 fsaa_samples)
+:	LLWindow(fullscreen, flags),
+	Lock_Display(NULL),
+	Unlock_Display(NULL),
+	mGamma(1.0f)
 {
 	// Initialize the keyboard
 	gKeyboard = new LLKeyboardSDL();
@@ -217,8 +226,7 @@ LLWindowSDL::LLWindowSDL(const std::string& title, S32 x, S32 y, S32 width,
 #endif // LL_X11
 
 #if LL_GTK
-	// We MUST be the first to initialize GTK, i.e. we have to beat
-	// our embedded Mozilla to the punch so that GTK doesn't get badly
+	// We MUST be the first to initialize GTK so that GTK doesn't get badly
 	// initialized with a non-C locale and cause lots of serious random
 	// weirdness.
 	ll_try_gtk_init();
@@ -233,7 +241,7 @@ LLWindowSDL::LLWindowSDL(const std::string& title, S32 x, S32 y, S32 width,
 		mWindowTitle = title;
 
 	// Create the GL context and set it up for windowed or fullscreen, as appropriate.
-	if(createContext(x, y, width, height, 32, fullscreen, disable_vsync))
+	if (createContext(x, y, width, height, 32, fullscreen, disable_vsync))
 	{
 		gGLManager.initGL();
 
@@ -279,7 +287,7 @@ static int x11_detect_VRAM_kb_fp(FILE *fp, const char *prefix_str)
 	char line_buf[line_buf_size];
 	while (fgets(line_buf, line_buf_size, fp))
 	{
-		//lldebugs << "XLOG: " << line_buf << llendl;
+		//LL_DEBUGS("WindowSDL") << "XLOG: " << line_buf << LL_ENDL;
 
 		// Why the ad-hoc parser instead of using a regex?  Our
 		// favourite regex implementation - libboost_regex - is
@@ -451,8 +459,8 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 		<< int(r_sdl_version->minor) << "."
 		<< int(r_sdl_version->patch) << llendl;
 
-	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo( );
-	if (!videoInfo)
+	const SDL_VideoInfo *video_info = SDL_GetVideoInfo();
+	if (!video_info)
 	{
 		llinfos << "SDL_GetVideoInfo() failed! " << SDL_GetError() << llendl;
 		setupFailure("SDL_GetVideoInfo() failed, Window creation error", "Error", OSMB_OK);
@@ -529,7 +537,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 		llinfos << "createContext: setting up fullscreen " << width << "x" << height << llendl;
 
 		// If the requested width or height is 0, find the best default for the monitor.
-		if((width == 0) || (height == 0))
+		if ((width == 0) || (height == 0))
 		{
 			// Scan through the list of modes, looking for one which has:
 			//		height between 700 and 800
@@ -537,7 +545,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 			S32 resolutionCount = 0;
 			LLWindowResolution *resolutionList = getSupportedResolutions(resolutionCount);
 
-			if(resolutionList != NULL)
+			if (resolutionList != NULL)
 			{
 				F32 closestAspect = 0;
 				U32 closestHeight = 0;
@@ -552,7 +560,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 
 					llinfos << "createContext: width " << resolutionList[i].mWidth << " height " << resolutionList[i].mHeight << " aspect " << aspect << llendl;
 
-					if( (resolutionList[i].mHeight >= 700) && (resolutionList[i].mHeight <= 800) &&
+					if ( (resolutionList[i].mHeight >= 700) && (resolutionList[i].mHeight <= 800) &&
 						(fabs(aspect - mOriginalAspectRatio) < fabs(closestAspect - mOriginalAspectRatio)))
 					{
 						llinfos << " (new closest mode) " << llendl;
@@ -569,7 +577,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 			}
 		}
 
-		if((width == 0) || (height == 0))
+		if ((width == 0) || (height == 0))
 		{
 			// Mode search failed for some reason.  Use the old-school default.
 			width = 1024;
@@ -612,7 +620,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 		}
 	}
 
-	if(!mFullscreen && (mWindow == NULL))
+	if (!mFullscreen && (mWindow == NULL))
 	{
 		if (width == 0)
 		    width = 1024;
@@ -659,7 +667,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 		// fallback to letting SDL detect VRAM.
 		// note: I've not seen SDL's detection ever actually find
 		// VRAM != 0, but if SDL *does* detect it then that's a bonus.
-		gGLManager.mVRAM = videoInfo->video_mem / 1024;
+		gGLManager.mVRAM = video_info->video_mem / 1024;
 		if (gGLManager.mVRAM != 0)
 		{
 			llinfos << "SDL detected " << gGLManager.mVRAM << "MB VRAM." << llendl;
@@ -694,7 +702,7 @@ BOOL LLWindowSDL::createContext(int x, int y, int width, int height, int bits, B
 	// relaxed about if we have to.
 #if LL_SOLARIS && defined(__sparc)
 //  again the __sparc required because Xsun support, 32bit are very pricey on SPARC
-	if(colorBits < 24)		//HACK:  on SPARC allow 24-bit color
+	if (colorBits < 24)		//HACK:  on SPARC allow 24-bit color
 #else
 	if (colorBits < 32)
 #endif
@@ -784,7 +792,7 @@ BOOL LLWindowSDL::switchContext(BOOL fullscreen, const LLCoordScreen &size, BOOL
 
 	llinfos << "switchContext, fullscreen=" << fullscreen << llendl;
 	stop_glerror();
-	if(needsRebuild)
+	if (needsRebuild)
 	{
 		destroyContext();
 		result = createContext(0, 0, size.mX, size.mY, 0, fullscreen, disable_vsync);
@@ -828,7 +836,7 @@ LLWindowSDL::~LLWindowSDL()
 	quitCursors();
 	destroyContext();
 
-	if(mSupportedResolutions != NULL)
+	if (mSupportedResolutions != NULL)
 	{
 		delete []mSupportedResolutions;
 	}
@@ -847,11 +855,13 @@ void LLWindowSDL::hide()
     // *FIX: What to do with SDL?
 }
 
+//virtual
 void LLWindowSDL::minimize()
 {
     // *FIX: What to do with SDL?
 }
 
+//virtual
 void LLWindowSDL::restore()
 {
     // *FIX: What to do with SDL?
@@ -962,7 +972,7 @@ BOOL LLWindowSDL::getSize(LLCoordWindow *size)
 
 BOOL LLWindowSDL::setPosition(const LLCoordScreen position)
 {
-	if(mWindow)
+	if (mWindow)
 	{
         // *FIX: (???)
 		//MacMoveWindow(mWindow, position.mX, position.mY, false);
@@ -973,7 +983,7 @@ BOOL LLWindowSDL::setPosition(const LLCoordScreen position)
 
 BOOL LLWindowSDL::setSize(const LLCoordScreen size)
 {
-	if(mWindow)
+	if (mWindow)
 	{
 		// Push a resize event onto SDL's queue - we'll handle it
 		// when it comes out again.
@@ -992,7 +1002,10 @@ BOOL LLWindowSDL::setSize(const LLCoordScreen size)
 void LLWindowSDL::swapBuffers()
 {
 	if (mWindow)
+	{	
+		glFinish();
 		SDL_GL_SwapBuffers();
+	}
 }
 
 U32 LLWindowSDL::getFSAASamples()
@@ -1604,31 +1617,32 @@ void LLWindowSDL::processMiscNativeEvents()
 {
 #if LL_GTK
 	// Pump GTK events to avoid starvation for:
-	// * Embedded Gecko
 	// * DBUS servicing
 	// * Anything else which quietly hooks into the default glib/GTK loop
     if (ll_try_gtk_init())
     {
+#if 0	// Not using Mozilla any more...
 	    // Yuck, Mozilla's GTK callbacks play with the locale - push/pop
 	    // the locale to protect it, as exotic/non-C locales
 	    // causes our code lots of general critical weirdness
 	    // and crashness. (SL-35450)
 	    static std::string saved_locale;
 	    saved_locale = ll_safe_string(setlocale(LC_ALL, NULL));
-
-	    // Pump until we've nothing left to do or passed 1/15th of a
+#endif
+	    // Pump until we've nothing left to do or passed 1/100th of a
 	    // second pumping for this frame.
 	    static LLTimer pump_timer;
 	    pump_timer.reset();
-	    pump_timer.setTimerExpirySec(1.0f / 15.0f);
+	    pump_timer.setTimerExpirySec(0.01f);
 	    do
 		{
 		     // Always do at least one non-blocking pump
 		    gtk_main_iteration_do(FALSE);
 	    }
 		while (gtk_events_pending() && !pump_timer.hasExpired());
-
+#if 0
 	    setlocale(LC_ALL, saved_locale.c_str());
+#endif
     }
 #endif // LL_GTK
 }
@@ -1773,7 +1787,7 @@ void LLWindowSDL::gatherInput()
 		{
 			// *FIX: More informative dialog?
 			llinfos << "Could not recreate context after resize! Quitting..." << llendl;
-			if(mCallbacks->handleCloseRequest(this))
+			if (mCallbacks->handleCloseRequest(this))
     			{
     				// Get the app to initiate cleanup.
     				mCallbacks->handleQuit(this);
@@ -1823,7 +1837,7 @@ void LLWindowSDL::gatherInput()
                 break;
 
             case SDL_QUIT:
-			    if(mCallbacks->handleCloseRequest(this))
+			    if (mCallbacks->handleCloseRequest(this))
     			{
     				// Get the app to initiate cleanup.
     				mCallbacks->handleQuit(this);
@@ -1854,11 +1868,12 @@ static SDL_Cursor *makeSDLCursorFromBMP(const char *filename, int hotx, int hoty
 
 	// Load cursor pixel data from BMP file
 	bmpsurface = Load_BMP_Resource(filename);
-	if (bmpsurface && bmpsurface->w%8==0)
+	if (bmpsurface && bmpsurface->w % 8 == 0)
 	{
 		SDL_Surface *cursurface;
-		lldebugs << "Loaded cursor file " << filename << " "
-			 << bmpsurface->w << "x" << bmpsurface->h << llendl;
+		LL_DEBUGS("WindowSDL") << "Loaded cursor file " << filename << " "
+							   << bmpsurface->w << "x" << bmpsurface->h
+							   << LL_ENDL;
 		cursurface = SDL_CreateRGBSurface (SDL_SWSURFACE,
 						   bmpsurface->w,
 						   bmpsurface->h,
@@ -1884,12 +1899,13 @@ static SDL_Cursor *makeSDLCursorFromBMP(const char *filename, int hotx, int hoty
 			// Walk the RGBA cursor pixel data, extracting both data and
 			// mask to build SDL-friendly cursor bitmaps from.  The mask
 			// is inferred by color-keying against 200,200,200
-			for (i=0; i<cursurface->h; ++i) {
-				for (j=0; j<cursurface->w; ++j) {
-					U8 *pixelp =
-						((U8*)cursurface->pixels)
-						+ cursurface->pitch * i
-						+ j*cursurface->format->BytesPerPixel;
+			for (i = 0; i < cursurface->h; ++i)
+			{
+				for (j = 0; j < cursurface->w; ++j)
+				{
+					U8 *pixelp = ((U8*)cursurface->pixels)
+									+ cursurface->pitch * i
+									+ j*cursurface->format->BytesPerPixel;
 					U8 srcred = pixelp[0];
 					U8 srcgreen = pixelp[1];
 					U8 srcblue = pixelp[2];
@@ -1909,12 +1925,16 @@ static SDL_Cursor *makeSDLCursorFromBMP(const char *filename, int hotx, int hoty
 						     hotx, hoty);
 			delete[] cursor_data;
 			delete[] cursor_mask;
-		} else {
+		}
+		else
+		{
 			llwarns << "CURSOR BLIT FAILURE, cursurface: " << cursurface << llendl;
 		}
 		SDL_FreeSurface(cursurface);
 		SDL_FreeSurface(bmpsurface);
-	} else {
+	}
+	else
+	{
 		llwarns << "CURSOR LOAD FAILURE " << filename << llendl;
 	}
 
@@ -1923,7 +1943,8 @@ static SDL_Cursor *makeSDLCursorFromBMP(const char *filename, int hotx, int hoty
 
 void LLWindowSDL::setCursor(ECursorType cursor)
 {
-	if (ATIbug) {
+	if (ATIbug)
+	{
 		// cursor-updating is very flaky when this bug is
 		// present; do nothing.
 		return;
@@ -1997,7 +2018,8 @@ void LLWindowSDL::initCursors()
 	mSDLCursors[UI_CURSOR_TOOLMEDIAOPEN] = makeSDLCursorFromBMP("toolmediaopen.BMP",0,0);
 	mSDLCursors[UI_CURSOR_PIPETTE] = makeSDLCursorFromBMP("lltoolpipette.BMP",2,28);
 
-	if (getenv("LL_ATI_MOUSE_CURSOR_BUG") != NULL) {
+	if (getenv("LL_ATI_MOUSE_CURSOR_BUG") != NULL)
+	{
 		llinfos << "Disabling cursor updating due to LL_ATI_MOUSE_CURSOR_BUG" << llendl;
 		ATIbug = true;
 	}
@@ -2033,19 +2055,19 @@ void LLWindowSDL::captureMouse()
 	// window, and in a less obnoxious way than SDL_WM_GrabInput
 	// which would confine the cursor to the window too.
 
-	//llinfos << "LLWindowSDL::captureMouse" << llendl;
+	LL_DEBUGS("WindowSDL") << "LLWindowSDL::captureMouse" << LL_ENDL;
 }
 
 void LLWindowSDL::releaseMouse()
 {
 	// see LWindowSDL::captureMouse()
 	
-	//llinfos << "LLWindowSDL::releaseMouse" << llendl;
+	LL_DEBUGS("WindowSDL") << "LLWindowSDL::releaseMouse" << LL_ENDL;
 }
 
 void LLWindowSDL::hideCursor()
 {
-	if(!mCursorHidden)
+	if (!mCursorHidden)
 	{
 		// llinfos << "hideCursor: hiding" << llendl;
 		mCursorHidden = TRUE;
@@ -2060,7 +2082,7 @@ void LLWindowSDL::hideCursor()
 
 void LLWindowSDL::showCursor()
 {
-	if(mCursorHidden)
+	if (mCursorHidden)
 	{
 		// llinfos << "showCursor: showing" << llendl;
 		mCursorHidden = FALSE;
@@ -2089,8 +2111,6 @@ void LLWindowSDL::hideCursorUntilMouseMove()
 		mHideCursorPermanent = FALSE;
 	}
 }
-
-
 
 //
 // LLSplashScreenSDL - I don't think we'll bother to implement this; it's
@@ -2133,7 +2153,7 @@ S32 OSMessageBoxSDL(const std::string& text, const std::string& caption, U32 typ
 {
 	S32 rtn = OSBTN_CANCEL;
 
-	if(gWindowImplementation != NULL)
+	if (gWindowImplementation != NULL)
 		gWindowImplementation->beforeDialog();
 
 	if (LLWindowSDL::ll_try_gtk_init())
@@ -2196,7 +2216,7 @@ S32 OSMessageBoxSDL(const std::string& text, const std::string& caption, U32 typ
 		// we should be able to use a gtk_dialog_run(), but it's
 		// apparently not written to exist in a world without a higher
 		// gtk_main(), so we manage its signal/destruction outselves.
-		gtk_widget_show_all (win);
+		gtk_widget_show_all(win);
 		gtk_main();
 
 		//llinfos << "response: " << response << llendl;
@@ -2220,7 +2240,7 @@ S32 OSMessageBoxSDL(const std::string& text, const std::string& caption, U32 typ
 		rtn = OSBTN_OK;
 	}
 
-	if(gWindowImplementation != NULL)
+	if (gWindowImplementation != NULL)
 		gWindowImplementation->afterDialog();
 
 	return rtn;
@@ -2235,7 +2255,7 @@ static void color_changed_callback(GtkWidget *widget,
 	gtk_color_selection_get_current_color(colorsel, colorp);
 }
 
-BOOL LLWindowSDL::dialog_color_picker ( F32 *r, F32 *g, F32 *b)
+BOOL LLWindowSDL::dialog_color_picker(F32 *r, F32 *g, F32 *b)
 {
 	BOOL rtn = FALSE;
 
@@ -2370,8 +2390,8 @@ void LLWindowSDL::spawnWebBrowser(const std::string& escaped_url, bool async)
 # endif // LL_X11
 
 	std::string cmd, arg;
-	cmd  = gDirUtilp->getAppRODataDir().c_str();
-	cmd += gDirUtilp->getDirDelimiter().c_str();
+	cmd  = gDirUtilp->getAppRODataDir();
+	cmd += gDirUtilp->getDirDelimiter();
 	cmd += "launch_url.sh";
 	arg = escaped_url;
 	exec_cmd(cmd, arg);
@@ -2429,7 +2449,12 @@ std::vector<std::string> LLWindowSDL::getDynamicFallbackFontList()
 {
 	// Use libfontconfig to find us a nice ordered list of fallback fonts
 	// specific to this system.
-	std::string final_fallback("/usr/share/fonts/truetype/kochi/kochi-gothic.ttf");
+	std::string final_fallback("/usr/share/fonts/TTF/dejavu/DejaVuSans.ttf");
+
+	// Fonts are expensive in the current system, don't enumerate an arbitrary
+	// number of them
+	const int max_font_count_cutoff = 40;
+
 	// Our 'ideal' font properties which define the sorting results.
 	// slant=0 means Roman, index=0 means the first face in a font file
 	// (the one we actually use), weight=80 means medium weight,
@@ -2445,7 +2470,6 @@ std::vector<std::string> LLWindowSDL::getDynamicFallbackFontList()
 	std::vector<std::string> rtns;
 	FcFontSet *fs = NULL;
 	FcPattern *sortpat = NULL;
-	int font_count = 0;
 
 	llinfos << "Getting system font list from FontConfig..." << llendl;
 
@@ -2489,34 +2513,35 @@ std::vector<std::string> LLWindowSDL::getDynamicFallbackFontList()
 		FcPatternDestroy(sortpat);
 	}
 
+	int found_font_count = 0;
 	if (fs)
 	{
 		// Get the full pathnames to the fonts, where available,
 		// which is what we really want.
-		int i;
-		for (i=0; i<fs->nfont; ++i)
+		found_font_count = fs->nfont;
+		for (int i = 0; i < fs->nfont; ++i)
 		{
 			FcChar8 *filename;
-			if (FcResultMatch == FcPatternGetString(fs->fonts[i],
-								FC_FILE, 0,
-								&filename)
-			    && filename)
+			if (FcResultMatch == FcPatternGetString(fs->fonts[i], FC_FILE, 0,
+													&filename)
+				&& filename)
 			{
 				rtns.push_back(std::string((const char*)filename));
-				++font_count;
+				if (rtns.size() >= max_font_count_cutoff)
+					break; // hit limit
 			}
 		}
 		FcFontSetDestroy (fs);
 	}
 
-	lldebugs << "Using font list: " << llendl;
+	LL_DEBUGS("WindowSDL") << "Using font list: " << LL_ENDL;
 	for (std::vector<std::string>::iterator it = rtns.begin();
-		 it != rtns.end();
-		 ++it)
+		 it != rtns.end(); ++it)
 	{
-		lldebugs << "  file: " << *it << llendl;
+		LL_DEBUGS("WindowSDL") << "  file: " << *it << LL_ENDL;
 	}
-	llinfos << "Using " << font_count << " system font(s)." << llendl;
+	llinfos << "Using " << rtns.size() << "/" << found_font_count
+			<< " system fonts." << llendl;
 
 	rtns.push_back(final_fallback);
 	return rtns;

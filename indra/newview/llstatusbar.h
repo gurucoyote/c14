@@ -40,9 +40,7 @@ extern S32 STATUS_BAR_HEIGHT;
 
 class LLButton;
 class LLLineEditor;
-class LLMessageSystem;
 class LLTextBox;
-class LLTextEditor;
 class LLUICtrl;
 class LLUUID;
 class LLFrameTimer;
@@ -52,8 +50,8 @@ class LLStatGraph;
 class LLRegionDetails
 {
 public:
-	LLRegionDetails() :
-		mRegionName("Unknown"),
+	LLRegionDetails()
+	:	mRegionName("Unknown"),
 		mParcelName("Unknown"),
 		mAccessString("Unknown"),
 		mX(0),
@@ -67,6 +65,7 @@ public:
 		mPing(0)
 	{
 	}
+
 	std::string	mRegionName;
 	std::string	mParcelName;
 	std::string	mAccessString;
@@ -123,16 +122,29 @@ private:
 	static void onClickStatGraph(void* data);
 
 private:
-	LLTextBox *mTextBalance;
-	LLTextBox *mTextHealth;
-	LLTextBox *mTextTime;
+	LLTextBox*		mTextBalance;
+	LLTextBox*		mTextHealth;
+	LLTextBox*		mTextTime;
+	LLTextBox*		mTextParcelName;
+	LLTextBox*		mTextStat;
 
-	LLTextBox* mTextParcelName;
+	LLStatGraph*	mSGBandwidth;
+	LLStatGraph*	mSGPacketLoss;
 
-	LLStatGraph *mSGBandwidth;
-	LLStatGraph *mSGPacketLoss;
+	LLButton*		mBtnScriptError;
+	LLButton*		mBtnHealth;
+	LLButton*		mBtnNoFly;
+	LLButton*		mBtnBuyLand;
+	LLButton*		mBtnNoBuild;
+	LLButton*		mBtnNoScript;
+	LLButton*		mBtnNoPush;
+	LLButton*		mBtnNoVoice;
+	LLButton*		mBtnNoSee;
+	LLButton*		mBtnBuyCurrency;
+	LLButton*		mBtnSearch;
+	LLButton*		mBtnSearchBevel;
 
-	LLButton *mBtnBuyCurrency;
+	LLLineEditor*	mLineEditSearch;
 
 	S32				mBalance;
 	S32				mHealth;
@@ -145,6 +157,6 @@ private:
 // *HACK: Status bar owns your cached money balance. JC
 BOOL can_afford_transaction(S32 cost);
 
-extern LLStatusBar *gStatusBar;
+extern LLStatusBar*	gStatusBar;
 
 #endif
