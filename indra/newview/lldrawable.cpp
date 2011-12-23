@@ -116,7 +116,6 @@ void LLDrawable::initClass()
 {
 }
 
-
 void LLDrawable::destroy()
 {
 	if (gDebugGL)
@@ -124,20 +123,19 @@ void LLDrawable::destroy()
 		gPipeline.checkReferences(this);
 	}
 
-	if (isDead())
-	{
-		sNumZombieDrawables--;
-	}
-
 	if (LLSpatialGroup::sNoDelete)
 	{
 		llerrs << "Illegal deletion of LLDrawable!" << llendl;
 	}
 
+	if (isDead())
+	{
+		sNumZombieDrawables--;
+	}
+
 	std::for_each(mFaces.begin(), mFaces.end(), DeletePointer());
 	mFaces.clear();
-		
-	
+
 	/*if (!(sNumZombieDrawables % 10))
 	{
 		llinfos << "- Zombie drawables: " << sNumZombieDrawables << llendl;

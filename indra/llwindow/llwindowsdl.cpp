@@ -1850,6 +1850,8 @@ void LLWindowSDL::gatherInput()
         }
     }
 
+	updateCursor();
+
 #if LL_X11
     // This is a good time to stop flashing the icon if our mFlashTimer has
     // expired.
@@ -1941,7 +1943,7 @@ static SDL_Cursor *makeSDLCursorFromBMP(const char *filename, int hotx, int hoty
 	return sdlcursor;
 }
 
-void LLWindowSDL::setCursor(ECursorType cursor)
+void LLWindowSDL::updateCursor()
 {
 	if (ATIbug)
 	{
@@ -1950,21 +1952,27 @@ void LLWindowSDL::setCursor(ECursorType cursor)
 		return;
 	}
 
-	if (mCurrentCursor != cursor)
+	if (mCurrentCursor != mNextCursor)
 	{
-		if (cursor < UI_CURSOR_COUNT)
+		if (mNextCursor < UI_CURSOR_COUNT)
 		{
-			SDL_Cursor *sdlcursor = mSDLCursors[cursor];
+			SDL_Cursor* sdlcursor = mSDLCursors[mNextCursor];
 			// Try to default to the arrow for any cursors that
 			// did not load correctly.
 			if (!sdlcursor && mSDLCursors[UI_CURSOR_ARROW])
+			{
 				sdlcursor = mSDLCursors[UI_CURSOR_ARROW];
+			}
 			if (sdlcursor)
+			{
 				SDL_SetCursor(sdlcursor);
-		} else {
-			llwarns << "Tried to set invalid cursor number " << cursor << llendl;
+			}
 		}
-		mCurrentCursor = cursor;
+		else
+		{
+			llwarns << "Tried to set invalid cursor number " << mNextCursor << llendl;
+		}
+		mCurrentCursor = mNextCursor;
 	}
 }
 

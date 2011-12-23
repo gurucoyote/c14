@@ -47,6 +47,7 @@
 #	define WIN32_LEAN_AND_MEAN
 #	include <winsock2.h>
 #	include <windows.h>
+#	include <psapi.h>
 #elif LL_DARWIN
 #	include <errno.h>
 #	include <sys/sysctl.h>
@@ -472,8 +473,6 @@ const S32 STATUS_SIZE = 8192;
 U32 LLOSInfo::getProcessVirtualSizeKB()
 {
 	U32 virtual_size = 0;
-#if LL_WINDOWS
-#endif
 #if LL_LINUX
 	LLFILE* status_filep = LLFile::fopen("/proc/self/status", "rb");
 	if (status_filep)
@@ -485,10 +484,36 @@ U32 LLOSInfo::getProcessVirtualSizeKB()
 		buff[nbytes] = '\0';
 
 		// All these guys return numbers in KB
-		char *memp = strstr(buff, "VmSize:");
+		U32 temp = 0;
+		char *memp = strstr(buff, "VmRSS:");
 		if (memp)
 		{
-			numRead += sscanf(memp, "%*s %u", &virtual_size);
+			numRead += sscanf(memp, "%*s %u", &temp);
+			virtual_size = temp;
+		}
+		memp = strstr(buff, "VmStk:");
+		if (memp)
+		{
+			numRead += sscanf(memp, "%*s %u", &temp);
+			virtual_size += temp;
+		}
+		memp = strstr(buff, "VmExe:");
+		if (memp)
+		{
+			numRead += sscanf(memp, "%*s %u", &temp);
+			virtual_size += temp;
+		}
+		memp = strstr(buff, "VmLib:");
+		if (memp)
+		{
+			numRead += sscanf(memp, "%*s %u", &temp);
+			virtual_size += temp;
+		}
+		memp = strstr(buff, "VmPTE:");
+		if (memp)
+		{
+			numRead += sscanf(memp, "%*s %u", &temp);
+			virtual_size += temp;
 		}
 		fclose(status_filep);
 	}
@@ -496,12 +521,14 @@ U32 LLOSInfo::getProcessVirtualSizeKB()
 	char proc_ps[LL_MAX_PATH];
 	sprintf(proc_ps, "/proc/%d/psinfo", (int)getpid());
 	int proc_fd = -1;
-	if((proc_fd = open(proc_ps, O_RDONLY)) == -1){
+	if ((proc_fd = open(proc_ps, O_RDONLY)) == -1)
+	{
 		llwarns << "unable to open " << proc_ps << llendl;
 		return 0;
 	}
 	psinfo_t proc_psinfo;
-	if(read(proc_fd, &proc_psinfo, sizeof(psinfo_t)) != sizeof(psinfo_t)){
+	if (read(proc_fd, &proc_psinfo, sizeof(psinfo_t)) != sizeof(psinfo_t))
+	{
 		llwarns << "Unable to read " << proc_ps << llendl;
 		close(proc_fd);
 		return 0;
@@ -695,20 +722,50 @@ U32 LLMemoryInfo::getPhysicalMemoryClamped() const
 //static
 void LLMemoryInfo::getAvailableMemoryKB(U32& avail_physical_mem_kb, U32& avail_virtual_mem_kb)
 {
+	// This is a coarse approximation...
 #if LL_WINDOWS
 	MEMORYSTATUSEX state;
 	state.dwLength = sizeof(state);
 	GlobalMemoryStatusEx(&state);
 
-	avail_physical_mem_kb = (U32)(state.ullAvailPhys/1024) ;
-	avail_virtual_mem_kb = (U32)(state.ullAvailVirtual/1024) ;
+	avail_physical_mem_kb = (U32)(state.ullAvailPhys / 1024);
+	avail_virtual_mem_kb = (U32)(state.ullAvailVirtual / 1024);
 
+	U32 max_virtual_mem_kb = avail_physical_mem_kb;
+#ifndef LL_X86_64
+	if (max_virtual_mem_kb > 3145728)
+	{
+		max_virtual_mem_kb = 3145728;	// 3Gb max for 32bits processes
+	}
+#endif
+
+	HANDLE self = GetCurrentProcess();
+	PROCESS_MEMORY_COUNTERS counters;
+	if (!GetProcessMemoryInfo(self, &counters, sizeof(counters)))
+	{
+		llwarns << "GetProcessMemoryInfo failed" << llendl;
+		return ;
+	}
+	U32 virtual_size_kb = (U32)(counters.WorkingSetSize / 1024);
+	virtual_size_kb += virtual_size_kb / 10;	// 10% penalty for fragmentation
+	avail_virtual_mem_kb = max_virtual_mem_kb - virtual_size_kb;
+#elif LL_LINUX
+	LLMemoryInfo memory_info;
+	avail_physical_mem_kb = memory_info.getPhysicalMemoryKB();
+	U32 max_virtual_mem_kb = avail_physical_mem_kb;
+#ifndef LL_X86_64
+	if (max_virtual_mem_kb > 3145728)
+	{
+		max_virtual_mem_kb = 3145728;	// 3Gb max for 32bits processes
+	}
+#endif
+	U32 virtual_size_kb = LLOSInfo::getProcessVirtualSizeKB();
+	virtual_size_kb += virtual_size_kb / 10;	// 10% penalty for fragmentation
+	avail_virtual_mem_kb = max_virtual_mem_kb - virtual_size_kb;
 #else
-	//do not know how to collect available memory info for other systems.
-	//leave it blank here for now.
-
-	avail_physical_mem_kb = -1 ;
-	avail_virtual_mem_kb = -1 ;
+	// Do not know how to collect available memory info for other systems.
+	avail_physical_mem_kb = 4194304;		// 4Gb
+	avail_virtual_mem_kb = avail_physical_mem_kb;
 #endif
 }
 

@@ -5295,6 +5295,23 @@ Export successful.
   </notification>
 
   <notification
+   icon="alert.tga"
+   name="ReducedDrawDistance"
+   type="alert">
+WARNING: the available virtual memory is getting low.
+Reducing the draw distance to free some memory...
+  </notification>
+
+  <notification
+   icon="alert.tga"
+   name="MightCrashSoon"
+   type="alert">
+ALERT !!!
+The available virtual memory is getting dangerously low.
+The viewer might crash soon...
+  </notification>
+
+  <notification
    icon="notifytip.tga"
    name="SystemMessageTip"
    type="notifytip">

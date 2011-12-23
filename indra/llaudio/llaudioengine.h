@@ -30,7 +30,6 @@
  * $/LicenseInfo$
  */
 
-
 #ifndef LL_AUDIOENGINE_H
 #define LL_AUDIOENGINE_H
 
@@ -74,7 +73,6 @@ class LLAudioChannelOpenAL;
 class LLAudioBuffer;
 class LLStreamingAudioInterface;
 
-
 //
 //  LLAudioEngine definition
 //
@@ -82,7 +80,7 @@ class LLStreamingAudioInterface;
 class LLAudioEngine 
 {
 	friend class LLAudioChannelOpenAL; // bleh. channel needs some listener methods.
-	
+
 public:
 	enum LLAudioType
 	{
@@ -92,7 +90,7 @@ public:
 		AUDIO_TYPE_AMBIENT = 3,
 		AUDIO_TYPE_COUNT   = 4 // last
 	};
-	
+
 	LLAudioEngine();
 	virtual ~LLAudioEngine();
 
@@ -136,7 +134,6 @@ public:
 	virtual F32 getRolloffFactor();
 	virtual void setMaxWindGain(F32 gain);
 
-
 	// Methods actually related to setting up and removing sounds
 	// Owner ID is the owner of the object making the request
 	void triggerSound(const LLUUID &sound_id, const LLUUID& owner_id, const F32 gain,
@@ -162,7 +159,7 @@ public:
 	// use a value from 0.0 to 1.0, inclusive
 	void setInternetStreamGain(F32 vol);
 	std::string getInternetStreamURL();
-	
+
 	// For debugging usage
 	virtual LLVector3 getListenerPos();
 
@@ -176,7 +173,6 @@ public:
 	bool hasLocalFile(const LLUUID &uuid);
 
 	bool updateBufferForData(LLAudioData *adp, const LLUUID &audio_uuid = LLUUID::null);
-
 
 	// Asset callback when we're retrieved a sound from the asset server.
 	void startNextTransfer();
@@ -198,13 +194,11 @@ protected:
 
 	virtual void allocateListener() = 0;
 
-
 	// listener methods
 	virtual void setListenerPos(LLVector3 vec);
 	virtual void setListenerVelocity(LLVector3 vec);
 	virtual void orientListener(LLVector3 up, LLVector3 at);
 	virtual void translateListener(LLVector3 vec);
-
 
 	F64 mapWindVecToGain(LLVector3 wind_vec);
 	F64 mapWindVecToPitch(LLVector3 wind_vec);
@@ -217,7 +211,7 @@ protected:
 	void* mUserData;
 
 	S32 mLastStatus;
-	
+
 	S32 mNumChannels;
 	bool mEnableWind;
 
@@ -240,7 +234,7 @@ protected:
 	// Buffers needs to change into a different data structure, as the number of buffers
 	// that we have active should be limited by RAM usage, not count.
 	LLAudioBuffer *mBuffers[MAX_BUFFERS];
-	
+
 	F32 mMasterGain;
 	F32 mInternalGain;			// Actual gain set; either mMasterGain or 0 when mMuted is true.
 	F32 mSecondaryGain[AUDIO_TYPE_COUNT];
@@ -254,13 +248,9 @@ private:
 	LLStreamingAudioInterface *mStreamingAudioImpl;
 };
 
-
-
-
 //
 // Standard audio source.  Can be derived from for special sources, such as those attached to objects.
 //
-
 
 class LLAudioSource
 {
@@ -299,7 +289,7 @@ public:
 
 	void setPositionGlobal(const LLVector3d &position_global)		{ mPositionGlobal = position_global; }
 	LLVector3d getPositionGlobal() const							{ return mPositionGlobal; }
-	LLVector3 getVelocity()	const									{ return mVelocity; }				
+	LLVector3 getVelocity()	const									{ return mVelocity; }
 	F32 getPriority() const											{ return mPriority; }
 
 	// Gain should always be clamped between 0 and 1.
@@ -337,6 +327,7 @@ protected:
 	bool			mSyncSlave;
 	bool			mQueueSounds;
 	bool			mPlayedOnce;
+	bool			mCorrupted;
 	S32             mType;
 	LLVector3d		mPositionGlobal;
 	LLVector3		mVelocity;
@@ -352,15 +343,11 @@ protected:
 	LLFrameTimer mAgeTimer;
 };
 
-
-
-
 //
 // Generic metadata about a particular piece of audio data.
 // The actual data is handled by the derived LLAudioBuffer classes which are
 // derived for each audio engine.
 //
-
 
 class LLAudioData
 {
@@ -389,13 +376,11 @@ protected:
 	bool mHasValidData;
 };
 
-
 //
 // Base class for an audio channel, i.e. a channel which is capable of playing back a sound.
 // Management of channels is done generically, methods for actually manipulating the channel
 // are derived for each audio engine.
 //
-
 
 class LLAudioChannel
 {
@@ -430,13 +415,9 @@ protected:
 	F32             mSecondaryGain;
 };
 
-
-
-
 // Basically an interface class to the engine-specific implementation
 // of audio data that's ready for playback.
 // Will likely get more complex as we decide to do stuff like real streaming audio.
-
 
 class LLAudioBuffer
 {
@@ -453,8 +434,6 @@ protected:
 	LLAudioData *mAudioDatap;
 	LLFrameTimer mLastUseTimer;
 };
-
-
 
 extern LLAudioEngine* gAudiop;
 

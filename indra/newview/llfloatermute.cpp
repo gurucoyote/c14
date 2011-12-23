@@ -260,7 +260,7 @@ void LLFloaterMute::updateButtons()
 		}
 		else
 		{
-			enabled = it->mType == LLMute::AGENT;
+			enabled = it->mType == LLMute::AGENT || it->mType == LLMute::GROUP;
 			mute_all = it->mFlags == 0;
 			if (!mute_all && enabled)
 			{

@@ -612,6 +612,11 @@ void LLIMMgr::addMessage(const LLUUID& session_id,
 	{
 		return;
 	}
+	if (!session_id.isNull() && ml && ml->isMuted(session_id, LLMute::flagTextChat))
+	{
+		// Muted group
+		return;
+	}
 
 	//not sure why...but if it is from ourselves we set the target_id to be NULL
 	if (other_participant_id == gAgent.getID())
@@ -1299,10 +1304,10 @@ LLFloaterIMPanel* LLIMMgr::createFloater(const LLUUID& session_id,
 {
 	if (session_id.isNull())
 	{
-		llwarns << "Creating LLFloaterIMPanel with null session ID" << llendl;
+		llwarns << "Creating LLFloaterIMPanel for multiple participants with null session ID" << llendl;
 	}
 
-	llinfos << "LLIMMgr::createFloater: from " << other_participant_id 
+	llinfos << "LLIMMgr::createFloater for multiple participants: from " << other_participant_id 
 			<< " in session " << session_id << llendl;
 	LLFloaterIMPanel* floater = new LLFloaterIMPanel(session_label,
 													 session_id,

@@ -6925,88 +6925,110 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
-  <key>MediaControlFadeTime</key>
-  <map>
-    <key>Comment</key>
-    <string>Amount of time (in seconds) that the media control fades</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>F32</string>
-    <key>Value</key>
-    <real>1.5</real>
-  </map>
-  <key>MediaControlTimeout</key>
-  <map>
-    <key>Comment</key>
-    <string>Amount of time (in seconds) for media controls to fade with no mouse activity</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>F32</string>
-    <key>Value</key>
-    <real>3.0</real>
-  </map>
-  <key>MediaEnableFilter</key>
-  <map>
-    <key>Comment</key>
-    <string>Enable media domain filtering</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>Boolean</string>
-    <key>Value</key>
-    <integer>1</integer>
-  </map>
-  <key>MediaLookupIP</key>
-  <map>
-    <key>Comment</key>
-    <string>Enable IP lookups on media domains (incurs short pauses during the lookup but allows to defeat domain name changes of fixed IP servers)</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>Boolean</string>
-    <key>Value</key>
-    <integer>1</integer>
-  </map>
-  <key>MediaFilterRect</key>
-  <map>
-    <key>Comment</key>
-    <string>Rectangle for Media Filter floater</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>Rect</string>
-    <key>Value</key>
-    <array>
+    <key>MediaControlFadeTime</key>
+    <map>
+      <key>Comment</key>
+      <string>Amount of time (in seconds) that the media control fades</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>1.5</real>
+    </map>
+    <key>MediaControlTimeout</key>
+    <map>
+      <key>Comment</key>
+      <string>Amount of time (in seconds) for media controls to fade with no mouse activity</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>3.0</real>
+    </map>
+    <key>MediaEnableFilter</key>
+    <map>
+      <key>Comment</key>
+      <string>Enable media domain filtering</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
+    <key>MediaLookupIP</key>
+    <map>
+      <key>Comment</key>
+      <string>Enable IP lookups on media domains (incurs short pauses during the lookup but allows to defeat domain name changes of fixed IP servers)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
+    <key>MediaFilterRect</key>
+    <map>
+      <key>Comment</key>
+      <string>Rectangle for Media Filter floater</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Rect</string>
+      <key>Value</key>
+      <array>
+        <integer>0</integer>
+        <integer>100</integer>
+        <integer>100</integer>
+        <integer>100</integer>
+      </array>
+    </map>
+    <key>MediaOnAPrimUI</key>
+    <map>
+      <key>Comment</key>
+      <string>Whether or not to show the "link sharing" UI</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
       <integer>0</integer>
-      <integer>100</integer>
-      <integer>100</integer>
-      <integer>100</integer>
-    </array>
-  </map>
-  <key>MediaOnAPrimUI</key>
-  <map>
-    <key>Comment</key>
-    <string>Whether or not to show the "link sharing" UI</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>Boolean</string>
-    <key>Value</key>
-    <integer>0</integer>
-  </map>
-  <key>MemoryLogFrequency</key>
-  <map>
-    <key>Comment</key>
-    <string>Seconds between display of Memory in log (0 for never)</string>
-    <key>Persist</key>
-    <integer>1</integer>
-    <key>Type</key>
-    <string>F32</string>
-    <key>Value</key>
-    <real>600.0</real>
-  </map>
+    </map>
+    <key>MemoryLogFrequency</key>
+    <map>
+      <key>Comment</key>
+      <string>Seconds between display of Memory in log (0 for never)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>600.0</real>
+    </map>
+    <key>MainMemorySafetyMargin</key>
+    <map>
+      <key>Comment</key>
+      <string>Safety margin of main virtual memory to let free in mega-bytes</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>U32</string>
+      <key>Value</key>
+      <real>200</real>
+    </map>
+    <key>MainMemorySafetyCheck</key>
+    <map>
+      <key>Comment</key>
+      <string>Whether or not to check for memory consumption and lower it when too high</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
     <key>MenuAccessKeyTime</key>
     <map>
       <key>Comment</key>

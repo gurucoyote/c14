@@ -103,6 +103,7 @@ extern BOOL gAuditTexture;
 extern BOOL gAnimateTextures;
 extern BOOL gPingInterpolate;
 extern BOOL gVelocityInterpolate;
+extern bool gUpdateDrawDistance;
 
 ////////////////////////////////////////////////////////////////////////////
 // Listeners
@@ -123,9 +124,7 @@ static bool handleRenderAvatarMouselookChanged(const LLSD& newvalue)
 
 static bool handleRenderFarClipChanged(const LLSD& newvalue)
 {
-	F32 draw_distance = (F32) newvalue.asReal();
-	gAgent.mDrawDistance = draw_distance;
-	LLWorld::getInstance()->setLandFarClip(draw_distance);
+	gUpdateDrawDistance = true;	// updated in llviewerdisplay.cpp
 	return true;
 }
 

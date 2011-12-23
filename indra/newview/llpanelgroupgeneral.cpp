@@ -49,6 +49,7 @@
 #include "llagent.h"
 #include "llfloateravatarinfo.h"
 #include "llfloatergroupinfo.h"
+#include "llmutelist.h"
 #include "llnamebox.h"
 #include "llnamelistctrl.h"
 #include "llstatusbar.h"	// can_afford_transaction()
@@ -85,11 +86,11 @@ LLPanelGroupGeneral::LLPanelGroupGeneral(const std::string& name,
 	mCtrlEnrollmentFee(NULL),
 	mSpinEnrollmentFee(NULL),
 	mCtrlReceiveNotices(NULL),
+	mCtrlReceiveChat(NULL),
 	mCtrlListGroup(NULL),
 	mActiveTitleLabel(NULL),
 	mComboActiveTitle(NULL)
 {
-
 }
 
 LLPanelGroupGeneral::~LLPanelGroupGeneral()
@@ -160,7 +161,7 @@ BOOL LLPanelGroupGeneral::postBuild()
 		mCtrlShowInGroupList->setCallbackUserData(this);
 	}
 
-	mComboMature = getChild<LLComboBox>("group_mature_check", TRUE, FALSE);	
+	mComboMature = getChild<LLComboBox>("group_mature_check", TRUE, FALSE);
 	if (mComboMature)
 	{
 		mComboMature->setCurrentByIndex(0);
@@ -213,6 +214,17 @@ BOOL LLPanelGroupGeneral::postBuild()
 		mCtrlReceiveNotices->setCallbackUserData(this);
 		mCtrlReceiveNotices->set(accept_notices);
 		mCtrlReceiveNotices->setEnabled(data.mID.notNull());
+	}
+
+	mCtrlReceiveChat = getChild<LLCheckBoxCtrl>("receive_chat", TRUE, FALSE);
+	if (mCtrlReceiveChat)
+	{
+		LLMuteList* ml = LLMuteList::getInstance();
+		bool receive_chat = !(ml && ml->isMuted(mGroupID, "", LLMute::flagTextChat));
+		mCtrlReceiveChat->setCommitCallback(onCommitReceiveChat);
+		mCtrlReceiveChat->setCallbackUserData(this);
+		mCtrlReceiveChat->set(receive_chat);
+		mCtrlReceiveChat->setEnabled(data.mID.notNull());
 	}
 
 	mCtrlListGroup = getChild<LLCheckBoxCtrl>("list_groups_in_profile", TRUE, FALSE);
@@ -286,6 +298,36 @@ void LLPanelGroupGeneral::onCommitUserOnly(LLUICtrl* ctrl, void* data)
 }
 
 // static
+void LLPanelGroupGeneral::onCommitReceiveChat(LLUICtrl* ctrl, void* data)
+{
+	LLPanelGroupGeneral* self = (LLPanelGroupGeneral*)data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (self && check)
+	{
+		LLMuteList* ml = LLMuteList::getInstance();
+		LLGroupData data;
+		if (ml && gAgent.getGroupData(self->mGroupID, data))
+		{
+			LLMute mute(self->mGroupID, data.mName, LLMute::GROUP);
+			if (check->get())
+			{
+				if (ml->isMuted(self->mGroupID, "", LLMute::flagTextChat))
+				{
+					ml->remove(mute, LLMute::flagTextChat);
+				}
+			}
+			else
+			{
+				if (!ml->isMuted(self->mGroupID, "", LLMute::flagTextChat))
+				{
+					ml->add(mute, LLMute::flagTextChat);
+				}
+			}
+		}
+	}
+}
+
+// static
 void LLPanelGroupGeneral::onCommitEnrollment(LLUICtrl* ctrl, void* data)
 {
 	onCommitAny(ctrl, data);
@@ -298,7 +340,7 @@ void LLPanelGroupGeneral::onCommitEnrollment(LLUICtrl* ctrl, void* data)
 	}
 
 	// Make sure the agent can change enrollment info.
-	if (!gAgent.hasPowerInGroup(self->mGroupID,GP_MEMBER_OPTIONS)
+	if (!gAgent.hasPowerInGroup(self->mGroupID, GP_MEMBER_OPTIONS)
 		|| !self->mAllowEdit)
 	{
 		return;
@@ -398,7 +440,7 @@ void LLPanelGroupGeneral::openProfile(void* data)
 		LLScrollListItem* selected = self->mListVisibleMembers->getFirstSelected();
 		if (selected)
 		{
-			LLFloaterAvatarInfo::showFromDirectory( selected->getUUID() );
+			LLFloaterAvatarInfo::showFromDirectory(selected->getUUID());
 		}
 	}
 }
@@ -639,7 +681,7 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 
 	LLGroupData agent_gdatap;
 	bool is_member = false;
-	if (gAgent.getGroupData(mGroupID,agent_gdatap)) is_member = true;
+	if (gAgent.getGroupData(mGroupID, agent_gdatap)) is_member = true;
 
 	if (mComboActiveTitle)
 	{
@@ -671,7 +713,7 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 
 			for ( ; citer != end; ++citer)
 			{
-				mComboActiveTitle->add(citer->mTitle,citer->mRoleID, (citer->mSelected ? ADD_TOP : ADD_BOTTOM));
+				mComboActiveTitle->add(citer->mTitle, citer->mRoleID, (citer->mSelected ? ADD_TOP : ADD_BOTTOM));
 				if (citer->mSelected)
 				{
 					mComboActiveTitle->setCurrentByID(citer->mRoleID);
@@ -693,8 +735,8 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 
 	bool can_change_ident = false;
 	bool can_change_member_opts = false;
-	can_change_ident = gAgent.hasPowerInGroup(mGroupID,GP_GROUP_CHANGE_IDENTITY);
-	can_change_member_opts = gAgent.hasPowerInGroup(mGroupID,GP_MEMBER_OPTIONS);
+	can_change_ident = gAgent.hasPowerInGroup(mGroupID, GP_GROUP_CHANGE_IDENTITY);
+	can_change_member_opts = gAgent.hasPowerInGroup(mGroupID, GP_MEMBER_OPTIONS);
 
 	if (mCtrlShowInGroupList) 
 	{
@@ -726,17 +768,17 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 	}
 
 	if (mCtrlEnrollmentFee) 
-	{	
+	{
 		mCtrlEnrollmentFee->set(gdatap->mMembershipFee > 0);
 		mCtrlEnrollmentFee->setEnabled(mAllowEdit && can_change_member_opts);
 		mCtrlEnrollmentFee->resetDirty();
 	}
-	
+
 	if (mSpinEnrollmentFee)
 	{
 		S32 fee = gdatap->mMembershipFee;
 		mSpinEnrollmentFee->set((F32)fee);
-		mSpinEnrollmentFee->setEnabled( mAllowEdit &&
+		mSpinEnrollmentFee->setEnabled(mAllowEdit &&
 						(fee > 0) &&
 						can_change_member_opts);
 		mSpinEnrollmentFee->resetDirty();
@@ -752,7 +794,7 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 
 		if (visible)
 		{
-			fee_buff = llformat( "Join (L$%d)", gdatap->mMembershipFee);
+			fee_buff = llformat("Join (L$%d)", gdatap->mMembershipFee);
 			mBtnJoinGroup->setLabelSelected(fee_buff);
 			mBtnJoinGroup->setLabelUnselected(fee_buff);
 		}
@@ -807,7 +849,7 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 		mEditCharter->setText(gdatap->mCharter);
 		mEditCharter->resetDirty();
 	}
-	
+
 	if (mListVisibleMembers)
 	{
 		mListVisibleMembers->deleteAllItems();

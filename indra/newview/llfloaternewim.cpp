@@ -34,11 +34,12 @@
 
 #include "llfloaternewim.h"
 
-#include "lluictrlfactory.h"
 #include "llresmgr.h"
 #include "lltabcontainer.h"
+#include "lluictrlfactory.h"
 
 #include "llimview.h"
+#include "llmutelist.h"
 #include "llnamelistctrl.h"
 
 LLFloaterNewIM::LLFloaterNewIM()
@@ -108,9 +109,12 @@ void LLFloaterNewIM::addGroup(const LLUUID& uuid, void* data)
 	row["target"] = "GROUP";
 	row["columns"][0]["value"] = ""; // name will be looked up
 	row["columns"][0]["font"] = "SANSSERIF";
-	row["columns"][0]["font-style"] = "BOLD";
+	LLMuteList* ml = LLMuteList::getInstance();
+	bool muted = ml && ml->isMuted(uuid, LLMute::flagTextChat);
+	row["columns"][0]["font-style"] = muted ? "NORMAL" : "BOLD";
 	LLScrollListItem* itemp = mGroupList->addElement(row);
 	itemp->setUserdata(data);
+	itemp->setEnabled(!muted);
 
 	if (mGroupList->getFirstSelectedIndex() == -1)
 	{
@@ -192,6 +196,15 @@ void LLFloaterNewIM::onStart(void* userdata)
 			// Needed to avoid catching a display name, which would
 			// make us use a wrong IM log file...
 			gCacheName->getFullName(item->getUUID(), name);
+		}
+		else
+		{
+			LLMuteList* ml = LLMuteList::getInstance();
+			if (ml && ml->isMuted(item->getUUID(), LLMute::flagTextChat))
+			{
+				make_ui_sound("UISndInvalidOp");
+				return;
+			}
 		}
 
 		gIMMgr->addSession(name, type, item->getUUID());

@@ -48,8 +48,8 @@
 //
 // LLFloaterChatterBox
 //
-LLFloaterChatterBox::LLFloaterChatterBox(const LLSD& seed) :
-	mActiveVoiceFloater(NULL)
+LLFloaterChatterBox::LLFloaterChatterBox(const LLSD& seed)
+:	mActiveVoiceFloater(NULL)
 {
 	mAutoResize = FALSE;
 
@@ -122,7 +122,7 @@ void LLFloaterChatterBox::draw()
 	}
 	LLFloater* current_active_floater = getCurrentVoiceFloater();
 	// set icon on tab for floater currently associated with active voice channel
-	if(mActiveVoiceFloater != current_active_floater)
+	if (mActiveVoiceFloater != current_active_floater)
 	{
 		// remove image from old floater's tab
 		if (mActiveVoiceFloater)

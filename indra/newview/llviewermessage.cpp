@@ -1859,7 +1859,9 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 			// If there is inventory, give the user the inventory offer.
 			LLOfferInfo* info = NULL;
 
-			if (has_inventory)
+			is_muted = ml && ml->isMuted(LLUUID::null, name, 0, LLMute::AGENT);
+
+			if (has_inventory && !is_muted)
 			{
 				info = new LLOfferInfo;
 
@@ -1893,7 +1895,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 
 			// Send the notification down the new path.
 			// For requested notices, we don't want to send the popups.
-			if (dialog != IM_GROUP_NOTICE_REQUESTED)
+			if (dialog != IM_GROUP_NOTICE_REQUESTED && !is_muted)
 			{
 				LLSD payload;
 				payload["subject"] = subj;
@@ -1912,14 +1914,15 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 			// Also send down the old path for now.
 			if (IM_GROUP_NOTICE_REQUESTED == dialog)
 			{
-				LLFloaterGroupInfo::showNotice(subj,mes,group_id,has_inventory,item_name,info);
+				LLFloaterGroupInfo::showNotice(subj, mes, group_id,
+											   has_inventory, item_name,info);
 			}
 		}
 		break;
 	case IM_GROUP_INVITATION:
 		{
 			//if (!is_linden && (is_busy || is_muted))
-			if ((is_busy || is_muted))
+			if (is_busy || is_muted)
 			{
 				LLMessageSystem *msg = gMessageSystem;
 				busy_message(msg, from_id);
@@ -2032,6 +2035,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 //mk
 			info->mDesc = message;
 			info->mHost = msg->getSender();
+			is_muted = ml && ml->isMuted(from_id, name);
 			if (is_muted)
 			{
 				static clock_t last_log = 0;
@@ -2252,7 +2256,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 
 	case IM_LURE_USER:
 		{
-			if (is_muted)
+			if (ml && ml->isMuted(from_id, name))
 			{ 
 				return;
 			}
@@ -2376,7 +2380,7 @@ void process_improved_im(LLMessageSystem *msg, void **user_data)
 				busy_message(msg, from_id);
 				LLNotifications::instance().forceResponse(LLNotification::Params("OfferFriendship").payload(payload), 1);
 			}
-			else if (is_muted)
+			else if (ml && ml->isMuted(from_id, name))
 			{
 				LLNotifications::instance().forceResponse(LLNotification::Params("OfferFriendship").payload(payload), 1);
 			}
@@ -4820,18 +4824,18 @@ bool handle_special_notification(std::string notificationID, LLSD& llsdBlock)
 	llsdBlock["REGIONMATURITY"] = LLViewerRegion::accessToString(regionAccess);
 
 	// we're going to throw the LLSD in there in case anyone ever wants to use it
-	LLNotifications::instance().add(notificationID+"_Notify", llsdBlock);
+	LLNotifications::instance().add(notificationID + "_Notify", llsdBlock);
 
 	if (regionAccess == SIM_ACCESS_MATURE)
 	{
 		if (gAgent.isTeen())
 		{
-			LLNotifications::instance().add(notificationID+"_KB", llsdBlock);
+			LLNotifications::instance().add(notificationID + "_KB", llsdBlock);
 			return true;
 		}
 		else if (gAgent.prefersPG())
 		{
-			LLNotifications::instance().add(notificationID+"_Change", llsdBlock, llsdBlock, handle_special_notification_callback);
+			LLNotifications::instance().add(notificationID + "_Change", llsdBlock, llsdBlock, handle_special_notification_callback);
 			return true;
 		}
 	}
@@ -4839,12 +4843,12 @@ bool handle_special_notification(std::string notificationID, LLSD& llsdBlock)
 	{
 		if (!gAgent.isAdult())
 		{
-			LLNotifications::instance().add(notificationID+"_KB", llsdBlock);
+			LLNotifications::instance().add(notificationID + "_KB", llsdBlock);
 			return true;
 		}
 		else if (gAgent.prefersPG() || gAgent.prefersMature())
 		{
-			LLNotifications::instance().add(notificationID+"_Change", llsdBlock, llsdBlock, handle_special_notification_callback);
+			LLNotifications::instance().add(notificationID + "_Change", llsdBlock, llsdBlock, handle_special_notification_callback);
 			return true;
 		}
 	}
@@ -5296,22 +5300,26 @@ bool script_question_cb(const LLSD& notification, const LLSD& response)
 	}
 
 	LLMuteList* ml = LLMuteList::getInstance();
-	if (ml && response["client_side_mute"]) // mute
+	if (ml && response["client_side_mute"])	// Mute from ScriptQuestion
 	{
 		LLMute mute(item_id, notification["payload"]["object_name"].asString(), LLMute::OBJECT);
 		ml->add(mute);
 		LLFloaterMute::showInstance();
 		LLFloaterMute::getInstance()->selectMute(mute.mID);
 
-		// purge the message queue of any previously queued requests from the same source. DEV-4879
+		// purge the message queue of any previously queued requests from the
+		// same source. DEV-4879
 		class OfferMatcher : public LLNotifyBoxView::Matcher
 		{
 		public:
 			OfferMatcher(const LLUUID& to_block) : blocked_id(to_block) {}
 			BOOL matches(const LLNotificationPtr notification) const
 			{
-				if (notification->getName() == "ScriptQuestionCaution"
-					|| notification->getName() == "ScriptQuestion")
+				// We don't test for ScriptQuestionOurs neither for
+				// ScriptQuestionCaution because these come from our objects
+				// are not mutable (if we got a Mute, it can only come from
+				// someone else's object via ScriptQuestion)
+				if (notification->getName() == "ScriptQuestion")
 				{
 					return (notification->getPayload()["item_id"].asUUID() == blocked_id);
 				}
@@ -5335,7 +5343,8 @@ bool script_question_cb(const LLSD& notification, const LLSD& response)
 	return false;
 }
 static LLNotificationFunctorRegistration script_question_cb_reg_1("ScriptQuestion", script_question_cb);
-static LLNotificationFunctorRegistration script_question_cb_reg_2("ScriptQuestionCaution", script_question_cb);
+static LLNotificationFunctorRegistration script_question_cb_reg_2("ScriptQuestionOurs", script_question_cb);
+static LLNotificationFunctorRegistration script_question_cb_reg_3("ScriptQuestionCaution", script_question_cb);
 
 void process_script_question(LLMessageSystem *msg, void **user_data)
 {

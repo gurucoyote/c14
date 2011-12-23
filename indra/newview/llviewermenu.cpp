@@ -960,6 +960,12 @@ void init_client_menu(LLMenuGL* menu)
 
 	menu->appendSeparator();
 
+	menu->append(new LLMenuItemCheckGL("Memory Usage Safety Check",
+									   &menu_toggle_control, NULL,
+									   &menu_check_control,
+									   (void*)"MainMemorySafetyCheck"));
+	menu->appendSeparator();
+
 	menu->append(new LLMenuItemToggleGL("Show Updates", &gShowObjectUpdates));
 
 	menu->appendSeparator(); 
@@ -981,7 +987,7 @@ void init_client_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCheckGL("Mouse Smoothing",
 									   &menu_toggle_control, NULL,
 									   &menu_check_control,
-									   (void*) "MouseSmooth"));
+									   (void*)"MouseSmooth"));
 	menu->appendSeparator();
 
 #if LL_WINDOWS

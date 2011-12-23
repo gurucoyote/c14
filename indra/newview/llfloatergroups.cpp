@@ -41,29 +41,31 @@
 
 #include "llfloatergroups.h"
 
+#include "llalertdialog.h"
+#include "llbutton.h"
+#include "llfocusmgr.h"
+#include "llscrolllistctrl.h"
+#include "lltextbox.h"
+#include "lluictrlfactory.h"
 #include "message.h"
 #include "roles_constants.h"
 
 #include "llagent.h"
-#include "llbutton.h"
 #include "llfloatergroupinfo.h"
 #include "llfloaterdirectory.h"
-#include "llfocusmgr.h"
-#include "llalertdialog.h"
+#include "llimview.h"
+#include "llmutelist.h"
 #include "llselectmgr.h"
-#include "llscrolllistctrl.h"
-#include "lltextbox.h"
-#include "lluictrlfactory.h"
+#include "llstartup.h"
 #include "llviewercontrol.h"
 #include "llviewerwindow.h"
-#include "llimview.h"
-#include "llstartup.h"
 
 // static
 std::map<const LLUUID, LLFloaterGroupPicker*> LLFloaterGroupPicker::sInstances;
 
 // helper functions
-void init_group_list(LLScrollListCtrl* ctrl, const LLUUID& highlight_id, U64 powers_mask = GP_ALL_POWERS);
+void init_group_list(LLScrollListCtrl* ctrl, const LLUUID& highlight_id,
+					 U64 powers_mask = GP_ALL_POWERS);
 
 ///----------------------------------------------------------------------------
 /// Class LLFloaterGroupPicker
@@ -88,8 +90,8 @@ LLFloaterGroupPicker* LLFloaterGroupPicker::createInstance(const LLSD &seed)
 	return pickerp;
 }
 
-LLFloaterGroupPicker::LLFloaterGroupPicker(const LLSD& seed) : 
-	mSelectCallback(NULL),
+LLFloaterGroupPicker::LLFloaterGroupPicker(const LLSD& seed)
+:	mSelectCallback(NULL),
 	mCallbackUserdata(NULL),
 	mPowersMask(GP_ALL_POWERS)
 {
@@ -102,8 +104,8 @@ LLFloaterGroupPicker::~LLFloaterGroupPicker()
 	sInstances.erase(mID);
 }
 
-void LLFloaterGroupPicker::setSelectCallback(void (*callback)(LLUUID, void*), 
-									void* userdata)
+void LLFloaterGroupPicker::setSelectCallback(void (*callback)(LLUUID, void*),
+											 void* userdata)
 {
 	mSelectCallback = callback;
 	mCallbackUserdata = userdata;
@@ -114,7 +116,6 @@ void LLFloaterGroupPicker::setPowersMask(U64 powers_mask)
 	mPowersMask = powers_mask;
 	postBuild();
 }
-
 
 BOOL LLFloaterGroupPicker::postBuild()
 {
@@ -137,15 +138,14 @@ BOOL LLFloaterGroupPicker::postBuild()
 void LLFloaterGroupPicker::onBtnOK(void* userdata)
 {
 	LLFloaterGroupPicker* self = (LLFloaterGroupPicker*)userdata;
-	if(self) self->ok();
+	if (self) self->ok();
 }
 
 void LLFloaterGroupPicker::onBtnCancel(void* userdata)
 {
 	LLFloaterGroupPicker* self = (LLFloaterGroupPicker*)userdata;
-	if(self) self->close();
+	if (self) self->close();
 }
-
 
 void LLFloaterGroupPicker::ok()
 {
@@ -155,7 +155,7 @@ void LLFloaterGroupPicker::ok()
 	{
 		group_id = group_list->getCurrentID();
 	}
-	if(mSelectCallback)
+	if (mSelectCallback)
 	{
 		mSelectCallback(group_id, mCallbackUserdata);
 	}
@@ -182,8 +182,7 @@ bool LLFloaterGroups::handleEvent(LLPointer<LLEvent> event, const LLSD& userdata
 }
 
 // Default constructor
-LLFloaterGroups::LLFloaterGroups() :
-	LLFloater()
+LLFloaterGroups::LLFloaterGroups() : LLFloater()
 {
 	sInstance = this;
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_groups.xml");
@@ -201,7 +200,7 @@ LLFloaterGroups::~LLFloaterGroups()
 
 LLFloaterGroups* LLFloaterGroups::show(void*)
 {
-	if(sInstance)
+	if (sInstance)
 	{
 		sInstance->open();	/*Flawfinder: ignore*/
 	}
@@ -289,7 +288,7 @@ void LLFloaterGroups::enableButtons()
 		group_id = group_list->getCurrentID();
 	}
 
-	if(group_id != gAgent.getGroupID())
+	if (group_id != gAgent.getGroupID())
 	{
 		childEnable("Activate");
 	}
@@ -300,7 +299,8 @@ void LLFloaterGroups::enableButtons()
 	if (group_id.notNull())
 	{
 		childEnable("Info");
-		childEnable("IM");
+		LLMuteList* ml = LLMuteList::getInstance();
+		childSetEnabled("IM", ml && !ml->isMuted(group_id, LLMute::flagTextChat));
 		childEnable("Leave");
 	}
 	else
@@ -309,7 +309,7 @@ void LLFloaterGroups::enableButtons()
 		childDisable("IM");
 		childDisable("Leave");
 	}
-	if(gAgent.mGroups.count() < gMaxAgentGroups)
+	if (gAgent.mGroups.count() < gMaxAgentGroups)
 	{
 		childEnable("Create");
 	}
@@ -322,37 +322,37 @@ void LLFloaterGroups::enableButtons()
 void LLFloaterGroups::onBtnCreate(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->create();
+	if (self) self->create();
 }
 
 void LLFloaterGroups::onBtnActivate(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->activate();
+	if (self) self->activate();
 }
 
 void LLFloaterGroups::onBtnInfo(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->info();
+	if (self) self->info();
 }
 
 void LLFloaterGroups::onBtnIM(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->startIM();
+	if (self) self->startIM();
 }
 
 void LLFloaterGroups::onBtnLeave(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->leave();
+	if (self) self->leave();
 }
 
 void LLFloaterGroups::onBtnSearch(void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->search();
+	if (self) self->search();
 }
 
 void LLFloaterGroups::create()
@@ -403,20 +403,19 @@ void LLFloaterGroups::startIM()
 
 	if (group_list && (group_id = group_list->getCurrentID()).notNull())
 	{
+		LLMuteList* ml = LLMuteList::getInstance();
 		LLGroupData group_data;
-		if (gAgent.getGroupData(group_id, group_data))
+		if (gAgent.getGroupData(group_id, group_data) &&
+			!(ml && ml->isMuted(group_id, "", LLMute::flagTextChat)))
 		{
 			gIMMgr->setFloaterOpen(TRUE);
-			gIMMgr->addSession(
-				group_data.mName,
-				IM_SESSION_GROUP_START,
-				group_id);
+			gIMMgr->addSession(group_data.mName, IM_SESSION_GROUP_START,
+							   group_id);
 			make_ui_sound("UISndStartIM");
 		}
 		else
 		{
-			// this should never happen, as starting a group IM session
-			// relies on you belonging to the group and hence having the group data
+			// Muted group
 			make_ui_sound("UISndInvalidOp");
 		}
 	}
@@ -431,12 +430,12 @@ void LLFloaterGroups::leave()
 	{
 		S32 count = gAgent.mGroups.count();
 		S32 i;
-		for(i = 0; i < count; ++i)
+		for (i = 0; i < count; ++i)
 		{
-			if(gAgent.mGroups.get(i).mID == group_id)
+			if (gAgent.mGroups.get(i).mID == group_id)
 				break;
 		}
-		if(i < count)
+		if (i < count)
 		{
 			LLSD args;
 			args["GROUP"] = gAgent.mGroups.get(i).mName;
@@ -457,7 +456,7 @@ bool LLFloaterGroups::callbackLeaveGroup(const LLSD& notification, const LLSD& r
 {
 	S32 option = LLNotification::getSelectedOption(notification, response);
 	LLUUID group_id = notification["payload"]["group_id"].asUUID();
-	if(option == 0)
+	if (option == 0)
 	{
 		LLMessageSystem* msg = gMessageSystem;
 		msg->newMessageFast(_PREHASH_LeaveGroupRequest);
@@ -474,7 +473,7 @@ bool LLFloaterGroups::callbackLeaveGroup(const LLSD& notification, const LLSD& r
 void LLFloaterGroups::onGroupList(LLUICtrl* ctrl, void* userdata)
 {
 	LLFloaterGroups* self = (LLFloaterGroups*)userdata;
-	if(self) self->enableButtons();
+	if (self) self->enableButtons();
 }
 
 void init_group_list(LLScrollListCtrl* ctrl, const LLUUID& highlight_id, U64 powers_mask)
@@ -486,14 +485,14 @@ void init_group_list(LLScrollListCtrl* ctrl, const LLUUID& highlight_id, U64 pow
 
 	group_list->operateOnAll(LLCtrlListInterface::OP_DELETE);
 
-	for(S32 i = 0; i < count; ++i)
+	for (S32 i = 0; i < count; ++i)
 	{
 		id = gAgent.mGroups.get(i).mID;
 		LLGroupData* group_datap = &gAgent.mGroups.get(i);
 		if ((powers_mask == GP_ALL_POWERS) || ((group_datap->mPowers & powers_mask) != 0))
 		{
 			std::string style = "NORMAL";
-			if(highlight_id == id)
+			if (highlight_id == id)
 			{
 				style = "BOLD";
 			}
