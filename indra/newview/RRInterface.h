@@ -26,8 +26,8 @@
 
 #define RR_VIEWER_NAME "RestrainedLife"
 #define RR_VIEWER_NAME_NEW "RestrainedLove"
-#define RR_VERSION_NUM "2070306"
-#define RR_VERSION "2.07.03.06"
+#define RR_VERSION_NUM "2070420"
+#define RR_VERSION "2.07.04.20"
 #define RR_SLV_VERSION "Cool VL Viewer v1.26.2"
 
 #define RR_PREFIX "@"
@@ -36,6 +36,10 @@
 // Length of the "#RLV/" string constant in characters.
 #define RR_HRLVS_LENGTH 5
 #define RR_ADD_FOLDER_PREFIX "+"
+
+// Define to 0 if you wish @getcommand to return @behav=force commands as
+// "behav%f" in excess to their @behave=y/n version (returned as "behav").
+#define STRIP_FORCE_FLAG 1
 
 // Set this to the name of the variable used to store the avatar height offset
 #define AVATARHEIGHTOFFSET "AvatarOffsetZ"
@@ -70,6 +74,7 @@
 #include "llchat.h"
 #include "llchatbar.h"
 #include "llinventorymodel.h"
+#include "llviewerjointattachment.h"
 #include "llviewermenu.h"
 #include "llwearable.h"
 
@@ -106,9 +111,10 @@ typedef enum FolderLock {
 class RRInterface
 {
 public:
-	
 	RRInterface();
 	~RRInterface();
+
+	static void init();
 
 	void refreshTPflag(bool save);
 	std::string getVersion(); // returns "RestrainedLife Viewer blah blah"
@@ -121,6 +127,7 @@ public:
 	FolderLock isFolderLockedWithoutException(LLInventoryCategory* cat, std::string attach_or_detach); // attach_or_detach must be equal to either "attach" or "detach"
 	FolderLock isFolderLockedWithoutExceptionAux(LLInventoryCategory* cat, std::string attach_or_detach, std::deque<std::string> list_of_restrictions); // auxiliary function to isFolderLockedWithoutException
 
+	bool isBlacklisted(std::string command, bool force = false);
 	BOOL add(LLUUID object_uuid, std::string action, std::string option);
 	BOOL remove(LLUUID object_uuid, std::string action, std::string option);
 	BOOL clear(LLUUID object_uuid, std::string command="");
@@ -144,6 +151,8 @@ public:
 	std::string getAttachments(std::string attachpt);
 
 	std::string getStatus(LLUUID object_uuid, std::string rule); // if object_uuid is null, return all
+	std::string getCommand(std::string match, bool blacklist = false);
+	std::string getCommandsByType(S32 type, bool blacklist = false);
 	BOOL forceDetach(std::string attachpt);
 	BOOL forceDetachByUuid(std::string object_uuid);
 
@@ -222,6 +231,48 @@ public:
 	bool canTouch(LLViewerObject* object, LLVector3 pick_intersection = LLVector3::zero); // set pick_intersection to force the check on this position
 	bool canTouchFar(LLViewerObject* object, LLVector3 pick_intersection = LLVector3::zero); // set pick_intersection to force the check on this position
 
+public:
+	enum RRBehaviourType {
+		RR_INFO,				// Information commands, not-blacklistable.
+		RR_MISCELLANEOUS,		// Miscellaneous not-blacklistable commands.
+		RR_INSTANTMESSAGE,		// Instant Messaging commands.
+		RR_SENDCHAT,			// Chat sending commands.
+		RR_RECEIVECHAT,			// Chat receiving commands.
+		RR_CHANNEL,				// Chat on private channels commands.
+		RR_EMOTE,				// Emote/pose commands.
+		RR_REDIRECTION,			// Emote/pose redirection commands.
+		RR_MOVE,				// Movement commands.
+		RR_SIT,					// Sitting/unsitting commands.
+		RR_TELEPORT,			// Teleportation commands.
+		RR_TOUCH,				// Touch commands.
+		RR_LOCK,				// Locking/unlocking commands.
+		RR_ATTACH,				// Attach/wear commands.
+		RR_DETACH,				// Detach/remove commands.
+		RR_INVENTORY,			// Inventory commands.
+		RR_INVENTORYLOCK,		// Inventory locking commands.
+		RR_BUILD,				// Rezing/editing commands.
+		RR_LOCATION,			// Location commands.
+		RR_NAME,				// Name commands.
+		RR_GROUP,				// Group commands.
+		RR_PERM,				// Permissions/extra-restriction commands.
+		RR_DEBUG,				// Debug settings commands.
+		RR_ENVIRONMENT,			// Environment/rendering commands.
+	};
+
+	typedef std::pair<std::string, S32> rr_command_entry_t;
+	typedef std::map<std::string, S32 > rr_command_map_t;
+	static rr_command_map_t sCommandsMap;
+
+	static BOOL sRRNoSetEnv;
+	static BOOL sRestrainedLoveDebug;
+	static BOOL sCanOoc; // when TRUE, the user can bypass a sendchat restriction by surrounding with (( and ))
+	static BOOL sUntruncatedEmotes; // when TRUE, the user's emotes are never truncated.
+	static std::string sBlackList;		// user-blacklisted RestrainedLove commands.
+	static std::string sRecvimMessage;	// message to replace an incoming IM, when under recvim
+	static std::string sSendimMessage;	// message to replace an outgoing IM, when under sendim
+	static std::string sRolePlayBlackList;	// standard blacklist for role-players
+	static std::string sVanillaBlackList;	// standard blacklist for non-BDSM folks
+
 	// Some cache variables to accelerate common checks
 	BOOL mHasLockedHuds;
 	BOOL mContainsDetach;
@@ -244,12 +295,6 @@ public:
 	BOOL mContainsPermissive;
 	BOOL mContainsRun;
 	BOOL mContainsAlwaysRun;
-
-	static BOOL sRRNoSetEnv;
-	static BOOL sRestrainedLoveDebug;
-	static BOOL sCanOoc; // when TRUE, the user can bypass a sendchat restriction by surrounding with (( and ))
-	static std::string sRecvimMessage; // message to replace an incoming IM, when under recvim
-	static std::string sSendimMessage; // message to replace an outgoing IM, when under sendim
 
 	// Allowed debug settings(initialized in the ctor)
 	std::string mAllowedU32;
@@ -285,7 +330,6 @@ private:
 	LLUUID mSitTargetId;
 	std::string mLastLoadedPreset; // contains the name of the latest loaded Windlight preset
 	U32 mLaunchTimestamp; // timestamp of the beginning of this session
-	
 };
 
 #endif

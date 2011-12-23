@@ -1689,7 +1689,7 @@ void LLTextureCache::purgeTextureFilesTimeSliced(bool force)
 	const F32 delay_between_passes = 2.0f; // seconds
 	const F32 max_time_per_pass = 0.1f; // seconds
 
-	if (!force && mSlicedPurgeTimer.getElapsedTimeF32() <= delay_between_passes) 
+	if (!force && mSlicedPurgeTimer.getElapsedTimeF32() <= delay_between_passes)
 	{
 		return;
 	}
@@ -1873,7 +1873,7 @@ bool LLTextureCache::readComplete(handle_t handle, bool abort)
 	{
 		unlockWorkers();
 	}
-	return (complete || abort);
+	return complete || abort;
 }
 
 LLTextureCache::handle_t LLTextureCache::writeToCache(const LLUUID& id, U32 priority,
@@ -1889,7 +1889,8 @@ LLTextureCache::handle_t LLTextureCache::writeToCache(const LLUUID& id, U32 prio
 	{
 		purgeTextures(false);
 	}
-	purgeTextureFilesTimeSliced(!gSavedSettings.getBOOL("CachePurgeTimeSliced"));
+	static LLCachedControl<bool> cache_purge_time_sliced(gSavedSettings, "CachePurgeTimeSliced");
+	purgeTextureFilesTimeSliced(!cache_purge_time_sliced);
 
 	LLMutexLock lock(&mWorkersMutex);
 	LLTextureCacheWorker* worker = new LLTextureCacheRemoteWorker(this, priority, id,
@@ -1966,12 +1967,11 @@ void LLTextureCache::removeEntry(S32 idx, Entry& entry, std::string& filename, b
 				file_maybe_exists = false;
 			}
 		}
+		mTexturesSizeTotal -= entry.mBodySize;
 		entry.mImageSize = -1;
 		entry.mBodySize = 0;
 		mHeaderIDMap.erase(entry.mID);
 		mTexturesSizeMap.erase(entry.mID);
-
-		mTexturesSizeTotal -= entry.mBodySize;
 		mFreeList.insert(idx);
 	}
 

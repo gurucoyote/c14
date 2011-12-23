@@ -97,6 +97,8 @@ LLViewerObject* getSelectedParentObject(LLViewerObject *object);
 // Consts
 //
 
+const std::string SAVE_INTO_INVENTORY("Save Object Back to My Inventory");
+
 const S32 NUM_SELECTION_UNDO_ENTRIES = 200;
 const F32 SILHOUETTE_UPDATE_THRESHOLD_SQUARED = 0.02f;
 const S32 MAX_ACTION_QUEUE_SIZE = 20;
@@ -3895,11 +3897,11 @@ void LLSelectMgr::sendDelink()
 					  NULL, SEND_INDIVIDUALS);
 }
 
+#ifdef SEND_HINGES
 //----------------------------------------------------------------------
 // Hinges
 //----------------------------------------------------------------------
 
-/*
 void LLSelectMgr::sendHinge(U8 type)
 {
 	if (!mSelectedObjects->getNumNodes())
@@ -3907,12 +3909,8 @@ void LLSelectMgr::sendHinge(U8 type)
 		return;
 	}
 
-	sendListToRegions(
-		"ObjectHinge",
-		packHingeHead,
-		packObjectLocalID,
-		&type,
-		SEND_ONLY_ROOTS);
+	sendListToRegions("ObjectHinge", packHingeHead, packObjectLocalID, &type,
+					  SEND_ONLY_ROOTS);
 }
 
 void LLSelectMgr::sendDehinge()
@@ -3922,13 +3920,22 @@ void LLSelectMgr::sendDehinge()
 		return;
 	}
 
-	sendListToRegions(
-		"ObjectDehinge",
-		packAgentAndSessionID,
-		packObjectLocalID,
-		NULL,
-		SEND_ONLY_ROOTS);
-}*/
+	sendListToRegions("ObjectDehinge", packAgentAndSessionID, packObjectLocalID,
+					  NULL, SEND_ONLY_ROOTS);
+}
+
+// static
+void LLSelectMgr::packHingeHead(void *user_data)
+{
+	U8	*type = (U8 *)user_data;
+
+	gMessageSystem->nextBlockFast(_PREHASH_AgentData);
+	gMessageSystem->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
+	gMessageSystem->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
+	gMessageSystem->nextBlockFast(_PREHASH_JointType);
+	gMessageSystem->addU8Fast(_PREHASH_Type, *type);
+}
+#endif
 
 void LLSelectMgr::sendSelect()
 {
@@ -3943,18 +3950,6 @@ void LLSelectMgr::sendSelect()
 		packObjectLocalID,
 		NULL,
 		SEND_INDIVIDUALS);
-}
-
-// static
-void LLSelectMgr::packHingeHead(void *user_data)
-{
-	U8	*type = (U8 *)user_data;
-
-	gMessageSystem->nextBlockFast(_PREHASH_AgentData);
-	gMessageSystem->addUUIDFast(_PREHASH_AgentID, gAgent.getID());
-	gMessageSystem->addUUIDFast(_PREHASH_SessionID, gAgent.getSessionID());
-	gMessageSystem->nextBlockFast(_PREHASH_JointType);
-	gMessageSystem->addU8Fast(_PREHASH_Type, *type);
 }
 
 void LLSelectMgr::selectionDump()

@@ -35,8 +35,9 @@
 
 #include "llavatarnamecache.h"
 #include "llpanel.h"
-#include "v3dmath.h"
 #include "lluuid.h"
+#include "v3dmath.h"
+
 #include "llmediactrl.h"
 
 class LLCheckBoxCtrl;
@@ -49,8 +50,8 @@ class LLMessageSystem;
 
 enum EOnlineStatus
 {
-	ONLINE_STATUS_NO      = 0,
-	ONLINE_STATUS_YES     = 1
+	ONLINE_STATUS_NO	= 0,
+	ONLINE_STATUS_YES	= 1
 };
 
 // Base class for all sub-tabs inside the avatar profile.  Many of these
@@ -59,8 +60,9 @@ enum EOnlineStatus
 class LLPanelAvatarTab : public LLPanel
 {
 public:
-	LLPanelAvatarTab(const std::string& name, const LLRect &rect, 
-		LLPanelAvatar* panel_avatar);
+	LLPanelAvatarTab(const std::string& name,
+					 const LLRect &rect,
+					 LLPanelAvatar* panel_avatar);
 
 	// Calls refresh() once per frame when panel is visible
 	/*virtual*/ void draw();
@@ -85,7 +87,9 @@ private:
 class LLPanelAvatarFirstLife : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarFirstLife(const std::string& name, const LLRect &rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarFirstLife(const std::string& name,
+						   const LLRect &rect,
+						   LLPanelAvatar* panel_avatar);
 
 	/*virtual*/ BOOL postBuild(void);
 
@@ -95,7 +99,9 @@ public:
 class LLPanelAvatarSecondLife : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarSecondLife(const std::string& name, const LLRect &rect, LLPanelAvatar* panel_avatar );
+	LLPanelAvatarSecondLife(const std::string& name,
+							const LLRect &rect,
+							LLPanelAvatar* panel_avatar );
 
 	/*virtual*/ BOOL postBuild(void);
 	/*virtual*/ void refresh();
@@ -104,7 +110,8 @@ public:
 	static void onDoubleClickGroup(void* userdata);
 	static void onClickPublishHelp(void *userdata);
 	static void onClickPartnerHelp(void *userdata);
-	static bool onClickPartnerHelpLoadURL(const LLSD& notification, const LLSD& response);
+	static bool onClickPartnerHelpLoadURL(const LLSD& notification,
+										  const LLSD& response);
 	static void onClickPartnerInfo(void *userdata);
 
 	// Clear out the controls anticipating new network data.
@@ -116,16 +123,19 @@ public:
 	void setPartnerID(LLUUID id) { mPartnerID = id; }
 	
 private:
-	LLUUID				mPartnerID;
+	LLUUID mPartnerID;
 };
 
-// WARNING!  The order of the inheritance here matters!!  Do not change.  - KLW
+// WARNING !  The order of the inheritance here matters !  Do not change. - KLW
 class LLPanelAvatarWeb : public LLPanelAvatarTab, public LLViewerMediaObserver
 {
 public:
-	LLPanelAvatarWeb(const std::string& name, const LLRect& rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarWeb(const std::string& name,
+					 const LLRect& rect,
+					 LLPanelAvatar* panel_avatar);
 	/*virtual*/ ~LLPanelAvatarWeb();
-	/*virtual*/ BOOL	postBuild(void);
+
+	/*virtual*/ BOOL postBuild(void);
 
 	/*virtual*/ void refresh();
 
@@ -143,21 +153,24 @@ public:
 	static void onClickWebProfileHelp(void*);
 
 	// inherited from LLViewerMediaObserver
-	/*virtual*/ void handleMediaEvent(LLPluginClassMedia* self, EMediaEvent event);
+	/*virtual*/ void handleMediaEvent(LLPluginClassMedia* self,
+									  EMediaEvent event);
 
 private:
-	bool				mCanEditURL;
-	std::string			mHome;
-	std::string         mNavigateTo;
-	LLMediaCtrl*		mWebBrowser;
+	bool			mCanEditURL;
+	std::string		mHome;
+	std::string		mNavigateTo;
+	LLMediaCtrl*	mWebBrowser;
 };
 
 class LLPanelAvatarAdvanced : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarAdvanced(const std::string& name, const LLRect& rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarAdvanced(const std::string& name,
+						  const LLRect& rect,
+						  LLPanelAvatar* panel_avatar);
 
-	/*virtual*/ BOOL	postBuild(void);
+	/*virtual*/ BOOL postBuild(void);
 
 	void enableControls(BOOL own_avatar);
 	void setWantSkills(U32 want_to_mask, const std::string& want_to_text,
@@ -168,20 +181,22 @@ public:
 					   std::string& languages_text);
 
 private:
-	S32					mWantToCount;
-	S32					mSkillsCount;
-	LLCheckBoxCtrl		*mWantToCheck[8];
-	LLLineEditor		*mWantToEdit;
-	LLCheckBoxCtrl		*mSkillsCheck[8];
-	LLLineEditor		*mSkillsEdit;
+	S32				mWantToCount;
+	S32				mSkillsCount;
+	LLCheckBoxCtrl	*mWantToCheck[8];
+	LLLineEditor	*mWantToEdit;
+	LLCheckBoxCtrl	*mSkillsCheck[8];
+	LLLineEditor	*mSkillsEdit;
 };
 
 class LLPanelAvatarNotes : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarNotes(const std::string& name, const LLRect& rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarNotes(const std::string& name,
+					   const LLRect& rect,
+					   LLPanelAvatar* panel_avatar);
 
-	/*virtual*/ BOOL	postBuild(void);
+	/*virtual*/ BOOL postBuild(void);
 
 	/*virtual*/ void refresh();
 
@@ -193,13 +208,15 @@ public:
 class LLPanelAvatarClassified : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarClassified(const std::string& name, const LLRect& rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarClassified(const std::string& name,
+							const LLRect& rect,
+							LLPanelAvatar* panel_avatar);
 
 	/*virtual*/ BOOL postBuild(void);
 
 	/*virtual*/ void refresh();
 
-	// If can close, return TRUE.  If cannot close, pop save/discard dialog
+	// If can close, return TRUE. If cannot close, pop save/discard dialog
 	// and return FALSE.
 	BOOL canClose();
 
@@ -225,9 +242,11 @@ private:
 class LLPanelAvatarPicks : public LLPanelAvatarTab
 {
 public:
-	LLPanelAvatarPicks(const std::string& name, const LLRect& rect, LLPanelAvatar* panel_avatar);
+	LLPanelAvatarPicks(const std::string& name,
+					   const LLRect& rect,
+					   LLPanelAvatar* panel_avatar);
 
-	/*virtual*/ BOOL	postBuild(void);
+	/*virtual*/ BOOL postBuild(void);
 
 	/*virtual*/ void refresh();
 
@@ -252,7 +271,7 @@ public:
 	LLPanelAvatar(const std::string& name, const LLRect &rect, BOOL allow_edit);
 	/*virtual*/ ~LLPanelAvatar();
 
-	/*virtual*/ BOOL	postBuild(void);
+	/*virtual*/ BOOL postBuild(void);
 
 	// If can close, return TRUE.  If cannot close, pop save/discard dialog
 	// and return FALSE.
@@ -261,12 +280,13 @@ public:
 	// Fill in the avatar ID and handle some field fill-in, as well as 
 	// button enablement.
 	// Pass one of the ONLINE_STATUS_foo constants above.
-	void setAvatarID(const LLUUID &avatar_id, const std::string &name, EOnlineStatus online_status);
+	void setAvatarID(const LLUUID &avatar_id, const std::string &name,
+					 EOnlineStatus online_status);
 
 	void setOnlineStatus(EOnlineStatus online_status);
 
-	const LLUUID& getAvatarID() const { return mAvatarID; }
-	std::string getAvatarUserName() { return mAvatarUserName; }
+	const LLUUID& getAvatarID() const	{ return mAvatarID; }
+	std::string getAvatarUserName()		{ return mAvatarUserName; }
 	
 	void resetGroupList();
 
@@ -293,18 +313,18 @@ public:
 	static void processAvatarPicksReply(LLMessageSystem *msg, void **);
 	static void processAvatarClassifiedReply(LLMessageSystem *msg, void **);
 
-	static void onClickTrack(	void *userdata);
-	static void onClickIM(		void *userdata);
-	static void onClickOfferTeleport(	void *userdata);
-	static void onClickPay(	void *userdata);
+	static void onClickTrack(void *userdata);
+	static void onClickIM(void *userdata);
+	static void onClickOfferTeleport(void *userdata);
+	static void onClickPay(void *userdata);
 	static void onClickAddFriend(void* userdata);
-	static void onClickOK(		void *userdata);
-	static void onClickCancel(	void *userdata);
-	static void onClickKick(	void *userdata);
-	static void onClickFreeze(	void *userdata);
+	static void onClickOK(void *userdata);
+	static void onClickCancel(void *userdata);
+	static void onClickKick(void *userdata);
+	static void onClickFreeze(void *userdata);
 	static void onClickUnfreeze(void *userdata);
-	static void onClickCSR(		void *userdata);
-	static void onClickMute(	void *userdata);
+	static void onClickCSR(void *userdata);
+	static void onClickMute(void *userdata);
 
 private:
 	void enableOKIfReady();
@@ -318,15 +338,15 @@ private:
 									 const LLAvatarName& avatar_name,
 									 void *userdata);
 
-	static	void*	createPanelAvatar(void*	data);
-	static	void*	createFloaterAvatarInfo(void*	data);
-	static	void*	createPanelAvatarSecondLife(void*	data);
-	static	void*	createPanelAvatarWeb(void*	data);
-	static	void*	createPanelAvatarInterests(void*	data);
-	static	void*	createPanelAvatarPicks(void*	data);
-	static	void*	createPanelAvatarClassified(void*	data);
-	static	void*	createPanelAvatarFirstLife(void*	data);
-	static	void*	createPanelAvatarNotes(void*	data);
+	static void* createPanelAvatar(void* data);
+	static void* createFloaterAvatarInfo(void* data);
+	static void* createPanelAvatarSecondLife(void* data);
+	static void* createPanelAvatarWeb(void* data);
+	static void* createPanelAvatarInterests(void* data);
+	static void* createPanelAvatarPicks(void* data);
+	static void* createPanelAvatarClassified(void* data);
+	static void* createPanelAvatarFirstLife(void* data);
+	static void* createPanelAvatarNotes(void* data);
 
 public:
 	LLPanelAvatarSecondLife*	mPanelSecondLife;
@@ -344,17 +364,18 @@ public:
 	static BOOL sAllowFirstLife;
 	
 private:
-	LLUUID						mAvatarID;			// for which avatar is this window?
-	std::string					mAvatarUserName;	// Known avatar user name
-	BOOL						mIsFriend;			// Are we friends?
-	BOOL						mHaveProperties;
-	BOOL						mHaveStatistics;
-	// only update note if data received from database and
-	// note is changed from database version
-	bool						mHaveNotes;
-	std::string					mLastNotes;
-	LLTabContainer*		mTab;
-	BOOL						mAllowEdit;
+	LLUUID			mAvatarID;			// for which avatar is this window?
+	std::string		mAvatarUserName;	// Known avatar user name
+	BOOL			mIsFriend;			// Are we friends?
+	BOOL			mHaveProperties;
+	BOOL			mHaveStatistics;
+	// only update note if data received from database and note is changed from
+	// database version
+	bool			mHaveNotes;
+	std::string		mLastNotes;
+
+	LLTabContainer*	mTab;
+	BOOL			mAllowEdit;
 
 	typedef std::list<LLPanelAvatar*> panel_list_t;
 	static panel_list_t sAllPanels;

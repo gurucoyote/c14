@@ -23,6 +23,8 @@
 
 #include "llviewerprecompiledheaders.h"
 
+#include "RRInterface.h"
+
 #include "llagent.h"
 #include "llcachename.h"
 #include "lldrawpoolalpha.h"
@@ -57,13 +59,16 @@
 #include "llworld.h"
 #include "pipeline.h"
 
-#include "RRInterface.h"
-
 // Global and static variables initialization.
 BOOL gRRenabled = TRUE;
 BOOL RRInterface::sRRNoSetEnv = FALSE;
 BOOL RRInterface::sRestrainedLoveDebug = FALSE;
+BOOL RRInterface::sUntruncatedEmotes = FALSE;
 BOOL RRInterface::sCanOoc = TRUE;
+RRInterface::rr_command_map_t RRInterface::sCommandsMap;
+std::string RRInterface::sBlackList;
+std::string RRInterface::sRolePlayBlackList;
+std::string RRInterface::sVanillaBlackList;
 std::string RRInterface::sRecvimMessage = "The Resident you messaged is prevented from reading your IMs at the moment, please try again later.";
 std::string RRInterface::sSendimMessage = "*** IM blocked by sender's viewer";
 
@@ -99,9 +104,9 @@ S32 match(std::deque<std::string> list, std::string str, bool& exact_match)
 		if (str == dump) {
 			exact_match = true;
 			return (S32)size;
-		} else if (str != "" && str[0] == '~') {
+		} else if (!str.empty() && str[0] == '~') {
 			return 0;
-		} else if (str.find(dump) != -1) {
+		} else if (str.find(dump) != std::string::npos) {
 			return (S32)size;
 		}
 		size--;
@@ -125,7 +130,7 @@ bool findMultiple(std::deque<std::string> list, std::string str)
 	// returns true if all the tokens in list are contained into str
 	U32 size = list.size();
 	for (U32 i = 0; i < size; i++) {
-		if (str.find(list[i]) == -1) return false;
+		if (str.find(list[i]) == std::string::npos) return false;
 	}
 	return true;
 }
@@ -183,7 +188,7 @@ void updateAllHudTexts()
 		++text_it)
 	{
 		LLHUDText *hudText = *text_it;
-		if (hudText && hudText->mLastMessageText != "") {
+		if (hudText && !hudText->mLastMessageText.empty()) {
 			// do not update the floating names of the avatars around
 			LLViewerObject* obj = hudText->getSourceObject();
 			if (obj && !obj->isAvatar()) {
@@ -199,7 +204,7 @@ void updateOneHudText(LLUUID uuid)
 	if (obj) {
 		if (obj->mText.notNull()) {
 			LLHUDText *hudText = obj->mText.get();
-			if (hudText && hudText->mLastMessageText != "") {
+			if (hudText && !hudText->mLastMessageText.empty()) {
 				hudText->setStringUTF8(hudText->mLastMessageText);
 			}
 		}
@@ -261,14 +266,237 @@ RRInterface::RRInterface()
 	mJustDetached.attachpt = "";
 	mJustReattached.uuid.setNull();
 	mJustReattached.attachpt = "";
-
-	// Calling gSavedSettings here crashes the viewer when compiled with VS2005.
-	// OK under Linux. Moved this initialization to llstartup.cpp as a consequence.
-	// sRestrainedLoveDebug = gSavedSettings.getBOOL("RestrainedLoveDebug");
 }
 
 RRInterface::~RRInterface()
 {
+}
+
+// init() must be called at an early stage, to setup all RestrainedLove session
+// variables. It is called from settings_to_globals() in llappviewer.cpp.
+// This can't be done in the constructor for RRInterface, because calling
+// gSavedSettings.get*() at that stage would cause crashes under Windows
+// (working fine under Linux): probably a race condition in constructors.
+
+//static
+void RRInterface::init()
+{
+	gRRenabled = gSavedSettings.getBOOL("RestrainedLove");
+	if (gRRenabled)
+	{
+		sRRNoSetEnv = gSavedSettings.getBOOL("RestrainedLoveNoSetEnv");
+		sRestrainedLoveDebug = gSavedSettings.getBOOL("RestrainedLoveDebug");
+		sUntruncatedEmotes = gSavedSettings.getBOOL("RestrainedLoveUntruncatedEmotes");
+		sCanOoc = gSavedSettings.getBOOL("RestrainedLoveCanOoc");
+		sRecvimMessage = gSavedSettings.getString("RestrainedLoveRecvimMessage");
+		sSendimMessage = gSavedSettings.getString("RestrainedLoveSendimMessage");
+		sBlackList = gSavedSettings.getString("RestrainedLoveBlacklist");
+
+		// Info commands (not "blacklistable").
+		sCommandsMap.insert(rr_command_entry_t("version", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("versionnew", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("versionnum", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getcommand", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getstatus", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getstatusall", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getsitid", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getoutfit", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getattach", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getinv", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getinvworn", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getpath", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getpathnew", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("findfolder", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getgroup", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getdebug_", RR_INFO));
+		sCommandsMap.insert(rr_command_entry_t("getenv_", RR_INFO));
+
+		// Miscellaneous non-info commands that are not "blacklistable".
+		sCommandsMap.insert(rr_command_entry_t("notify", RR_MISCELLANEOUS));
+		sCommandsMap.insert(rr_command_entry_t("clear", RR_MISCELLANEOUS));
+		sCommandsMap.insert(rr_command_entry_t("detachme%f", RR_MISCELLANEOUS));
+		sCommandsMap.insert(rr_command_entry_t("setrot%f", RR_MISCELLANEOUS));
+		sCommandsMap.insert(rr_command_entry_t("adjustheight%f", RR_MISCELLANEOUS));
+		sCommandsMap.insert(rr_command_entry_t("emote", RR_MISCELLANEOUS));
+
+		// Normal commands, "blacklistable".
+
+		// Movement restrictions
+		sCommandsMap.insert(rr_command_entry_t("fly", RR_MOVE));
+		sCommandsMap.insert(rr_command_entry_t("temprun", RR_MOVE));
+		sCommandsMap.insert(rr_command_entry_t("alwaysrun", RR_MOVE));
+		sVanillaBlackList += "fly,temprun,alwaysrun,";
+
+		// Chat sending restrictions
+		sCommandsMap.insert(rr_command_entry_t("sendchat", RR_SENDCHAT));
+		sCommandsMap.insert(rr_command_entry_t("chatshout", RR_SENDCHAT));
+		sCommandsMap.insert(rr_command_entry_t("chatnormal", RR_SENDCHAT));
+		sCommandsMap.insert(rr_command_entry_t("chatwhisper", RR_SENDCHAT));
+		sVanillaBlackList += "sendchat,chatshout,chatnormal,chatwhisper,";
+
+		// Chat receiving restrictions
+		sCommandsMap.insert(rr_command_entry_t("recvchat", RR_RECEIVECHAT ));
+		sCommandsMap.insert(rr_command_entry_t("recvchat_sec", RR_RECEIVECHAT ));
+		sCommandsMap.insert(rr_command_entry_t("recvchatfrom", RR_RECEIVECHAT ));
+		sVanillaBlackList += "recvchat,recvchat_sec,recvchatfrom,";
+
+		// Chat on private channels restrictions
+		sCommandsMap.insert(rr_command_entry_t("sendchannel", RR_CHANNEL));
+		sCommandsMap.insert(rr_command_entry_t("sendchannel_sec", RR_CHANNEL));
+		sRolePlayBlackList += "sendchannel,sendchannel_sec,";
+		sVanillaBlackList += "sendchannel,sendchannel_sec,";
+
+		// Chat and emotes redirections
+		sCommandsMap.insert(rr_command_entry_t("redirchat", RR_REDIRECTION));
+		sCommandsMap.insert(rr_command_entry_t("rediremote", RR_REDIRECTION));
+
+		// Emotes restrictions
+		sCommandsMap.insert(rr_command_entry_t("recvemote", RR_EMOTE));
+		sCommandsMap.insert(rr_command_entry_t("recvemote_sec", RR_EMOTE));
+		sCommandsMap.insert(rr_command_entry_t("recvemotefrom", RR_EMOTE));
+		sRolePlayBlackList += "recvemote,recvemote_sec,recvemotefrom,";
+		sVanillaBlackList += "recvemote,recvemote_sec,recvemotefrom,";
+
+		// Instant messaging restrictions
+		sCommandsMap.insert(rr_command_entry_t("sendim", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("sendim_sec", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("sendimto", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("startim", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("startimto", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("recvim", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("recvim_sec", RR_INSTANTMESSAGE));
+		sCommandsMap.insert(rr_command_entry_t("recvimfrom", RR_INSTANTMESSAGE));
+		sRolePlayBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
+		sVanillaBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
+
+		// Teleport restrictions
+		sCommandsMap.insert(rr_command_entry_t("tplm", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("tploc", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("tplure", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("tplure_sec", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("sittp", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("standtp", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("tpto%f", RR_TELEPORT));
+		sCommandsMap.insert(rr_command_entry_t("accepttp", RR_TELEPORT));
+		sVanillaBlackList += "tplm,tploc,tplure,tplure_sec,sittp,standtp,accepttp,"; // tpto used by teleporters: allow
+
+		// Inventory access restrictions
+		sCommandsMap.insert(rr_command_entry_t("showinv", RR_INVENTORY));
+		sCommandsMap.insert(rr_command_entry_t("viewnote", RR_INVENTORY));
+		sCommandsMap.insert(rr_command_entry_t("viewscript", RR_INVENTORY));
+		sCommandsMap.insert(rr_command_entry_t("viewtexture", RR_INVENTORY));
+		sCommandsMap.insert(rr_command_entry_t("unsharedwear", RR_INVENTORYLOCK));
+		sCommandsMap.insert(rr_command_entry_t("unsharedunwear", RR_INVENTORYLOCK));
+		sRolePlayBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
+		sVanillaBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
+
+		// Building restrictions
+		sCommandsMap.insert(rr_command_entry_t("edit", RR_BUILD));
+		sCommandsMap.insert(rr_command_entry_t("editobj", RR_BUILD));
+		sCommandsMap.insert(rr_command_entry_t("rez", RR_BUILD));
+		sRolePlayBlackList += "edit,editobj,rez,";
+		sVanillaBlackList += "edit,editobj,rez,";
+
+		// Sitting restrictions
+		sCommandsMap.insert(rr_command_entry_t("unsit", RR_SIT));
+		sCommandsMap.insert(rr_command_entry_t("unsit%f", RR_SIT));
+		sCommandsMap.insert(rr_command_entry_t("sit", RR_SIT));
+		sCommandsMap.insert(rr_command_entry_t("sit%f", RR_SIT));
+		sVanillaBlackList += "unsit,unsit%f,sit,sit%f,";
+
+		// Locking commands
+		sCommandsMap.insert(rr_command_entry_t("detach", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("detachthis", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("detachallthis", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("detachthis_except", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("detachallthis_except", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("attachthis", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("attachallthis", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("attachthis_except", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("attachallthis_except", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("addattach", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("remattach", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("addoutfit", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("remoutfit", RR_LOCK));
+		sCommandsMap.insert(rr_command_entry_t("defaultwear", RR_LOCK));
+		sVanillaBlackList += "detach,detachthis,detachallthis,detachthis_except,detachallthis_except,attachthis,attachallthis,attachthis_except,attachallthis_except,addattach,remattach,addoutfit,remoutfit,defaultwear,";
+
+		// Detach/remove commands
+		sCommandsMap.insert(rr_command_entry_t("detach%f", RR_DETACH));
+		sCommandsMap.insert(rr_command_entry_t("detachall%f", RR_DETACH));
+		sCommandsMap.insert(rr_command_entry_t("detachthis%f", RR_DETACH));
+		sCommandsMap.insert(rr_command_entry_t("detachallthis%f", RR_DETACH));
+		sCommandsMap.insert(rr_command_entry_t("remattach%f", RR_DETACH));
+		sCommandsMap.insert(rr_command_entry_t("remoutfit%f", RR_DETACH));
+
+		// Attach/wear commands
+		sCommandsMap.insert(rr_command_entry_t("attach%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachover%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachoverorreplace%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachall%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachallover%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachalloverorreplace%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachthis%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachthisoverorreplace%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachallthis%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachallthisover%f", RR_ATTACH));
+		sCommandsMap.insert(rr_command_entry_t("attachallthisoverorreplace%f", RR_ATTACH));
+
+		// Touch restrictions
+		sCommandsMap.insert(rr_command_entry_t("fartouch", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchfar", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchall", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchworld", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchthis", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchme", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchattach", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchattachself", RR_TOUCH));
+		sCommandsMap.insert(rr_command_entry_t("touchattachother", RR_TOUCH));
+		sVanillaBlackList += "fartouch,touchfar,touchall,touchworld,touchthis,touchme,touchattach,touchattachself,touchattachother,";
+
+		// Location/mapping restrictions
+		sCommandsMap.insert(rr_command_entry_t("showworldmap", RR_LOCATION));
+		sCommandsMap.insert(rr_command_entry_t("showminimap", RR_LOCATION));
+		sCommandsMap.insert(rr_command_entry_t("showloc", RR_LOCATION));
+		sRolePlayBlackList += "showworldmap,showminimap,showloc,";
+		sVanillaBlackList += "showworldmap,showminimap,showloc,";
+
+		// Name viewing restrictions
+		sCommandsMap.insert(rr_command_entry_t("shownames", RR_NAME));
+		sCommandsMap.insert(rr_command_entry_t("showhovertextall", RR_NAME));
+		sCommandsMap.insert(rr_command_entry_t("showhovertext", RR_NAME));
+		sCommandsMap.insert(rr_command_entry_t("showhovertexthud", RR_NAME));
+		sCommandsMap.insert(rr_command_entry_t("showhovertextworld", RR_NAME));
+		sRolePlayBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
+		sVanillaBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
+
+		// Group restrictions
+		sCommandsMap.insert(rr_command_entry_t("setgroup", RR_GROUP));
+		sCommandsMap.insert(rr_command_entry_t("setgroup%f", RR_GROUP));
+		sRolePlayBlackList += "setgroup,";
+		sVanillaBlackList += "setgroup,";	// @setgroup=force May be used as a helper: allow
+
+		// Permissions/extra-restriction commands.
+		sCommandsMap.insert(rr_command_entry_t("permissive", RR_PERM));
+		sCommandsMap.insert(rr_command_entry_t("acceptpermission", RR_PERM));
+		sVanillaBlackList += "permissive,acceptpermission,";
+
+		// Debug settings commands.
+		sCommandsMap.insert(rr_command_entry_t("setdebug", RR_DEBUG));
+		sCommandsMap.insert(rr_command_entry_t("setdebug_%f", RR_DEBUG));
+		sRolePlayBlackList += "setdebug";
+		sVanillaBlackList += "setdebug,setdebug_%f,";
+
+		if (!sRRNoSetEnv) {
+			sCommandsMap.insert(rr_command_entry_t("setenv", RR_ENVIRONMENT));
+			sCommandsMap.insert(rr_command_entry_t("setenv_%f", RR_ENVIRONMENT));
+		}
+		sVanillaBlackList += "setenv";
+
+		llinfos << "RestrainedLove enabled and initialized." << llendl;
+	}
 }
 
 void RRInterface::refreshTPflag(bool save)
@@ -345,7 +573,7 @@ BOOL RRInterface::containsSubstr(std::string action)
 	LLStringUtil::toLower(action);
 //	llinfos << "looking for " << action << llendl;
 	while (it != mSpecialObjectBehaviours.end()) {
-		if (it->second.find(action) != -1) {
+		if (it->second.find(action) != std::string::npos) {
 //			llinfos << "found " << it->second << llendl;
 			return TRUE;
 		}
@@ -364,7 +592,7 @@ BOOL RRInterface::containsWithoutException(std::string action, std::string excep
 	LLUUID uuid;
 	
 	// 1. If except is empty, behave like contains(), but looking for both action and action_sec
-	if (except == "") {
+	if (except.empty()) {
 		return(contains(action) || contains(action_sec));
 	}
 
@@ -536,6 +764,33 @@ FolderLock RRInterface::isFolderLockedWithoutExceptionAux(LLInventoryCategory* c
 	return FolderLock_unlocked; // this should never happen since list_of_commands is supposed to contain at least one "{attach|detach}[all]this" restriction
 }
 
+bool RRInterface::isBlacklisted(std::string command, bool force)
+{
+	if (sBlackList.empty()) return false;
+
+	size_t i = command.find('_');
+	if (i != std::string::npos && command.find("_sec") != i
+		&& command.find("_except") != i) {
+		command = command.substr(0, i + 1);
+	}
+	if (force) {
+		command += "%f";
+	}
+
+	rr_command_map_t::iterator it = sCommandsMap.find(command);
+	if (it == sCommandsMap.end()) {
+		return false;
+	}
+
+	S32 type = it->second;
+	if (type == (S32)RR_INFO || type == (S32)RR_MISCELLANEOUS) {
+		return false;
+	}
+
+	std::string blacklist = "," + sBlackList + ",";
+	return blacklist.find("," + command + ",") != std::string::npos;
+}
+
 BOOL RRInterface::add(LLUUID object_uuid, std::string action, std::string option)
 {
 	if (sRestrainedLoveDebug) {
@@ -549,14 +804,11 @@ BOOL RRInterface::add(LLUUID object_uuid, std::string action, std::string option
 		// Notify if needed
 		notify(object_uuid, action, "=n");
 
-		if (gSavedSettings.controlExists("RestrainedLoveBlacklist")) {
-			// Check the action against the blacklist
-			std::string blacklist = "," + gSavedSettings.getString("RestrainedLoveBlacklist") + ",";
-			if (blacklist.find("," + canon_action + ",") != std::string::npos)
-			{
-				llinfos << "Blacklisted RestrainedLove command: " << action << " for object " << object_uuid.asString() << llendl;
-				return TRUE;
-			}
+		// Check the action against the blacklist
+		if (isBlacklisted(canon_action)) {
+			llinfos << "Blacklisted RestrainedLove command: " << action
+					<< "=n for object " << object_uuid.asString() << llendl;
+			return TRUE;
 		}
 
 		// Actions to do BEFORE inserting the new behav
@@ -660,7 +912,7 @@ BOOL RRInterface::remove(LLUUID object_uuid, std::string action, std::string opt
 	}
 
 	std::string canon_action = action;
-	if (option!="") action += ":" + option;
+	if (!option.empty()) action += ":" + option;
 	
 	// Notify if needed
 	notify(object_uuid, action, "=y");
@@ -708,7 +960,7 @@ BOOL RRInterface::clear(LLUUID object_uuid, std::string command)
 	}
 
 	// Notify if needed
-	notify(object_uuid, "clear" + (command!="" ? ":" + command : ""), "");
+	notify(object_uuid, "clear" + (command.empty() ? "" : ":" + command), "");
 	
 	RRMAP::iterator it;
 	it = mSpecialObjectBehaviours.begin();
@@ -716,7 +968,8 @@ BOOL RRInterface::clear(LLUUID object_uuid, std::string command)
 		if (sRestrainedLoveDebug) {
 			llinfos << "  checking " << it->second << llendl;
 		}
-		if (it->first == object_uuid.asString() && (command == "" || it->second.find(command) != -1)) {
+		if (it->first == object_uuid.asString() &&
+			(command.empty() || it->second.find(command) != std::string::npos)) {
 			notify(object_uuid, it->second, "=y");
 			if (sRestrainedLoveDebug) {
 				llinfos << it->second << " => removed. " << llendl;
@@ -790,18 +1043,23 @@ std::deque<std::string> RRInterface::parse(std::string str, std::string sep)
 {
 	size_t ind;
 	size_t length = sep.length();
+	std::string token;
 	std::deque<std::string> res;
 	
 	do {
 		ind = str.find(sep);
-		if (ind != -1) {
-			res.push_back(str.substr(0, ind));
+		if (ind != std::string::npos) {
+			token = str.substr (0, ind);
+			if (!token.empty())
+			{
+				res.push_back(token);
+			}
 			str = str.substr(ind + length);
 		}
-		else {
+		else if (!str.empty()) {
 			res.push_back(str);
 		}
-	} while (ind != -1);
+	} while (ind != std::string::npos);
 	
 	return res;
 }
@@ -825,7 +1083,7 @@ void RRInterface::notify(LLUUID object_uuid, std::string action, std::string suf
 			rule = rule.substr(length); // keep right part only(here "2222;tp")
 			tokens = parse(rule, ";");
 			size = tokens.size();
-			if (size == 1 || (size > 1 && action.find(tokens[1]) != -1)) {
+			if (size == 1 || (size > 1 && action.find(tokens[1]) != std::string::npos)) {
 				answerOnChat(tokens[0], "/" + action + suffix); // suffix can be "=n", "=y" or whatever else we want, "/" is needed to avoid some clever griefing
 			}
 		}
@@ -835,15 +1093,15 @@ void RRInterface::notify(LLUUID object_uuid, std::string action, std::string suf
 
 BOOL RRInterface::parseCommand(std::string command, std::string& behaviour, std::string& option, std::string& param)
 {
-	size_t ind = command.find("=");
+	size_t ind = command.find('=');
 	behaviour = command;
-	option = "";
-	param = "";
-	if (ind != -1) {
+	option.clear();
+	param.clear();
+	if (ind != std::string::npos) {
 		behaviour = command.substr(0, ind);
 		param = command.substr(ind + 1);
-		ind = behaviour.find(":");
-		if (ind != -1) {
+		ind = behaviour.find(':');
+		if (ind != std::string::npos) {
 			option = behaviour.substr(ind + 1);
 			behaviour = behaviour.substr(0, ind); // keep in this order(option first, then behav) or crash
 		}
@@ -855,7 +1113,7 @@ BOOL RRInterface::parseCommand(std::string command, std::string& behaviour, std:
 BOOL RRInterface::handleCommand(LLUUID uuid, std::string command)
 {
 	// 1. check the command is actually a single one or a list of commands separated by ","
-	if (command.find(",") != -1) {
+	if (command.find(',') != std::string::npos) {
 		BOOL res = TRUE;
 		std::deque<std::string> list_of_commands = parse(command, ",");
 		for (U32 i = 0; i < list_of_commands.size(); ++i) {
@@ -905,6 +1163,7 @@ BOOL RRInterface::handleCommand(LLUUID uuid, std::string command)
 			uuid.setNull();
 			return answerOnChat(param, getStatus(uuid, option));
 		}
+		else if (behav == "getcommand") return answerOnChat(param, getCommand(option));
 		else if (behav == "getinv") return answerOnChat(param, getInventoryList(option));
 		else if (behav == "getinvworn") return answerOnChat(param, getInventoryList(option, TRUE));
 		else if (behav == "getsitid") return answerOnChat(param, getSitTargetId().asString());
@@ -994,7 +1253,9 @@ static void force_sit(LLUUID object_uuid)
 		gMessageSystem->nextBlockFast(_PREHASH_TargetObject);
 		gMessageSystem->addUUIDFast(_PREHASH_TargetID, object->mID);
 		gMessageSystem->addVector3Fast(_PREHASH_Offset,
-			gAgent.calcFocusOffset(object, gAgent.getPositionAgent(),(S32)0.0f,(S32)0.0f));
+									   gAgent.calcFocusOffset(object,
+															  gAgent.getPositionAgent(),
+															  0, 0));
 		object->getRegion()->sendReliableMessage();
 	}
 }
@@ -1004,6 +1265,17 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	if (sRestrainedLoveDebug) {
 		llinfos << command << "     " << option << llendl;
 	}
+
+	// Check the command against the blacklist
+	if (isBlacklisted(command, true)) {
+		if (!option.empty()) {
+			command += ":" + option;
+		}
+		llinfos << "Blacklisted RestrainedLove command: " << command
+				<< "=force for object " << object_uuid.asString() << llendl;
+		return TRUE;
+	}
+
 	if (command == "sit") { // sit:UUID
 		BOOL allowed_to_sittp = TRUE;
 		if (!isAllowed(object_uuid, "sittp")) {
@@ -1037,7 +1309,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 		}
 	}
 	else if (command == "remoutfit") { // remoutfit:shoes
-		if (option == "") {
+		if (option.empty()) {
 			removeWearableFromAvatar(WT_GLOVES);
 			removeWearableFromAvatar(WT_JACKET);
 			removeWearableFromAvatar(WT_PANTS);
@@ -1061,9 +1333,9 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 			else forceDetachByName(option, FALSE, TRUE); // remove by category(in RLV share)
 		}
 	}
-	else if (command == "detach" || command == "remattach") { // detach:chest=force OR detach:restraints/cuffs=force(@remattach is a synonym)
+	else if (command == "detach" || command == "remattach") { // detach:chest=force OR detach:restraints/cuffs=force (@remattach is a synonym)
 		LLViewerJointAttachment* attachpt = findAttachmentPointFromName(option, true); // exact name
-		if (attachpt != NULL || option == "") return forceDetach(option); // remove by attach pt
+		if (attachpt != NULL || option.empty()) return forceDetach(option); // remove by attach pt
 		else forceDetachByName(option, FALSE, TRUE);
 	}
 	else if (command == "detachme") { // detachme=force to detach this object specifically
@@ -1125,7 +1397,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachthis" || command == "addoutfitthis") { // attachthis=force to attach the folder containing this object
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), FALSE, AttachHow_over_or_replace); // Will have to be changed back to AttachHow_replace eventually, but not before a clear and early communication
@@ -1136,7 +1408,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachthisover" || command == "addoutfitthisover") { // attachthisover=force to attach the folder containing this object
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), FALSE, AttachHow_over);
@@ -1147,7 +1419,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachthisoverorreplace" || command == "addoutfitthisoverorreplace") { // attachthisoverorreplace=force to attach the folder containing this object
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), FALSE, AttachHow_over_or_replace);
@@ -1167,7 +1439,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachallthis" || command == "addoutfitallthis") { // attachallthis=force to attach the folder containing this object and its subfolders
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), TRUE, AttachHow_over_or_replace); // Will have to be changed back to AttachHow_replace eventually, but not before a clear and early communication
@@ -1178,7 +1450,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachallthisover" || command == "addoutfitallthisover") { // attachallthisover=force to attach the folder containing this object and its subfolders
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), TRUE, AttachHow_over);
@@ -1189,7 +1461,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 	else if (command == "attachallthisoverorreplace" || command == "addoutfitallthisoverorreplace") { // attachallthisoverorreplace=force to attach the folder containing this object and its subfolders
 		BOOL res = TRUE;
 		std::string pathes_str = getFullPath(getItem(object_uuid), option);
-		if (pathes_str != "") {
+		if (!pathes_str.empty()) {
 			std::deque<std::string> pathes = parse(pathes_str, ",");
 			for (U32 i = 0; i < pathes.size(); ++i) {
 				res &= forceAttach(pathes.at(i), TRUE, AttachHow_over_or_replace);
@@ -1238,7 +1510,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 		LLVOAvatar* avatar = gAgent.getAvatarObject();
 		if (avatar) {
 			F32 val = (F32)atoi(option.c_str()) / 100.0f;
-			size_t i = option.find(";");
+			size_t i = option.find(';');
 			if (i != std::string::npos && i + 1 < option.length()) {
 				F32 scalar = (F32)atof(option.substr(i + 1).c_str());
 				if (scalar != 0.0f) {
@@ -1247,7 +1519,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 					}
 					val = (atof(option.c_str()) - avatar->getPelvisToFoot()) * scalar;
 					option = option.substr(i + 1);
-					i = option.find(";");
+					i = option.find(';');
 					if (i != std::string::npos && i + 1 < option.length()) {
 						val += (F32)atof(option.substr(i + 1).c_str());
 					}
@@ -1302,7 +1574,7 @@ void RRInterface::removeWearableFromAvatar(EWearableType type)
 	if (!item) return;
 	std::string name = item->getName();
 	LLStringUtil::toLower(name);
-	if (name.find("nostrip") != -1) return;
+	if (name.find("nostrip") != std::string::npos) return;
 	gAgent.removeWearable(type);
 }
 
@@ -1345,19 +1617,19 @@ std::string RRInterface::crunchEmote(std::string msg, U32 truncateTo) {
 	if (msg.find("/me ") == 0 || msg.find("/me'") == 0) {
 		// Only allow emotes without "spoken" text.
 		// Forbid text containing any symbol which could be used as quotes.
-		if (msg.find('"') != -1 || msg.find("''") != -1
-		    || msg.find('(')  != -1 || msg.find(')')  != -1
-		    || msg.find(" -") != -1 || msg.find("- ") != -1
-		    || msg.find('*')  != -1 || msg.find('=')  != -1
-		    || msg.find('^')  != -1 || msg.find('_')  != -1
-		    || msg.find('?')  != -1 || msg.find('~')  != -1)
+		if (msg.find('"') != std::string::npos || msg.find("''") != std::string::npos
+		    || msg.find('(')  != std::string::npos || msg.find(')')  != std::string::npos
+		    || msg.find(" -") != std::string::npos || msg.find("- ") != std::string::npos
+		    || msg.find('*')  != std::string::npos || msg.find('=')  != std::string::npos
+		    || msg.find('^')  != std::string::npos || msg.find('_')  != std::string::npos
+		    || msg.find('?')  != std::string::npos || msg.find('~')  != std::string::npos)
 		{
 			crunched = "...";
 		}
-		else if (truncateTo > 0 && !contains("emote")) {
+		else if (truncateTo > 0 && !sUntruncatedEmotes && !contains("emote")) {
 			// Only allow short emotes.
 			size_t i = msg.find('.');
-			if (i != -1) {
+			if (i != std::string::npos) {
 				crunched = msg.substr(0, ++i);
 			}
 			if (crunched.length() > truncateTo) {
@@ -1457,7 +1729,7 @@ std::string RRInterface::getAttachments(std::string attachpt)
 		llwarns << "NULL avatar pointer. Aborting." << llendl;
 		return res;
 	}
-	if (attachpt == "") res += "0"; // to match the LSL macros
+	if (attachpt.empty()) res += "0"; // to match the LSL macros
 	for (LLVOAvatar::attachment_map_t::iterator iter = avatar->mAttachmentPoints.begin(); 
 		iter != avatar->mAttachmentPoints.end(); iter++)
 	{
@@ -1468,7 +1740,7 @@ std::string RRInterface::getAttachments(std::string attachpt)
 		if (sRestrainedLoveDebug) {
 			llinfos << "trying <" << name << ">" << llendl;
 		}
-		if (attachpt == "" || attachpt == name) {
+		if (attachpt.empty() || attachpt == name) {
 			if (attachment->getNumObjects() > 0) res+="1"; //attachment->getName();
 			else res += "0";
 		}
@@ -1478,27 +1750,78 @@ std::string RRInterface::getAttachments(std::string attachpt)
 
 std::string RRInterface::getStatus(LLUUID object_uuid, std::string rule)
 {
-	std::string res = "";
+	std::string res;
 	std::string name;
 	RRMAP::iterator it;
 	if (object_uuid.isNull()) {
 		it = mSpecialObjectBehaviours.begin();
-	}
-	else {
+	} else {
 		it = mSpecialObjectBehaviours.find(object_uuid.asString());
 	}
-	bool is_first = true;
 	while (it != mSpecialObjectBehaviours.end() &&
-			(object_uuid.isNull() || it != mSpecialObjectBehaviours.upper_bound(object_uuid.asString()))
-	)
+		   (object_uuid.isNull() ||
+			it != mSpecialObjectBehaviours.upper_bound(object_uuid.asString())))
 	{
-		if (rule == "" || it->second.find(rule) != -1) {
-			//if (!is_first) 
+		if (rule.empty() || it->second.find(rule) != std::string::npos) {
 			res += "/";
 			res += it->second;
-			is_first = false;
 		}
 		it++;
+	}
+	return res;
+}
+
+std::string RRInterface::getCommand(std::string match, bool blacklist)
+{
+	std::string res, command, name, temp;
+	size_t i;
+	bool force;
+	// When RestrainedLoveExtendedGetcommand is TRUE, @getcommand returns
+	// @behav=force commands as "behav%f" in excess to their @behave=y/n version
+	// (returned as "behav").
+	bool strip_force = !gSavedSettings.getBOOL("RestrainedLoveExtendedGetcommand");
+	LLStringUtil::toLower(match);
+	rr_command_map_t::iterator it;
+	for (it = sCommandsMap.begin(); it != sCommandsMap.end(); it++) {
+		command = it->first;
+		i = command.find("%f");
+		force = i != std::string::npos;
+		name = force ? command.substr(0, i) : command;
+		temp = res + "/";
+		if (match.empty() || command.find(match) != std::string::npos) {
+			if (strip_force &&force) {
+				command = name;
+			}
+			if (temp.find("/" + command + "/") == std::string::npos
+				&& (blacklist || !isBlacklisted(name, force))) {
+				res += "/" + command;
+			}
+		}
+	}
+	return res;
+}
+
+std::string RRInterface::getCommandsByType(S32 type, bool blacklist)
+{
+	std::string res, command, name, temp;
+	S32 cmdtype;
+	size_t i;
+	bool force;
+	rr_command_map_t::iterator it;
+	for (it = sCommandsMap.begin(); it != sCommandsMap.end(); it++) {
+		cmdtype = (S32)it->second;
+		if (cmdtype == type)
+		{
+			command = it->first;
+			i = command.find("%f");
+			force = i != std::string::npos;
+			name = force ? command.substr(0, i) : command;
+			temp = res + "/";
+			if (temp.find("/" + command + "/") == std::string::npos
+				&& (blacklist || !isBlacklisted(name, force))) {
+				res += "/" + command;
+			}
+		}
 	}
 	return res;
 }
@@ -1519,7 +1842,7 @@ BOOL RRInterface::forceDetach(std::string attachpt)
 		if (sRestrainedLoveDebug) {
 			llinfos << "trying <" << name << ">" << llendl;
 		}
-		if (attachpt == "" || attachpt == name) {
+		if (attachpt.empty() || attachpt == name) {
 			if (sRestrainedLoveDebug) {
 				llinfos << "found => detaching" << llendl;
 			}
@@ -1657,7 +1980,7 @@ std::deque<std::string> RRInterface::getListOfRestrictions(LLUUID object_uuid, s
 			(object_uuid.isNull() || it != mSpecialObjectBehaviours.upper_bound(object_uuid.asString()))
 	)
 	{
-		if (rule == "" || it->second.find(rule) != -1) {
+		if (rule.empty() || it->second.find(rule) != std::string::npos) {
 			res.push_back(it->second);
 		}
 		it++;
@@ -1671,7 +1994,7 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 	LLInventoryModel::cat_array_t* cats;
 	LLInventoryModel::item_array_t* items;
 	LLInventoryCategory* root = NULL;
-	if (path == "") root = getRlvShare();
+	if (path.empty()) root = getRlvShare();
 	else root = getCategoryUnderRlvShare(path);
 	
 	if (root) {
@@ -1686,7 +2009,7 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 			for (S32 i = 0; i < count; ++i) {
 				LLInventoryCategory* cat = cats->get(i);
 				std::string name = cat->getName();
-				if (name != "" && name[0] !=  '.') { // hidden folders => invisible to the list
+				if (!name.empty() && name[0] !=  '.') { // hidden folders => invisible to the list
 					if (found_one) res += ",";
 					res += name.c_str();
 					if (withWornInfo) {
@@ -1785,7 +2108,7 @@ std::string RRInterface::getWornItems(LLInventoryCategory* cat)
 							subRes = 1;
 						}
 					}
-					else if (cat_child->getName() != "" && cat_child->getName()[0] != '.') { // we don't want to include invisible folders, except the ones containing a no-mod item
+					else if (!cat_child->getName().empty() && cat_child->getName()[0] != '.') { // we don't want to include invisible folders, except the ones containing a no-mod item
 						// This is an actual sub-folder with several items and sub-folders inside,
 						// so retain its score to integrate it into the current one
 						// As it is a sub-folder, to integrate it we need to reduce its score first(consider "0" as "ignore")
@@ -1947,7 +2270,7 @@ void RRInterface::renameAttachment(LLInventoryItem* item, LLViewerJointAttachmen
 LLInventoryCategory* RRInterface::getCategoryUnderRlvShare(std::string catName, LLInventoryCategory* root)
 {
 	if (root == NULL) root = getRlvShare();
-	if (catName == "") return root;
+	if (catName.empty()) return root;
 	LLStringUtil::toLower(catName);
 	std::deque<std::string> tokens = parse(catName, "/");
 
@@ -1957,8 +2280,8 @@ LLInventoryCategory* RRInterface::getCategoryUnderRlvShare(std::string catName, 
 	S32 nb = tokens.size();
 	for (S32 i = 0; i < nb; ++i) {
 		std::string tok = tokens[i];
-		S32 ind = tok.find("|");
-		if (ind != -1) {
+		S32 ind = tok.find('|');
+		if (ind != std::string::npos) {
 			tok = tok.substr(0, ind);
 			tokens[i] = tok;
 		}
@@ -1981,7 +2304,7 @@ LLInventoryCategory* RRInterface::getCategoryUnderRlvShare(std::string catName, 
 			for (S32 i = 0; i < count; ++i) {
 				cat = cats->get(i);
 				std::string name = cat->getName();
-				if (name != "" && name[0] !=  '.') { // ignore invisible folders
+				if (!name.empty() && name[0] !=  '.') { // ignore invisible folders
 					LLStringUtil::toLower(name);
 					
 					S32 size = match(tokens, name, exact_match);
@@ -2040,7 +2363,7 @@ LLInventoryCategory* RRInterface::findCategoryUnderRlvShare(std::string catName,
 		std::string name = root->getName();
 		LLStringUtil::toLower(name);
 		// We can't find invisible folders('.') and dropped folders('~')
-		if (name != "" && name[0] != '.' && name[0] != '~' && findMultiple(tokens, name)) return root;
+		if (!name.empty() && name[0] != '.' && name[0] != '~' && findMultiple(tokens, name)) return root;
 	}
 	// didn't find anything
 	return NULL;
@@ -2106,8 +2429,9 @@ LLViewerJointAttachment* RRInterface::findAttachmentPointFromName(std::string ob
 				if (objectName == attachName) return attachment;
 			} else {
 				size_t ind = objectName.rfind(attachName);
-				if (ind != -1 && objectName.substr(0, ind).find('(') != -1
-					&& objectName.substr(ind).find(')') != -1) {
+				if (ind != std::string::npos
+					&& objectName.substr(0, ind).find('(') != std::string::npos
+					&& objectName.substr(ind).find(')') != std::string::npos) {
 					Candidate new_candidate;
 					new_candidate.index = ind;
 					new_candidate.length = attachName.length();
@@ -2271,7 +2595,7 @@ BOOL RRInterface::forceAttach(std::string category, BOOL recursive, AttachHow ho
 {
 	// recursive is TRUE in the case of an attachall command
 	// find the category under RLV shared folder
-	if (category == "") return TRUE; // just a safety
+	if (category.empty()) return TRUE; // just a safety
 	LLInventoryCategory* cat = getCategoryUnderRlvShare(category);
 	BOOL isRoot = (getRlvShare() == cat);
 	BOOL replacing = (how == AttachHow_replace || how == AttachHow_over_or_replace); // we're replacing for now, but the name of the category could decide otherwise
@@ -2386,7 +2710,7 @@ BOOL RRInterface::forceAttach(std::string category, BOOL recursive, AttachHow ho
 					}
 				}
 
-				if (recursive && cat_child->getName().find(".") != 0) { // attachall and not invisible)
+				if (recursive && cat_child->getName().find('.') != 0) { // attachall and not invisible)
 					forceAttach(getFullPath(cat_child), recursive, how);
 				}
 			}
@@ -2398,7 +2722,7 @@ BOOL RRInterface::forceAttach(std::string category, BOOL recursive, AttachHow ho
 BOOL RRInterface::forceDetachByName(std::string category, BOOL recursive, BOOL handle_nostrip)
 {
 	// find the category under RLV shared folder
-	if (category == "") return TRUE; // just a safety
+	if (category.empty()) return TRUE; // just a safety
 	LLInventoryCategory* cat = getCategoryUnderRlvShare(category);
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
 	if (!avatar) return FALSE;
@@ -2409,7 +2733,7 @@ BOOL RRInterface::forceDetachByName(std::string category, BOOL recursive, BOOL h
 		if (handle_nostrip) {
 			std::string name = cat->getName();
 			LLStringUtil::toLower(name);
-			if (name.find("nostrip") != -1) return false;
+			if (name.find("nostrip") != std::string::npos) return false;
 		}
 
 		LLInventoryModel::cat_array_t* cats;
@@ -2467,7 +2791,7 @@ BOOL RRInterface::forceDetachByName(std::string category, BOOL recursive, BOOL h
 				if (handle_nostrip) {
 					std::string name = cat_child->getName();
 					LLStringUtil::toLower(name);
-					if (name.find("nostrip") != -1) continue;
+					if (name.find("nostrip") != std::string::npos) continue;
 				}
 
 				LLInventoryModel::cat_array_t* cats_grandchildren; // won't be used here
@@ -2498,7 +2822,7 @@ BOOL RRInterface::forceDetachByName(std::string category, BOOL recursive, BOOL h
 					}
 				}
 
-				if (recursive && cat_child->getName().find(".") != 0) { // detachall and not invisible)
+				if (recursive && cat_child->getName().find('.') != 0) { // detachall and not invisible)
 					forceDetachByName(getFullPath(cat_child), recursive, handle_nostrip);
 				}
 			}
@@ -2542,14 +2866,14 @@ BOOL RRInterface::forceTeleport(std::string location)
 std::string RRInterface::stringReplace(std::string s, std::string what, std::string by, BOOL caseSensitive /* = FALSE */)
 {
 //	llinfos << "trying to replace <" << what << "> in <" << s << "> by <" << by << ">" << llendl;
-	if (what == "" || what == " ") return s; // avoid an infinite loop
+	if (what.empty() || what == " ") return s; // avoid an infinite loop
 	size_t ind;
 	size_t old_ind = 0;
 	size_t len_what = what.length();
 	size_t len_by = by.length();
 	if (len_by == 0) len_by = 1; // avoid an infinite loop
 	
-	while ((ind = s.find("%20")) != -1) // unescape
+	while ((ind = s.find("%20")) != std::string::npos) // unescape
 	{
 		s = s.replace(ind, 3, " ");
 	}
@@ -2560,7 +2884,7 @@ std::string RRInterface::stringReplace(std::string s, std::string what, std::str
 		LLStringUtil::toLower(what);
 	}
 	
-	while ((ind = lower.find(what, old_ind)) != -1)
+	while ((ind = lower.find(what, old_ind)) != std::string::npos)
 	{
 //		llinfos << "ind=" << ind << "    old_ind=" << old_ind << llendl;
 		s = s.replace(ind, len_what, by);
@@ -3023,7 +3347,7 @@ BOOL RRInterface::forceDebugSetting(std::string command, std::string option)
 	allowed = mAllowedU32;
 	tmp = allowed;
 	LLStringUtil::toLower(tmp);
-	if ((ind = tmp.find("," + command + ",")) != -1) {
+	if ((ind = tmp.find("," + command + ",")) != std::string::npos) {
 		gSavedSettings.setU32(allowed.substr(++ind, command.length()), atoi(option.c_str()));
 		return TRUE;
 	}
@@ -3044,7 +3368,7 @@ std::string RRInterface::getDebugSetting(std::string command)
 	allowed = mAllowedU32;
 	tmp = allowed;
 	LLStringUtil::toLower(tmp);
-	if ((ind = tmp.find("," + command + ",")) != -1) {
+	if ((ind = tmp.find("," + command + ",")) != std::string::npos) {
 		res << gSavedSettings.getU32(allowed.substr(++ind, command.length()));
 	}
 	
@@ -3073,7 +3397,7 @@ std::string RRInterface::getFullPath(LLInventoryItem* item, std::string option, 
 		llinfos << "getFullPath(" << (item? item->getName(): "NULL") << ", " << option << ", " << full_list << ")" << llendl;
 	}
 	// Returns the path from the shared root to this object, or to the object worn at the attach point or clothing layer pointed by option if any
-	if (option != "") {
+	if (!option.empty()) {
 		item = NULL; // an option is specified => we don't want to check the item that issued the command, but something else that is currently worn(object or clothing)
 		
 		EWearableType wearable_type = gAgent.mRRInterface.getOutfitLayerAsType(option);
@@ -3308,7 +3632,7 @@ bool RRInterface::canAttachCategoryAux(LLInventoryCategory* folder, bool in_pare
 			cat = cats->get(i);
 			if (cat) {
 				std::string name = cat->getName();
-				if (name != "" && name[0] ==  '.' && findAttachmentPointFromName(name) != NULL) {
+				if (!name.empty() && name[0] ==  '.' && findAttachmentPointFromName(name) != NULL) {
 					if (!canAttachCategoryAux(cat, false, true, with_exceptions)) return false;
 				}
 			}
@@ -3408,7 +3732,7 @@ bool RRInterface::canDetachCategoryAux(LLInventoryCategory* folder, bool in_pare
 			cat = cats->get(i);
 			if (cat) {
 				std::string name = cat->getName();
-				if (name != "" && name[0] ==  '.' && findAttachmentPointFromName(name) != NULL) {
+				if (!name.empty() && name[0] ==  '.' && findAttachmentPointFromName(name) != NULL) {
 					if (!canDetachCategoryAux(cat, false, true)) return false;
 				}
 			}
@@ -3516,7 +3840,7 @@ bool RRInterface::canDetach(LLViewerInventoryItem* item, BOOL handle_nostrip /* 
 	if (handle_nostrip) {
 		std::string name = item->getName();
 		LLStringUtil::toLower(name);
-		if (name.find("nostrip") != -1) return false;
+		if (name.find("nostrip") != std::string::npos) return false;
 	}
 
 	if (item->getType() == LLAssetType::AT_OBJECT) {
@@ -3560,7 +3884,7 @@ bool RRInterface::canDetach(LLViewerObject* attached_object, BOOL handle_nostrip
 		if (handle_nostrip) {
 			std::string name = item->getName();
 			LLStringUtil::toLower(name);
-			if (name.find("nostrip") != -1) return false;
+			if (name.find("nostrip") != std::string::npos) return false;
 		}
 
 		LLVOAvatar* avatarp = gAgent.getAvatarObject();

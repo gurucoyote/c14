@@ -2,7 +2,7 @@ This is the edited version of the original readme file by Marine Kelley.
 The file has been edited to take into account the improvements by Henri Beauchamp, as well as the Cool VL Viewer.
 
 -------------
-Version 2.07.03.06
+Version 2.07.04.20
 
 
 WHAT IS IT ?
@@ -155,6 +155,16 @@ Since v1.23d you may set the RestrainedLoveAddReplace advanced setting to TRUE s
 
 RELEASE NOTES :
 ---------------
+2.07.04.20 (@versionnum = 2070420) by Henri Beauchamp:
+- Inclusion of Marine Kelley's change:
+	- fixed : Empty tokens in RLV commands ("@showloc=n,,showinv=n", "@showloc=n,") would raise a "failed command" alert, yet execute the command anyway.
+- Added: commands black-listing for role-players, non-BDSM users, etc. Also implemented a black-list floater.
+- Added: @getcommand[:partial_name_match]=channel to retreive the list of the available and non black-listed commands which name match partial_name_match (returns all non black-listed commands when partial_name_match is ommitted). Also, when the new RestrainedLoveExtendedGetcommand debug setting is set to TRUE, @getcommand returns "behav" for @behav=y/n commands and "behav%f" for @behav=force commands.
+- Added: RestrainedLoveUntruncatedEmotes setting to always prevent the truncation of emotes when chat is restricted (equivalent to a permanent @emote=add).
+- Bumped the nano version number (20) so that Marine's RLV (hopefully) won't ever collide again with mine (the nano was supposed to be reserved for builds, Marine... not for bugfixes...).
+- Some code cleanup.
+
+
 2.07.03.06 (@versionnum = 2070306) by Henri Beauchamp:
 - Inclusion of Marine Kelley's (upcoming) change:
 	- added : Make gestures activate/deactivate when wearing/removing items respectively through a script.

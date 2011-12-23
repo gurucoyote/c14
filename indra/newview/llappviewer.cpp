@@ -446,7 +446,11 @@ static void settings_to_globals()
 	LLFloaterView::setStackMinimizedRightToLeft(gSavedSettings.getBOOL("StackMinimizedRightToLeft"));
 	LLFloaterView::setStackScreenWidthFraction(gSavedSettings.getU32("StackScreenWidthFraction"));
 
-	LLFilePickerThread::setBlocking(gSavedSettings.getBOOL("BlockingFilePicker") != FALSE);
+#if LL_DARWIN
+	LLFilePickerThread::setBlocking(true);	// Apparently, Darwin doesn't like non-blocking file pickers...
+#else
+	LLFilePickerThread::setBlocking(gSavedSettings.getBOOL("BlockingFilePicker") == TRUE);
+#endif
 
 	LLSurface::setTextureSize(gSavedSettings.getU32("RegionTextureSize"));
 	
@@ -482,6 +486,10 @@ static void settings_to_globals()
 	gShowObjectUpdates = gSavedSettings.getBOOL("ShowObjectUpdates");
 	LLWorldMapView::sMapScale = gSavedSettings.getF32("MapScale");
 	LLHoverView::sShowHoverTips = gSavedSettings.getBOOL("ShowHoverTips");
+
+//MK
+	RRInterface::init();
+//mk
 }
 
 static void settings_modify()

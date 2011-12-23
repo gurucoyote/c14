@@ -3741,12 +3741,11 @@ void LLVOAvatar::idleUpdateTractorBeam()
 
 void LLVOAvatar::idleUpdateBelowWater()
 {
-	F32 avatar_height = (F32)(getPositionGlobal().mdV[VZ]);
-
-	F32 water_height;
-	water_height = getRegion()->getWaterHeight();
-
-	mBelowWater =  avatar_height < water_height;
+	if (getRegion())	// May be NULL on disconnect during TP
+	{
+		F32 avatar_height = (F32)(getPositionGlobal().mdV[VZ]);
+		mBelowWater =  avatar_height < getRegion()->getWaterHeight();
+	}
 }
 
 void LLVOAvatar::slamPosition()

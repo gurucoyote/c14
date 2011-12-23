@@ -2331,7 +2331,7 @@ void LLFolderBridge::buildContextMenu(LLMenuGL& menu, U32 flags)
 			mItems.push_back("Replace Outfit");
 			mItems.push_back("Take Off Items");
 			if (gAgent.mRRInterface.mContainsDetach &&
-				(!gSavedSettings.getBOOL("RestrainedLoveAddReplace") ||
+				(!gSavedSettings.getBOOL("RestrainedLoveAllowWear") ||
 				 gAgent.mRRInterface.mContainsDefaultwear))
 			{
 				mDisabledItems.push_back("Add To Outfit");

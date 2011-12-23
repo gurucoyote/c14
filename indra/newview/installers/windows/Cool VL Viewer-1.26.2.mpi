@@ -62,6 +62,9 @@ EnableResponseFiles
 Ext
 {.exe}
 
+ExtractMessage
+{The proprietary components are being extracted from the Snowglobe archive. Please wait...}
+
 ExtractSolidArchives
 {Before installation}
 
@@ -93,7 +96,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.5}
+{1.26.2.6}
 
 Language,ca
 {No}
@@ -199,6 +202,11 @@ SnowglobeArchiveCaption
 
 You can either let the "Snowglobe archive location" field blank and press "Next", in which case the installer will download the archive from Linden Lab's web site, extract the necessary components from it and then discard it, or you can fill-in the location field, in which case the installer will search for an existing archive in the provided directory and, on failure to find one, download it to that directory thus allowing you to reuse the downloaded archive for a future installation from scratch (updates don't need the archive).}
 
+SnowglobeArchiveConsoleText
+{When installing the viewer for the first time (or in a new directory), a few proprietary components need to be retrieved from the official Snowglobe v1.4.2 distribution (<%Snowglobe%>).
+
+You can either enter nothing at this step, in which case the installer will download the archive from Linden Lab's web site, extract the necessary components from it and then discard it, or you can give the path for the Snowglobe archive, in which case the installer will search for an existing archive in the provided directory and, on failure to find one, download it to that directory thus allowing you to reuse the downloaded archive for a future installation from scratch (updates don't need the archive).}
+
 SnowglobeDir
 {}
 
@@ -244,11 +252,17 @@ debug
 debugconsole
 {ShowConsole Switch Yes No {} {run installer with a debug console open}}
 
+destination
+{InstallDir String No No {} {set the installation directory}}
+
 mode
 {InstallMode Choice No No {Console Default Silent Standard} {set the mode to run the installer in}}
 
 prefix
-{InstallDir String No No {} {set the installation directory}}
+{InstallDir String No Yes {} {set the installation directory}}
+
+snowglobe
+{SnowglobeDir String No No {} {set the location for the Snowglobe archive}}
 
 test
 {Testing Switch Yes No {} {run installer without installing any files}}
@@ -297,7 +311,7 @@ File CED00FCD-068F-44E2-8912-2888D5C5DA76 -active Yes -name eyeballF.glsl -paren
 File 08648E9F-E703-4B16-8355-A01B976DE051 -active Yes -name eyeballV.glsl -parent 87EB6115-1F83-45BF-A839-C13F519D22A8
 File 18D06D54-DF46-4DC9-B00D-CA46B6C86F18 -active Yes -name pickAvatarF.glsl -parent 87EB6115-1F83-45BF-A839-C13F519D22A8
 File 55CDDE58-9D94-4DB9-91A6-A80B550A1B5B -active Yes -name pickAvatarV.glsl -parent 87EB6115-1F83-45BF-A839-C13F519D22A8
-File BB390C6D-B920-493B-9884-FD59CF36CE7E -active Yes -name objectSkinV.glsl -parent 87EB6115-1F83-45BF-A839-C13F519D22A8
+File DD945048-64B4-4272-AB2C-3AE39124DE87 -active Yes -name objectSkinV.glsl -parent 87EB6115-1F83-45BF-A839-C13F519D22A8
 File 068E9EDB-550A-4F84-94AE-CB1C1277EE70 -active Yes -name deferred -type dir -parent A54FB417-88B1-4569-B159-0256BBAFB1B7
 File 7681336F-6047-42AD-B6DB-B2E6982A2C51 -active Yes -name alphaF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
 File 1CDA8257-F38C-44C6-AD0A-FBC34650D75C -active Yes -name alphaV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
@@ -332,23 +346,23 @@ File 5560F6BA-D3D1-484B-AFC3-70E94E7D701C -active Yes -name treeF.glsl -parent 0
 File 677CE59F-9D7A-4EB4-9089-9AFA2842838F -active Yes -name treeV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
 File 3F3676CA-E4B6-4C11-A2D0-AFEE950B1AC1 -active Yes -name waterF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
 File BB227889-2096-4601-97BE-DD1DF4B8A2D9 -active Yes -name waterV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File E54F4CF3-A88D-4F92-9C71-EC81BE4D6234 -active Yes -name alphaSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 2BCD4100-3C6F-4133-AAA9-715EB83CD598 -active Yes -name attachmentShadowF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 125AACE2-BB29-461A-8E14-6CB415360EE3 -active Yes -name attachmentShadowV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 5A071141-F51B-4C59-B10C-30DF950C19F9 -active Yes -name bumpSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 4C02A437-F3D9-4124-B089-9B6029FB8C3C -active Yes -name diffuseSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File EBA480D2-3673-48DE-BF05-8580927D36DE -active Yes -name giF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 97E13F73-3F72-402C-BE76-8FF73234435B -active Yes -name giV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 5D366EE5-4331-4ED9-BDEC-AB21AE2777AF -active Yes -name luminanceF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File BCAA67BB-7FFA-4822-ADA6-8BFFC6B71D68 -active Yes -name luminanceV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 958F0C48-E6E5-4F88-9F15-866F482E9CB4 -active Yes -name multiSpotLightF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File D2BB9A6F-B706-492D-BC49-176D554A415E -active Yes -name postDeferredF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File BEE4E307-8A4F-4697-AA69-7E6D3FEE0E19 -active Yes -name postDeferredNoDoFF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File F0F1F3E2-C722-4B7F-AB09-536C9295BDB8 -active Yes -name postDeferredV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File D3EBA096-3241-4A43-8146-3A1E4CB9AAB2 -active Yes -name postgiF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 29627517-1182-4038-8188-FCFC00273C89 -active Yes -name postgiV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File 6E4BBBE0-2120-48F1-8B60-8F17984250FE -active Yes -name spotLightF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
-File ABF73834-4953-449C-A7BC-8D12A75799F2 -active Yes -name sunLightSSAOF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File A64B2D0D-F0BC-46CD-8E2F-DBD066BB1CBD -active Yes -name alphaSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 686633F2-5E8C-4B95-A66B-B704A5D3CB1C -active Yes -name attachmentShadowF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 48C16D36-4335-4AE0-998E-F7B46DC58656 -active Yes -name attachmentShadowV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File B1B31A7E-5523-455A-8D86-3D5464866D2A -active Yes -name bumpSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File B3F866D7-E3F8-42EF-B45A-6CDE1DA7E7A9 -active Yes -name diffuseSkinnedV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File AF380BCB-427E-409D-B121-EA162B982B33 -active Yes -name giF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 924BEECE-82BB-4C19-B6F6-7BFE073519A0 -active Yes -name giV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File A1BBAA10-65D8-4C43-8E36-E0D3D4E0C6C6 -active Yes -name luminanceF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 3F7B0E0D-4768-4427-AC26-ABA8BB65EA61 -active Yes -name luminanceV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File F692E995-1D02-4107-BCCB-492D52EEE567 -active Yes -name multiSpotLightF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File D54968F1-D1F0-43CE-9871-960BC77AD091 -active Yes -name postDeferredF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 0B5DE187-C929-4026-820A-931AE73EB64D -active Yes -name postDeferredNoDoFF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 9D9357DA-92D1-418C-BD5B-1BA18EEBDBF7 -active Yes -name postDeferredV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 3CDF5100-03D8-470B-85E8-F6DE6664868E -active Yes -name postgiF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File A8A52081-1169-481E-859C-DB7CCF6B94E4 -active Yes -name postgiV.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File 15A29393-8257-4D7E-89B1-FC11DB30E535 -active Yes -name spotLightF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
+File BDBB9B30-74C4-483E-9B29-3E0FC9A7C0C6 -active Yes -name sunLightSSAOF.glsl -parent 068E9EDB-550A-4F84-94AE-CB1C1277EE70
 File 56FD4237-7126-42F7-9012-8C1A8046A2E6 -active Yes -name effects -type dir -parent A54FB417-88B1-4569-B159-0256BBAFB1B7
 File 621C1AC6-49AF-4427-8DE8-D74EEF13FF72 -active Yes -name glowExtractF.glsl -parent 56FD4237-7126-42F7-9012-8C1A8046A2E6
 File 6885A184-2DE5-4753-8DA3-12946C08F677 -active Yes -name glowExtractV.glsl -parent 56FD4237-7126-42F7-9012-8C1A8046A2E6
@@ -379,7 +393,7 @@ File B8CE5330-FD4A-4DC2-A1A8-1675066660A2 -active Yes -name lightV.glsl -parent 
 File A175701D-8536-4AFC-A7AD-70FB06EE9D84 -active Yes -name lightWaterF.glsl -parent 64608668-9307-4F66-95BF-BEC072924775
 File 2FA91493-5D5D-46FA-8DF2-AB55C238E16F -active Yes -name sumLightsSpecularV.glsl -parent 64608668-9307-4F66-95BF-BEC072924775
 File F8ABBCDE-7D8F-47AE-BDEA-9AA04BA85FDE -active Yes -name sumLightsV.glsl -parent 64608668-9307-4F66-95BF-BEC072924775
-File 9D5E52B8-BFD4-4DAD-A00E-B2A55E6E7FA5 -active Yes -name lightFullbrightShinyWaterF.glsl -parent 64608668-9307-4F66-95BF-BEC072924775
+File 8E6ED6C0-000F-4C1C-8274-E31EAA6348C9 -active Yes -name lightFullbrightShinyWaterF.glsl -parent 64608668-9307-4F66-95BF-BEC072924775
 File 1AC177C0-7AC7-4401-89B0-5DE1D922875E -active Yes -name objects -type dir -parent A54FB417-88B1-4569-B159-0256BBAFB1B7
 File 4A83549D-FB46-482E-8671-77EF05B212ED -active Yes -name fullbrightF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
 File 26618EB4-CFD0-4D25-AE68-4B2E183EB657 -active Yes -name fullbrightShinyF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
@@ -392,11 +406,11 @@ File B56A02FD-8AEE-435E-8675-22A9DB70AF7A -active Yes -name shinyWaterF.glsl -pa
 File 234A66B3-2D1C-4082-B86A-A0D0E51E2329 -active Yes -name simpleF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
 File F443A4ED-15E6-4909-A895-890DC0476AF1 -active Yes -name simpleV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
 File D525F76B-4843-4B98-88F3-BACD4C41292F -active Yes -name simpleWaterF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
-File 68C9CBDB-662E-4B82-BCF1-598A4D600DA2 -active Yes -name fullbrightShinySkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
-File 3393655A-C87C-4EFC-A4B3-7D57C81D85F3 -active Yes -name fullbrightShinyWaterF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
-File 7ED2A083-220B-4C4B-A024-78FC21B8005C -active Yes -name fullbrightSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
-File B7D547CC-E99C-425D-BE72-0F2C0BCB46EA -active Yes -name shinySimpleSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
-File 64992E63-8438-4AEF-8B62-DBBF91791230 -active Yes -name simpleSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
+File D011F67C-88D9-46E6-8EA5-3C0376FB6708 -active Yes -name fullbrightShinySkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
+File 3D3CF117-C229-407A-AB02-7297BA694AE2 -active Yes -name fullbrightShinyWaterF.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
+File E671A92D-34F4-4660-BCF7-596630367636 -active Yes -name fullbrightSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
+File A85D0653-9B71-4CC0-8C45-D9D379F04608 -active Yes -name shinySimpleSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
+File 484600DB-97D0-44F6-87BF-E535C958C828 -active Yes -name simpleSkinnedV.glsl -parent 1AC177C0-7AC7-4401-89B0-5DE1D922875E
 File 9A4430D0-3CFF-48AF-8AFE-C45492427F37 -active Yes -name windlight -type dir -parent A54FB417-88B1-4569-B159-0256BBAFB1B7
 File 9F07E392-DD92-4DF1-ABBA-6B27E6D0E3A0 -active Yes -name atmosphericsF.glsl -parent 9A4430D0-3CFF-48AF-8AFE-C45492427F37
 File 11A2A1C9-6571-43DC-894D-DE7BB3D7C25A -active Yes -name atmosphericsHelpersV.glsl -parent 9A4430D0-3CFF-48AF-8AFE-C45492427F37
@@ -435,7 +449,7 @@ File D41D2BBF-B2B2-4147-A76C-67682E1A7E43 -active Yes -name lightV.glsl -parent 
 File 4F3A24F2-1047-4C33-B921-467D6EDDD14A -active Yes -name lightWaterF.glsl -parent 0661F674-B997-4315-BE67-14654F9A9CA5
 File A645B097-481F-46DA-BAEC-8A4EFE06E137 -active Yes -name sumLightsSpecularV.glsl -parent 0661F674-B997-4315-BE67-14654F9A9CA5
 File 35FBB68F-6FBE-4D52-BC06-109D12D3B3DA -active Yes -name sumLightsV.glsl -parent 0661F674-B997-4315-BE67-14654F9A9CA5
-File 3E127771-1893-494F-9732-DDDB73AE4DAE -active Yes -name lightFullbrightShinyWaterF.glsl -parent 0661F674-B997-4315-BE67-14654F9A9CA5
+File 30F219C5-AC4F-404E-9090-6C686FC6705A -active Yes -name lightFullbrightShinyWaterF.glsl -parent 0661F674-B997-4315-BE67-14654F9A9CA5
 File DDD2A010-B078-4021-80E9-73D7E05A2EC6 -active Yes -name objects -type dir -parent B3A810E4-9A4F-45C1-A003-11824978BFEA
 File 7F5AD8FD-78B1-4AAC-B4FE-8354760AA7E6 -active Yes -name shinyV.glsl -parent DDD2A010-B078-4021-80E9-73D7E05A2EC6
 File 1E12F874-AF19-46F5-BEC4-0DF4104B6E94 -active Yes -name windlight -type dir -parent B3A810E4-9A4F-45C1-A003-11824978BFEA
@@ -450,43 +464,43 @@ File 85D34FDF-F24E-4766-B8D1-166645ED12C7 -active Yes -name gammaF.glsl -parent 
 File FCC23E2C-0718-4469-A9BD-0FF16C888F07 -active Yes -name skyF.glsl -parent 1E12F874-AF19-46F5-BEC4-0DF4104B6E94
 File A4CF2629-FDFE-4A57-92F8-0D2F2F989016 -active Yes -name skyV.glsl -parent 1E12F874-AF19-46F5-BEC4-0DF4104B6E94
 File 689EB29F-E07B-4883-B3C3-BE7571A71B29 -active Yes -name transportF.glsl -parent 1E12F874-AF19-46F5-BEC4-0DF4104B6E94
-File 486FB45A-A3DC-4302-AD6C-B9499AEEA964 -active Yes -name deferred -type dir -parent B3A810E4-9A4F-45C1-A003-11824978BFEA
-File 6521FE7C-5257-47FC-9177-21BCF1D3FF37 -active Yes -name alphaF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 46CCC130-A6AB-4D1B-9C00-B92AE334338F -active Yes -name alphaSkinnedV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File FE5B71A2-00C6-4A86-ADBB-1C603E11C8C5 -active Yes -name alphaV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File B64487BA-0F03-4767-8C7F-716BC5006D39 -active Yes -name avatarAlphaF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File EE51F7B6-E4B1-4101-8D99-3A55EF1087CC -active Yes -name avatarAlphaV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 64807417-BE8F-45B2-856A-3BD70FFD522E -active Yes -name edgeF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File C9CA3E5C-1592-485C-9F79-345BEC55FCDB -active Yes -name edgeV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File CB9E0518-77DB-498B-B116-3035845663AD -active Yes -name multiSpotLightF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 9EA93F69-A768-4BF1-A522-30096965CAE4 -active Yes -name softenLightF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File E54E2D48-75C8-4086-B4E4-A7EC10CE52D8 -active Yes -name softenLightV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 07FD70FB-23DB-4EB7-8D51-5B0E9CF68D7B -active Yes -name spotLightF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 3AB4086D-5BD2-4A29-A170-7C6818B1AFC4 -active Yes -name sunLightF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File 6979BD4A-BC50-4985-B809-F03656A4C72F -active Yes -name sunLightSSAOF.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
-File A635154B-25C0-4CE7-B9D5-E9CBA2C4C158 -active Yes -name sunLightV.glsl -parent 486FB45A-A3DC-4302-AD6C-B9499AEEA964
+File 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3 -active Yes -name deferred -type dir -parent B3A810E4-9A4F-45C1-A003-11824978BFEA
+File 58224177-7853-41E8-AD28-05830FC61ABF -active Yes -name alphaF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File C37672C1-A1D1-4661-833C-68A70EC97C54 -active Yes -name alphaSkinnedV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File F99AC1F1-DF13-43BA-A41E-4E4133A7FB22 -active Yes -name alphaV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 667DC751-A581-4ED2-93B4-739BED6D1628 -active Yes -name avatarAlphaF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File E0E5B101-6D50-4273-81D7-E78C4B4558CF -active Yes -name avatarAlphaV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 40B7B7B3-CA4F-48D6-B0F2-B9DA20302924 -active Yes -name edgeF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File DC12989F-2E39-4557-9DDB-FBD671E18E7E -active Yes -name edgeV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File F07F9008-F79D-460E-ADE2-41F053B7A6FB -active Yes -name multiSpotLightF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 1EC0CF28-6227-428E-ADBD-335AE043F579 -active Yes -name softenLightF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 6D3621F3-66B8-4422-A91A-EEFA523FECF3 -active Yes -name softenLightV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 66CDCF49-41BB-4948-939D-3DB1FC9BF507 -active Yes -name spotLightF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File BF5822A5-FCF0-49D4-B334-E5E65BA7903C -active Yes -name sunLightF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File C6705EE3-5F7E-4E1B-BAE6-34BD2FCE25CA -active Yes -name sunLightSSAOF.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
+File 7FC73BB8-7DEA-48B3-A111-9C247947283D -active Yes -name sunLightV.glsl -parent 3633AAA5-29E6-4BB7-B9BC-A4E9FBA92DA3
 File BF86286F-4DCB-416E-9D2B-70279CB274A4 -active Yes -name class3 -type dir -parent 842C8920-15EA-418A-B5D2-BB5A256B6B88
 File FA7E30A2-D75B-4369-A4AF-EF19ACB6870E -active Yes -name avatar -type dir -parent BF86286F-4DCB-416E-9D2B-70279CB274A4
 File A9D2D48E-B914-4F21-90FC-ED800D63D0F3 -active Yes -name avatarV.glsl -parent FA7E30A2-D75B-4369-A4AF-EF19ACB6870E
 File 83CF526E-2F89-4EBE-A07A-33859C95B334 -active Yes -name lighting -type dir -parent BF86286F-4DCB-416E-9D2B-70279CB274A4
 File 7C539F07-D146-4BC2-9371-385D35ABFB1F -active Yes -name sumLightsSpecularV.glsl -parent 83CF526E-2F89-4EBE-A07A-33859C95B334
 File 88006FF9-4518-46ED-995B-C0C5103FE468 -active Yes -name sumLightsV.glsl -parent 83CF526E-2F89-4EBE-A07A-33859C95B334
-File 760D88D0-7B9C-45C0-AF94-24AC91C30970 -active Yes -name deferred -type dir -parent BF86286F-4DCB-416E-9D2B-70279CB274A4
-File F98B3124-EE96-4110-A9D4-C3B01CB07582 -active Yes -name giDownsampleF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File B9DCD9C3-3780-4C18-963F-9F4DC100C2AA -active Yes -name giDownsampleV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 4B0E281F-A076-417E-97CF-964C2CAE402A -active Yes -name giF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 8E51C35F-1561-43F1-9A87-C780178C8425 -active Yes -name giFinalF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 7CB726F4-92EC-42CD-8BBA-2C3BCA3F2D88 -active Yes -name giFinalV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File EC36B0BB-4586-4435-A496-8ED2B29ED792 -active Yes -name giV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 0DB98912-9536-4847-99F0-3FB71AE7D062 -active Yes -name luminanceF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 3D815BF0-1336-41EC-8D03-17660D5B8109 -active Yes -name luminanceV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 6CDBEB2B-0885-4213-8EF4-37727B68C103 -active Yes -name postDeferredF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 545620F6-0FD6-4D59-9579-B3068FCB0683 -active Yes -name postDeferredV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 0E2AAD26-6A35-4632-A6B0-A3F9FC592D37 -active Yes -name postgiF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 1A5D66A5-5ABE-46A4-9B61-76658421BA3A -active Yes -name postgiV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 562C02BE-E652-4A4F-B92C-BAB4898F7CF7 -active Yes -name softenLightF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 5CB7045E-6C83-48F7-8A86-E0A67EFC320C -active Yes -name softenLightV.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
-File 368B99AB-09D1-4446-8349-67AD5117F399 -active Yes -name treeF.glsl -parent 760D88D0-7B9C-45C0-AF94-24AC91C30970
+File 7920646A-C96F-4AF3-BF6B-8928CE52DFE0 -active Yes -name deferred -type dir -parent BF86286F-4DCB-416E-9D2B-70279CB274A4
+File 1DFB921B-2757-4024-BB08-210691EC228F -active Yes -name giDownsampleF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 8FE78FFE-233A-4CFC-A87B-BEF436D89398 -active Yes -name giDownsampleV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File B5079691-D686-47EE-97E8-89BF5CCAE8BC -active Yes -name giF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File CD159C0D-9DE3-423F-92C0-3ABF8BBA7154 -active Yes -name giFinalF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File E0E7F5EA-BB6F-4D42-839A-CD81A8DC19DB -active Yes -name giFinalV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File DA47CE03-A40D-4F77-87DD-A6BACD7AD9EE -active Yes -name giV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 5CC9FA30-1F1D-44A3-AD5C-EC77E7B0D394 -active Yes -name luminanceF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 0BF8588F-B7D0-4A9E-98EF-6AE5391DDCF2 -active Yes -name luminanceV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 12FDB197-BC99-491F-9B76-477A14572A06 -active Yes -name postDeferredF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File F946DFED-7B14-4435-A02D-9C522E3B593C -active Yes -name postDeferredV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 086C42CF-9C14-4E03-98FF-241F96B5064A -active Yes -name postgiF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 31B782DD-E077-48FE-8ABD-6F812D8A6B6B -active Yes -name postgiV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 363BA95E-CBAF-47A0-862C-6168600ACACB -active Yes -name softenLightF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File B6E2CD86-2AB6-4E65-B374-04C647EBE413 -active Yes -name softenLightV.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
+File 378C3AF7-D33C-4261-B86B-90B61F8BE98B -active Yes -name treeF.glsl -parent 7920646A-C96F-4AF3-BF6B-8928CE52DFE0
 File 9E217693-D4BE-4F11-ACF4-051F6315B940 -active Yes -name shader_hierarchy.txt -parent 842C8920-15EA-418A-B5D2-BB5A256B6B88
 File EB815EEF-E3BD-4CDC-A99D-42E7F41A2207 -active Yes -name anim.ini -parent F313216A-9099-4465-94F9-8F28502159D0
 File D9E1775C-0A88-4224-9A9A-A74B603D85C1 -active Yes -name cmd_line.xml -parent F313216A-9099-4465-94F9-8F28502159D0
@@ -1602,7 +1616,8 @@ File 6BC5DD73-0D53-433E-B092-5DCA21BA98E7 -active Yes -name teleport_strings.xml
 File 3D69C713-04DE-40DF-A6D3-48B466BAF724 -active Yes -name ui_strings.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File FEE7EA97-FD36-4D66-B3E0-B6CCE167F13C -active Yes -name xui_version.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 39972322-9C3C-4D8B-9D09-A9730C78A431 -active Yes -name floater_make_new_outfit.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
-File 3DA31D04-4079-4D0D-81B0-5C98537C1CE7 -active Yes -name floater_model_preview.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
+File D19576F0-3555-46DB-AB6F-DA5175A1C87F -active Yes -name floater_model_preview.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
+File E1673CAE-74C1-4FCB-B4B2-AA83500F04D3 -active Yes -name floater_rlv_blacklist.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 801E5197-45CE-4174-AC68-EDFCE93D9D7F -active Yes -name colors.xml -parent 3A542087-9E49-4945-AF4C-16608F2D6BE6
 File A8FE3E97-54B4-466F-BA84-6CEDCEA3E613 -active Yes -name silver -type dir -parent 1E430344-AAB4-45B1-AC0E-F04E115F6E46
 File C442D02F-67F7-47C5-B00D-AF6EFF9268D1 -active Yes -name xui -type dir -parent A8FE3E97-54B4-466F-BA84-6CEDCEA3E613
@@ -1890,13 +1905,13 @@ File 10C0EA4B-1E66-42AA-ADCD-80746E76A062 -active Yes -name ortp.dll -parent 7B6
 File C6C863BE-09F2-4267-AFCE-A36BA0FB45F5 -active No -name SLVoice.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File D24425FC-60BF-4D91-95F7-143D8D0D511C -active No -name vivoxsdk.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 1C5C0B57-FB95-4B30-8380-E6FBF19A7E19 -active Yes -name wrap_oal.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File 25D7086D-7E59-4334-A664-B723618545FE -active Yes -name 7z.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File 019412EA-BA3A-4E0C-BE32-74C6F49A64D3 -active Yes -name 7z.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File D2DD3655-A2DD-495A-A73B-209D918783A1 -active Yes -name win_crash_logger.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 File 850C3392-1E92-411B-B3A4-7DCBBC32382F -active Yes -name CoolVLViewer.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File 9A20EF11-C293-489A-B16A-C61E224C2F3F -active Yes -name glod.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File 5DE2792C-C60E-4676-93E3-48A84D391CF0 -active Yes -name libcollada14dom22.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
-File 219C2923-8548-48C8-889D-E201F757D8DB -active Yes -name libtcmalloc_minimal.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File 14046145-2C48-4D89-916B-F2BC6CDCC660 -active Yes -name 7z.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File 5DA0748F-30E3-4548-A52A-8B2BE8977946 -active Yes -name 7z.exe -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File 02298333-9D63-481C-919D-A99C5F82A531 -active Yes -name glod.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File 03DADA3F-5A61-4F99-A71F-14CD0BDE45A6 -active Yes -name libcollada14dom22.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
+File 59429C30-48CB-4FD6-99B7-5CAA41210F94 -active Yes -name libtcmalloc_minimal.dll -parent 7B67B5DB-A2ED-41F9-9193-82BC34EADF2F
 Component C534F619-7737-408C-9AE4-16221BEC8C2D -active Yes -name {Default Component} -parent Components -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
 SetupType 6152CCF8-42C8-49B7-9C4D-337AF8F4C351 -active Yes -name Typical -parent SetupTypes -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
 SetupType 9BE97F6C-FBCB-44C2-A69E-F35B87DE5000 -active Yes -name Custom -parent SetupTypes -platforms {FreeBSD-7-x86 Linux-x86 Linux-x86_64 MacOS-X MacOS-X-ppc Solaris-sparc Solaris-x86 Windows} -setup Install
@@ -1906,12 +1921,10 @@ Action 3A7E5FBA-4118-40D2-BD46-24946F9D6CC6 -active Yes -name 3a7e5fba-4118-40d2
 Pane 828B33A0-4266-4C1A-8363-CBA18E3CDBDE -active Yes -name 828b33a0-4266-4c1a-8363-cba18e3cdbde -type pane -parent StandardInstall -setup Install -title {Select Destination} -component SelectDestination
 Condition 05894717-F0F3-43CE-B168-3D527C779287 -active Yes -name 05894717-f0f3-43ce-b168-3d527c779287 -parent 828B33A0-4266-4C1A-8363-CBA18E3CDBDE -setup Install -title {Script Condition} -component ScriptCondition
 Condition 0B9C7174-57F9-4571-A587-5FFA2074CF73 -active Yes -name 0b9c7174-57f9-4571-a587-5ffa2074cf73 -parent 828B33A0-4266-4C1A-8363-CBA18E3CDBDE -setup Install -title {File Permission Condition} -component FilePermissionCondition
-Pane E391520A-AEE4-4913-B97C-D2B446ED860C -active Yes -name e391520a-aee4-4913-b97c-d2b446ed860c -type pane -parent StandardInstall -setup Install -title {Select Snowglobe location} -operator OR -component SelectDestination
-Condition 9DC5C20F-2B57-4A52-B853-3E908A29EB68 -active Yes -name 9dc5c20f-2b57-4a52-b853-3e908a29eb68 -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition F1B39E0A-C0B8-42AF-B8A3-0EF8CEBEA264 -active Yes -name f1b39e0a-c0b8-42af-b8a3-0ef8cebea264 -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition 0FDE4ECC-5C10-434F-BC0A-3D713E570319 -active Yes -name 0fde4ecc-5c10-434f-bc0a-3d713e570319 -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {File Exists Condition} -component FileExistsCondition
-Action 280FEE87-65C4-43A3-8863-821C5FC89110 -active Yes -name 280fee87-65c4-43a3-8863-821c5fc89110 -type action -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {Move Forward} -operator OR -component MoveForward
-Condition 54D6048A-5917-4F9C-BDAD-AA9F72F75013 -active Yes -name 54d6048a-5917-4f9c-bdad-aa9f72f75013 -parent 280FEE87-65C4-43A3-8863-821C5FC89110 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Action C6DBF684-5587-4E4B-8B20-C0F0231ABBC1 -active Yes -name c6dbf684-5587-4e4b-8b20-c0f0231abbc1 -type action -parent 828B33A0-4266-4C1A-8363-CBA18E3CDBDE -setup Install -title {Check Action} -component ExecuteAction
+Pane E391520A-AEE4-4913-B97C-D2B446ED860C -active Yes -name e391520a-aee4-4913-b97c-d2b446ed860c -type pane -parent StandardInstall -setup Install -title {Select Snowglobe location} -component SelectDestination
+Condition 88666D80-51BA-4EF2-915A-7A6611916678 -active Yes -name 88666d80-51ba-4ef2-915a-7a6611916678 -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {String Equal Condition} -component StringEqualCondition
+Condition 381E415F-F220-4A1C-91C2-CCDFDC11B25D -active Yes -name 381e415f-f220-4a1c-91c2-ccdfdc11b25d -parent E391520A-AEE4-4913-B97C-D2B446ED860C -setup Install -title {File Exists Condition} -component FileExistsCondition
 Pane F0DF6DA4-CC1E-4839-9185-A97217D52C65 -active Yes -name f0df6da4-cc1e-4839-9185-a97217d52c65 -type pane -parent StandardInstall -setup Install -title {Copying Files} -component CopyFiles
 Action C71C069B-3261-4823-98E0-5A4215C8BCC6 -active Yes -name c71c069b-3261-4823-98e0-5a4215c8bcc6 -type action -parent F0DF6DA4-CC1E-4839-9185-A97217D52C65 -setup Install -title {Install Everything} -component ExecuteAction
 Action 4D580119-D1E6-4B0E-B8AF-06F30BD8C91E -active Yes -name 4d580119-d1e6-4b0e-b8af-06f30bd8c91e -type action -parent F0DF6DA4-CC1E-4839-9185-A97217D52C65 -setup Install -title {Move Forward} -component MoveForward
@@ -1924,11 +1937,10 @@ Pane E19E24D1-BC26-404E-882D-D75D8650A631 -active Yes -name e19e24d1-bc26-404e-8
 Condition 1D53E4F9-33B6-4A8B-AFEE-BEB486901580 -active Yes -name 1d53e4f9-33b6-4a8b-afee-beb486901580 -parent E19E24D1-BC26-404E-882D-D75D8650A631 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition BE9B3219-ECE1-474E-BCA2-8433196432B5 -active Yes -name be9b3219-ece1-474e-bca2-8433196432b5 -parent E19E24D1-BC26-404E-882D-D75D8650A631 -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action 5AA720D5-7981-4CD7-BCA6-E4D491A1FA87 -active Yes -name 5aa720d5-7981-4cd7-bca6-e4d491a1fa87 -type action -parent E19E24D1-BC26-404E-882D-D75D8650A631 -setup Install -title {Execute Action} -component ExecuteAction
+Action 0422ED60-0854-41DC-8997-E1B99E6CCC5E -active Yes -name 0422ed60-0854-41dc-8997-e1b99e6ccc5e -type action -parent E19E24D1-BC26-404E-882D-D75D8650A631 -setup Install -title Check -component ExecuteAction
 Action F3B5765F-76CC-455A-A504-AF250B61F6A8 -active Yes -name f3b5765f-76cc-455a-a504-af250b61f6a8 -type action -parent E19E24D1-BC26-404E-882D-D75D8650A631 -setup Install -title {Move Forward} -component MoveForward
 Pane A8DBCF0E-4A47-4413-B387-6834B90264DA -active Yes -name a8dbcf0e-4a47-4413-b387-6834b90264da -type pane -parent StandardInstall -setup Install -title Warning -operator OR -component CustomBlankPane1
-Condition B7394B1A-7593-4278-820B-1B3398170F4E -active Yes -name b7394b1a-7593-4278-820b-1b3398170f4e -parent A8DBCF0E-4A47-4413-B387-6834B90264DA -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition F52367B7-B410-4962-AAFB-8D0C7AE5DC79 -active Yes -name f52367b7-b410-4962-aafb-8d0c7ae5dc79 -parent A8DBCF0E-4A47-4413-B387-6834B90264DA -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition 3572E0BE-F0DB-47AF-A353-DC573D877A8F -active Yes -name 3572e0be-f0db-47af-a353-dc573d877a8f -parent A8DBCF0E-4A47-4413-B387-6834B90264DA -setup Install -title {File Exists Condition} -component FileExistsCondition
+Condition 9256DF5F-1F56-461B-88A7-1AC277134159 -active Yes -name 9256df5f-1f56-461b-88a7-1ac277134159 -parent A8DBCF0E-4A47-4413-B387-6834B90264DA -setup Install -title {String Equal Condition} -component StringEqualCondition
 Pane 97D6C0B8-8DD1-4656-9649-768FBC125EAB -active Yes -name 97d6c0b8-8dd1-4656-9649-768fbc125eab -type pane -parent StandardInstall -setup Install -title {Setup Complete} -component SetupComplete
 Action 9B2BDA53-8635-493B-89C4-7E54045FFC75 -active Yes -name 9b2bda53-8635-493b-89c4-7e54045ffc75 -type action -parent 97D6C0B8-8DD1-4656-9649-768FBC125EAB -setup Install -title {Desktop Shortcut Checkbutton} -component AddWidget
 Condition 1D8F6683-165A-44C1-A646-C94C78010A16 -active Yes -name 1d8f6683-165a-44c1-a646-c94c78010a16 -parent 9B2BDA53-8635-493B-89C4-7E54045FFC75 -setup Install -title {File Exists Condition} -component FileExistsCondition
@@ -1947,6 +1959,7 @@ Action E26F269E-DDC7-4AB9-9178-430B616B74D3 -active Yes -name e26f269e-ddc7-4ab9
 Pane 8A4F73E7-035F-4077-826C-7CCE4E26DF9A -active Yes -name 8a4f73e7-035f-4077-826c-7cce4e26df9a -type pane -parent DefaultInstall -setup Install -title {Copying Files} -component CopyFiles
 Action 0B6EC9EA-7B0A-418B-9EFC-628EB90E4A5B -active Yes -name 3a7e5fba-4118-40d2-bd46-24946f9d6cc6 -type action -parent 8A4F73E7-035F-4077-826C-7CCE4E26DF9A -setup Install -title Setup -component ExecuteAction
 Action 98AB555C-8D69-4D44-AD2C-1FF4916DC111 -active Yes -name 98ab555c-8d69-4d44-ad2c-1ff4916dc111 -type action -parent 8A4F73E7-035F-4077-826C-7CCE4E26DF9A -setup Install -title {Install Everything} -component ExecuteAction
+Action 9BF9E553-8BF3-42A7-82B1-9B1A04F46E09 -active Yes -name c6dbf684-5587-4e4b-8b20-c0f0231abbc1 -type action -parent 8A4F73E7-035F-4077-826C-7CCE4E26DF9A -setup Install -title {Check Action} -component ExecuteAction
 Action 110D10A2-BED9-4618-A283-86F50292ADEC -active Yes -name 110d10a2-bed9-4618-a283-86f50292adec -type action -parent 8A4F73E7-035F-4077-826C-7CCE4E26DF9A -setup Install -title {Move Forward} -component MoveForward
 Pane 18E1AB7E-1FF3-4B42-A54C-424D57E47B5F -active Yes -name 966eaf2a-378d-45e7-9e50-bbc61e351574 -type pane -parent DefaultInstall -setup Install -title {Downloading Files} -component CopyFiles
 Condition 0A3E8E8C-4A8A-463A-B932-2B763A31B727 -active Yes -name ffe66489-a88f-4dbf-b64c-fcd7e2064e02 -parent 18E1AB7E-1FF3-4B42-A54C-424D57E47B5F -setup Install -title {String Equal Condition} -component StringEqualCondition
@@ -1957,11 +1970,10 @@ Pane B13B2935-2E6A-4B9B-8A48-D537019C6BFF -active Yes -name e19e24d1-bc26-404e-8
 Condition D8C4AAF7-960F-4ACF-9267-A47145C58F88 -active Yes -name 1d53e4f9-33b6-4a8b-afee-beb486901580 -parent B13B2935-2E6A-4B9B-8A48-D537019C6BFF -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 860ED39B-9BEC-4058-9501-92A211045E41 -active Yes -name be9b3219-ece1-474e-bca2-8433196432b5 -parent B13B2935-2E6A-4B9B-8A48-D537019C6BFF -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action D23BABAD-2B48-4EA4-B3C9-443634632687 -active Yes -name 5aa720d5-7981-4cd7-bca6-e4d491a1fa87 -type action -parent B13B2935-2E6A-4B9B-8A48-D537019C6BFF -setup Install -title {Execute Action} -component ExecuteAction
+Action 632B9CD6-A6CC-47FC-B718-188A4683C17C -active Yes -name c6dbf684-5587-4e4b-8b20-c0f0231abbc1 -type action -parent B13B2935-2E6A-4B9B-8A48-D537019C6BFF -setup Install -title {Check Action} -component ExecuteAction
 Action F4C81113-D7C1-4C63-B1C3-760F5B24B14F -active Yes -name f3b5765f-76cc-455a-a504-af250b61f6a8 -type action -parent B13B2935-2E6A-4B9B-8A48-D537019C6BFF -setup Install -title {Move Forward} -component MoveForward
-Pane 916806AF-89A2-47DD-83F5-8A56606ADF09 -active Yes -name a8dbcf0e-4a47-4413-b387-6834b90264da -type pane -parent DefaultInstall -setup Install -title Warning -operator OR -component CustomBlankPane1
-Condition C666424D-806C-49C2-B423-E1FCF361F7B5 -active Yes -name b7394b1a-7593-4278-820b-1b3398170f4e -parent 916806AF-89A2-47DD-83F5-8A56606ADF09 -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition 277716C0-AEEC-47F8-9352-A4EABCBBAD57 -active Yes -name f52367b7-b410-4962-aafb-8d0c7ae5dc79 -parent 916806AF-89A2-47DD-83F5-8A56606ADF09 -setup Install -title {File Exists Condition} -component FileExistsCondition
-Condition 0D3247D6-4B3D-41CD-ACCE-044D8BF2B4A8 -active Yes -name 3572e0be-f0db-47af-a353-dc573d877a8f -parent 916806AF-89A2-47DD-83F5-8A56606ADF09 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Pane 07034520-5EF9-469E-8EC6-37142BB6FB89 -active Yes -name a8dbcf0e-4a47-4413-b387-6834b90264da -type pane -parent DefaultInstall -setup Install -title Warning -operator OR -component CustomBlankPane1
+Condition 10CC57BC-E965-4381-A2E3-1DABE75C1683 -active Yes -name 9256df5f-1f56-461b-88a7-1ac277134159 -parent 07034520-5EF9-469E-8EC6-37142BB6FB89 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Pane 001ED8B0-AA34-46E3-8B75-AC536E17B2EF -active Yes -name 001ed8b0-aa34-46e3-8b75-ac536e17b2ef -type pane -parent DefaultInstall -setup Install -title {Setup Complete} -component SetupComplete
 Action 2EA3998E-851C-4033-BB96-A47E386AB9AC -active Yes -name 2ea3998e-851c-4033-bb96-a47e386ab9ac -type action -parent 001ED8B0-AA34-46E3-8B75-AC536E17B2EF -setup Install -title {Desktop Shortcut Checkbutton} -component AddWidget
 Condition 56BD6A4C-BC6C-4D58-B853-6CA0046BDE6F -active Yes -name 56bd6a4c-bc6c-4d58-b853-6ca0046bde6f -parent 2EA3998E-851C-4033-BB96-A47E386AB9AC -setup Install -title {File Exists Condition} -component FileExistsCondition
@@ -1980,22 +1992,33 @@ Action 7A814A73-686B-4B4F-8DF9-BD62FF87DE84 -active Yes -name e26f269e-ddc7-4ab9
 Action 405536AE-8D7F-429B-B760-E409A2FA0214 -active Yes -name 405536ae-8d7f-429b-b760-e409a2fa0214 -type action -parent ConsoleInstall -setup Install -title {Prompt to continue installation} -component ConsoleAskYesOrNo
 Action CE7D9FDD-959B-466D-B374-FABCF473ACEA -active Yes -name ce7d9fdd-959b-466d-b374-fabcf473acea -type action -parent ConsoleInstall -setup Install -title {Exit if they said no} -component Exit
 Condition A818AFBA-5B2B-4B3C-9763-3EA5CBCC446B -active Yes -name a818afba-5b2b-4b3c-9763-3ea5cbcc446b -parent CE7D9FDD-959B-466D-B374-FABCF473ACEA -setup Install -title {String Is Condition} -component StringIsCondition
-Action 24574442-313A-4410-A0A4-0EAA25A75511 -active Yes -name 3a7e5fba-4118-40d2-bd46-24946f9d6cc6 -type action -parent ConsoleInstall -setup Install -title Setup -component ExecuteAction
+Action 24574442-313A-4410-A0A4-0EAA25A75511 -active Yes -name 3a7e5fba-4118-40d2-bd46-24946f9d6cc6 -type action -parent ConsoleInstall -setup Install -title {Setting up} -component ExecuteAction
 Action C66F1916-8ADD-4863-A234-2F6CC010031C -active Yes -name c66f1916-8add-4863-a234-2f6cc010031c -type action -parent ConsoleInstall -setup Install -title {Prompt for install destination} -component ConsoleGetUserInput
 Condition 43743136-4DE8-442E-B4B2-93E7366D9E21 -active Yes -name 43743136-4de8-442e-b4b2-93e7366d9e21 -parent C66F1916-8ADD-4863-A234-2F6CC010031C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Action 647BFE69-F95F-4F65-B67C-4A3768A09448 -active Yes -name 647bfe69-f95f-4f65-b67c-4a3768a09448 -type action -parent ConsoleInstall -setup Install -title {Check Action} -component ExecuteAction
+Action DAC82051-F40B-4DDC-8670-BCD66A22E95E -active Yes -name dac82051-f40b-4ddc-8670-bcd66a22e95e -type action -parent ConsoleInstall -setup Install -title {Prompt for Snowglobe location} -component ConsoleGetUserInput
+Condition 576B748D-F39B-4C96-A373-4F3C68A22D99 -active Yes -name 576b748d-f39b-4c96-a373-4f3c68a22d99 -parent DAC82051-F40B-4DDC-8670-BCD66A22E95E -setup Install -title {String Equal Condition} -component StringEqualCondition
+Condition 1136A7F8-8477-4575-8356-9CB3B35E9866 -active Yes -name 1136a7f8-8477-4575-8356-9cb3b35e9866 -parent DAC82051-F40B-4DDC-8670-BCD66A22E95E -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action BCFD6895-6220-4038-B05D-126073252207 -active Yes -name bcfd6895-6220-4038-b05d-126073252207 -type action -parent ConsoleInstall -setup Install -title {Output Installing Message} -component ConsoleMessage
 Action 05924A9C-2828-416A-8399-72F4ECC243EB -active Yes -name 05924a9c-2828-416a-8399-72f4ecc243eb -type action -parent ConsoleInstall -setup Install -title {Install Everything} -component ExecuteAction
+Action 1A4C4750-0E2C-4C3C-AF9D-3953DD0FB8D9 -active Yes -name 1a4c4750-0e2c-4c3c-af9d-3953dd0fb8d9 -type action -parent ConsoleInstall -setup Install -title {Download Message} -component ConsoleMessage
+Condition 79FA0E18-3E10-4C30-8618-6D84913860AB -active Yes -name 79fa0e18-3e10-4c30-8618-6d84913860ab -parent 1A4C4750-0E2C-4C3C-AF9D-3953DD0FB8D9 -setup Install -title {String Equal Condition} -component StringEqualCondition
+Condition 4D33B725-E93D-4325-B534-0A59F3040471 -active Yes -name 4d33b725-e93d-4325-b534-0a59f3040471 -parent 1A4C4750-0E2C-4C3C-AF9D-3953DD0FB8D9 -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action CFF1BD24-F2EE-43E0-837B-9AF3DBD643D1 -active Yes -name cff1bd24-f2ee-43e0-837b-9af3dbd643d1 -type action -parent ConsoleInstall -setup Install -title Downlload -component ExecuteAction
 Condition 773B8675-7D86-4277-B60F-D15F13D02677 -active Yes -name 773b8675-7d86-4277-b60f-d15f13d02677 -parent CFF1BD24-F2EE-43E0-837B-9AF3DBD643D1 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 4E6BC341-785F-4744-AA0F-DE5838827479 -active Yes -name 4e6bc341-785f-4744-aa0f-de5838827479 -parent CFF1BD24-F2EE-43E0-837B-9AF3DBD643D1 -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action 2F7D15DC-BCD5-4D9D-AF3D-38A638393388 -active Yes -name 2f7d15dc-bcd5-4d9d-af3d-38a638393388 -type action -parent ConsoleInstall -setup Install -title Extract -component ExecuteAction
 Condition 595F6AC8-C71E-4776-B730-78E10181DF93 -active Yes -name 595f6ac8-c71e-4776-b730-78e10181df93 -parent 2F7D15DC-BCD5-4D9D-AF3D-38A638393388 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 5940C7FC-6457-4347-BF4E-057C6CE8E356 -active Yes -name 5940c7fc-6457-4347-bf4e-057c6ce8e356 -parent 2F7D15DC-BCD5-4D9D-AF3D-38A638393388 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Action 393E3418-A503-41A1-8A6D-5C595114D9D7 -active Yes -name c6dbf684-5587-4e4b-8b20-c0f0231abbc1 -type action -parent ConsoleInstall -setup Install -title {Check Action} -component ExecuteAction
+Action DF1D0F36-BC17-4302-BAD3-160637CE82F6 -active Yes -name df1d0f36-bc17-4302-bad3-160637ce82f6 -type action -parent ConsoleInstall -setup Install -title {Warning Message} -component ConsoleMessage
+Condition AA85C1D9-0691-47E6-8FBE-BD218E46CCAB -active Yes -name aa85c1d9-0691-47e6-8fbe-bd218e46ccab -parent DF1D0F36-BC17-4302-BAD3-160637CE82F6 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Action 83B0B53E-D6D1-4C6F-B51B-1FBF6DA3B83B -active Yes -name 83b0b53e-d6d1-4c6f-b51b-1fbf6da3b83b -type action -parent ConsoleInstall -setup Install -title {Output Install Complete Message} -component ConsoleMessage
 Action 96584280-FB93-4ADB-A35F-61D22DD502D0 -active Yes -name e26f269e-ddc7-4ab9-9178-430b616b74d3 -type action -parent ConsoleInstall -setup Install -title {Delete File} -component DeleteFile
 Action 22623DC3-639D-46D5-AFFE-30F3AA0D1EB2 -active Yes -name 22623dc3-639d-46d5-affe-30f3aa0d1eb2 -type action -parent ConsoleInstall -setup Install -title Exit -component Exit
-Action A2FB9994-441E-4804-B0C6-AE5DBAF1F7E9 -active Yes -name 3a7e5fba-4118-40d2-bd46-24946f9d6cc6 -type action -parent SilentInstall -setup Install -title Setup -component ExecuteAction
+Action A2FB9994-441E-4804-B0C6-AE5DBAF1F7E9 -active Yes -name 3a7e5fba-4118-40d2-bd46-24946f9d6cc6 -type action -parent SilentInstall -setup Install -title {Setting up} -component ExecuteAction
 Action ED5F18DD-5391-4FD2-A8C5-1A2C04DAFF71 -active Yes -name ed5f18dd-5391-4fd2-a8c5-1a2c04daff71 -type action -parent SilentInstall -setup Install -title {Install Everything} -component ExecuteAction
+Action 41A2D222-BADE-4E3C-AD2C-13220E77F1CC -active Yes -name c6dbf684-5587-4e4b-8b20-c0f0231abbc1 -type action -parent SilentInstall -setup Install -title {Check Action} -component ExecuteAction
 Action 99B9856E-42C5-45E3-B9D0-142B3D7F09B5 -active Yes -name cff1bd24-f2ee-43e0-837b-9af3dbd643d1 -type action -parent SilentInstall -setup Install -title Downlload -component ExecuteAction
 Condition 5BE956E3-0C7B-445C-8D7B-625570E5E010 -active Yes -name 773b8675-7d86-4277-b60f-d15f13d02677 -parent 99B9856E-42C5-45E3-B9D0-142B3D7F09B5 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 1A61C730-F4D5-43EB-AEB5-9B9EFAC79509 -active Yes -name 4e6bc341-785f-4744-aa0f-de5838827479 -parent 99B9856E-42C5-45E3-B9D0-142B3D7F09B5 -setup Install -title {File Exists Condition} -component FileExistsCondition
@@ -2042,6 +2065,12 @@ Action 1E702AA7-96E1-4D16-8E37-231BCD8035C5 -active Yes -name 1e702aa7-96e1-4d16
 Condition 08193CA7-5B7D-44A9-AD72-81A3C4250A42 -active Yes -name 08193ca7-5b7d-44a9-ad72-81a3c4250a42 -parent 1E702AA7-96E1-4D16-8E37-231BCD8035C5 -setup Install -title {String Is Condition} -component StringIsCondition
 Action 9458B859-AB20-42E9-80B0-639BB6A74119 -active Yes -name 9458b859-ab20-42e9-80b0-639bb6a74119 -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Copy 7zip to Temp} -component CopyFile
 Action DD955477-004B-48F7-ACF9-13A503388F7D -active Yes -name dd955477-004b-48f7-acf9-13a503388f7d -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete 7zip original copy} -component DeleteFile
+ActionGroup 899C40A6-424B-4146-B482-A7A14C6C93C8 -active Yes -name 899c40a6-424b-4146-b482-a7a14c6c93c8 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Check Actions}
+Action 3403FC28-506E-4DE9-A478-821A8B55AB9C -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -component SetVirtualText
+Action 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -operator OR -component SetVirtualText
+Condition 265B67B9-A7E2-41A6-B563-B5B353089ABC -active Yes -name 265b67b9-a7e2-41a6-b563-b5b353089abc -parent 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Condition 6D5B673D-2FE0-4DDE-A2EB-07D604A59F3A -active Yes -name 6d5b673d-2fe0-4dde-a2eb-07d604a59f3a -parent 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Condition C4E32FB7-42E0-4BDF-B8CE-F297892C1E7F -active Yes -name c4e32fb7-42e0-4bdf-b8ce-f297892c1e7f -parent 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -setup Install -title {File Exists Condition} -component FileExistsCondition
 ActionGroup 75563754-F020-4AFD-888D-F12768246650 -active Yes -name 75563754-f020-4afd-888d-f12768246650 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Download Actions}
 Action E37DCEA0-4C62-4D06-B014-0373A2E874FD -active Yes -name e37dcea0-4c62-4d06-b014-0373a2e874fd -type action -parent 75563754-F020-4AFD-888D-F12768246650 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Condition 541CA529-A385-4C25-B777-C36217D343EF -active Yes -name 541ca529-a385-4c25-b777-c36217d343ef -parent E37DCEA0-4C62-4D06-B014-0373A2E874FD -setup Install -title {String Match Condition} -component StringMatchCondition
@@ -2052,6 +2081,9 @@ Condition A6C67353-66E5-44E7-BD0F-F3976025094E -active Yes -name a6c67353-66e5-4
 Action 8701186E-1578-4A4B-B6A7-ED9472F039A4 -active Yes -name 44c21ef5-0a42-4f5a-ad3f-a90a3fbe7175 -type action -parent BACE09F1-E8A3-4324-899E-2F834BA83690 -setup Install -title {Write InstallDir to Registry 2} -component AddWindowsRegistryKey
 Condition 109C6A7E-963C-4443-AA6D-01706D22F101 -active Yes -name 109c6a7e-963c-4443-aa6d-01706d22f101 -parent 8701186E-1578-4A4B-B6A7-ED9472F039A4 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Condition 5E92FD9F-5759-4C2E-8E7F-E5495B7288B3 -active Yes -name 5e92fd9f-5759-4c2e-8e7f-e5495b7288b3 -parent 8701186E-1578-4A4B-B6A7-ED9472F039A4 -setup Install -title {String Equal Condition} -component StringEqualCondition
+Action 8A119B4A-2C58-481C-9A38-591328656929 -active Yes -name 8a119b4a-2c58-481c-9a38-591328656929 -type action -parent BACE09F1-E8A3-4324-899E-2F834BA83690 -setup Install -title {Add Response File Info} -component AddResponseFileInfo
+Condition A49688D4-3B44-44EC-8C2E-BEEF7F930EFB -active Yes -name a49688d4-3b44-44ec-8c2e-beef7f930efb -parent 8A119B4A-2C58-481C-9A38-591328656929 -setup Install -title {String Equal Condition} -component StringEqualCondition
+Condition 5FC0154F-9104-440B-85A7-4E01335B1BCD -active Yes -name 5fc0154f-9104-440b-85a7-4e01335b1bcd -parent 8A119B4A-2C58-481C-9A38-591328656929 -setup Install -title {String Equal Condition} -component StringEqualCondition
 Action 29CAD88D-9DA8-4F45-BDDA-3485FB1488AB -active Yes -name 29cad88d-9da8-4f45-bdda-3485fb1488ab -type action -parent BACE09F1-E8A3-4324-899E-2F834BA83690 -setup Install -title {Execute External Program} -component ExecuteExternalProgram
 Action 53AAE198-2EC5-4BA3-B430-F23F834E05F4 -active Yes -name 53aae198-2ec5-4ba3-b430-f23f834e05f4 -type action -parent BACE09F1-E8A3-4324-899E-2F834BA83690 -setup Install -title {Copy File} -component CopyFile
 Action B92776A1-40EF-4372-8C65-236EAA0B56AE -active Yes -name b92776a1-40ef-4372-8c65-236eaa0b56ae -type action -parent BACE09F1-E8A3-4324-899E-2F834BA83690 -setup Install -title {Copy File} -component CopyFile
@@ -2127,6 +2159,9 @@ array set Properties {
 03DE440B-2D27-4725-8648-62790710B266,String
 {<%InstallStopped%>}
 
+0422ED60-0854-41DC-8997-E1B99E6CCC5E,Action
+{Check Actions}
+
 05894717-F0F3-43CE-B168-3D527C779287,Comment
 {Do not display this pane if this is an upgrade install unless there is more than one installation present}
 
@@ -2135,6 +2170,18 @@ array set Properties {
 
 05924A9C-2828-416A-8399-72F4ECC243EB,Action
 {Install Actions}
+
+07034520-5EF9-469E-8EC6-37142BB6FB89,Active
+{Yes}
+
+07034520-5EF9-469E-8EC6-37142BB6FB89,Buttons
+{Next}
+
+07034520-5EF9-469E-8EC6-37142BB6FB89,Caption
+{<%WarningCaption%>}
+
+07034520-5EF9-469E-8EC6-37142BB6FB89,Message
+{<%WarningMessage%>}
 
 07241CB1-8AD0-49BA-9352-3B1D9DF16CEA,Background
 {white}
@@ -2187,18 +2234,6 @@ array set Properties {
 0B9C7174-57F9-4571-A587-5FFA2074CF73,Permission
 {can create}
 
-0D3247D6-4B3D-41CD-ACCE-044D8BF2B4A8,Filename
-{<%InstallDir%>/SLVoice.exe}
-
-0D3247D6-4B3D-41CD-ACCE-044D8BF2B4A8,Operator
-{does not exist}
-
-0FDE4ECC-5C10-434F-BC0A-3D713E570319,Filename
-{<%InstallDir%>/vivoxsdk.dll}
-
-0FDE4ECC-5C10-434F-BC0A-3D713E570319,Operator
-{does not exist}
-
 107C3AE5-D15B-48AA-9B16-7D7C70AF387E,Key
 {SOFTWARE\Cool Products\SnowglobeArchive}
 
@@ -2222,6 +2257,21 @@ array set Properties {
 
 109C6A7E-963C-4443-AA6D-01706D22F101,String2
 {<%SnowglobeDir%>}
+
+10CC57BC-E965-4381-A2E3-1DABE75C1683,String1
+{<%NeedProprietaryComponents%>}
+
+10CC57BC-E965-4381-A2E3-1DABE75C1683,String2
+{yes}
+
+1136A7F8-8477-4575-8356-9CB3B35E9866,CheckCondition
+{Before Action is Executed}
+
+1136A7F8-8477-4575-8356-9CB3B35E9866,Filename
+{<%SnowglobeDir%>/<%Snowglobe%>}
+
+1136A7F8-8477-4575-8356-9CB3B35E9866,Operator
+{does not exist}
 
 12173265-9610-42B0-874D-37CD39AF57E5,Alias
 {Finish Actions}
@@ -2267,6 +2317,9 @@ array set Properties {
 
 18E1AB7E-1FF3-4B42-A54C-424D57E47B5F,Subtitle
 {Downloading Snowglobe v1.4.2}
+
+1A4C4750-0E2C-4C3C-AF9D-3953DD0FB8D9,Message
+{<%DownloadCaption%>}
 
 1A61C730-F4D5-43EB-AEB5-9B9EFAC79509,CheckCondition
 {Before Action is Executed}
@@ -2334,10 +2387,13 @@ array set Properties {
 24574442-313A-4410-A0A4-0EAA25A75511,Action
 {Setup Actions}
 
-277716C0-AEEC-47F8-9352-A4EABCBBAD57,Filename
-{<%InstallDir%>/vivoxsdk.dll}
+265B67B9-A7E2-41A6-B563-B5B353089ABC,CheckCondition
+{Before Action is Executed}
 
-277716C0-AEEC-47F8-9352-A4EABCBBAD57,Operator
+265B67B9-A7E2-41A6-B563-B5B353089ABC,Filename
+{<%InstallDir%>/llkdu.dll}
+
+265B67B9-A7E2-41A6-B563-B5B353089ABC,Operator
 {does not exist}
 
 29CAD88D-9DA8-4F45-BDDA-3485FB1488AB,ClearProgressiveWidget
@@ -2409,6 +2465,12 @@ array set Properties {
 3133146D-D715-4D20-AC43-EE3EC862DCF5,Operator
 {does not exist}
 
+319C5014-8D5E-4C77-B2AA-1CBB59111A55,Value
+{yes}
+
+319C5014-8D5E-4C77-B2AA-1CBB59111A55,VirtualText
+{NeedProprietaryComponents}
+
 32EF8810-D8CB-4190-89B0-8714F22CC477,Background
 {white}
 
@@ -2427,11 +2489,20 @@ array set Properties {
 32EF8810-D8CB-4190-89B0-8714F22CC477,Y
 {200}
 
-3572E0BE-F0DB-47AF-A353-DC573D877A8F,Filename
-{<%InstallDir%>/SLVoice.exe}
+3403FC28-506E-4DE9-A478-821A8B55AB9C,Value
+{no}
 
-3572E0BE-F0DB-47AF-A353-DC573D877A8F,Operator
+3403FC28-506E-4DE9-A478-821A8B55AB9C,VirtualText
+{NeedProprietaryComponents}
+
+381E415F-F220-4A1C-91C2-CCDFDC11B25D,Filename
+{<%SnowglobeDir%>/<%Snowglobe%>}
+
+381E415F-F220-4A1C-91C2-CCDFDC11B25D,Operator
 {does not exist}
+
+393E3418-A503-41A1-8A6D-5C595114D9D7,Action
+{Check Actions}
 
 3A7E5FBA-4118-40D2-BD46-24946F9D6CC6,Action
 {Setup Actions}
@@ -2468,6 +2539,9 @@ array set Properties {
 
 405536AE-8D7F-429B-B760-E409A2FA0214,Prompt
 {<%InstallStartupText%>}
+
+41A2D222-BADE-4E3C-AD2C-13220E77F1CC,Action
+{Check Actions}
 
 43743136-4DE8-442E-B4B2-93E7366D9E21,CheckCondition
 {Before Next Action is Executed}
@@ -2524,7 +2598,7 @@ array set Properties {
 {<%InstallDir%>}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,FileSize
-{75233429}
+{75289067}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,Name
 {Program Files}
@@ -2546,6 +2620,15 @@ array set Properties {
 
 4CCDD9D4-D8DB-47F4-B1CE-92E74ECC88E6,Y
 {160}
+
+4D33B725-E93D-4325-B534-0A59F3040471,CheckCondition
+{Before Action is Executed}
+
+4D33B725-E93D-4325-B534-0A59F3040471,Filename
+{<%SnowglobeDir%>/<%Snowglobe%>}
+
+4D33B725-E93D-4325-B534-0A59F3040471,Operator
+{does not exist}
 
 4E6BC341-785F-4744-AA0F-DE5838827479,CheckCondition
 {Before Action is Executed}
@@ -2592,17 +2675,20 @@ array set Properties {
 541CA529-A385-4C25-B777-C36217D343EF,String
 {<%SnowglobeDir%>}
 
-54D6048A-5917-4F9C-BDAD-AA9F72F75013,CheckCondition
-{Before Action is Executed}
-
-54D6048A-5917-4F9C-BDAD-AA9F72F75013,Filename
-{<%SnowglobeDir%>/<%Snowglobe%>}
-
 56BD6A4C-BC6C-4D58-B853-6CA0046BDE6F,CheckCondition
 {Before Action is Executed}
 
 56BD6A4C-BC6C-4D58-B853-6CA0046BDE6F,Filename
 {<%ProgramExecutable%>}
+
+576B748D-F39B-4C96-A373-4F3C68A22D99,CheckCondition
+{Before Action is Executed}
+
+576B748D-F39B-4C96-A373-4F3C68A22D99,String1
+{<%NeedProprietaryComponents%>}
+
+576B748D-F39B-4C96-A373-4F3C68A22D99,String2
+{yes}
 
 5940C7FC-6457-4347-BF4E-057C6CE8E356,CheckCondition
 {Before Action is Executed}
@@ -2673,6 +2759,18 @@ array set Properties {
 5F1A0A44-AD77-4E13-8161-1D752E000E8F,String
 {<%GuiMode%>}
 
+5FC0154F-9104-440B-85A7-4E01335B1BCD,CheckCondition
+{Before Action is Executed}
+
+5FC0154F-9104-440B-85A7-4E01335B1BCD,Operator
+{does not equal}
+
+5FC0154F-9104-440B-85A7-4E01335B1BCD,String1
+{<%PERSONAL%>}
+
+5FC0154F-9104-440B-85A7-4E01335B1BCD,String2
+{<%SnowglobeDir%>}
+
 5FE90F2E-63A8-4CFA-B54A-DA2D564DA832,Default
 {Yes}
 
@@ -2706,11 +2804,17 @@ array set Properties {
 62B693A5-4215-46F9-B6D9-899D0612744A,URL
 {<%SnowglobeURL%>}
 
+632B9CD6-A6CC-47FC-B718-188A4683C17C,Action
+{Check Actions}
+
 6335A923-D784-448B-A8B8-009C031171D4,CheckCondition
 {Before Action is Executed}
 
 6335A923-D784-448B-A8B8-009C031171D4,Filename
 {<%SnowglobeDir%>/<%Snowglobe%>}
+
+647BFE69-F95F-4F65-B67C-4A3768A09448,Action
+{Check Actions}
 
 64C8BAA8-D636-4FFF-996B-0ED728F6B664,Value
 {yes}
@@ -2723,6 +2827,15 @@ array set Properties {
 
 6A11DE12-E032-46B8-B1D8-EFC1E6817B4B,RegistryKey
 {HKEY_LOCAL_MACHINE\SOFTWARE\Cool Products\SnowglobeArchive}
+
+6D5B673D-2FE0-4DDE-A2EB-07D604A59F3A,CheckCondition
+{Before Action is Executed}
+
+6D5B673D-2FE0-4DDE-A2EB-07D604A59F3A,Filename
+{<%InstallDir%>/SLVoice.exe}
+
+6D5B673D-2FE0-4DDE-A2EB-07D604A59F3A,Operator
+{does not exist}
 
 6DFFBB81-E690-4A1E-A3C2-7921B5A89034,CheckCondition
 {Before Action is Executed}
@@ -2775,6 +2888,15 @@ array set Properties {
 774A8A94-35E9-4193-ADFD-D8B27C0BB64C,Files
 {<%Temp%>/bin/;<%Temp%>}
 
+79FA0E18-3E10-4C30-8618-6D84913860AB,CheckCondition
+{Before Action is Executed}
+
+79FA0E18-3E10-4C30-8618-6D84913860AB,String1
+{<%NeedProprietaryComponents%>}
+
+79FA0E18-3E10-4C30-8618-6D84913860AB,String2
+{yes}
+
 7A253983-3C9F-472C-AAFA-B5F2C5CFAB29,Alias
 {Uninstall Actions}
 
@@ -2817,6 +2939,9 @@ array set Properties {
 8701186E-1578-4A4B-B6A7-ED9472F039A4,AddToUninstall
 {No}
 
+8701186E-1578-4A4B-B6A7-ED9472F039A4,IgnoreErrors
+{Yes}
+
 8701186E-1578-4A4B-B6A7-ED9472F039A4,Key
 {SOFTWARE\Cool Products\SnowglobeArchive}
 
@@ -2835,11 +2960,20 @@ array set Properties {
 8811879D-529B-4DAA-83D7-641A730539FA,String
 {<%GuiMode%>}
 
+88666D80-51BA-4EF2-915A-7A6611916678,String1
+{<%NeedProprietaryComponents%>}
+
+88666D80-51BA-4EF2-915A-7A6611916678,String2
+{yes}
+
 8999FCC0-0407-42CD-9925-1D364EAA81FA,Action
 {Download Actions}
 
 8999FCC0-0407-42CD-9925-1D364EAA81FA,IgnoreErrors
 {Yes}
+
+899C40A6-424B-4146-B482-A7A14C6C93C8,Alias
+{Check Actions}
 
 8A4F73E7-035F-4077-826C-7CCE4E26DF9A,Buttons
 {Cancel}
@@ -2862,17 +2996,11 @@ array set Properties {
 8E1DD48A-F8F3-414D-822F-CF4D4DC85F05,Operator
 {does not exist}
 
-916806AF-89A2-47DD-83F5-8A56606ADF09,Active
-{Yes}
+9256DF5F-1F56-461B-88A7-1AC277134159,String1
+{<%NeedProprietaryComponents%>}
 
-916806AF-89A2-47DD-83F5-8A56606ADF09,Buttons
-{Next}
-
-916806AF-89A2-47DD-83F5-8A56606ADF09,Caption
-{<%WarningCaption%>}
-
-916806AF-89A2-47DD-83F5-8A56606ADF09,Message
-{<%WarningMessage%>}
+9256DF5F-1F56-461B-88A7-1AC277134159,String2
+{yes}
 
 9389289D-9A13-40E7-A916-D0540CEC2CF6,CheckCondition
 {Before Action is Executed}
@@ -2928,6 +3056,9 @@ array set Properties {
 9BE97F6C-FBCB-44C2-A69E-F35B87DE5000,Name
 {Custom}
 
+9BF9E553-8BF3-42A7-82B1-9B1A04F46E09,Action
+{Check Actions}
+
 9C0F868A-733B-47C7-98D1-25255AD97774,CheckCondition
 {Before Action is Executed}
 
@@ -2955,12 +3086,6 @@ array set Properties {
 9D21486D-2903-49EA-86CA-591E67135471,Value
 {"<%ProgramExecutable%>" -url "%1"}
 
-9DC5C20F-2B57-4A52-B853-3E908A29EB68,Filename
-{<%InstallDir%>/llkdu.dll}
-
-9DC5C20F-2B57-4A52-B853-3E908A29EB68,Operator
-{does not exist}
-
 9E09BCAF-C464-41E5-904B-8C00F5D186D7,ExitType
 {Finish}
 
@@ -2969,6 +3094,18 @@ array set Properties {
 
 A2FB9994-441E-4804-B0C6-AE5DBAF1F7E9,Action
 {Setup Actions}
+
+A49688D4-3B44-44EC-8C2E-BEEF7F930EFB,CheckCondition
+{Before Action is Executed}
+
+A49688D4-3B44-44EC-8C2E-BEEF7F930EFB,Operator
+{does not equal}
+
+A49688D4-3B44-44EC-8C2E-BEEF7F930EFB,String1
+{<%Temp%>}
+
+A49688D4-3B44-44EC-8C2E-BEEF7F930EFB,String2
+{<%SnowglobeDir%>}
 
 A6C67353-66E5-44E7-BD0F-F3976025094E,CheckCondition
 {Before Action is Executed}
@@ -3012,6 +3149,15 @@ A9CF547E-D9E3-42BF-BB6F-A1506E22BB3A,WorkingDirectory
 AA7CB6D9-8528-402F-A7F5-0E3D6B6A1E80,Message
 {<%UninstallCompleteText%>}
 
+AA85C1D9-0691-47E6-8FBE-BD218E46CCAB,CheckCondition
+{Before Action is Executed}
+
+AA85C1D9-0691-47E6-8FBE-BD218E46CCAB,String1
+{<%NeedProprietaryComponents%>}
+
+AA85C1D9-0691-47E6-8FBE-BD218E46CCAB,String2
+{yes}
+
 AE859B68-AFF2-40F7-8CAC-36EE4B8B1595,Caption
 {<%ApplicationReadmeText%>}
 
@@ -3034,13 +3180,7 @@ B13B2935-2E6A-4B9B-8A48-D537019C6BFF,Caption
 {Installing}
 
 B13B2935-2E6A-4B9B-8A48-D537019C6BFF,Message
-{The proprietary components are being extracted from the Snowglobe archive. Please wait...}
-
-B7394B1A-7593-4278-820B-1B3398170F4E,Filename
-{<%InstallDir%>/llkdu.dll}
-
-B7394B1A-7593-4278-820B-1B3398170F4E,Operator
-{does not exist}
+{<%ExtractMessage%>}
 
 B82A98E3-E08D-41E1-A6B9-A3862B499FD9,Alias
 {Startup Actions}
@@ -3132,6 +3272,15 @@ C2ADE78B-91DC-4C66-A01E-86377AB329D5,Action
 C2ADE78B-91DC-4C66-A01E-86377AB329D5,IgnoreErrors
 {Yes}
 
+C4E32FB7-42E0-4BDF-B8CE-F297892C1E7F,CheckCondition
+{Before Action is Executed}
+
+C4E32FB7-42E0-4BDF-B8CE-F297892C1E7F,Filename
+{<%InstallDir%>/vivoxsdk.dll}
+
+C4E32FB7-42E0-4BDF-B8CE-F297892C1E7F,Operator
+{does not exist}
+
 C534F619-7737-408C-9AE4-16221BEC8C2D,Description
 {<%ProgramFilesDescription%>}
 
@@ -3143,12 +3292,6 @@ C534F619-7737-408C-9AE4-16221BEC8C2D,Name
 
 C534F619-7737-408C-9AE4-16221BEC8C2D,RequiredComponent
 {Yes}
-
-C666424D-806C-49C2-B423-E1FCF361F7B5,Filename
-{<%InstallDir%>/llkdu.dll}
-
-C666424D-806C-49C2-B423-E1FCF361F7B5,Operator
-{does not exist}
 
 C66F1916-8ADD-4863-A234-2F6CC010031C,Prompt
 {<%ConsoleSelectDestinationText%>}
@@ -3167,6 +3310,9 @@ C68CF007-291F-41A7-A386-03F69724084C,TargetFileName
 
 C68CF007-291F-41A7-A386-03F69724084C,WorkingDirectory
 {<%InstallDir%>}
+
+C6DBF684-5587-4E4B-8B20-C0F0231ABBC1,Action
+{Check Actions}
 
 C71C069B-3261-4823-98E0-5A4215C8BCC6,Action
 {Install Actions}
@@ -3239,6 +3385,12 @@ D8C4AAF7-960F-4ACF-9267-A47145C58F88,String2
 
 DA11E2CD-7D89-4C06-9FE5-852B21A3AEAF,Action
 {Uninstall Actions}
+
+DAC82051-F40B-4DDC-8670-BCD66A22E95E,Prompt
+{<%SnowglobeArchiveConsoleText%>}
+
+DAC82051-F40B-4DDC-8670-BCD66A22E95E,VirtualText
+{SnowglobeDir}
 
 DAEEE564-BF06-4B91-B2B0-3AAC02551ADE,CheckCondition
 {Before Action is Executed}
@@ -3322,7 +3474,7 @@ E19E24D1-BC26-404E-882D-D75D8650A631,Caption
 {Installing}
 
 E19E24D1-BC26-404E-882D-D75D8650A631,Message
-{The proprietary components are being extracted from the Snowglobe archive. Please wait...}
+{<%ExtractMessage%>}
 
 E26F269E-DDC7-4AB9-9178-430B616B74D3,Files
 {<%Temp%>/bin/;<%Temp%>}
@@ -3414,12 +3566,6 @@ F103B9B8-2FD5-49BC-A4AB-D6F705DC6E16,CheckCondition
 F103B9B8-2FD5-49BC-A4AB-D6F705DC6E16,Filename
 {<%ProgramExecutable%>}
 
-F1B39E0A-C0B8-42AF-B8A3-0EF8CEBEA264,Filename
-{<%InstallDir%>/SLVoice.exe}
-
-F1B39E0A-C0B8-42AF-B8A3-0EF8CEBEA264,Operator
-{does not exist}
-
 F1FD7E9D-87B5-45A0-BA90-9B55E6B38B4A,CheckCondition
 {Before Action is Executed}
 
@@ -3433,12 +3579,6 @@ F350EBD0-7C8E-4C9A-9855-80255C5D1026,Filename
 {<%SnowglobeDir%>/<%Snowglobe%>}
 
 F350EBD0-7C8E-4C9A-9855-80255C5D1026,Operator
-{does not exist}
-
-F52367B7-B410-4962-AAFB-8D0C7AE5DC79,Filename
-{<%InstallDir%>/vivoxsdk.dll}
-
-F52367B7-B410-4962-AAFB-8D0C7AE5DC79,Operator
 {does not exist}
 
 F618EF49-FE00-4B17-965C-8795F42BF5B7,CheckCondition

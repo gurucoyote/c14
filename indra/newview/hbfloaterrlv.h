@@ -1,6 +1,6 @@
 /** 
  * @file hbfloaterrlv.h
- * @brief The HBFloaterRLV class declaration
+ * @brief The HBFloaterRLV and HBFloaterBlacklistRLV classes declarations
  *
  * $LicenseInfo:firstyear=2011&license=viewergpl$
  * 
@@ -57,4 +57,25 @@ private:
 
 	static HBFloaterRLV* sInstance;
 };
+
+class HBFloaterBlacklistRLV : public LLFloater
+{
+public:
+	HBFloaterBlacklistRLV();
+	/*virtual*/ ~HBFloaterBlacklistRLV();
+
+	/*virtual*/ BOOL postBuild();
+	/*virtual*/ void draw();
+
+	static void showInstance();
+	static bool instanceExists()	{ return sInstance != NULL; }
+	static void closeInstance();
+
+	static void onButtonApply(void* data);
+	static void onButtonCancel(void* data);
+
+private:
+	static HBFloaterBlacklistRLV* sInstance;
+};
+
 #endif

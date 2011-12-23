@@ -1,4 +1,3 @@
-
 /** 
  * @file llviewermenu.cpp
  * @brief Builds menus out of items.
@@ -249,16 +248,15 @@ void handle_test_load_url(void*);
 // Evil hackish imported globals
 //
 extern BOOL gRenderAvatar;
-extern BOOL gShowOverlayTitle;
 extern BOOL gOcclusionCull;
 //
 // Globals
 //
 
-LLMenuBarGL		*gMenuBarView = NULL;
+LLMenuBarGL				*gMenuBarView = NULL;
 LLViewerMenuHolderGL	*gMenuHolder = NULL;
-LLMenuGL		*gPopupMenuView = NULL;
-LLMenuBarGL		*gLoginMenuBarView = NULL;
+LLMenuGL				*gPopupMenuView = NULL;
+LLMenuBarGL				*gLoginMenuBarView = NULL;
 
 // Pie menus
 LLPieMenu	*gPieSelf	= NULL;
@@ -270,9 +268,6 @@ LLPieMenu	*gPieLand	= NULL;
 // local constants
 const std::string CLIENT_MENU_NAME("Advanced");
 const std::string SERVER_MENU_NAME("Admin");
-
-const std::string SAVE_INTO_INVENTORY("Save Object Back to My Inventory");
-const std::string SAVE_INTO_TASK_INVENTORY("Save Object Back to Object Contents");
 
 LLMenuGL* gAttachSubMenu = NULL;
 LLMenuGL* gDetachSubMenu = NULL;
@@ -337,7 +332,6 @@ void handle_follow(void *userdata);
 void handle_talk_to(void *userdata);
 
 // Debug menu
-void show_permissions_control(void*);
 void toggle_build_options(void* user_data);
 void reload_ui(void*);
 void handle_agent_stop_moving(void*);
@@ -367,14 +361,13 @@ BOOL check_show_xui_names(void *);
 // Debug UI
 void handle_web_search_demo(void*);
 void handle_web_browser_test(void*);
-void handle_buy_currency_test(void*);
 void handle_save_to_xml(void*);
 void handle_load_from_xml(void*);
 
-void handle_god_mode(void*);
-
 // God menu
+void handle_god_mode(void*);
 void handle_leave_god_mode(void*);
+BOOL enable_god_options(void*);
 
 BOOL is_inventory_visible(void* user_data);
 void handle_reset_view();
@@ -391,10 +384,6 @@ void handle_object_owner_permissive(void*);
 void handle_object_lock(void*);
 void handle_object_asset_ids(void*);
 void force_take_copy(void*);
-#ifdef _CORY_TESTING
-void force_export_copy(void*);
-void force_import_geometry(void*);
-#endif
 
 void handle_force_parcel_owner_to_me(void*);
 void handle_force_parcel_to_content(void*);
@@ -415,12 +404,14 @@ void force_error_software_exception(void *);
 void force_error_driver_crash(void *);
 
 void handle_stopall(void*);
-//void handle_hinge(void*);
-//void handle_ptop(void*);
-//void handle_lptop(void*);
-//void handle_wheel(void*);
-//void handle_dehinge(void*);
+#ifdef SEND_HINGES
+void handle_hinge(void*);
+void handle_ptop(void*);
+void handle_lptop(void*);
+void handle_wheel(void*);
+void handle_dehinge(void*);
 BOOL enable_dehinge(void*);
+#endif
 void handle_force_delete(void*);
 void print_object_info(void*);
 void print_agent_nvpairs(void*);
@@ -433,7 +424,6 @@ void focus_here(void*);
 void dump_select_mgr(void*);
 void dump_volume_mgr(void*);
 void dump_inventory(void*);
-void edit_ui(void*);
 void decode_ui_sounds(void*);
 void toggle_visibility(void*);
 BOOL get_visibility(void*);
@@ -449,8 +439,8 @@ void handle_dump_image_list(void*);
 
 void handle_crash(void*);
 void handle_dump_followcam(void*);
-void handle_viewer_enable_message_log(void*);
-void handle_viewer_disable_message_log(void*);
+BOOL check_message_logging(void*);
+void handle_viewer_toggle_message_log(void*);
 void handle_send_postcard(void*);
 void handle_gestures_old(void*);
 void handle_focus(void *);
@@ -467,7 +457,6 @@ void handle_test_male(void *);
 void handle_test_female(void *);
 void handle_toggle_pg(void*);
 void handle_dump_attachments(void *);
-void handle_show_overlay_title(void*);
 void handle_dump_avatar_local_textures(void*);
 void handle_debug_avatar_textures(void*);
 void handle_grab_texture(void*);
@@ -694,109 +683,103 @@ void init_menus()
 	//
 	show_debug_menus();
 
-	gLoginMenuBarView = (LLMenuBarGL*)LLUICtrlFactory::getInstance()->buildMenu("menu_login.xml", gMenuHolder);
+	gLoginMenuBarView = (LLMenuBarGL*)LLUICtrlFactory::getInstance()->buildMenu("menu_login.xml",
+																				gMenuHolder);
 	// Add the debug settings item to the login menu bar
 	menu = new LLMenuGL(CLIENT_MENU_NAME);
-	menu->append(new LLMenuItemCallGL("Debug Settings...", LLFloaterSettingsDebug::show, NULL, NULL, 'S', MASK_CONTROL|MASK_ALT));
+	menu->append(new LLMenuItemCallGL("Debug Settings...",
+									  LLFloaterSettingsDebug::show, NULL, NULL,
+									  'S', MASK_CONTROL|MASK_ALT));
 	gLoginMenuBarView->appendMenu(menu);
 	menu->updateParent(LLMenuGL::sMenuContainer);
 
 	LLRect menuBarRect = gLoginMenuBarView->getRect();
-	gLoginMenuBarView->setRect(LLRect(menuBarRect.mLeft, menuBarRect.mTop, gViewerWindow->getRootView()->getRect().getWidth() - menuBarRect.mLeft,  menuBarRect.mBottom));
+	gLoginMenuBarView->setRect(LLRect(menuBarRect.mLeft, menuBarRect.mTop,
+							   gViewerWindow->getRootView()->getRect().getWidth() - menuBarRect.mLeft,
+							   menuBarRect.mBottom));
 
 	gLoginMenuBarView->setBackgroundColor(color);
 
 	gMenuHolder->addChild(gLoginMenuBarView);
 }
 
+#if	0	// *TODO: Implement a proper permissions manager floater
+void show_permissions_control(void*)
+{
+	LLFloaterPermissionsMgr::show();
+}
+#endif
+
 void init_client_menu(LLMenuGL* menu)
 {
 	LLMenuGL* sub_menu = NULL;
 
-	//menu->append(new LLMenuItemCallGL("Permissions Control", &show_permissions_control));
-	// this is now in the view menu so we don't need it here!
+#if	0	// *TODO: Implement a proper permissions manager floater and add it to
+		//		  the View menu.
+	menu->append(new LLMenuItemCallGL("Permissions Control", &show_permissions_control));
+#endif
 
 	{
 		// *TODO: Translate
 		LLMenuGL* sub = new LLMenuGL("Consoles");
 		menu->appendMenu(sub);
-		sub->append(new LLMenuItemCheckGL("Frame Console", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gDebugView->mFrameStatView,
-										'2', MASK_CONTROL|MASK_SHIFT));
-		sub->append(new LLMenuItemCheckGL("Texture Console", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gTextureView,
-									   	'3', MASK_CONTROL|MASK_SHIFT));
-		LLView* debugview = gDebugView->mDebugConsolep;
-		sub->append(new LLMenuItemCheckGL("Debug Console", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										debugview,
-									   	'4', MASK_CONTROL|MASK_SHIFT));
-
+		sub->append(new LLMenuItemCheckGL("Fast Timers", &toggle_visibility,
+										  NULL, &get_visibility,
+										  (void*)gDebugView->mFastTimerView,
+										  '9', MASK_CONTROL|MASK_SHIFT));
+		sub->append(new LLMenuItemCheckGL("Frame Console", &toggle_visibility,
+										  NULL, &get_visibility,
+										  (void*)gDebugView->mFrameStatView,
+										  '2', MASK_CONTROL|MASK_SHIFT));
+		sub->append(new LLMenuItemCheckGL("Texture Console", &toggle_visibility,
+										  NULL, &get_visibility,
+										  (void*)gTextureView,
+										  '3', MASK_CONTROL|MASK_SHIFT));
 		if (gAuditTexture)
 		{
 			sub->append(new LLMenuItemCheckGL("Texture Size Console", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gTextureSizeView,
-									   	'5', MASK_CONTROL|MASK_SHIFT));
+											  &toggle_visibility, NULL,
+											  &get_visibility,
+											  (void*)gTextureSizeView,
+											  '5', MASK_CONTROL|MASK_SHIFT));
 			sub->append(new LLMenuItemCheckGL("Texture Category Console", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gTextureCategoryView,
-									   	'6', MASK_CONTROL|MASK_SHIFT));
+											  &toggle_visibility, NULL,
+											  &get_visibility,
+											  (void*)gTextureCategoryView,
+											  '6', MASK_CONTROL|MASK_SHIFT));
 		}
 
-		sub->append(new LLMenuItemCheckGL("Fast Timers", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gDebugView->mFastTimerView,
-										  '9', MASK_CONTROL|MASK_SHIFT));
 #if MEM_TRACK_MEM
-		sub->append(new LLMenuItemCheckGL("Memory", 
-										&toggle_visibility,
-										NULL,
-										&get_visibility,
-										(void*)gDebugView->mMemoryView,
+		sub->append(new LLMenuItemCheckGL("Memory", &toggle_visibility, NULL,
+										  &get_visibility,
+										  (void*)gDebugView->mMemoryView,
 										  '0', MASK_CONTROL|MASK_SHIFT));
 #endif
+		sub->appendSeparator();
 
+		LLView* debugview = gDebugView->mDebugConsolep;
+		sub->append(new LLMenuItemCheckGL("Debug Console", &toggle_visibility,
+										  NULL, &get_visibility,
+										  debugview,
+										  '4', MASK_CONTROL|MASK_SHIFT));
+		sub->append(new LLMenuItemCallGL("Region Info to Debug Console", 
+										 &handle_region_dump_settings, NULL, NULL));
+		sub->append(new LLMenuItemCallGL("Capabilities Info to Debug Console",
+										 &handle_dump_capabilities_info, NULL, NULL));
+		sub->append(new LLMenuItemCallGL("Group Info to Debug Console",
+										 &handle_dump_group_info, NULL, NULL));
+		sub->append(new LLMenuItemCallGL("Packets Lost to Debug Console",
+										 &print_packets_lost, NULL, NULL));
+		sub->createJumpKeys();
 		sub->appendSeparator();
 
 		// Debugging view for unified notifications
 		sub->append(new LLMenuItemCallGL("Notifications Console...",
-						 &handle_show_notifications_console, NULL, NULL, '5', MASK_CONTROL|MASK_SHIFT));
+					&handle_show_notifications_console, NULL, NULL, '5', MASK_CONTROL|MASK_SHIFT));
 		sub->append(new LLMenuItemCallGL("Region Debug Console", 
 					&handle_region_debug_console, NULL, NULL, 'C', MASK_CONTROL|MASK_SHIFT));
 
-		sub->appendSeparator();
-
-		sub->append(new LLMenuItemCallGL("Region Info to Debug Console", 
-			&handle_region_dump_settings, NULL));
-		sub->append(new LLMenuItemCallGL("Group Info to Debug Console",
-			&handle_dump_group_info, NULL, NULL));
-		sub->append(new LLMenuItemCallGL("Capabilities Info to Debug Console",
-			&handle_dump_capabilities_info, NULL, NULL));
-		sub->createJumpKeys();
 	}
-
-	// neither of these works particularly well at the moment
-	/*menu->append(new LLMenuItemCallGL("Reload UI XML",	&reload_ui,
-	  				NULL, NULL));*/
-	/*menu->append(new LLMenuItemCallGL("Reload settings/colors", 
-					&handle_reload_settings, NULL, NULL));*/
-	menu->append(new LLMenuItemCallGL("Reload personal setting overrides", 
-		&reload_personal_settings_overrides, NULL, NULL, KEY_F10, MASK_CONTROL|MASK_SHIFT));
 
 	sub_menu = new LLMenuGL("HUD Info");
 	{
@@ -821,26 +804,22 @@ void init_client_menu(LLMenuGL* menu)
 	menu->appendSeparator();
 
 	menu->append(new LLMenuItemCheckGL("High-res Snapshot",
-										&menu_toggle_control,
-										NULL,
-										&menu_check_control,
-										(void*)"HighResSnapshot"));
+									   &menu_toggle_control, NULL,
+									   &menu_check_control,
+									   (void*)"HighResSnapshot"));
 
 	menu->append(new LLMenuItemCheckGL("Quiet Snapshots to Disk",
-										&menu_toggle_control,
-										NULL,
-										&menu_check_control,
-										(void*)"QuietSnapshotsToDisk"));
+									   &menu_toggle_control, NULL,
+									   &menu_check_control,
+									   (void*)"QuietSnapshotsToDisk"));
 
 	menu->append(new LLMenuItemCheckGL("Show Mouselook Crosshairs",
-									   &menu_toggle_control,
-									   NULL,
+									   &menu_toggle_control, NULL,
 									   &menu_check_control,
 									   (void*)"ShowCrosshairs"));
 
 	menu->append(new LLMenuItemCheckGL("Debug Permissions",
-									   &menu_toggle_control,
-									   NULL,
+									   &menu_toggle_control, NULL,
 									   &menu_check_control,
 									   (void*)"DebugPermissions"));
 
@@ -848,8 +827,7 @@ void init_client_menu(LLMenuGL* menu)
 	if (!LLViewerLogin::getInstance()->isInProductionGrid())
 	{
 		menu->append(new LLMenuItemCheckGL("Hacked Godmode",
-										   &handle_toggle_hacked_godmode,
-										   NULL,
+										   &handle_toggle_hacked_godmode, NULL,
 										   &check_toggle_hacked_godmode,
 										   (void*)"HackedGodmode"));
 	}
@@ -869,8 +847,8 @@ void init_client_menu(LLMenuGL* menu)
 	if (gSavedSettings.getBOOL("OpenGridProtocol"))
 	{
 		sub_menu = new LLMenuGL("Interop");
-		sub_menu->append(new LLMenuItemCallGL("Teleport Region...", 
-			&LLFloaterTeleport::show, NULL, NULL, 'R', MASK_CONTROL|MASK_ALT|MASK_SHIFT));
+		sub_menu->append(new LLMenuItemCallGL("Teleport Region...",
+						 &LLFloaterTeleport::show, NULL, NULL));
 		menu->appendMenu(sub_menu);
 	}
 	sub_menu = new LLMenuGL("UI");
@@ -903,10 +881,9 @@ void init_client_menu(LLMenuGL* menu)
 
 		sub->appendSeparator();
 
-		sub->append(new LLMenuItemCallGL("Enable Message Log",  
-					&handle_viewer_enable_message_log,  NULL));
-		sub->append(new LLMenuItemCallGL("Disable Message Log", 
-					&handle_viewer_disable_message_log, NULL));
+		sub->append(new LLMenuItemCheckGL("Server Messages Logging",  
+					&handle_viewer_toggle_message_log,  NULL,
+					&check_message_logging, NULL));
 
 		sub->appendSeparator();
 
@@ -954,17 +931,17 @@ void init_client_menu(LLMenuGL* menu)
 
 		sub->append(new LLMenuItemCheckGL("Full Session Logging", &menu_toggle_control, NULL, &menu_check_control, (void*)"StatsSessionTrackFrameStats"));
 
-		sub->append(new LLMenuItemCallGL("Start Logging",	&LLFrameStats::startLogging, NULL));
-		sub->append(new LLMenuItemCallGL("Stop Logging",	&LLFrameStats::stopLogging, NULL));
+		sub->append(new LLMenuItemCallGL("Start Logging", &LLFrameStats::startLogging, NULL));
+		sub->append(new LLMenuItemCallGL("Stop Logging", &LLFrameStats::stopLogging, NULL));
 		sub->append(new LLMenuItemCallGL("Log 10 Seconds", &LLFrameStats::timedLogging10, NULL));
 		sub->append(new LLMenuItemCallGL("Log 30 Seconds", &LLFrameStats::timedLogging30, NULL));
 		sub->append(new LLMenuItemCallGL("Log 60 Seconds", &LLFrameStats::timedLogging60, NULL));
 		sub->appendSeparator();
 		sub->append(new LLMenuItemCallGL("Start Playback", &LLAgentPilot::startPlayback, NULL));
-		sub->append(new LLMenuItemCallGL("Stop Playback",	&LLAgentPilot::stopPlayback, NULL));
+		sub->append(new LLMenuItemCallGL("Stop Playback", &LLAgentPilot::stopPlayback, NULL));
 		sub->append(new LLMenuItemToggleGL("Loop Playback", &LLAgentPilot::sLoop));
-		sub->append(new LLMenuItemCallGL("Start Record",	&LLAgentPilot::startRecord, NULL));
-		sub->append(new LLMenuItemCallGL("Stop Record",	&LLAgentPilot::saveRecord, NULL));
+		sub->append(new LLMenuItemCallGL("Start Record", &LLAgentPilot::startRecord, NULL));
+		sub->append(new LLMenuItemCallGL("Stop Record", &LLAgentPilot::saveRecord, NULL));
 
 		menu->appendMenu(sub);
 		sub->createJumpKeys();
@@ -980,84 +957,94 @@ void init_client_menu(LLMenuGL* menu)
 
 	menu->appendSeparator();
 
-	menu->append(new LLMenuItemToggleGL("Show Updates", 
-		&gShowObjectUpdates));
+	menu->append(new LLMenuItemToggleGL("Show Updates", &gShowObjectUpdates));
 
 	menu->appendSeparator(); 
 
-	menu->append(new LLMenuItemCallGL("Compress Images...", 
-		&handle_compress_image, NULL, NULL));
+	menu->append(new LLMenuItemCallGL("Compress Images...",
+									  &handle_compress_image, NULL, NULL));
 
 	menu->append(new LLMenuItemCheckGL("Limit Select Distance", 
-									   &menu_toggle_control,
-									   NULL, 
+									   &menu_toggle_control, NULL, 
 									   &menu_check_control,
 									   (void*)"LimitSelectDistance"));
 
 	menu->append(new LLMenuItemCheckGL("Disable Camera Constraints", 
-									   &menu_toggle_control,
-									   NULL, 
+									   &menu_toggle_control, NULL, 
 									   &menu_check_control,
 									   (void*)"DisableCameraConstraints"));
 
 	menu->append(new LLMenuItemCheckGL("Mouse Smoothing",
-										&menu_toggle_control,
-										NULL,
-										&menu_check_control,
-										(void*) "MouseSmooth"));
+									   &menu_toggle_control, NULL,
+									   &menu_check_control,
+									   (void*) "MouseSmooth"));
 	menu->appendSeparator();
 
+#if LL_WINDOWS
 	menu->append(new LLMenuItemCheckGL("Console Window", 
-										&menu_toggle_control,
-										NULL, 
-										&menu_check_control,
-										(void*)"ShowConsoleWindow"));
+									   &menu_toggle_control, NULL, 
+									   &menu_check_control,
+									   (void*)"ShowConsoleWindow"));
+#endif
 
 	if (gSavedSettings.getBOOL("QAMode"))
 	{
 		LLMenuGL* sub = NULL;
 		sub = new LLMenuGL("Debugging");
 #if LL_WINDOWS
-        sub->append(new LLMenuItemCallGL("Force Breakpoint", &force_error_breakpoint, NULL, NULL, 'B', MASK_CONTROL | MASK_ALT));
+        sub->append(new LLMenuItemCallGL("Force Breakpoint",
+										 &force_error_breakpoint, NULL, NULL,
+										 'B', MASK_CONTROL | MASK_ALT));
 #endif
 		sub->append(new LLMenuItemCallGL("Force LLError And Crash", &force_error_llerror));
         sub->append(new LLMenuItemCallGL("Force Bad Memory Access", &force_error_bad_memory_access));
 		sub->append(new LLMenuItemCallGL("Force Infinite Loop", &force_error_infinite_loop));
 		sub->append(new LLMenuItemCallGL("Force Driver Crash", &force_error_driver_crash));
 		sub->append(new LLMenuItemCallGL("Force Disconnect Viewer", &handle_disconnect_viewer));
-		// *NOTE:Mani this isn't handled yet... sub->append(new LLMenuItemCallGL("Force Software Exception", &force_error_unhandled_exception)); 
+#if 0	// *NOTE:Mani this isn't handled yet...
+		sub->append(new LLMenuItemCallGL("Force Software Exception", &force_error_unhandled_exception));
+#endif
 		sub->createJumpKeys();
 		menu->appendMenu(sub);
 	}
 
 	menu->append(new LLMenuItemCheckGL("Output Debug Minidump", 
-										&menu_toggle_control,
-										NULL, 
-										&menu_check_control,
-										(void*)"SaveMinidump"));
+									   &menu_toggle_control, NULL, 
+									   &menu_check_control,
+									   (void*)"SaveMinidump"));
 
-	menu->append(new LLMenuItemCallGL("Debug Settings...", LLFloaterSettingsDebug::show, NULL, NULL, 'S', MASK_ALT | MASK_CONTROL));
-	menu->append(new LLMenuItemCheckGL("View Admin Options", &handle_admin_override_toggle, NULL, &check_admin_override, NULL, 'V', MASK_CONTROL | MASK_ALT));
+	menu->append(new LLMenuItemCallGL("Debug Settings...",
+									  LLFloaterSettingsDebug::show, NULL, NULL,
+									  'S', MASK_ALT | MASK_CONTROL));
+#if 0	// neither of these works particularly well at the moment
+	menu->append(new LLMenuItemCallGL("Reload UI XML", &reload_ui, NULL, NULL));
+	menu->append(new LLMenuItemCallGL("Reload settings/colors",
+				 &handle_reload_settings, NULL, NULL));
+#endif
+	menu->append(new LLMenuItemCallGL("Reload personal setting overrides", 
+				 &reload_personal_settings_overrides, NULL, NULL, KEY_F10,
+				 MASK_CONTROL|MASK_SHIFT));
 
-	menu->append(new LLMenuItemCallGL("Request Admin Status", 
-		&handle_god_mode, NULL, NULL, 'G', MASK_ALT | MASK_CONTROL));
+	menu->append(new LLMenuItemCheckGL("View Admin Options",
+									   &handle_admin_override_toggle, NULL,
+									   &check_admin_override, NULL,
+									   'V', MASK_CONTROL | MASK_ALT));
 
-	menu->append(new LLMenuItemCallGL("Leave Admin Status", 
-		&handle_leave_god_mode, NULL, NULL, 'G', MASK_ALT | MASK_SHIFT | MASK_CONTROL));
+	menu->append(new LLMenuItemCallGL("Request Admin Status",
+									  &handle_god_mode,
+									  &enable_god_options, NULL,
+									  'G', MASK_ALT | MASK_CONTROL));
+
+	menu->append(new LLMenuItemCallGL("Leave Admin Status",
+									  &handle_leave_god_mode,
+									  &enable_god_options, NULL,
+									  'G', MASK_ALT | MASK_SHIFT | MASK_CONTROL));
 
 	menu->createJumpKeys();
 }
 
 void init_debug_world_menu(LLMenuGL* menu)
 {
-/* REMOVE mouse move sun from menu options
-	menu->append(new LLMenuItemCheckGL("Mouse Moves Sun", 
-									   &menu_toggle_control,
-									   NULL, 
-									   &menu_check_control,
-									   (void*)"MouseSun", 
-									   'M', MASK_CONTROL|MASK_ALT));
-*/
 	menu->append(new LLMenuItemCheckGL("Sim Sun Override", 
 									   &menu_toggle_control,
 									   NULL, 
@@ -1101,16 +1088,24 @@ extern BOOL gDebugClicks;
 extern BOOL gDebugWindowProc;
 extern BOOL gDebugTextEditorTips;
 
+#if 0	// This has no real action: obviously editable UI was never implemented
+void edit_ui(void*)
+{
+	LLFloater::setEditModeEnabled(!LLFloater::getEditModeEnabled());
+}
+#endif
+
 void init_debug_ui_menu(LLMenuGL* menu)
 {
 	menu->append(new LLMenuItemCheckGL("Use default system color picker", menu_toggle_control, NULL, menu_check_control, (void*)"UseDefaultColorPicker"));
 	menu->append(new LLMenuItemCheckGL("Show search panel in overlay bar", menu_toggle_control, NULL, menu_check_control, (void*)"ShowSearchBar"));
 	menu->appendSeparator();
 
-	// commented out until work is complete: DEV-32268
-	// menu->append(new LLMenuItemCallGL("Buy Currency Test", &handle_buy_currency_test));
+#if 0	// This has no real action: obviously editable UI was never implemented
 	menu->append(new LLMenuItemCallGL("Editable UI", &edit_ui));
 	menu->appendSeparator();
+#endif
+
 	menu->append(new LLMenuItemCallGL("Decode all UI sounds", &decode_ui_sounds));
 	menu->appendSeparator();
 	menu->append(new LLMenuItemCallGL("Dump SelectMgr", &dump_select_mgr));
@@ -1120,7 +1115,6 @@ void init_debug_ui_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCallGL("Print Agent Info",			&print_agent_nvpairs, NULL, NULL, 'P', MASK_SHIFT));
 	menu->append(new LLMenuItemCallGL("Memory Stats",  &output_statistics));
 	menu->appendSeparator();
-//	menu->append(new LLMenuItemCallGL("Print Packets Lost",			&print_packets_lost, NULL, NULL, 'L', MASK_SHIFT));
 	menu->append(new LLMenuItemCheckGL("Debug SelectMgr", menu_toggle_control, NULL, menu_check_control, (void*)"DebugSelectMgr"));
 	menu->append(new LLMenuItemToggleGL("Debug Clicks", &gDebugClicks));
 	menu->append(new LLMenuItemToggleGL("Debug Views", &LLView::sDebugRects));
@@ -1475,7 +1469,8 @@ void init_debug_rendering_menu(LLMenuGL* menu)
 	item = new LLMenuItemCheckGL("Attached Particles", menu_toggle_attached_particles, NULL, menu_check_control, (void*)"RenderAttachedParticles");
 	menu->append(item);
 
-	item = new LLMenuItemCheckGL("Audit Texture", menu_toggle_control, NULL, menu_check_control, (void*)"AuditTexture");
+	std::string audit_label = gAuditTexture ? "Audit Texture" : "Audit Texture (after restart)";
+	item = new LLMenuItemCheckGL(audit_label, menu_toggle_control, NULL, menu_check_control, (void*)"AuditTexture");
 	menu->append(item);
 
 	item = new LLMenuItemCheckGL("Load Meshes At Max LOD", menu_toggle_control, NULL, menu_check_control, (void*)"MeshLoadHighLOD");
@@ -1564,15 +1559,13 @@ void handle_restrictions_list(void*)
 
 void init_restrained_life_menu(LLMenuGL* menu)
 {
-	menu->append(new LLMenuItemCheckGL("Allow Wear", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveAllowWear"));
-	menu->append(new LLMenuItemCheckGL("Allow Add to/Replace Outfit", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveAddReplace"));
+	menu->append(new LLMenuItemCallGL("Restrictions list", &handle_restrictions_list, NULL));
+	menu->appendSeparator();
+	menu->append(new LLMenuItemCheckGL("Allow Wear and Add to/Replace Outfit", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveAllowWear"));
 	menu->append(new LLMenuItemCheckGL("Forbid give to #RLV/", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveForbidGiveToRLV"));
-	menu->append(new LLMenuItemCheckGL("Ignore @setenv (after restart)", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveNoSetEnv"));
 	menu->append(new LLMenuItemCheckGL("Show '...' for muted text when deafened", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveShowEllipsis"));
-	menu->append(new LLMenuItemCheckGL("OOC chat always allowed (after restart)", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveCanOoc"));
 	menu->appendSeparator();
-	menu->append(new LLMenuItemCallGL("Restrictions list", 	&handle_restrictions_list, NULL));
-	menu->appendSeparator();
+	menu->append(new LLMenuItemCheckGL("Enable the extended @getcommand version", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveExtendedGetcommand"));
 	menu->append(new LLMenuItemCheckGL("Debug mode", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveDebug"));
 }
 //mk
@@ -1595,24 +1588,12 @@ void init_server_menu(LLMenuGL* menu)
 		menu->appendMenu(sub);
 
 		sub->append(new LLMenuItemCallGL("Take Copy",
-										  &force_take_copy, &enable_god_customer_service, NULL,
-										  'O', MASK_SHIFT | MASK_ALT | MASK_CONTROL));
-#ifdef _CORY_TESTING
-		sub->append(new LLMenuItemCallGL("Export Copy",
-										   &force_export_copy, NULL, NULL));
-		sub->append(new LLMenuItemCallGL("Import Geometry",
-										   &force_import_geometry, NULL, NULL));
-#endif
-		//sub->append(new LLMenuItemCallGL("Force Public", 
-		//			&handle_object_owner_none, NULL, NULL));
-		//sub->append(new LLMenuItemCallGL("Force Ownership/Permissive", 
-		//			&handle_object_owner_self_and_permissive, NULL, NULL, 'K', MASK_SHIFT | MASK_ALT | MASK_CONTROL));
+										 &force_take_copy, &enable_god_customer_service, NULL,
+										 'O', MASK_SHIFT | MASK_ALT | MASK_CONTROL));
 		sub->append(new LLMenuItemCallGL("Force Owner To Me", 
 					&handle_object_owner_self, &enable_god_customer_service));
 		sub->append(new LLMenuItemCallGL("Force Owner Permissive", 
 					&handle_object_owner_permissive, &enable_god_customer_service));
-		//sub->append(new LLMenuItemCallGL("Force Totally Permissive", 
-		//			&handle_object_permissive));
 		sub->append(new LLMenuItemCallGL("Delete", 
 					&handle_force_delete, &enable_god_customer_service, NULL, KEY_DELETE, MASK_SHIFT | MASK_ALT | MASK_CONTROL));
 		sub->append(new LLMenuItemCallGL("Lock", 
@@ -1654,12 +1635,6 @@ void init_server_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCallGL("Save Region State", 
 		&LLPanelRegionTools::onSaveState, &enable_god_customer_service, NULL));
 
-//	menu->append(new LLMenuItemCallGL("Force Join Group", handle_force_join_group));
-//
-//	menu->appendSeparator();
-//
-//	menu->append(new LLMenuItemCallGL("OverlayTitle",
-//		&handle_show_overlay_title, &enable_god_customer_service, NULL));
 	menu->createJumpKeys();
 }
 
@@ -3261,6 +3236,23 @@ void handle_leave_god_mode(void*)
 	gAgent.requestLeaveGodMode();
 }
 
+BOOL enable_god_options(void*)
+{
+	BOOL may_be_linden = TRUE;	// Linden or OpenSim admin
+	LLVOAvatar* avatarp = gAgent.getAvatarObject();
+	if (avatarp && gIsInSecondLife)
+	{
+		LLNameValue *lastname = avatarp->getNVPair("LastName");
+		if (lastname)
+		{
+			std::string name = lastname->getString();
+			may_be_linden = (name == "Linden" ? TRUE : FALSE);
+		}
+	}
+
+	return may_be_linden;
+}
+
 void set_god_level(U8 god_level)
 {
 	U8 old_god_level = gAgent.getGodLevel();
@@ -3600,14 +3592,6 @@ class LLLandSit : public view_listener_t
 		return true;
 	}
 };
-
-void show_permissions_control(void*)
-{
-	LLFloaterPermissionsMgr* floaterp = LLFloaterPermissionsMgr::show();
-	floaterp->mPermissions->addPermissionsData("foo1", LLUUID::null, 0);
-	floaterp->mPermissions->addPermissionsData("foo2", LLUUID::null, 0);
-	floaterp->mPermissions->addPermissionsData("foo3", LLUUID::null, 0);
-}
 
 class LLCreateLandmarkCallback : public LLInventoryCallback
 {
@@ -4059,12 +4043,6 @@ void handle_god_request_avatar_geometry(void *)
 	{
 		LLSelectMgr::getInstance()->sendGodlikeRequest("avatar toggle", NULL);
 	}
-}
-
-void handle_show_overlay_title(void*)
-{
-	gShowOverlayTitle = !gShowOverlayTitle;
-	gSavedSettings.setBOOL("ShowOverlayTitle", gShowOverlayTitle);
 }
 
 void derez_objects(EDeRezDestination dest, const LLUUID& dest_id)
@@ -4954,36 +4932,38 @@ class LLToolsEnableReleaseKeys : public view_listener_t
 	}
 };
 
-//void handle_hinge(void*)
-//{
-//	LLSelectMgr::getInstance()->sendHinge(1);
-//}
+#ifdef SEND_HINGES
+void handle_hinge(void*)
+{
+	LLSelectMgr::getInstance()->sendHinge(1);
+}
 
-//void handle_ptop(void*)
-//{
-//	LLSelectMgr::getInstance()->sendHinge(2);
-//}
+void handle_ptop(void*)
+{
+	LLSelectMgr::getInstance()->sendHinge(2);
+}
 
-//void handle_lptop(void*)
-//{
-//	LLSelectMgr::getInstance()->sendHinge(3);
-//}
+void handle_lptop(void*)
+{
+	LLSelectMgr::getInstance()->sendHinge(3);
+}
 
-//void handle_wheel(void*)
-//{
-//	LLSelectMgr::getInstance()->sendHinge(4);
-//}
+void handle_wheel(void*)
+{
+	LLSelectMgr::getInstance()->sendHinge(4);
+}
 
-//void handle_dehinge(void*)
-//{
-//	LLSelectMgr::getInstance()->sendDehinge();
-//}
+void handle_dehinge(void*)
+{
+	LLSelectMgr::getInstance()->sendDehinge();
+}
 
-//BOOL enable_dehinge(void*)
-//{
-//	LLViewerObject* obj = LLSelectMgr::getInstance()->getSelection()->getFirstEditableObject();
-//	return obj && !obj->isAttachment();
-//}
+BOOL enable_dehinge(void*)
+{
+	LLViewerObject* obj = LLSelectMgr::getInstance()->getSelection()->getFirstEditableObject();
+	return obj && !obj->isAttachment();
+}
+#endif
 
 class LLEditEnableCut : public view_listener_t
 {
@@ -5312,10 +5292,8 @@ void show_debug_menus()
 		// Server ('Admin') menu hidden when not in godmode.
 		const bool show_server_menu = debug && (gAgent.getGodLevel() > GOD_NOT);
 		gMenuBarView->setItemVisible(SERVER_MENU_NAME, show_server_menu);
-		gMenuBarView->setItemEnabled(SERVER_MENU_NAME, show_server_menu);
-
-		//gMenuBarView->setItemVisible("DebugOptions",	visible);
-		//gMenuBarView->setItemVisible(std::string(AVI_TOOLS),	visible);
+		BOOL is_linden = enable_god_options(NULL);
+		gMenuBarView->setItemEnabled(SERVER_MENU_NAME, show_server_menu && is_linden);
 
 		gMenuBarView->arrange(); // clean-up positioning 
 	};
@@ -5809,11 +5787,6 @@ class LLObjectEnableSitOrStand : public view_listener_t
 	}
 };
 
-void edit_ui(void*)
-{
-	LLFloater::setEditModeEnabled(!LLFloater::getEditModeEnabled());
-}
-
 void decode_ui_sounds(void*)
 {
 	audio_preload_ui_sounds(true);
@@ -5858,14 +5831,21 @@ void handle_dump_followcam(void*)
 	LLFollowCamMgr::dump();
 }
 
-void handle_viewer_enable_message_log(void*)
+BOOL check_message_logging(void*)
 {
-	gMessageSystem->startLogging();
+	return gMessageSystem->mVerboseLog;
 }
 
-void handle_viewer_disable_message_log(void*)
+void handle_viewer_toggle_message_log(void*)
 {
-	gMessageSystem->stopLogging();
+	if (gMessageSystem->mVerboseLog)
+	{
+		gMessageSystem->stopLogging();
+	}
+	else
+	{
+		gMessageSystem->startLogging();
+	}
 }
 
 // TomY TODO: Move!
@@ -7722,9 +7702,11 @@ class LLToolsEditLinkedParts : public view_listener_t
 
 void reload_personal_settings_overrides(void *)
 {
-	llinfos << "Loading overrides from " << gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,"overrides.xml") << llendl;
+	std::string overrides = gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,
+														   "overrides.xml");
+	llinfos << "Loading overrides from " << overrides << llendl;
 
-	gSavedSettings.loadFromFile(gDirUtilp->getExpandedFilename(LL_PATH_PER_SL_ACCOUNT,"overrides.xml"));
+	gSavedSettings.loadFromFile(overrides);
 }
 
 void reload_vertex_shader(void *)
@@ -8046,43 +8028,6 @@ void handle_web_browser_test(void*)
 	LLFloaterMediaBrowser::showInstance("http://secondlife.com/app/search/slurls.html", true);
 }
 
-void handle_buy_currency_test(void*)
-{
-	std::string url =
-		"http://sarahd-sl-13041.webdev.lindenlab.com/app/lindex/index.php?agent_id=[AGENT_ID]&secure_session_id=[SESSION_ID]&lang=[LANGUAGE]";
-
-	LLStringUtil::format_map_t replace;
-	replace["[AGENT_ID]"] = gAgent.getID().asString();
-	replace["[SESSION_ID]"] = gAgent.getSecureSessionID().asString();
-
-	// *TODO: Replace with call to LLUI::getLanguage() after windows-setup
-	// branch merges in. JC
-	std::string language = "en-us";
-	language = gSavedSettings.getString("Language");
-	if (language.empty() || language == "default")
-	{
-		language = gSavedSettings.getString("InstallLanguage");
-	}
-	if (language.empty() || language == "default")
-	{
-		language = gSavedSettings.getString("SystemLanguage");
-	}
-	if (language.empty() || language == "default")
-	{
-		language = "en-us";
-	}
-
-	replace["[LANGUAGE]"] = language;
-	LLStringUtil::format(url, replace);
-
-	llinfos << "buy currency url " << url << llendl;
-
-	LLFloaterHtmlCurrency* floater = LLFloaterHtmlCurrency::showInstance(url);
-	// Needed so we can use secondlife:///app/floater/self/close SLURLs
-	floater->setTrusted(true);
-	floater->center();
-}
-
 void handle_rebake_textures(void*)
 {
 	LLVOAvatar* avatar = gAgent.getAvatarObject();
@@ -8096,13 +8041,16 @@ void handle_rebake_textures(void*)
 void toggle_visibility(void* user_data)
 {
 	LLView* viewp = (LLView*)user_data;
-	viewp->setVisible(!viewp->getVisible());
+	if (viewp)
+	{
+		viewp->setVisible(!viewp->getVisible());
+	}
 }
 
 BOOL get_visibility(void* user_data)
 {
 	LLView* viewp = (LLView*)user_data;
-	return viewp->getVisible();
+	return viewp ? viewp->getVisible() : FALSE;
 }
 
 // TomY TODO: Get rid of these?

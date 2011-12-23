@@ -34,12 +34,18 @@
 
 #include "hbprefscool.h"
 
-#include "llstartup.h"
-#include "llviewercontrol.h"
-#include "lluictrlfactory.h"
 #include "llcheckboxctrl.h"
 #include "llcombobox.h"
 #include "llcolorswatch.h"
+#include "llradiogroup.h"
+#include "llstring.h"
+#include "lltexteditor.h"
+#include "lluictrlfactory.h"
+
+#include "hbfloaterrlv.h"
+#include "llstartup.h"
+#include "llviewercontrol.h"
+#include "RRInterface.h"
 
 class HBPrefsCoolImpl : public LLPanel
 {
@@ -48,17 +54,27 @@ public:
 	/*virtual*/ ~HBPrefsCoolImpl() { };
 
 	/*virtual*/ void refresh();
+	/*virtual*/ void draw();
 
 	void apply();
 	void cancel();
 
 private:
+	void refreshRestrainedLove(bool enable);
+	void updateRestrainedLoveUserProfile();
+
 	static void onCommitCheckBoxShowButton(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxRestrainedLove(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxSpeedRez(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxPrivateLookAt(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data);
+	static void onCommitUserProfile(LLUICtrl* ctrl, void* user_data);
+	static void onClickCustomBlackList(void* user_data);
 	void refreshValues();
+
+private:
+	bool mWatchBlackListFloater;
+	S32 mRestrainedLoveUserProfile;
 
 	BOOL mHideMasterRemote;
 	BOOL mShowChatButton;
@@ -81,7 +97,6 @@ private:
 	BOOL mAutoCloseOOC;
 	BOOL mPrivateLookAt;
 	BOOL mFetchInventoryOnLogin;
-	BOOL mRestrainedLove;
 	BOOL mPreviewAnimInWorld;
 	BOOL mSpeedRez;
 	BOOL mRevokePermsOnStandUp;
@@ -95,8 +110,17 @@ private:
 	BOOL mTeleportHistoryDeparture;
 	BOOL mAvatarPhysics;
 	BOOL mUseNewSLLoginPage;
-	LLColor4 mOwnNameChatColor;
-	std::string mHighlightNicknames;
+	BOOL mRestrainedLove;
+	BOOL mRestrainedLoveNoSetEnv;
+	BOOL mRestrainedLoveAllowWear;
+	BOOL mRestrainedLoveForbidGiveToRLV;
+	BOOL mRestrainedLoveShowEllipsis;
+	BOOL mRestrainedLoveUntruncatedEmotes;
+	BOOL mRestrainedLoveCanOoc;
+	std::string mRestrainedLoveRecvimMessage;
+	std::string mRestrainedLoveSendimMessage;
+	std::string mRestrainedLoveBlacklist;
+	U32 mRestrainedLoveReattachDelay;
 	U32 mStackScreenWidthFraction;
 	U32 mSpeedRezInterval;
 	U32 mPrivateLookAtLimit;
@@ -104,11 +128,13 @@ private:
 	U32 mFadeMouselookExitTip;
 	U32 mTimeFormat;
 	U32 mDateFormat;
+	std::string mHighlightNicknames;
+	LLColor4 mOwnNameChatColor;
 };
 
-
 HBPrefsCoolImpl::HBPrefsCoolImpl()
- : LLPanel(std::string("Cool Preferences Panel"))
+:	LLPanel(std::string("Cool Preferences Panel")),
+	mWatchBlackListFloater(false)
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_cool.xml");
 	childSetCommitCallback("show_chat_button_check",			onCommitCheckBoxShowButton, this);
@@ -130,99 +156,58 @@ HBPrefsCoolImpl::HBPrefsCoolImpl()
 	childSetCommitCallback("im_tabs_vertical_stacking_check",	onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("use_old_statusbar_icons_check",		onCommitCheckBoxAfterRestart, this);
 	childSetCommitCallback("use_new_sl_login_page_check",		onCommitCheckBoxAfterRestart, this);
+	childSetCommitCallback("restrained_love_no_setenv_check",	onCommitCheckBoxAfterRestart, this);
+	childSetCommitCallback("restrained_love_untruncated_emotes_check", onCommitCheckBoxAfterRestart, this);
+	childSetCommitCallback("restrained_love_can_ooc_check",		onCommitCheckBoxAfterRestart, this);
+	childSetCommitCallback("user_profile",						onCommitUserProfile, this);
+	childSetAction("custom_profile_button",						onClickCustomBlackList, this);
+
+	if (LLStartUp::getStartupState() != STATE_STARTED)
+	{
+		LLCheckBoxCtrl* rl = getChild<LLCheckBoxCtrl>("restrained_love_check");
+		std::string tooltip = rl->getToolTip();
+		tooltip += " " + getString("when_logged_in");
+		rl->setToolTip(tooltip);
+	}
 	refresh();
 }
 
-//static
-void HBPrefsCoolImpl::onCommitCheckBoxShowButton(LLUICtrl* ctrl, void* user_data)
+void HBPrefsCoolImpl::draw()
 {
-	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (!self || !check) return;
-
-	bool enabled = check->get();
-	if (enabled && gSavedSettings.getBOOL("ShowToolBar") == FALSE)
+	if (mWatchBlackListFloater && !HBFloaterBlacklistRLV::instanceExists())
 	{
-		gSavedSettings.setBOOL("ShowToolBar", TRUE);
+		mWatchBlackListFloater = false;
+		updateRestrainedLoveUserProfile();
 	}
+	LLPanel::draw();
 }
 
-//static
-void HBPrefsCoolImpl::onCommitCheckBoxRestrainedLove(LLUICtrl* ctrl, void* user_data)
+void HBPrefsCoolImpl::refreshRestrainedLove(bool enable)
 {
-	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (!self || !check) return;
+	// Enable/disable all children in the RestrainedLove panel
+	LLPanel* panel = getChild<LLPanel>("RestrainedLove");
+	LLView* child = panel->getFirstChild();
+	while (child)
+	{
+		child->setEnabled(enable);
+		child = panel->findNextSibling(child);
+	}
 
-	if (check->get())
+	// Enable/disable the FetchInventoryOnLogin check box
+	if (enable)
 	{
 		gSavedSettings.setBOOL("FetchInventoryOnLogin",	TRUE);
-		self->childSetValue("fetch_inventory_on_login_check", TRUE);
-		self->childDisable("fetch_inventory_on_login_check");
+		childSetValue("fetch_inventory_on_login_check", TRUE);
+		childDisable("fetch_inventory_on_login_check");
 	}
 	else
 	{
-		self->childEnable("fetch_inventory_on_login_check");
+		childEnable("fetch_inventory_on_login_check");
 	}
-	if (self->mRestrainedLove != check->get())
-	{
-		LLNotifications::instance().add("InEffectAfterRestart");
-	}
-}
 
-//static
-void HBPrefsCoolImpl::onCommitCheckBoxSpeedRez(LLUICtrl* ctrl, void* user_data)
-{
-	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (!self || !check) return;
-
-	bool enabled = check->get();
-	self->childSetEnabled("speed_rez_interval", enabled);
-	self->childSetEnabled("speed_rez_seconds", enabled);
-}
-
-//static
-void HBPrefsCoolImpl::onCommitCheckBoxPrivateLookAt(LLUICtrl* ctrl, void* user_data)
-{
-	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (!self || !check) return;
-
-	bool enabled = check->get();
-	self->childSetEnabled("private_look_at_limit", enabled);
-	self->childSetEnabled("private_look_at_limit_meters", enabled);
-}
-
-//static
-void HBPrefsCoolImpl::onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data)
-{
-	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (!self || !check) return;
-
-	BOOL saved = FALSE;
-	std::string control = check->getControlName();
-	if (control == "UseOldChatHistory")
-	{
-		saved = self->mUseOldChatHistory;
-	}
-	else if (control == "IMTabsVerticalStacking")
-	{
-		saved = self->mIMTabsVerticalStacking;
-	}
-	else if (control == "UseOldStatusBarIcons")
-	{
-		saved = self->mUseOldStatusBarIcons;
-	}
-	else if (control == "UseNewSLLoginPage")
-	{
-		saved = self->mUseNewSLLoginPage;
-	}
- 	if (saved != check->get())
-	{
-		LLNotifications::instance().add("InEffectAfterRestart");
-	}
+	// RestrainedLove check box enabled only when logged in.
+	childSetEnabled("restrained_love_check",
+					LLStartUp::getStartupState() == STATE_STARTED);
 }
 
 void HBPrefsCoolImpl::refreshValues()
@@ -258,6 +243,16 @@ void HBPrefsCoolImpl::refreshValues()
 	{
 		mFetchInventoryOnLogin	= gSavedSettings.getBOOL("FetchInventoryOnLogin");
 	}
+	mRestrainedLoveNoSetEnv		= gSavedSettings.getBOOL("RestrainedLoveNoSetEnv");
+	mRestrainedLoveAllowWear	= gSavedSettings.getBOOL("RestrainedLoveAllowWear");
+	mRestrainedLoveForbidGiveToRLV = gSavedSettings.getBOOL("RestrainedLoveForbidGiveToRLV");
+	mRestrainedLoveShowEllipsis	= gSavedSettings.getBOOL("RestrainedLoveShowEllipsis");
+	mRestrainedLoveUntruncatedEmotes = gSavedSettings.getBOOL("RestrainedLoveUntruncatedEmotes");
+	mRestrainedLoveCanOoc		= gSavedSettings.getBOOL("RestrainedLoveCanOoc");
+	mRestrainedLoveReattachDelay = gSavedSettings.getU32("RestrainedLoveReattachDelay");
+	mRestrainedLoveRecvimMessage = gSavedSettings.getString("RestrainedLoveRecvimMessage");
+	mRestrainedLoveSendimMessage = gSavedSettings.getString("RestrainedLoveSendimMessage");
+	mRestrainedLoveBlacklist	= gSavedSettings.getString("RestrainedLoveBlacklist");
 	mPreviewAnimInWorld			= gSavedSettings.getBOOL("PreviewAnimInWorld");
 	mSpeedRez					= gSavedSettings.getBOOL("SpeedRez");
 	mSpeedRezInterval			= gSavedSettings.getU32("SpeedRezInterval");
@@ -282,13 +277,35 @@ void HBPrefsCoolImpl::refreshValues()
 	mFadeMouselookExitTip		= gSavedSettings.getU32("FadeMouselookExitTip");
 }
 
+void HBPrefsCoolImpl::updateRestrainedLoveUserProfile()
+{
+	std::string blacklist = gSavedSettings.getString("RestrainedLoveBlacklist");
+	if (blacklist.empty())
+	{
+		mRestrainedLoveUserProfile = 0;
+	}
+	else if (blacklist == RRInterface::sRolePlayBlackList)
+	{
+		mRestrainedLoveUserProfile = 1;
+	}
+	else if (blacklist == RRInterface::sVanillaBlackList)
+	{
+		mRestrainedLoveUserProfile = 2;
+	}
+	else
+	{
+		mRestrainedLoveUserProfile = 3;
+	}
+	LLRadioGroup* radio = getChild<LLRadioGroup>("user_profile");
+	radio->selectNthItem(mRestrainedLoveUserProfile);
+}
+
 void HBPrefsCoolImpl::refresh()
 {
 	refreshValues();
 
 	if (LLStartUp::getStartupState() != STATE_STARTED)
 	{
-		childDisable("restrained_love_check");
 		childDisable("highlight_nicknames_text");
 		childDisable("highlight_display_name_check");
 	}
@@ -298,15 +315,15 @@ void HBPrefsCoolImpl::refresh()
 		childSetValue("highlight_display_name_check", mHighlightDisplayName);
 	}
 
-	if (mRestrainedLove)
-	{
-		childSetValue("fetch_inventory_on_login_check", TRUE);
-		childDisable("fetch_inventory_on_login_check");
-	}
-	else
-	{
-		childEnable("fetch_inventory_on_login_check");
-	}
+	// RestrainedLove
+	refreshRestrainedLove(mRestrainedLove);
+	updateRestrainedLoveUserProfile();
+	LLWString message = utf8str_to_wstring(gSavedSettings.getString("RestrainedLoveRecvimMessage"));
+	LLWStringUtil::replaceChar(message, '^', '\n');
+	childSetText("receive_im_message_editor", wstring_to_utf8str(message));
+	message = utf8str_to_wstring(gSavedSettings.getString("RestrainedLoveSendimMessage"));
+	LLWStringUtil::replaceChar(message, '^', '\n');
+	childSetText("send_im_message_editor", wstring_to_utf8str(message));
 
 	if (mSpeedRez)
 	{
@@ -383,6 +400,16 @@ void HBPrefsCoolImpl::cancel()
 	gSavedSettings.setU32("PrivateLookAtLimit",			mPrivateLookAtLimit);
 	gSavedSettings.setBOOL("FetchInventoryOnLogin",		mFetchInventoryOnLogin);
 	gSavedSettings.setBOOL("RestrainedLove",			mRestrainedLove);
+	gSavedSettings.setBOOL("RestrainedLoveNoSetEnv",	mRestrainedLoveNoSetEnv);
+	gSavedSettings.setBOOL("RestrainedLoveAllowWear",	mRestrainedLoveAllowWear);
+	gSavedSettings.setBOOL("RestrainedLoveForbidGiveToRLV", mRestrainedLoveForbidGiveToRLV);
+	gSavedSettings.setBOOL("RestrainedLoveShowEllipsis", mRestrainedLoveShowEllipsis);
+	gSavedSettings.setBOOL("RestrainedLoveUntruncatedEmotes", mRestrainedLoveUntruncatedEmotes);
+	gSavedSettings.setBOOL("RestrainedLoveCanOoc",		mRestrainedLoveCanOoc);
+	gSavedSettings.setU32("RestrainedLoveReattachDelay", mRestrainedLoveReattachDelay);
+	gSavedSettings.setString("RestrainedLoveRecvimMessage", mRestrainedLoveRecvimMessage);
+	gSavedSettings.setString("RestrainedLoveSendimMessage", mRestrainedLoveSendimMessage);
+	gSavedSettings.setString("RestrainedLoveBlacklist",	mRestrainedLoveBlacklist);
 	gSavedSettings.setBOOL("PreviewAnimInWorld",		mPreviewAnimInWorld);
 	gSavedSettings.setBOOL("SpeedRez",					mSpeedRez);
 	gSavedSettings.setU32("SpeedRezInterval",			mSpeedRezInterval);
@@ -467,7 +494,159 @@ void HBPrefsCoolImpl::apply()
 		gSavedPerAccountSettings.setBOOL("HighlightDisplayName", childGetValue("highlight_display_name_check"));
 	}
 
+	LLTextEditor* text = getChild<LLTextEditor>("receive_im_message_editor");
+	LLWString message = text->getWText(); 
+	LLWStringUtil::replaceTabsWithSpaces(message, 4);
+	LLWStringUtil::replaceChar(message, '\n', '^');
+	gSavedSettings.setString("RestrainedLoveRecvimMessage",
+							 std::string(wstring_to_utf8str(message)));
+
+	text = getChild<LLTextEditor>("send_im_message_editor");
+	message = text->getWText(); 
+	LLWStringUtil::replaceTabsWithSpaces(message, 4);
+	LLWStringUtil::replaceChar(message, '\n', '^');
+	gSavedSettings.setString("RestrainedLoveSendimMessage",
+							 std::string(wstring_to_utf8str(message)));
+
 	refreshValues();
+}
+
+//static
+void HBPrefsCoolImpl::onCommitCheckBoxShowButton(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enabled = check->get();
+	if (enabled && gSavedSettings.getBOOL("ShowToolBar") == FALSE)
+	{
+		gSavedSettings.setBOOL("ShowToolBar", TRUE);
+	}
+}
+
+//static
+void HBPrefsCoolImpl::onCommitCheckBoxRestrainedLove(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enable = check->get();
+	self->refreshRestrainedLove(enable);
+	if ((bool)self->mRestrainedLove != enable)
+	{
+		LLNotifications::instance().add("InEffectAfterRestart");
+	}
+}
+
+//static
+void HBPrefsCoolImpl::onCommitCheckBoxSpeedRez(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enabled = check->get();
+	self->childSetEnabled("speed_rez_interval", enabled);
+	self->childSetEnabled("speed_rez_seconds", enabled);
+}
+
+//static
+void HBPrefsCoolImpl::onCommitCheckBoxPrivateLookAt(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	bool enabled = check->get();
+	self->childSetEnabled("private_look_at_limit", enabled);
+	self->childSetEnabled("private_look_at_limit_meters", enabled);
+}
+
+//static
+void HBPrefsCoolImpl::onCommitCheckBoxAfterRestart(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	BOOL saved = FALSE;
+	std::string control = check->getControlName();
+	if (control == "UseOldChatHistory")
+	{
+		saved = self->mUseOldChatHistory;
+	}
+	else if (control == "IMTabsVerticalStacking")
+	{
+		saved = self->mIMTabsVerticalStacking;
+	}
+	else if (control == "UseOldStatusBarIcons")
+	{
+		saved = self->mUseOldStatusBarIcons;
+	}
+	else if (control == "UseNewSLLoginPage")
+	{
+		saved = self->mUseNewSLLoginPage;
+	}
+	else if (control == "RestrainedLoveNoSetEnv")
+	{
+		saved = self->mRestrainedLoveNoSetEnv;
+	}
+	else if (control == "RestrainedLoveUntruncatedEmotes")
+	{
+		saved = self->mRestrainedLoveUntruncatedEmotes;
+	}
+	else if (control == "RestrainedLoveCanOoc")
+	{
+		saved = self->mRestrainedLoveUntruncatedEmotes;
+	}
+ 	if (saved != check->get())
+	{
+		LLNotifications::instance().add("InEffectAfterRestart");
+	}
+}
+
+//static
+void HBPrefsCoolImpl::onCommitUserProfile(LLUICtrl* ctrl, void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	LLRadioGroup* radio = (LLRadioGroup*)ctrl;
+	if (!self || !radio) return;
+
+	std::string blacklist;
+	U32 profile = radio->getSelectedIndex();
+	switch (profile)
+	{
+		case 0:
+			blacklist.clear();
+			break;
+		case 1:
+			blacklist = RRInterface::sRolePlayBlackList;
+			break;
+		case 2:
+			blacklist = RRInterface::sVanillaBlackList;
+			break;
+		default:
+			blacklist = gSavedSettings.getString("RestrainedLoveBlacklist");
+			break;
+	}
+	gSavedSettings.setString("RestrainedLoveBlacklist",	blacklist);
+
+	if (self->mRestrainedLoveUserProfile != profile)
+	{
+		LLNotifications::instance().add("InEffectAfterRestart");
+	}
+	self->mRestrainedLoveUserProfile = profile;
+}
+
+//static
+void HBPrefsCoolImpl::onClickCustomBlackList(void* user_data)
+{
+	HBPrefsCoolImpl* self = (HBPrefsCoolImpl*)user_data;
+	if (!self) return;
+	HBFloaterBlacklistRLV::showInstance();
+	self->mWatchBlackListFloater = true;
 }
 
 //---------------------------------------------------------------------------
@@ -484,11 +663,13 @@ HBPrefsCool::~HBPrefsCool()
 
 void HBPrefsCool::apply()
 {
+	HBFloaterBlacklistRLV::closeInstance();
 	impl.apply();
 }
 
 void HBPrefsCool::cancel()
 {
+	HBFloaterBlacklistRLV::closeInstance();
 	impl.cancel();
 }
 

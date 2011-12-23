@@ -23,7 +23,7 @@
 			FALSE
 		</combo_item>
 	</combo_box>
-	<line_editor bottom_delta="0" height="20" name="val_text" max_length="1024" visible="false" width="320" />
+	<line_editor bottom_delta="0" height="20" name="val_text" max_length="2048" visible="false" width="320" />
 	<color_swatch bottom="30" can_apply_immediately="true" height="55" label="Color"
 	     name="color_swatch" visible="true" width="37" />
 	<spinner bottom_delta="25" height="20" label="x" label_width="40" max_val="10000000"

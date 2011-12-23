@@ -14,22 +14,6 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
-    <key>FloaterRLVRect</key>
-    <map>
-      <key>Comment</key>
-      <string>Rectangle for the RestrainedLove restrictions floater</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Rect</string>
-      <key>Value</key>
-      <array>
-        <integer>0</integer>
-        <integer>336</integer>
-        <integer>600</integer>
-        <integer>0</integer>
-      </array>
-    </map>
     <key>RestrainedLoveDebug</key>
     <map>
       <key>Comment</key>
@@ -52,6 +36,17 @@
       <key>Value</key>
       <integer>1</integer>
     </map>
+    <key>RestrainedLoveUntruncatedEmotes</key>
+    <map>
+      <key>Comment</key>
+      <string>When TRUE, emotes are never truncated (equivalent to @emote=add). Requires a restart.</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
     <key>RestrainedLoveCanOoc</key>
     <map>
       <key>Comment</key>
@@ -66,7 +61,7 @@
     <key>RestrainedLoveRecvimMessage</key>
     <map>
       <key>Comment</key>
-      <string>Message to show to people trying to IM you when you are forbidden to receive IMs. Requires a restart.</string>
+      <string>Message to show to people trying to IM you while you are forbidden to receive IMs. Requires a restart.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -110,18 +105,7 @@
     <key>RestrainedLoveAllowWear</key>
     <map>
       <key>Comment</key>
-      <string>When TRUE, enables the Wear command in the inventory context menus (unless @defaultwear is in force).</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>1</integer>
-    </map>
-    <key>RestrainedLoveAddReplace</key>
-    <map>
-      <key>Comment</key>
-      <string>When TRUE, enables the Add to Outfit and Replace Outfit commands in the inventory context menus (unless @defaultwear is in force).</string>
+      <string>When TRUE, enables the Wear, Add to Outfit and Replace Outfit commands in the inventory context menus (unless @defaultwear is in force).</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -132,13 +116,51 @@
     <key>RestrainedLoveReattachDelay</key>
     <map>
       <key>Comment</key>
-      <string>Delay between an accidental kick off of a locked attachment and the moment when it is auto-reattached (keep above 10s !)</string>
+      <string>Delay between an accidental kick off of a locked attachment and the moment when it is auto-reattached (keep above 5s !)</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <integer>15</integer>
+      <integer>10</integer>
+    </map>
+    <key>RestrainedLoveExtendedGetcommand</key>
+    <map>
+      <key>Comment</key>
+      <string>When TRUE, enables the the extended version of @getcommand (which then returns "behav%f" for @behav=force commands).</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
+    <key>RestrainedLoveBlacklist</key>
+    <map>
+      <key>Comment</key>
+      <string>Comma-separated list of blacklisted RestrainedLove "behaviours" (append "%f" to behaviours using "force" as a parameter). Requires a restart</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>String</string>
+      <key>Value</key>
+      <string />
+    </map>
+    <key>FloaterRLVRect</key>
+    <map>
+      <key>Comment</key>
+      <string>Rectangle for the RestrainedLove restrictions floater</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Rect</string>
+      <key>Value</key>
+      <array>
+        <integer>0</integer>
+        <integer>336</integer>
+        <integer>600</integer>
+        <integer>0</integer>
+      </array>
     </map>
     <key>AFKTimeout</key>
     <map>
@@ -7121,17 +7143,6 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
-    <key>MouseSun</key>
-    <map>
-      <key>Comment</key>
-      <string />
-      <key>Persist</key>
-      <integer>0</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>0</integer>
-    </map>
     <key>MouselookBtnState</key>
     <map>
       <key>Comment</key>
@@ -7678,17 +7689,6 @@
         <real>0.0</real>
         <real>1.0</real>
       </array>
-    </map>
-    <key>OverlayTitle</key>
-    <map>
-      <key>Comment</key>
-      <string>Controls watermark text message displayed on screen when "ShowOverlayTitle" is enabled (one word, underscores become spaces)</string>
-      <key>Persist</key>
-      <integer>1</integer>
-      <key>Type</key>
-      <string>String</string>
-      <key>Value</key>
-      <string>Set_via_OverlayTitle_in_settings.xml</string>
     </map>
     <key>PTTCurrentlyEnabled</key>
     <map>
@@ -10445,7 +10445,7 @@
     <key>MeshUploadEnable</key>
     <map>
       <key>Comment</key>
-      <string>Enable the (not yet functionnal) mesh upload feature for non-Linux systems.</string>
+      <string>Enable the (not yet functionnal) mesh upload feature for Windows systems.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -10489,7 +10489,7 @@
     <key>BlockingFilePicker</key>
     <map>
       <key>Comment</key>
-      <string>Use a blocking threaded file picker. Requires a restart.</string>
+      <string>Use a blocking threaded file picker. Requires a restart. This setting is ignored for Darwin.</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
@@ -11278,33 +11278,22 @@
       <integer>1</integer>
     </map>
     <key>ShowInInventory</key>
-        <map>
-        <key>Comment</key>
-            <string>Automatically opens inventory to show accepted objects</string>
-        <key>Persist</key>
-            <integer>1</integer>
-        <key>Type</key>
-            <string>Boolean</string>
-        <key>Value</key>
-            <integer>0</integer>
-        </map>
+      <map>
+      <key>Comment</key>
+      <string>Automatically opens inventory to show accepted objects</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+      </map>
     <key>ShowObjectUpdates</key>
     <map>
       <key>Comment</key>
       <string>Show when update messages are received for individual objects</string>
       <key>Persist</key>
       <integer>0</integer>
-      <key>Type</key>
-      <string>Boolean</string>
-      <key>Value</key>
-      <integer>0</integer>
-    </map>
-    <key>ShowOverlayTitle</key>
-    <map>
-      <key>Comment</key>
-      <string>Prints watermark text message on screen</string>
-      <key>Persist</key>
-      <integer>1</integer>
       <key>Type</key>
       <string>Boolean</string>
       <key>Value</key>
@@ -11411,15 +11400,15 @@
     </map>
 	<key>ShowTutorial</key>
 	<map>
-		<key>Comment</key>
-		<string>Show tutorial window on login</string>
-		<key>Persist</key>
-		<integer>1</integer>
-		<key>Type</key>
-		<string>Boolean</string>
-		<key>Value</key>
-		<integer>0</integer>
-	</map>
+      <key>Comment</key>
+      <string>Show tutorial window on login</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
 	<key>ShowVoiceChannelPopup</key>
     <map>
       <key>Comment</key>

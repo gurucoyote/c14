@@ -66,6 +66,7 @@
 #include "llfloaterchat.h"
 #include "llimpanel.h"
 #include "llimview.h"
+#include "llstartup.h"				// for gIsInSecondLife
 #include "llviewergenericmessage.h"	// for gGenericDispatcher
 #include "llviewerobjectlist.h"
 #include "llviewerwindow.h"
@@ -310,6 +311,9 @@ LLMuteList::~LLMuteList()
 
 BOOL LLMuteList::isLinden(const std::string& name) const
 {
+	// We don't know the last name for admins in OpenSim, so...
+	if (!gIsInSecondLife) return FALSE;
+
 	typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 	boost::char_separator<char> sep(" ");
 	tokenizer tokens(name, sep);
