@@ -33,32 +33,32 @@
 
 #include "llviewerprecompiledheaders.h"
 
+#include <boost/tokenizer.hpp>
+
 #include "llhudtext.h"
 
+#include "llcriticaldamp.h"
+#include "llfontgl.h"
+#include "llglheaders.h"
+#include "llmenugl.h"
+#include "llimagegl.h"
 #include "llrender.h"
 
 #include "llagent.h"
-#include "llviewercontrol.h"
 #include "llchatbar.h"
-#include "llcriticaldamp.h"
 #include "lldrawable.h"
-#include "llfontgl.h"
-#include "llglheaders.h"
 #include "llhudrender.h"
-#include "llimagegl.h"
-#include "llui.h"
-#include "llviewercamera.h"
-#include "llviewertexturelist.h"
-#include "llviewerobject.h"
-#include "llvovolume.h"
-#include "llviewerwindow.h"
 #include "llstatusbar.h"
-#include "llmenugl.h"
-#include "pipeline.h"
+#include "llviewercamera.h"
+#include "llviewercontrol.h"
+#include "llviewerobject.h"
 //MK
 #include "llviewerregion.h"
 //mk
-#include <boost/tokenizer.hpp>
+#include "llviewertexturelist.h"
+#include "llviewerwindow.h"
+#include "llvovolume.h"
+#include "pipeline.h"
 
 const F32 SPRING_STRENGTH = 0.7f;
 const F32 RESTORATION_SPRING_TIME_CONSTANT = 0.1f;
@@ -112,6 +112,7 @@ LLHUDText::LLHUDText(const U8 type) :
 	mDropShadow = TRUE;
 	mOffscreen = FALSE;
 	mRadius = 0.1f;
+	mRoundedSquare = LLUI::getUIImage("rounded_square.tga");
 	LLPointer<LLHUDText> ptr(this);
 	sTextObjects.insert(ptr);
 	//LLDebugVarMessageBox::show("max width", &HUD_TEXT_MAX_WIDTH, 500.f, 1.f);
@@ -265,9 +266,6 @@ void LLHUDText::renderText()
 
 	mOffsetY = lltrunc(mHeight * ((mVertAlignment == ALIGN_VERT_CENTER) ? 0.5f : 1.f));
 
-	// *TODO: cache this image
-	LLUIImagePtr imagep = LLUI::getUIImage("rounded_square.tga");
-
 	// *TODO: make this a per-text setting
 	static LLCachedControl<LLColor4> background_chat_color(gSavedSettings, "BackgroundChatColor");
 	LLColor4 bg_color = background_chat_color;
@@ -305,7 +303,7 @@ void LLHUDText::renderText()
 		LLViewerCamera::getInstance()->getPixelVectors(mPositionAgent, y_pixel_vec, x_pixel_vec);
 	}
 
-	LLVector2 border_scale_vec((F32)border_width / (F32)imagep->getTextureWidth(), (F32)border_height / (F32)imagep->getTextureHeight());
+	LLVector2 border_scale_vec((F32)border_width / (F32)mRoundedSquare->getTextureWidth(), (F32)border_height / (F32)mRoundedSquare->getTextureHeight());
 	LLVector3 width_vec = mWidth * x_pixel_vec;
 	LLVector3 height_vec = mHeight * y_pixel_vec;
 	LLVector3 scaled_border_width = (F32)llfloor(border_scale * (F32)border_width) * x_pixel_vec;
@@ -326,9 +324,9 @@ void LLHUDText::renderText()
 		screen_offset = updateScreenPos(mPositionOffset);
 	}
 
-	LLVector3 render_position = mPositionAgent  
-			+ (x_pixel_vec * screen_offset.mV[VX])
-			+ (y_pixel_vec * screen_offset.mV[VY]);
+	LLVector3 render_position = mPositionAgent +
+								(x_pixel_vec * screen_offset.mV[VX]) +
+								(y_pixel_vec * screen_offset.mV[VY]);
 
 	if (mUseBubble)
 	{
@@ -341,7 +339,7 @@ void LLHUDText::renderText()
 				- (height_vec);
 			LLUI::translate(bg_pos.mV[VX], bg_pos.mV[VY], bg_pos.mV[VZ]);
 
-			gGL.getTexUnit(0)->bind(imagep->getImage());
+			gGL.getTexUnit(0)->bind(mRoundedSquare->getImage());
 
 			gGL.color4fv(bg_color.mV);
 			gl_segmented_rect_3d_tex(border_scale_vec, scaled_border_width, scaled_border_height, width_vec, height_vec);

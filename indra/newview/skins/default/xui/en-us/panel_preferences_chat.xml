@@ -220,6 +220,7 @@ Color:
 			Anyone's objects
 		</radio_item>
 	</radio_group>
+<!--
 	<text name="text_box10" type="string" length="1" enabled="true" mouse_opaque="true"
 	 bg_visible="false" border_drop_shadow_visible="false" border_visible="false" drop_shadow_visible="true"
 	 font="SansSerifSmall" v_pad="0" h_pad="0" halign="left"
@@ -240,10 +241,7 @@ Color:
 		</combo_item>
 		<combo_item type="string" length="1" enabled="true" name="English" value="en">
 			English
-		</combo_item>
-		
-		<!-- After "System Default" and "English", please keep the rest of these combo_items in alphabetical order by the first character in the string. -->
-		
+		</combo_item>		
 		<combo_item type="string" length="1" enabled="true" name="Danish" value="da">
 			Dansk (Danish)
 		</combo_item>
@@ -290,10 +288,11 @@ Color:
 			한국어 (Korean)
 		</combo_item>
 	</combo_box>
+-->
 	<text name="text_box12" type="string" length="1" enabled="true" mouse_opaque="true"
 	 bg_visible="false" border_drop_shadow_visible="false" border_visible="false" drop_shadow_visible="true"
 	 font="SansSerifSmall" v_pad="0" h_pad="0" halign="left"
-	 bottom_delta="-20" left="10" height="16" width="90" follows="left|top">
+	 bottom_delta="-30" left="10" height="16" width="90" follows="left|top">
 		Chat logging:
 	</text>	
 	<text name="text_box13" type="string" length="1" enabled="true" mouse_opaque="true"

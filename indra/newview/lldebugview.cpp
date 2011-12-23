@@ -99,7 +99,7 @@ LLDebugView::LLDebugView(const std::string& name, const LLRect &rect)
 	addChild(gTextureView);
 	//gTextureView->reshape(r.getWidth(), r.getHeight(), TRUE);
 
-	if(gAuditTexture)
+	if (gAuditTexture)
 	{
 		r.set(150, rect.getHeight() - 50, 900 + LLImageGL::sTextureLoadedCounter.size() * 30, 100);
 		gTextureSizeView = new LLTextureSizeView("gTextureSizeView");
@@ -129,7 +129,6 @@ LLDebugView::LLDebugView(const std::string& name, const LLRect &rect)
 	addChild(gVelocityBar);
 }
 
-
 LLDebugView::~LLDebugView()
 {
 	// These have already been deleted.  Fix the globals appropriately.
@@ -138,4 +137,3 @@ LLDebugView::~LLDebugView()
 	gTextureSizeView = NULL;
 	gTextureCategoryView = NULL;
 }
-

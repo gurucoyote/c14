@@ -35,6 +35,7 @@
 
 #include "llerrorcontrol.h" // For LLLineBuffer
 #include "llthread.h"
+#include "llui.h"
 #include "llview.h"
 #include "v4color.h"
 #include <deque>
@@ -45,13 +46,14 @@ class LLSD;
 class LLConsole : public LLLineBuffer, public LLView
 {
 private:
-	F32			mLinePersistTime; // Age at which to stop drawing.
-	F32			mFadeTime; // Age at which to start fading
-	LLFontGL*	mFont;
-	S32			mConsoleWidth;
-	S32			mConsoleHeight;
-	LLMutex 	mQueueMutex;
-	LLTimer		mTimer;
+	F32				mLinePersistTime;	// Age at which to stop drawing.
+	F32				mFadeTime;			// Age at which to start fading
+	LLFontGL*		mFont;
+	S32				mConsoleWidth;
+	S32				mConsoleHeight;
+	LLMutex 		mQueueMutex;
+	LLTimer			mTimer;
+	LLUIImagePtr	mRoundedSquare;
 
 public:
 	//A paragraph color segment defines the color of text in a line 

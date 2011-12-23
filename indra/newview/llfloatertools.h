@@ -178,6 +178,9 @@ public:
 	LLSlider		*mSliderDozerSize;
 	LLSlider		*mSliderDozerForce;
 
+	LLComboBox		*mComboTreesGrass;
+
+
 	LLButton		*mBtnApplyToSelection;
 
 	std::vector<LLButton*>	mButtons;//[ 15 ];
@@ -200,6 +203,9 @@ private:
 	U32						mPrecision;
 
 	std::map<std::string, std::string> mStatusText;
+
+	void updateTreeGrassCombo(bool visible);
+	static void onSelectTreesGrass(LLUICtrl*, void*);
 };
 
 extern LLFloaterTools *gFloaterTools;

@@ -62,6 +62,7 @@
 #include "llsky.h"
 #include "lltoolbar.h"
 #include "lltracker.h"
+#include "lltranslate.h"
 #include "llvieweraudio.h"
 #include "llviewerjoystick.h"
 #include "llviewermenu.h"
@@ -575,6 +576,7 @@ bool handleVoiceClientPrefsChanged(const LLSD& newvalue)
 	return true;
 }
 
+#if TRANSLATE_CHAT
 bool handleTranslateChatPrefsChanged(const LLSD& newvalue)
 {
 	LLFloaterChat* floaterp = LLFloaterChat::getInstance();
@@ -586,6 +588,7 @@ bool handleTranslateChatPrefsChanged(const LLSD& newvalue)
 	}
 	return true;
 }
+#endif
 
 static bool handleMiniMapCenterChanged(const LLSD& newvalue)
 {
@@ -801,7 +804,9 @@ void settings_setup_listeners()
 	gSavedSettings.getControl("VoiceOutputAudioDevice")->getSignal()->connect(boost::bind(&handleVoiceClientPrefsChanged, _2));
 	gSavedSettings.getControl("AudioLevelMic")->getSignal()->connect(boost::bind(&handleVoiceClientPrefsChanged, _2));
 	gSavedSettings.getControl("LipSyncEnabled")->getSignal()->connect(boost::bind(&handleVoiceClientPrefsChanged, _2));	
-	gSavedSettings.getControl("TranslateChat")->getSignal()->connect(boost::bind(&handleTranslateChatPrefsChanged, _2));	
+#if TRANSLATE_CHAT
+	gSavedSettings.getControl("TranslateChat")->getSignal()->connect(boost::bind(&handleTranslateChatPrefsChanged, _2));
+#endif
 	gSavedSettings.getControl("MiniMapCenter")->getSignal()->connect(boost::bind(&handleMiniMapCenterChanged, _2));	
 	gSavedSettings.getControl("MiniMapRotate")->getSignal()->connect(boost::bind(&handleMiniMapRotateChanged, _2));	
 	gSavedSettings.getControl("UseOldTrackingDots")->getSignal()->connect(boost::bind(&handleUseOldTrackingDotsChanged, _2));	

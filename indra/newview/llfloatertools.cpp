@@ -83,6 +83,8 @@
 #include "llviewerparcelmgr.h"
 #include "llviewerregion.h"
 #include "llviewerwindow.h"
+#include "llvograss.h"
+#include "llvotree.h"
 
 // Globals
 LLFloaterTools *gFloaterTools = NULL;
@@ -120,14 +122,14 @@ void commit_grid_mode(LLUICtrl *, void*);
 void commit_slider_zoom(LLUICtrl *, void*);
 
 //static
-void*	LLFloaterTools::createPanelPermissions(void* data)
+void* LLFloaterTools::createPanelPermissions(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelPermissions = new LLPanelPermissions("General");
 	return floater->mPanelPermissions;
 }
 //static
-void*	LLFloaterTools::createPanelObject(void* data)
+void* LLFloaterTools::createPanelObject(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelObject = new LLPanelObject("Object");
@@ -135,7 +137,7 @@ void*	LLFloaterTools::createPanelObject(void* data)
 }
 
 //static
-void*	LLFloaterTools::createPanelVolume(void* data)
+void* LLFloaterTools::createPanelVolume(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelVolume = new LLPanelVolume("Features");
@@ -143,7 +145,7 @@ void*	LLFloaterTools::createPanelVolume(void* data)
 }
 
 //static
-void*	LLFloaterTools::createPanelFace(void* data)
+void* LLFloaterTools::createPanelFace(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelFace = new LLPanelFace("Texture");
@@ -151,7 +153,7 @@ void*	LLFloaterTools::createPanelFace(void* data)
 }
 
 //static
-void*	LLFloaterTools::createPanelContents(void* data)
+void* LLFloaterTools::createPanelContents(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelContents = new LLPanelContents("Contents");
@@ -159,7 +161,7 @@ void*	LLFloaterTools::createPanelContents(void* data)
 }
 
 //static
-void*	LLFloaterTools::createPanelContentsInventory(void* data)
+void* LLFloaterTools::createPanelContentsInventory(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelContents->mPanelInventory = new LLPanelInventory(std::string("ContentsInventory"), LLRect());
@@ -167,7 +169,7 @@ void*	LLFloaterTools::createPanelContentsInventory(void* data)
 }
 
 //static
-void*	LLFloaterTools::createPanelLandInfo(void* data)
+void* LLFloaterTools::createPanelLandInfo(void* data)
 {
 	LLFloaterTools* floater = (LLFloaterTools*)data;
 	floater->mPanelLandInfo = new LLPanelLandInfo(std::string("land info panel"));
@@ -196,7 +198,7 @@ void LLFloaterTools::toolsPrecision()
 	}
 }
 
-BOOL	LLFloaterTools::postBuild()
+BOOL LLFloaterTools::postBuild()
 {
 
 	// Hide until tool selected
@@ -271,7 +273,7 @@ BOOL	LLFloaterTools::postBuild()
 	// Create Buttons
 	//
 
-	static	const std::string	toolNames[]={
+	static const std::string toolNames[]={
 			"ToolCube",
 			"ToolPrism",
 			"ToolPyramid",
@@ -287,7 +289,7 @@ BOOL	LLFloaterTools::postBuild()
 			"ToolRing",
 			"ToolTree",
 			"ToolGrass"};
-	void*	toolData[]={
+	void* toolData[] = {
 			&LLToolPlacerPanel::sCube,
 			&LLToolPlacerPanel::sPrism,
 			&LLToolPlacerPanel::sPyramid,
@@ -303,17 +305,20 @@ BOOL	LLFloaterTools::postBuild()
 			&LLToolPlacerPanel::sTriangleTorus,
 			&LLToolPlacerPanel::sTree,
 			&LLToolPlacerPanel::sGrass};
-	for (size_t t=0; t<LL_ARRAY_SIZE(toolNames); ++t)
+	for (size_t t = 0; t < LL_ARRAY_SIZE(toolNames); t++)
 	{
 		LLButton *found = getChild<LLButton>(toolNames[t]);
 		if (found)
 		{
 			found->setClickedCallback(setObjectType,toolData[t]);
 			mButtons.push_back(found);
-		}else{
+		}
+		else
+		{
 			llwarns << "Tool button not found! DOA Pending." << llendl;
 		}
 	}
+
 	mCheckCopySelection = getChild<LLCheckBoxCtrl>("checkbox copy selection");
 	childSetValue("checkbox copy selection",(BOOL)gSavedSettings.getBOOL("CreateToolCopySelection"));
 	mCheckSticky = getChild<LLCheckBoxCtrl>("checkbox sticky");
@@ -323,19 +328,19 @@ BOOL	LLFloaterTools::postBuild()
 	mCheckCopyRotates = getChild<LLCheckBoxCtrl>("checkbox copy rotates");
 	childSetValue("checkbox copy rotates",(BOOL)gSavedSettings.getBOOL("CreateToolCopyRotates"));
 	mRadioSelectLand = getChild<LLCheckBoxCtrl>("radio select land");
-	childSetCommitCallback("radio select land",commit_select_tool, LLToolSelectLand::getInstance());
+	childSetCommitCallback("radio select land", commit_select_tool, LLToolSelectLand::getInstance());
 	mRadioDozerFlatten = getChild<LLCheckBoxCtrl>("radio flatten");
-	childSetCommitCallback("radio flatten",click_popup_dozer_mode,  (void*)0);
+	childSetCommitCallback("radio flatten", click_popup_dozer_mode, (void*)0);
 	mRadioDozerRaise = getChild<LLCheckBoxCtrl>("radio raise");
-	childSetCommitCallback("radio raise",click_popup_dozer_mode,  (void*)1);
+	childSetCommitCallback("radio raise", click_popup_dozer_mode, (void*)1);
 	mRadioDozerLower = getChild<LLCheckBoxCtrl>("radio lower");
-	childSetCommitCallback("radio lower",click_popup_dozer_mode,  (void*)2);
+	childSetCommitCallback("radio lower", click_popup_dozer_mode, (void*)2);
 	mRadioDozerSmooth = getChild<LLCheckBoxCtrl>("radio smooth");
-	childSetCommitCallback("radio smooth",click_popup_dozer_mode,  (void*)3);
+	childSetCommitCallback("radio smooth", click_popup_dozer_mode, (void*)3);
 	mRadioDozerNoise = getChild<LLCheckBoxCtrl>("radio noise");
-	childSetCommitCallback("radio noise",click_popup_dozer_mode,  (void*)4);
+	childSetCommitCallback("radio noise", click_popup_dozer_mode, (void*)4);
 	mRadioDozerRevert = getChild<LLCheckBoxCtrl>("radio revert");
-	childSetCommitCallback("radio revert",click_popup_dozer_mode,  (void*)5);
+	childSetCommitCallback("radio revert", click_popup_dozer_mode, (void*)5);
 	mBtnApplyToSelection = getChild<LLButton>("button apply to selection");
 	childSetAction("button apply to selection",click_apply_to_selection,  (void*)0);
 
@@ -347,6 +352,9 @@ BOOL	LLFloaterTools::postBuild()
 	childSetCommitCallback("slider force",commit_slider_dozer_force,  (void*)0);
 	// the setting stores the actual force multiplier, but the slider is logarithmic, so we convert here
 	childSetValue("slider force", log10(gSavedSettings.getF32("LandBrushForce")));
+
+	mComboTreesGrass = getChild<LLComboBox>("tree_grass");
+	childSetCommitCallback("tree_grass", onSelectTreesGrass, this);
 
 	mTab = getChild<LLTabContainer>("Object Info Tabs");
 	if (mTab)
@@ -426,6 +434,8 @@ LLFloaterTools::LLFloaterTools()
 	mSliderDozerSize(NULL),
 	mSliderDozerForce(NULL),
 	mBtnApplyToSelection(NULL),
+
+	mComboTreesGrass(NULL),
 
 	mTab(NULL),
 	mPanelPermissions(NULL),
@@ -706,8 +716,9 @@ void LLFloaterTools::updatePopup(LLCoordGL center, MASK mask)
 
 	mBtnCreate->setToggleState(	tool == LLToolCompCreate::getInstance());
 
-	if (mCheckCopySelection
-		&& mCheckCopySelection->get())
+	updateTreeGrassCombo(create_visible);
+
+	if (mCheckCopySelection && mCheckCopySelection->get())
 	{
 		// don't highlight any placer button
 		for (std::vector<LLButton*>::size_type i = 0; i < mButtons.size(); i++)
@@ -1016,6 +1027,7 @@ void LLFloaterTools::setObjectType(void* data)
 	LLPCode pcode = *(LLPCode*) data;
 	LLToolPlacer::setObjectType(pcode);
 	gSavedSettings.setBOOL("CreateToolCopySelection", FALSE);
+	gFloaterTools->updateTreeGrassCombo(true);
 	gFocusMgr.setMouseCapture(NULL);
 }
 
@@ -1049,4 +1061,83 @@ void LLFloaterTools::onFocusReceived()
 {
 	LLToolMgr::getInstance()->setCurrentToolset(gBasicToolset);
 	LLFloater::onFocusReceived();
+}
+
+// static
+void LLFloaterTools::onSelectTreesGrass(LLUICtrl*, void*)
+{
+	const std::string& selected = gFloaterTools->mComboTreesGrass->getValue();
+	LLPCode pcode = LLToolPlacer::getObjectType();
+	if (pcode == LLToolPlacerPanel::sTree) 
+	{
+		gSavedSettings.setString("LastTree", selected);
+	} 
+	else if (pcode == LLToolPlacerPanel::sGrass) 
+	{
+		gSavedSettings.setString("LastGrass", selected);
+	}  
+}
+
+void LLFloaterTools::updateTreeGrassCombo(bool visible)
+{
+	LLTextBox* tree_grass_label = getChild<LLTextBox>("tree_grass_label");
+	if (visible) 
+	{
+		LLPCode pcode = LLToolPlacer::getObjectType();
+		std::map<std::string, S32>::iterator it, end;
+		std::string selected;
+		if (pcode == LLToolPlacerPanel::sTree) 
+		{
+			tree_grass_label->setVisible(visible);
+			LLButton* button = getChild<LLButton>("ToolTree");
+			tree_grass_label->setText(button->getToolTip());
+
+			selected = gSavedSettings.getString("LastTree");
+			it = LLVOTree::sSpeciesNames.begin();
+			end = LLVOTree::sSpeciesNames.end();
+		} 
+		else if (pcode == LLToolPlacerPanel::sGrass) 
+		{
+			tree_grass_label->setVisible(visible);
+			LLButton* button = getChild<LLButton>("ToolGrass");
+			tree_grass_label->setText(button->getToolTip());
+
+			selected = gSavedSettings.getString("LastGrass");
+			it = LLVOGrass::sSpeciesNames.begin();
+			end = LLVOGrass::sSpeciesNames.end();
+		} 
+		else 
+		{
+			mComboTreesGrass->removeall();
+			// LLComboBox::removeall() does not clear the label
+			mComboTreesGrass->setLabel(LLStringExplicit(""));
+			mComboTreesGrass->setEnabled(false);
+			mComboTreesGrass->setVisible(false);
+			tree_grass_label->setVisible(false);
+			return;
+		}
+
+		mComboTreesGrass->removeall();
+		mComboTreesGrass->add("Random");
+
+		S32 select = 0, i = 0;
+
+		while (it != end) 
+		{
+			const std::string& species = it->first;
+			mComboTreesGrass->add(species);
+			i++;
+			if (species == selected)
+			{
+				select = i;
+			}
+			it++;
+		}
+		// if saved species not found, default to "Random"
+		mComboTreesGrass->selectNthItem(select);
+		mComboTreesGrass->setEnabled(true);
+	}
+
+	mComboTreesGrass->setVisible(visible);
+	tree_grass_label->setVisible(visible);
 }

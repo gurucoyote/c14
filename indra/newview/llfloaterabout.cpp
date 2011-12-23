@@ -75,32 +75,110 @@ LLFloaterAbout* LLFloaterAbout::sInstance = NULL;
 static std::string get_viewer_release_notes_url();
 
 ///----------------------------------------------------------------------------
+/// Class LLServerReleaseNotesURLFetcher
+///----------------------------------------------------------------------------
+class LLServerReleaseNotesURLFetcher : public LLHTTPClient::Responder
+{
+	LOG_CLASS(LLServerReleaseNotesURLFetcher);
+public:
+
+	static void startFetch();
+	/*virtual*/ void completedHeader(U32 status,
+									 const std::string& reason,
+									 const LLSD& content);
+	/*virtual*/ void completedRaw(U32 status,
+								  const std::string& reason,
+								  const LLChannelDescriptors& channels,
+								  const LLIOPipe::buffer_ptr_t& buffer);
+};
+
+///----------------------------------------------------------------------------
 /// Class LLFloaterAbout
 ///----------------------------------------------------------------------------
 
 // Default constructor
 LLFloaterAbout::LLFloaterAbout() 
-:	LLFloater(std::string("floater_about"), std::string("FloaterAboutRect"), LLStringUtil::null)
+:	LLFloater(std::string("floater_about"))
 {
 	LLUICtrlFactory::getInstance()->buildFloater(this, "floater_about.xml");
+	sInstance = this;
+}
 
-	// Support for changing product name.
-	std::string title("About ");
-	title += LLAppViewer::instance()->getSecondLifeTitle();
-	setTitle(title);
+// Destroys the object
+LLFloaterAbout::~LLFloaterAbout()
+{
+	sInstance = NULL;
+}
 
-	LLViewerTextEditor *support_widget = 
-		getChild<LLViewerTextEditor>("support", true);
+BOOL LLFloaterAbout::postBuild()
+{
+	center();
 
-	LLViewerTextEditor *credits_widget = 
-		getChild<LLViewerTextEditor>("credits", true);
+	childSetAction("copy_button", onClickCopyToClipboard, this);
+	childSetAction("close_button", onClickClose, this);
 
+	LLViewerTextEditor *credits_widget = getChild<LLViewerTextEditor>("credits", true);
+	credits_widget->setCursorPos(0);
+	credits_widget->setEnabled(FALSE);
+	credits_widget->setTakesFocus(TRUE);
+	credits_widget->setHandleEditKeysDirectly(TRUE);
 
-	if (!support_widget || !credits_widget)
+	std::string support_url;
+	LLViewerRegion* region = gAgent.getRegion();
+	if (region)
 	{
-		return;
+		std::string url = region->getCapability("ServerReleaseNotes");
+		if (!url.empty())
+		{
+			if (url.find("/cap/") != std::string::npos)
+			{
+				// The URL is itself a capability URL: start fetching the
+				// actual server release notes URL
+				LLServerReleaseNotesURLFetcher::startFetch();
+				support_url = LLTrans::getString("RetrievingData");
+			}
+			else
+			{
+				// On OpenSim grids, we could still get a direct URL
+				support_url = url;
+			}
+		}
 	}
+	setSupportText(support_url);
 
+	return TRUE;
+}
+
+void LLFloaterAbout::updateServerReleaseNotesURL(const std::string& url)
+{
+	setSupportText(url);
+}
+
+static std::string get_viewer_release_notes_url()
+{
+	std::ostringstream version;
+	version << LL_VERSION_MAJOR << "."
+			<< LL_VERSION_MINOR << "."
+			<< LL_VERSION_PATCH << "."
+			<< LL_VERSION_BUILD;
+
+	LLSD query;
+	query["channel"] = gSavedSettings.getString("VersionChannelName");
+	query["version"] = version.str();
+
+	std::ostringstream url;
+	url << RELEASE_NOTES_BASE_URL << LLURI::mapToQueryString(query);
+
+	return url.str();
+}
+
+void LLFloaterAbout::setSupportText(const std::string& server_release_notes_url)
+{
+	LLColor4 fg_color = gColors.getColor("TextFgReadOnlyColor");
+	LLViewerTextEditor *support_widget = getChild<LLViewerTextEditor>("support", true);
+
+	// We need to prune the highlights, and clear() is not doing it...
+	support_widget->removeTextFromEnd(support_widget->getMaxLength());
 	// For some reason, adding style doesn't work unless this is true.
 	support_widget->setParseHTML(TRUE);
 
@@ -112,18 +190,18 @@ LLFloaterAbout::LLFloaterAbout()
 	viewer_link_style->setColor(gSavedSettings.getColor4("HTMLLinkColor"));
 
 	// Version string
-	std::string version = LLAppViewer::instance()->getSecondLifeTitle()
-		+ llformat(" %d.%d.%d (%d) %s %s (%s)\n",
-				   LL_VERSION_MAJOR, LL_VERSION_MINOR, LL_VERSION_PATCH, LL_VERSION_BUILD,
-				   __DATE__, __TIME__,
-				   gSavedSettings.getString("VersionChannelName").c_str());
+	std::string version = LLAppViewer::instance()->getSecondLifeTitle() +
+						  llformat(" %d.%d.%d (%d) %s %s (%s)\n",
+						  LL_VERSION_MAJOR, LL_VERSION_MINOR, LL_VERSION_PATCH,
+						  LL_VERSION_BUILD, __DATE__, __TIME__,
+						  gSavedSettings.getString("VersionChannelName").c_str());
 //MK
 	if (gRRenabled)
 	{
 		version += gAgent.mRRInterface.getVersion2 () + "\n";
 	}
 //mk
-	support_widget->appendColoredText(version, FALSE, FALSE, gColors.getColor("TextFgReadOnlyColor"));
+	support_widget->appendColoredText(version, false, false, fg_color);
 	support_widget->appendStyledText(LLTrans::getString("ReleaseNotes"), false, false, viewer_link_style);
 
 	std::string support;
@@ -142,10 +220,13 @@ LLFloaterAbout::LLFloaterAbout()
 	if (region)
 	{
 		LLStyleSP server_link_style(new LLStyle);
-		server_link_style->setVisible(true);
-		server_link_style->setFontName(LLStringUtil::null);
-		server_link_style->setLinkHREF(region->getCapability("ServerReleaseNotes"));
-		server_link_style->setColor(gSavedSettings.getColor4("HTMLLinkColor"));
+		if (server_release_notes_url.find("http") == 0)
+		{
+			server_link_style->setVisible(true);
+			server_link_style->setFontName(LLStringUtil::null);
+			server_link_style->setLinkHREF(server_release_notes_url);
+			server_link_style->setColor(gSavedSettings.getColor4("HTMLLinkColor"));
+		}
 
 		const LLVector3d &pos = gAgent.getPositionGlobal();
 		LLUIString pos_text = getString("you_are_at");
@@ -186,21 +267,39 @@ LLFloaterAbout::LLFloaterAbout()
 		}
 		else
 		{
-			support.append ("(Server info hidden)\n\n");
+			support.append("(Server info hidden)\n");
 		}
 //mk
-		support_widget->appendColoredText(support, FALSE, FALSE, gColors.getColor("TextFgReadOnlyColor"));
-		support_widget->appendStyledText(LLTrans::getString("ReleaseNotes"), false, false, server_link_style);
+		support_widget->appendColoredText(support, false, false, fg_color);
 
-		support = "\n\n";
+		if (!server_release_notes_url.empty())
+		{
+			std::string text;
+			if (server_release_notes_url.find("http") == 0)
+			{
+				text = LLTrans::getString("ReleaseNotes") + "\n";
+				support_widget->appendStyledText(text, false, false,
+												 server_link_style);
+			}
+			else
+			{
+				text = LLTrans::getString("ReleaseNotes") + ": " +
+					   server_release_notes_url + "\n";
+				support_widget->appendColoredText(text, false, false, fg_color);
+			}
+		}
+	}
+	else
+	{
+		support_widget->appendColoredText(" \n", false, false, fg_color);
 	}
 
 	// *NOTE: Do not translate text like GPU, Graphics Card, etc -
-	//  Most PC users that know what these mean will be used to the english versions,
-	//  and this info sometimes gets sent to support
-	
+	//  Most PC users that know what these mean will be used to the english
+	//  versions and this info sometimes gets sent to support
+
 	// CPU
-	support.append("CPU: ");
+	support = "CPU: ";
 	support.append(gSysCPU.getCPUString());
 	support.append("\n");
 
@@ -256,39 +355,26 @@ LLFloaterAbout::LLFloaterAbout()
 	support.append("\n");
 
 	// TODO: Implement media plugin version query
-	support.append("Qt Webkit Version: 4.7.1\n");
+	support.append("Qt Webkit Version: 4.7.1 (version number hard-coded)\n");
 
 	if (gPacketsIn > 0)
 	{
-		std::string packet_loss = llformat("Packets Lost: %.0f/%.0f (%.1f%%)", 
-			LLViewerStats::getInstance()->mPacketsLostStat.getCurrent(), F32(gPacketsIn),
-			100.f * LLViewerStats::getInstance()->mPacketsLostStat.getCurrent() / F32(gPacketsIn));
+		LLViewerStats* stats = LLViewerStats::getInstance();
+		std::string packet_loss = llformat("Packets Lost: %.0f/%.0f (%.1f%%)",
+										   stats->mPacketsLostStat.getCurrent(),
+										   F32(gPacketsIn),
+										   100.f * stats->mPacketsLostStat.getCurrent() / F32(gPacketsIn));
 		support.append(packet_loss);
 		support.append("\n");
 	}
 
-	support_widget->appendColoredText(support, FALSE, FALSE, gColors.getColor("TextFgReadOnlyColor"));
+	support_widget->appendColoredText(support, false, true, fg_color);
 
 	// Fix views
 	support_widget->setCursorPos(0);
 	support_widget->setEnabled(FALSE);
 	support_widget->setTakesFocus(TRUE);
 	support_widget->setHandleEditKeysDirectly(TRUE);
-
-	credits_widget->setCursorPos(0);
-	credits_widget->setEnabled(FALSE);
-	credits_widget->setTakesFocus(TRUE);
-	credits_widget->setHandleEditKeysDirectly(TRUE);
-
-	center();
-
-	sInstance = this;
-}
-
-// Destroys the object
-LLFloaterAbout::~LLFloaterAbout()
-{
-	sInstance = NULL;
 }
 
 // static
@@ -302,21 +388,69 @@ void LLFloaterAbout::show(void*)
 	sInstance->open();	 /*Flawfinder: ignore*/
 }
 
-
-static std::string get_viewer_release_notes_url()
+// static
+void LLFloaterAbout::onClickCopyToClipboard(void* userdata)
 {
-	std::ostringstream version;
-	version << LL_VERSION_MAJOR << "."
-		<< LL_VERSION_MINOR << "."
-		<< LL_VERSION_PATCH << "."
-		<< LL_VERSION_BUILD;
+	LLFloaterAbout* self = (LLFloaterAbout*)userdata;
+	LLViewerTextEditor *support = self->getChild<LLViewerTextEditor>("support", true);
+	support->selectAll();
+	support->copy();
+	support->deselect();
+}
 
-	LLSD query;
-	query["channel"] = gSavedSettings.getString("VersionChannelName");
-	query["version"] = version.str();
+// static
+void LLFloaterAbout::onClickClose(void* userdata)
+{
+	LLFloaterAbout* self = (LLFloaterAbout*)userdata;
+	self->close();
+}
 
-	std::ostringstream url;
-	url << RELEASE_NOTES_BASE_URL << LLURI::mapToQueryString(query);
+///----------------------------------------------------------------------------
+/// Class LLServerReleaseNotesURLFetcher implementation
+///----------------------------------------------------------------------------
+// static
+void LLServerReleaseNotesURLFetcher::startFetch()
+{
+	LLViewerRegion* region = gAgent.getRegion();
+	if (!region) return;
 
-	return url.str();
+	// We cannot display the URL returned by the ServerReleaseNotes capability
+	// because opening it in an external browser will trigger a warning about untrusted
+	// SSL certificate.
+	// So we query the URL ourselves, expecting to find
+	// an URL suitable for external browsers in the "Location:" HTTP header.
+	std::string cap_url = region->getCapability("ServerReleaseNotes");
+	LLHTTPClient::get(cap_url, new LLServerReleaseNotesURLFetcher);
+}
+
+// virtual
+void LLServerReleaseNotesURLFetcher::completedHeader(U32 status,
+													 const std::string& reason,
+													 const LLSD& content)
+{
+	LL_DEBUGS("About") << "Status: " << status
+					   << " - Reason: " << reason
+					   << " - Headers: " << content << LL_ENDL;
+
+	LLFloaterAbout* floater_about = LLFloaterAbout::getInstance();
+	if (floater_about)
+	{
+		std::string location = content["location"].asString();
+		if (location.empty())
+		{
+			location = floater_about->getString("ErrorFetchingServerReleaseNotesURL");
+		}
+		floater_about->updateServerReleaseNotesURL(location);
+	}
+}
+
+// virtual
+void LLServerReleaseNotesURLFetcher::completedRaw(U32 status,
+												  const std::string& reason,
+												  const LLChannelDescriptors& channels,
+												  const LLIOPipe::buffer_ptr_t& buffer)
+{
+	// Do nothing.
+	// We're overriding just because the base implementation tries to
+	// deserialize LLSD which triggers warnings.
 }

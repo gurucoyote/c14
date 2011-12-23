@@ -76,6 +76,8 @@
 #define g_return_if_fail(COND) llg_return_if_fail(COND)
 // The generated API
 # include "llappviewerlinux_api.h"
+
+std::string LLAppViewerLinux::sReceivedSLURL = "";
 #endif
 
 namespace
@@ -460,6 +462,9 @@ gboolean viewer_app_api_GoSLURL(ViewerAppAPI *obj, gchar *slurl, gboolean **succ
 
 	llinfos << "Was asked to go to slurl: " << slurl << llendl;
 
+#if 0	// Calling viewer code from within this callback deadlocks next
+		// gtk_main() call when the viewer is made gdk threads aware
+		// (gdk_threads_init() used).
 	std::string url = slurl;
 	LLMediaCtrl* web = NULL;
 	const bool trusted_browser = false;
@@ -470,6 +475,10 @@ gboolean viewer_app_api_GoSLURL(ViewerAppAPI *obj, gchar *slurl, gboolean **succ
 		//xxx->mWindow->bringToFront();
 		success = true;
 	}		
+#else
+	LLAppViewerLinux::setReceivedSLURL(slurl);
+	success = true;
+#endif
 
 	*success_rtn = g_new (gboolean, 1);
 	(*success_rtn)[0] = (gboolean)success;

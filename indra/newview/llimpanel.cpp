@@ -46,6 +46,7 @@
 #include "llnotifications.h"
 #include "llrect.h"
 #include "llresmgr.h"
+#include "llslider.h"
 #include "llstring.h"
 #include "lltabcontainer.h"
 #include "lltextbox.h"
@@ -84,10 +85,12 @@ const U32 DEFAULT_RETRIES_COUNT = 3;
 //
 // Statics
 //
-//
 static std::string sTitleString = "Instant Message with [NAME]";
 static std::string sTypingStartString = "[NAME]: ...";
 static std::string sSessionStartString = "Starting session with [NAME] please wait.";
+static std::string sDefaultTextString = "Click here to instant message.";
+static std::string sUnavailableTextString;
+static std::string sMutedTextString;
 
 LLVoiceChannel::voice_channel_map_t LLVoiceChannel::sVoiceChannelMap;
 LLVoiceChannel::voice_channel_map_uri_t LLVoiceChannel::sVoiceChannelURIMap;
@@ -1008,6 +1011,12 @@ LLFloaterIMPanel::LLFloaterIMPanel(const std::string& session_label,
 :	LLFloater(session_label, LLRect(), session_label),
 	mInputEditor(NULL),
 	mHistoryEditor(NULL),
+	mSendButton(NULL),
+	mStartCallButton(NULL),
+	mEndCallButton(NULL),
+	mToggleSpeakersButton(NULL),
+	mSpeakerVolumeSlider(NULL),
+	mMuteButton(NULL),
 	mSessionUUID(session_id),
 	mVoiceChannel(NULL),
 	mSessionInitialized(FALSE),
@@ -1041,6 +1050,12 @@ LLFloaterIMPanel::LLFloaterIMPanel(const std::string& session_label,
 :	LLFloater(session_label, LLRect(), session_label),
 	mInputEditor(NULL),
 	mHistoryEditor(NULL),
+	mSendButton(NULL),
+	mStartCallButton(NULL),
+	mEndCallButton(NULL),
+	mToggleSpeakersButton(NULL),
+	mSpeakerVolumeSlider(NULL),
+	mMuteButton(NULL),
 	mSessionUUID(session_id),
 	mVoiceChannel(NULL),
 	mSessionInitialized(FALSE),
@@ -1221,9 +1236,11 @@ LLFloaterIMPanel::~LLFloaterIMPanel()
 		}
 	}
 
-	//kicks you out of the voice channel if it is currently active
+	// Kicks you out of the voice channel if it is currently active
 
-	// HAVE to do this here -- if it happens in the LLVoiceChannel destructor it will call the wrong version (since the object's partially deconstructed at that point).
+	// HAVE to do this here -- if it happens in the LLVoiceChannel destructor it
+	// will call the wrong version (since the object's partially deconstructed
+	// at that point).
 	mVoiceChannel->deactivate();
 
 	delete mVoiceChannel;
@@ -1266,12 +1283,24 @@ BOOL LLFloaterIMPanel::postBuild()
 			childSetAction("group_info_btn", onClickGroupInfo, this);
 		}
 
-		childSetAction("start_call_btn", onClickStartCall, this);
-		childSetAction("end_call_btn", onClickEndCall, this);
-		childSetAction("send_btn", onClickSend, this);
-		if (getChild<LLButton>("toggle_active_speakers_btn", TRUE, FALSE))
+		mStartCallButton = getChild<LLButton>("start_call_btn", TRUE, FALSE);
+		if (mStartCallButton)
 		{
-			childSetAction("toggle_active_speakers_btn", onClickToggleActiveSpeakers, this);
+			mStartCallButton->setClickedCallback(onClickStartCall, this);
+			mEndCallButton = getChild<LLButton>("end_call_btn");
+			mEndCallButton->setClickedCallback(onClickEndCall, this);
+		}
+
+		mSendButton = getChild<LLButton>("send_btn", TRUE, FALSE);
+		if (mSendButton)
+		{
+			mSendButton->setClickedCallback(onClickSend, this);
+		}
+
+		mToggleSpeakersButton = getChild<LLButton>("toggle_active_speakers_btn", TRUE, FALSE);
+		if (mToggleSpeakersButton)
+		{
+			mToggleSpeakersButton->setClickedCallback(onClickToggleActiveSpeakers, this);
 		}
 
 		//LLButton* close_btn = getChild<LLButton>("close_btn");
@@ -1281,7 +1310,7 @@ BOOL LLFloaterIMPanel::postBuild()
 		mHistoryEditor->setParseHTML(TRUE);
 		mHistoryEditor->setParseHighlights(TRUE);
 
-		if (IM_SESSION_GROUP_START == mDialog)
+		if (mDialog == IM_SESSION_GROUP_START)
 		{
 			childSetEnabled("profile_btn", FALSE);
 		}
@@ -1289,6 +1318,7 @@ BOOL LLFloaterIMPanel::postBuild()
 		sTitleString = getString("title_string");
 		sTypingStartString = getString("typing_start_string");
 		sSessionStartString = getString("session_start_string");
+		sDefaultTextString = getString("default_text_label");
 
 		if (mSpeakerPanel)
 		{
@@ -1297,11 +1327,17 @@ BOOL LLFloaterIMPanel::postBuild()
 
 		if (mDialog == IM_NOTHING_SPECIAL)
 		{
-			childSetAction("mute_btn", onClickMuteVoice, this);
-			childSetCommitCallback("speaker_volume", onVolumeChange, this);
+			mMuteButton = getChild<LLButton>("mute_btn", TRUE, FALSE);
+			if (mMuteButton)
+			{
+				mMuteButton->setClickedCallback(onClickMuteVoice, this);
+				mSpeakerVolumeSlider = getChild<LLSlider>("speaker_volume");
+				childSetCommitCallback("speaker_volume", onVolumeChange, this);
+			}
 		}
 
 		setDefaultBtn("send_btn");
+
 		return TRUE;
 	}
 
@@ -1357,27 +1393,45 @@ void LLFloaterIMPanel::draw()
 					  	  mCallBackEnabled && mSessionInitialized &&
 						  LLVoiceClient::voiceEnabled();
 
-	// hide/show start call and end call buttons
-	childSetVisible("end_call_btn", LLVoiceClient::voiceEnabled() && mVoiceChannel->getState() >= LLVoiceChannel::STATE_CALL_STARTED);
-	childSetVisible("start_call_btn", LLVoiceClient::voiceEnabled() && mVoiceChannel->getState() < LLVoiceChannel::STATE_CALL_STARTED);
-	childSetEnabled("start_call_btn", enable_connect);
-	childSetEnabled("send_btn", !childGetValue("chat_editor").asString().empty());
+	if (mStartCallButton)
+	{
+		// hide/show start call and end call buttons
+		BOOL call_started = mVoiceChannel &&
+							mVoiceChannel->getState() >= LLVoiceChannel::STATE_CALL_STARTED;
+
+		mStartCallButton->setVisible(LLVoiceClient::voiceEnabled() && !call_started);
+		mStartCallButton->setEnabled(enable_connect);
+		mEndCallButton->setVisible(LLVoiceClient::voiceEnabled() && call_started);
+	}
+
+	if (mSendButton)
+	{
+		mSendButton->setEnabled(!mInputEditor->getValue().asString().empty());
+	}
 
 	LLPointer<LLSpeaker> self_speaker = mSpeakers->findSpeaker(gAgent.getID());
 	if (!mTextIMPossible)
 	{
+		if (sUnavailableTextString.empty())
+		{
+			sUnavailableTextString = getString("unavailable_text_label");
+		}
 		mInputEditor->setEnabled(FALSE);
-		mInputEditor->setLabel(getString("unavailable_text_label"));
+		mInputEditor->setLabel(sUnavailableTextString);
 	}
 	else if (self_speaker.notNull() && self_speaker->mModeratorMutedText)
 	{
+		if (sMutedTextString.empty())
+		{
+			sMutedTextString = getString("muted_text_label");
+		}
 		mInputEditor->setEnabled(FALSE);
-		mInputEditor->setLabel(getString("muted_text_label"));
+		mInputEditor->setLabel(sMutedTextString);
 	}
 	else
 	{
 		mInputEditor->setEnabled(TRUE);
-		mInputEditor->setLabel(getString("default_text_label"));
+		mInputEditor->setLabel(sDefaultTextString);
 	}
 
 	if (mAutoConnect && enable_connect)
@@ -1387,14 +1441,14 @@ void LLFloaterIMPanel::draw()
 	}
 
 	// show speakers window when voice first connects
-	if (mShowSpeakersOnConnect && mVoiceChannel->isActive())
+	if (mShowSpeakersOnConnect && mSpeakerPanel && mVoiceChannel->isActive())
 	{
-		childSetVisible("active_speakers_panel", TRUE);
+		mSpeakerPanel->setVisible(TRUE);
 		mShowSpeakersOnConnect = FALSE;
 	}
-	if (getChild<LLButton>("toggle_active_speakers_btn", TRUE, FALSE))
+	if (mToggleSpeakersButton)
 	{
-		childSetValue("toggle_active_speakers_btn", childIsVisible("active_speakers_panel"));
+		mToggleSpeakersButton->setValue(mSpeakerPanel && mSpeakerPanel->getVisible());
 	}
 
 	if (mTyping)
@@ -1407,8 +1461,7 @@ void LLFloaterIMPanel::draw()
 
 		// If we are typing, and it's been a little while, send the
 		// typing indicator
-		if (!mSentTypingState
-			&& mFirstKeystrokeTimer.getElapsedTimeF32() > 1.f)
+		if (!mSentTypingState && mFirstKeystrokeTimer.getElapsedTimeF32() > 1.f)
 		{
 			sendTypingState(TRUE);
 			mSentTypingState = TRUE;
@@ -1423,15 +1476,18 @@ void LLFloaterIMPanel::draw()
 			mSpeakerPanel->refreshSpeakers();
 		}
 	}
-	else if (LLVoiceClient::instanceExists())
+	else if (mMuteButton && LLVoiceClient::instanceExists())
 	{
-		// refresh volume and mute checkbox
-		childSetVisible("speaker_volume", LLVoiceClient::voiceEnabled() && mVoiceChannel->isActive());
-		childSetValue("speaker_volume", LLVoiceClient::getInstance()->getUserVolume(mOtherParticipantUUID));
+		// refresh volume and mute
+		mSpeakerVolumeSlider->setVisible(LLVoiceClient::voiceEnabled() &&
+										 mVoiceChannel->isActive());
+		mSpeakerVolumeSlider->setValue(LLVoiceClient::getInstance()->getUserVolume(mOtherParticipantUUID));
 
 		LLMuteList* ml = LLMuteList::getInstance();
-		childSetValue("mute_btn", ml && ml->isMuted(mOtherParticipantUUID, LLMute::flagVoiceChat));
-		childSetVisible("mute_btn", LLVoiceClient::voiceEnabled() && mVoiceChannel->isActive());
+		mMuteButton->setValue(ml && ml->isMuted(mOtherParticipantUUID,
+												LLMute::flagVoiceChat));
+		mMuteButton->setVisible(LLVoiceClient::voiceEnabled() &&
+								mVoiceChannel->isActive());
 	}
 	LLFloater::draw();
 }
@@ -1662,11 +1718,13 @@ BOOL LLFloaterIMPanel::handleDragAndDrop(S32 x, S32 y, MASK mask, BOOL drop,
 
 	if (mDialog == IM_NOTHING_SPECIAL)
 	{
-		LLToolDragAndDrop::handleGiveDragAndDrop(mOtherParticipantUUID, mSessionUUID, drop,
-												 cargo_type, cargo_data, accept);
+		LLToolDragAndDrop::handleGiveDragAndDrop(mOtherParticipantUUID,
+												 mSessionUUID, drop, cargo_type,
+												 cargo_data, accept);
 	}
 
-	// handle case for dropping calling cards (and folders of calling cards) onto invitation panel for invites
+	// Handle case for dropping calling cards (and folders of calling cards)
+	// onto invitation panel for invites
 	else if (isInviteAllowed())
 	{
 		*accept = ACCEPT_NO;
@@ -1740,7 +1798,8 @@ BOOL LLFloaterIMPanel::dropCategory(LLInventoryCategory* category, BOOL drop)
 
 BOOL LLFloaterIMPanel::isInviteAllowed() const
 {
-	return (IM_SESSION_CONFERENCE_START == mDialog || IM_SESSION_INVITE == mDialog);
+	return (IM_SESSION_CONFERENCE_START == mDialog ||
+			IM_SESSION_INVITE == mDialog);
 }
 
 // static
@@ -1756,7 +1815,7 @@ void LLFloaterIMPanel::onClickProfile(void* userdata)
 	//  Bring up the Profile window
 	LLFloaterIMPanel* self = (LLFloaterIMPanel*) userdata;
 
-	if (self->mOtherParticipantUUID.notNull())
+	if (self && self->mOtherParticipantUUID.notNull())
 	{
 		LLFloaterAvatarInfo::showFromDirectory(self->getOtherParticipantID());
 	}
@@ -1806,7 +1865,10 @@ void LLFloaterIMPanel::onClickSend(void* userdata)
 void LLFloaterIMPanel::onClickToggleActiveSpeakers(void* userdata)
 {
 	LLFloaterIMPanel* self = (LLFloaterIMPanel*)userdata;
-	self->childSetVisible("active_speakers_panel", !self->childIsVisible("active_speakers_panel"));
+	if (self && self->mSpeakerPanel)
+	{
+		self->mSpeakerPanel->setVisible(!self->mSpeakerPanel->getVisible());
+	}
 }
 
 // static
@@ -1898,7 +1960,8 @@ void deliver_message(const std::string& utf8_text,
 	{
 		// User is online through the OOW connector, but not with a regular
 		// viewer. Try to send the message via SLVoice.
-		sent = LLVoiceClient::getInstance()->sendTextMessage(other_participant_id, utf8_text);
+		sent = LLVoiceClient::getInstance()->sendTextMessage(other_participant_id,
+															 utf8_text);
 	}
 
 	if (!sent)
@@ -1969,7 +2032,8 @@ void LLFloaterIMPanel::sendMsg()
 			 || gAgent.mRRInterface.contains("sendimto:" + mOtherParticipantUUID.asString())))
 		{
 			// user is forbidden to send IMs and the receiver is no exception
-			text = utf8str_to_wstring(RRInterface::sSendimMessage); // signal both the sender and the receiver
+			// signal both the sender and the receiver
+			text = utf8str_to_wstring(RRInterface::sSendimMessage);
 		}
 //mk
 		if (!text.empty())
@@ -2066,8 +2130,7 @@ void LLFloaterIMPanel::sendMsg()
 			}
 			else
 			{
-				//queue up the message to send once the session is
-				//initialized
+				// Queue up the message to send once the session is initialized
 				mQueuedMsgsForInit.append(utf8_text);
 			}
 		}
@@ -2104,7 +2167,7 @@ void LLFloaterIMPanel::processSessionUpdate(const LLSD& session_update)
 			setTitle(mSessionLabel);
 		}
 
-		//update the speakers dropdown too
+		// Update the speakers dropdown too
 		mSpeakerPanel->setVoiceModerationCtrlMode(voice_moderated);
 	}
 }
@@ -2217,7 +2280,8 @@ void LLFloaterIMPanel::addTypingIndicator(const std::string &name)
 		mTypingLineStartIndex = mHistoryEditor->getWText().length();
 		LLUIString typing_start = sTypingStartString;
 		typing_start.setArg("[NAME]", name);
-		addHistoryLine(typing_start, gSavedSettings.getColor4("SystemChatColor"), false);
+		addHistoryLine(typing_start,
+					   gSavedSettings.getColor4("SystemChatColor"), false);
 		mOtherTypingName = name;
 		mOtherTyping = TRUE;
 	}

@@ -60,7 +60,7 @@
 		/>	
 	<button	name="close_btn" label="OK"
 		tool_tip="Close this floater"
-		left_delta="75" bottom_delta="0" width="48" height="20"
+		right="-10" bottom_delta="0" width="48" height="20"
 		font="SansSerifSmall" follows="bottom|right"
 		/>	
 </floater>

@@ -2,7 +2,7 @@ This is the edited version of the original readme file by Marine Kelley.
 The file has been edited to take into account the improvements by Henri Beauchamp, as well as the Cool VL Viewer.
 
 -------------
-Version 2.07.04.20
+Version 2.08.01.20
 
 
 WHAT IS IT ?
@@ -155,6 +155,18 @@ Since v1.23d you may set the RestrainedLoveAddReplace advanced setting to TRUE s
 
 RELEASE NOTES :
 ---------------
+2.08.01.20 (@versionnum = 2080120) by Henri Beauchamp (equivalent to Marine's v2.08.01.00):
+- Inclusion of Marine Kelley's change:
+	- added : @getblacklist[:partial_name]=2222 to retrieve a comma separated list of blacklisted commands.
+	- added : @getblacklist in IM to act like @version.
+	- added : @versionnumbl=2222 to retrieve both the version and the blacklist.
+	- fixed : @detach=n on a child prim did not always make the whole object undetachable.
+	- fixed : @getstatus needs a new, or user-selectable, separator.
+	- fixed : @getinvworn can return string literal "n" instead of two numbers for the this/child status indication.
+- Fixed: allow to change the blacklist when RestrainedLove was just enabled but not yet actually activated by a viewer restart.
+- Changed: @getcommand now always returns both "behav" and "behav%f" to distinguish between "@behav=n" and "@behav=force". RestrainedLoveExtendedGetcommand debug setting removed as a result.
+
+
 2.07.04.20 (@versionnum = 2070420) by Henri Beauchamp:
 - Inclusion of Marine Kelley's change:
 	- fixed : Empty tokens in RLV commands ("@showloc=n,,showinv=n", "@showloc=n,") would raise a "failed command" alert, yet execute the command anyway.

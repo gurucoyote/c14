@@ -55,40 +55,40 @@ public:
 	LLNetMap(const std::string& name);
 	virtual ~LLNetMap();
 
+	virtual BOOL	postBuild();
 	virtual void	draw();
 	virtual void	reshape(S32 width, S32 height, BOOL called_from_parent = TRUE);
-	virtual BOOL	handleMouseDown( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleMouseUp( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleHover( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleDoubleClick( S32 x, S32 y, MASK mask );
-	virtual BOOL	handleRightMouseDown( S32 x, S32 y, MASK mask );
+	virtual BOOL	handleMouseDown(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleMouseUp(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleHover(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleDoubleClick(S32 x, S32 y, MASK mask);
+	virtual BOOL	handleRightMouseDown(S32 x, S32 y, MASK mask);
 	virtual BOOL	handleScrollWheel(S32 x, S32 y, S32 clicks);
-	virtual BOOL	handleToolTip( S32 x, S32 y, std::string& msg, LLRect* sticky_rect_screen );
+	virtual BOOL	handleToolTip(S32 x, S32 y, std::string& msg, LLRect* sticky_rect_screen);
 
-	void			renderScaledPointGlobal( const LLVector3d& pos, const LLColor4U &color, F32 radius );
+	void			renderScaledPointGlobal(const LLVector3d& pos, const LLColor4U &color, F32 radius);
 
 	static S32		sMiniMapCenter;
 	static BOOL		sMiniMapRotate;
 
 private:
-
-	void			setScale( F32 scale );
+	void			setScale(F32 scale);
 
 	// Not used at present
-	void			translatePan( F32 delta_x, F32 delta_y );
-	void			setPan( F32 x, F32 y )			{ mTargetPanX = x; mTargetPanY = y; }
+	void			translatePan(F32 delta_x, F32 delta_y);
+	void			setPan(F32 x, F32 y)			{ mTargetPanX = x; mTargetPanY = y; }
 
 	void renderPoint(const LLVector3 &pos, const LLColor4U &color, 
 					 S32 diameter, S32 relative_height = 0);
 	LLVector3		globalPosToView(const LLVector3d& global_pos, BOOL rotated);
 	LLVector3d		viewPosToGlobal(S32 x,S32 y, BOOL rotated);
 
-	void			drawTracking( const LLVector3d& pos_global,
+	void			drawTracking(const LLVector3d& pos_global,
 							BOOL rotated,
 							const LLColor4& color,
 							BOOL draw_arrow = TRUE);
 
-	void			setDirectionPos( LLTextBox* text_box, F32 rotation );
+	void			setDirectionPos(LLTextBox* text_box, F32 rotation);
 	void			updateMinorDirections();
 	void			createObjectImage();
 
@@ -115,17 +115,26 @@ private:
 	LLPointer<LLImageRaw>		mObjectRawImagep;
 	LLPointer<LLViewerTexture>	mObjectImagep;
 
+	LLTextBox*	mNorthLabel;
+	LLTextBox*	mSouthLabel;
+	LLTextBox*	mWestLabel;
+	LLTextBox*	mEastLabel;
+	LLTextBox*	mNorthWestLabel;
+	LLTextBox*	mNorthEastLabel;
+	LLTextBox*	mSouthWestLabel;
+	LLTextBox*	mSouthEastLabel;
+
 private:
 	LLUUID			mClosestAgentToCursor;
 	LLUUID			mClosestAgentAtLastRightClick;
 
 	static BOOL		sRotateMap;
 	static LLNetMap*	sInstance;
-	static BOOL isAgentUnderCursor(void*) { return sInstance && sInstance->mClosestAgentToCursor.notNull(); }
+	static BOOL isAgentUnderCursor(void*)	{ return sInstance && sInstance->mClosestAgentToCursor.notNull(); }
 	static BOOL outsideSlop(S32 x, S32 y, S32 start_x, S32 start_y, S32 slop);
 
 	static void showAgentProfile(void*);
-	BOOL isAgentUnderCursor() { return mClosestAgentToCursor.notNull(); }
+	BOOL isAgentUnderCursor()				{ return mClosestAgentToCursor.notNull(); }
 
 	class LLScaleMap : public LLMemberListener<LLNetMap>
 	{
@@ -181,6 +190,5 @@ private:
 		/*virtual*/ bool handleEvent(LLPointer<LLEvent> event, const LLSD& userdata);
 	};
 };
-
 
 #endif

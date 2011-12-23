@@ -26,8 +26,8 @@
 
 #define RR_VIEWER_NAME "RestrainedLife"
 #define RR_VIEWER_NAME_NEW "RestrainedLove"
-#define RR_VERSION_NUM "2070420"
-#define RR_VERSION "2.07.04.20"
+#define RR_VERSION_NUM "2080120"
+#define RR_VERSION "2.08.01.20"
 #define RR_SLV_VERSION "Cool VL Viewer v1.26.2"
 
 #define RR_PREFIX "@"
@@ -117,8 +117,9 @@ public:
 	static void init();
 
 	void refreshTPflag(bool save);
-	std::string getVersion(); // returns "RestrainedLife Viewer blah blah"
-	std::string getVersion2(); // returns "RestrainedLove Viewer blah blah"
+	std::string getVersion();		// returns "RestrainedLife Viewer blah blah"
+	std::string getVersion2();		// returns "RestrainedLove Viewer blah blah"
+	std::string getVersionNum();	// returns "RR_VERSION_NUM[,blacklist]"
 	BOOL isAllowed(LLUUID object_uuid, std::string action, BOOL log_it = TRUE);
 	BOOL contains(std::string action); // return TRUE if the action is contained
 	BOOL containsSubstr(std::string action);
@@ -153,6 +154,7 @@ public:
 	std::string getStatus(LLUUID object_uuid, std::string rule); // if object_uuid is null, return all
 	std::string getCommand(std::string match, bool blacklist = false);
 	std::string getCommandsByType(S32 type, bool blacklist = false);
+	std::deque<std::string> getBlacklist(std::string filter = "");
 	BOOL forceDetach(std::string attachpt);
 	BOOL forceDetachByUuid(std::string object_uuid);
 
@@ -265,11 +267,11 @@ public:
 
 	static BOOL sRRNoSetEnv;
 	static BOOL sRestrainedLoveDebug;
-	static BOOL sCanOoc; // when TRUE, the user can bypass a sendchat restriction by surrounding with (( and ))
-	static BOOL sUntruncatedEmotes; // when TRUE, the user's emotes are never truncated.
-	static std::string sBlackList;		// user-blacklisted RestrainedLove commands.
-	static std::string sRecvimMessage;	// message to replace an incoming IM, when under recvim
-	static std::string sSendimMessage;	// message to replace an outgoing IM, when under sendim
+	static BOOL sCanOoc;					// when TRUE, the user can bypass a sendchat restriction by surrounding with (( and ))
+	static BOOL sUntruncatedEmotes;			// when TRUE, the user's emotes are never truncated.
+	static std::string sBlackList;			// user-blacklisted RestrainedLove commands.
+	static std::string sRecvimMessage;		// message to replace an incoming IM, when under recvim
+	static std::string sSendimMessage;		// message to replace an outgoing IM, when under sendim
 	static std::string sRolePlayBlackList;	// standard blacklist for role-players
 	static std::string sVanillaBlackList;	// standard blacklist for non-BDSM folks
 

@@ -96,7 +96,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.7}
+{1.26.2.8}
 
 Language,ca
 {No}
@@ -2103,7 +2103,7 @@ Condition DBF1EAAE-A05D-58A7-1681-99308C7A19B2 -active Yes -name dbf1eaae-a05d-5
 Action 8BF494E5-F9BC-EBEC-145B-39EB51327BCE -active Yes -name efd2a6e7-000f-9a5e-ccf3-d772b05c7a13 -type action -parent 22730ED5-5B2B-C051-E1D3-39781071170E -setup Install -title {Set Virtual Text} -component SetVirtualText
 Condition D014194E-EEE4-DD29-3C43-3E937A13CC6B -active Yes -name dbf1eaae-a05d-58a7-1681-99308c7a19b2 -parent 8BF494E5-F9BC-EBEC-145B-39EB51327BCE -setup Install -title {File Exists Condition} -component FileExistsCondition
 Action 6BF5BF5A-7509-4A08-43FD-317D94BCF15A -active Yes -name 6bf5bf5a-7509-4a08-43fd-317d94bcf15a -type action -parent 22730ED5-5B2B-C051-E1D3-39781071170E -setup Install -title {Set Virtual Text} -component SetVirtualText
-Condition 93A2BD20-EA08-9B27-FA23-C1FFD481AD9F -active Yes -name 93a2bd20-ea08-9b27-fa23-c1ffd481ad9f -parent 6BF5BF5A-7509-4A08-43FD-317D94BCF15A -title {String Equal Condition} -component StringEqualCondition
+Condition 93A2BD20-EA08-9B27-FA23-C1FFD481AD9F -active Yes -name 93a2bd20-ea08-9b27-fa23-c1ffd481ad9f -parent 6BF5BF5A-7509-4A08-43FD-317D94BCF15A -setup Install -title {String Equal Condition} -component StringEqualCondition
 ActionGroup 3D42EA75-6FD0-AAE2-81AA-803AC1C409CC -active Yes -name 3d42ea75-6fd0-aae2-81aa-803ac1c409cc -parent ActionGroupsInstall -setup Install -title {Startup Actions}
 Action 58CC124A-3561-BEF9-FF93-8187562C4208 -active Yes -name 58cc124a-3561-bef9-ff93-8187562c4208 -parent 3D42EA75-6FD0-AAE2-81AA-803AC1C409CC -setup Install -title {Create Install Panes} -component CreateInstallPanes
 ActionGroup C201C2D2-A390-FA01-0226-0E42B30CDB8D -active Yes -name c201c2d2-a390-fa01-0226-0e42b30cdb8d -parent ActionGroupsInstall -setup Install -title {Install Actions}
@@ -2755,7 +2755,7 @@ array set Properties {
 {<%InstallDir%>}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,FileSize
-{122567673}
+{123213754}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,Name
 {Program Files}

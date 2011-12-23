@@ -294,7 +294,8 @@ void LLChatBar::refresh()
 	if (!mSecondary)
 	{
 		// call superclass setVisible so that we don't overwrite the saved setting
-		LLPanel::setVisible(gSavedSettings.getBOOL("ChatVisible"));
+		static LLCachedControl<bool> chat_visible(gSavedSettings, "ChatVisible");
+		LLPanel::setVisible((bool)chat_visible);
 	}
 
 	// HACK: Leave the name of the gesture in place for a few seconds.
@@ -306,7 +307,8 @@ void LLChatBar::refresh()
 		mGestureLabelTimer.stop();
 	}
 
-	if ((gAgent.getTypingTime() > AGENT_TYPING_TIMEOUT) && (gAgent.getRenderState() & AGENT_STATE_TYPING))
+	if (gAgent.getTypingTime() > AGENT_TYPING_TIMEOUT &&
+		gAgent.getRenderState() & AGENT_STATE_TYPING)
 	{
 		gAgent.stopTyping();
 	}
@@ -336,7 +338,8 @@ void LLChatBar::refreshGestures()
 		// collect list of unique gestures
 		std::map <std::string, BOOL> unique;
 		LLGestureManager::item_map_t::iterator it;
-		for (it = gGestureManager.mActive.begin(); it != gGestureManager.mActive.end(); ++it)
+		for (it = gGestureManager.mActive.begin();
+			 it != gGestureManager.mActive.end(); ++it)
 		{
 			LLMultiGesture* gesture = (*it).second;
 			if (gesture)
@@ -436,16 +439,13 @@ void LLChatBar::setGestureCombo(LLComboBox* combo)
 // Otherwise returns input and channel 0.
 LLWString LLChatBar::stripChannelNumber(const LLWString &mesg, S32* channel)
 {
-	if (mesg[0] == '/'
-		&& mesg[1] == '/')
+	if (mesg[0] == '/' && mesg[1] == '/')
 	{
 		// This is a "repeat channel send"
 		*channel = mLastSpecialChatChannel;
 		return mesg.substr(2, mesg.length() - 2);
 	}
-	else if (mesg[0] == '/'
-			 && mesg[1]
-			 && LLStringOps::isDigit(mesg[1]))
+	else if (mesg[0] == '/' && mesg[1] && LLStringOps::isDigit(mesg[1]))
 	{
 		// This a special "/20" speak on a channel
 		S32 pos = 0;
@@ -459,12 +459,12 @@ LLWString LLChatBar::stripChannelNumber(const LLWString &mesg, S32* channel)
 			channel_string.push_back(c);
 			pos++;
 		}
-		while(c && pos < 64 && LLStringOps::isDigit(c));
+		while (c && pos < 64 && LLStringOps::isDigit(c));
 
 		// Move the pointer forward to the first non-whitespace char
 		// Check isspace before looping, so we can handle "/33foo"
 		// as well as "/33 foo"
-		while(c && iswspace(c))
+		while (c && iswspace(c))
 		{
 			c = mesg[pos+1];
 			pos++;
@@ -547,7 +547,7 @@ void LLChatBar::sendChat(EChatType type)
 //MK
 				std::ostringstream stream;
 				stream << "" << channel;
-				if (gRRenabled && gAgent.mRRInterface.containsWithoutException ("sendchannel", stream.str()))
+				if (gRRenabled && gAgent.mRRInterface.containsWithoutException("sendchannel", stream.str()))
 				{
 					utf8_revised_text = "";
 				}
@@ -634,7 +634,7 @@ void LLChatBar::setVisible(BOOL visible)
 // static
 void LLChatBar::onInputEditorKeystroke(LLLineEditor* caller, void* userdata)
 {
-	LLChatBar* self = (LLChatBar *)userdata;
+	LLChatBar* self = (LLChatBar*)userdata;
 
 	LLWString raw_text;
 	if (self->mInputEditor) raw_text = self->mInputEditor->getWText();
@@ -645,7 +645,7 @@ void LLChatBar::onInputEditorKeystroke(LLLineEditor* caller, void* userdata)
 
 	S32 length = raw_text.length();
 
-	if((length > 0) && (raw_text[0] != '/'))  // forward slash is used for escape (eg. emote) sequences
+	if (length > 0 && raw_text[0] != '/')  // forward slash is used for escape (eg. emote) sequences
 	{
 //MK
 		if (!gRRenabled || !gAgent.mRRInterface.containsSubstr ("redirchat:"))
@@ -660,9 +660,7 @@ void LLChatBar::onInputEditorKeystroke(LLLineEditor* caller, void* userdata)
 	KEY key = gKeyboard->currentKey();
 
 	// Ignore "special" keys, like backspace, arrows, etc.
-	if (length > 1 
-		&& raw_text[0] == '/'
-		&& key < KEY_SPECIAL)
+	if (length > 1 && raw_text[0] == '/' && key < KEY_SPECIAL)
 	{
 		// we're starting a gesture, attempt to autocomplete
 

@@ -32,8 +32,11 @@
 
 #include "llviewerprecompiledheaders.h"
 
-#include "llbufferstream.h"
 #include "lltranslate.h"
+
+#if TRANSLATE_CHAT
+
+#include "llbufferstream.h"
 #include "llui.h"
 #include "llversionviewer.h"
 
@@ -133,3 +136,4 @@ std::string LLTranslate::getTranslateLanguage()
 	return language;
 }
 
+#endif

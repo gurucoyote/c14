@@ -42,12 +42,14 @@
 #include "llvoiceclient.h"
 #include "llstyle.h"
 
+class LLButton;
 class LLLineEditor;
 class LLViewerTextEditor;
 class LLInventoryItem;
 class LLInventoryCategory;
 class LLIMSpeakerMgr;
 class LLPanelActiveSpeakers;
+class LLSlider;
 
 class LLVoiceChannel : public LLVoiceClientStatusObserver
 {
@@ -299,8 +301,14 @@ private:
 	void sendTypingState(BOOL typing);
 	
 private:
-	LLLineEditor* mInputEditor;
-	LLViewerTextEditor* mHistoryEditor;
+	LLLineEditor*		mInputEditor;
+	LLViewerTextEditor*	mHistoryEditor;
+	LLButton*			mSendButton;
+	LLButton*			mStartCallButton;
+	LLButton*			mEndCallButton;
+	LLButton*			mToggleSpeakersButton;
+	LLButton*			mMuteButton;
+	LLSlider*			mSpeakerVolumeSlider;
 
 	// The value of the mSessionUUID depends on how the IM session was started:
 	//   one-on-one  ==> random id

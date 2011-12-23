@@ -63,6 +63,8 @@
 #include "llmutelist.h"
 #include "llstartup.h"
 #include "lltexturestats.h"
+#include "llurldispatcher.h"
+#include "llurlhistory.h"
 #include "llviewerdisplay.h"
 #include "llviewerjoystick.h"
 #include "llviewermedia.h"
@@ -73,10 +75,8 @@
 #include "llviewerstats.h"
 #include "llviewertexturelist.h"
 #include "llviewerwindow.h"
-#include "llworldmap.h"
-#include "llurldispatcher.h"
-#include "llurlhistory.h"
 #include "llweb.h"
+#include "llworldmap.h"
 
 #include <boost/bind.hpp>
 
@@ -977,14 +977,14 @@ bool LLAppViewer::mainLoop()
 				gViewerWindow->mWindow->gatherInput();
 			}
 
-#if 1 && !LL_RELEASE_FOR_DOWNLOAD
+#if !LL_RELEASE_FOR_DOWNLOAD
 			// once per second debug info
 			if (debugTime.getElapsedTimeF32() > 1.f)
 			{
 				debugTime.reset();
 			}
-			
 #endif
+
 			//memory leaking simulation
 			if (LLFloaterMemLeak::getInstance())
 			{
@@ -1028,7 +1028,6 @@ bool LLAppViewer::mainLoop()
 							gAgent.mRRInterface.garbageCollector (FALSE);
 							garbage_collector_cnt = 0;
 						}
-						
 					}
 
 					// We must check whether there is an object waiting to be reattached after
@@ -1118,6 +1117,16 @@ bool LLAppViewer::mainLoop()
 				}
 
 			}
+
+#if LL_DBUS_ENABLED
+			if (!getReceivedSLURL().empty())
+			{
+				std::string url = getReceivedSLURL();
+				LLMediaCtrl* web = NULL;
+				LLURLDispatcher::dispatch(url, web, false);
+				clearReceivedSLURL();
+			}
+#endif
 
 			pingMainloopTimeout("Main:Sleep");
 			

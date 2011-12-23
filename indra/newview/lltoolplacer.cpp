@@ -36,40 +36,34 @@
 #include "lltoolplacer.h"
 
 // linden library headers
+#include "llaudioengine.h"
+#include "llbutton.h"
+#include "llparcel.h"
 #include "llprimitive.h"
+#include "llui.h"
 #include "roles_constants.h"
 
 // viewer headers
-//MK
 #include "llagent.h"
-//mk
-#include "llbutton.h"
-#include "llviewercontrol.h"
 #include "llfirstuse.h"
 #include "llfloatertools.h"
+#include "llhudeffecttrail.h"
+#include "llhudmanager.h"
 #include "llselectmgr.h"
 #include "llstatusbar.h"
 #include "lltoolcomp.h"
 #include "lltoolmgr.h"
-#include "llviewerobject.h"
-#include "llviewerregion.h"
-#include "llparcel.h"
-#include "llviewerparcelmgr.h"
-#include "llviewerwindow.h"
-#include "llworld.h"
-#include "llui.h"
-
-//Headers added for functions moved from viewer.cpp
-#include "llvograss.h"
-#include "llvotree.h"
-#include "llvolumemessage.h"
-#include "llhudmanager.h"
-#include "llagent.h"
-#include "llaudioengine.h"
-#include "llhudeffecttrail.h"
-#include "llviewerobjectlist.h"
 #include "llviewercamera.h"
+#include "llviewercontrol.h"
+#include "llviewerobjectlist.h"
+#include "llviewerparcelmgr.h"
+#include "llviewerregion.h"
 #include "llviewerstats.h"
+#include "llviewerwindow.h"
+#include "llvograss.h"
+#include "llvolumemessage.h"
+#include "llvotree.h"
+#include "llworld.h"
 
 const LLVector3 DEFAULT_OBJECT_SCALE(0.5f, 0.5f, 0.5f);
 
@@ -77,19 +71,22 @@ const LLVector3 DEFAULT_OBJECT_SCALE(0.5f, 0.5f, 0.5f);
 LLPCode	LLToolPlacer::sObjectType = LL_PCODE_CUBE;
 
 LLToolPlacer::LLToolPlacer()
-:	LLTool( std::string("Create") )
+:	LLTool(std::string("Create"))
 {
 }
 
-BOOL LLToolPlacer::raycastForNewObjPos( S32 x, S32 y, LLViewerObject** hit_obj, S32* hit_face, 
-							 BOOL* b_hit_land, LLVector3* ray_start_region, LLVector3* ray_end_region, LLViewerRegion** region )
+BOOL LLToolPlacer::raycastForNewObjPos(S32 x, S32 y, LLViewerObject** hit_obj,
+									   S32* hit_face, BOOL* b_hit_land,
+									   LLVector3* ray_start_region,
+									   LLVector3* ray_end_region,
+									   LLViewerRegion** region)
 {
-	F32 max_dist_from_camera = gSavedSettings.getF32( "MaxSelectDistance" ) - 1.f;
+	F32 max_dist_from_camera = gSavedSettings.getF32("MaxSelectDistance") - 1.f;
 
 	// Viewer-side pick to find the right sim to create the object on.  
 	// First find the surface the object will be created on.
 	LLPickInfo pick = gViewerWindow->pickImmediate(x, y, FALSE);
-	
+
 	// Note: use the frontmost non-flora version because (a) plants usually have lots of alpha and (b) pants' Havok
 	// representations (if any) are NOT the same as their viewer representation.
 	if (pick.mPickType == LLPickInfo::PICK_FLORA)
@@ -126,7 +123,7 @@ BOOL LLToolPlacer::raycastForNewObjPos( S32 x, S32 y, LLViewerObject** hit_obj, 
 	// Make sure the surface isn't too far away.
 	LLVector3d ray_start_global = gAgent.getCameraPositionGlobal();
 	F32 dist_to_surface_sq = (F32)((surface_pos_global - ray_start_global).magVecSquared());
-	if( dist_to_surface_sq > (max_dist_from_camera * max_dist_from_camera) )
+	if (dist_to_surface_sq > (max_dist_from_camera * max_dist_from_camera))
 	{
 		return FALSE;
 	}
@@ -141,29 +138,49 @@ BOOL LLToolPlacer::raycastForNewObjPos( S32 x, S32 y, LLViewerObject** hit_obj, 
 
 	// Find the simulator-side ray that will be used to place the object accurately
 	LLVector3d		mouse_direction;
-	mouse_direction.setVec( gViewerWindow->mouseDirectionGlobal( x, y ) );
+	mouse_direction.setVec(gViewerWindow->mouseDirectionGlobal(x, y));
 
 	*region = regionp;
-	*ray_start_region =	regionp->getPosRegionFromGlobal( ray_start_global );
-	F32 near_clip = LLViewerCamera::getInstance()->getNear() + 0.01f;  // Include an epsilon to avoid rounding issues.
+	*ray_start_region =	regionp->getPosRegionFromGlobal(ray_start_global);
+	// Include an epsilon to avoid rounding issues.
+	F32 near_clip = LLViewerCamera::getInstance()->getNear() + 0.01f;
 	*ray_start_region += LLViewerCamera::getInstance()->getAtAxis() * near_clip;
 
-	if( bypass_sim_raycast )
+	if (bypass_sim_raycast)
 	{
 		// Hack to work around Havok's inability to ray cast onto height fields
-		*ray_end_region = regionp->getPosRegionFromGlobal( surface_pos_global );  // ray end is the viewer's intersection point
+		// ray end is the viewer's intersection point
+		*ray_end_region = regionp->getPosRegionFromGlobal(surface_pos_global);
 	}
 	else
 	{
-		LLVector3d		ray_end_global = ray_start_global + (1.f + max_dist_from_camera) * mouse_direction;  // add an epsilon to the sim version of the ray to avoid rounding problems.
-		*ray_end_region = regionp->getPosRegionFromGlobal( ray_end_global );
+		// add an epsilon to the sim version of the ray to avoid rounding problems.
+		LLVector3d ray_end_global = ray_start_global +
+								    (1.f + max_dist_from_camera) * mouse_direction;
+		*ray_end_region = regionp->getPosRegionFromGlobal(ray_end_global);
 	}
 
 	return TRUE;
 }
 
+S32 LLToolPlacer::getTreeGrassSpecies(std::map<std::string, S32> &table,
+									  const char *control, S32 max)
+{
+	const std::string& species = gSavedSettings.getString(control);
+	std::map<std::string, S32>::iterator it;
+	it = table.find(species);
+	if (it != table.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		// if saved species not found, default to "Random"
+		return (rand() % max);
+	}
+}
 
-BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
+BOOL LLToolPlacer::addObject(LLPCode pcode, S32 x, S32 y, U8 use_physics)
 {
 	LLVector3 ray_start_region;
 	LLVector3 ray_end_region;
@@ -172,13 +189,15 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	S32 hit_face = -1;
 	LLViewerObject* hit_obj = NULL;
 	U8 state = 0;
-	BOOL success = raycastForNewObjPos( x, y, &hit_obj, &hit_face, &b_hit_land, &ray_start_region, &ray_end_region, &regionp );
-	if( !success )
+	BOOL success = raycastForNewObjPos(x, y, &hit_obj, &hit_face, &b_hit_land,
+									   &ray_start_region, &ray_end_region,
+									   &regionp);
+	if (!success)
 	{
 		return FALSE;
 	}
 
-	if( hit_obj && (hit_obj->isAvatar() || hit_obj->isAttachment()) )
+	if (hit_obj && (hit_obj->isAvatar() || hit_obj->isAttachment()))
 	{
 		// Can't create objects on avatars or attachments
 		return FALSE;
@@ -201,19 +220,24 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	U8				material = LL_MCODE_WOOD;
 	BOOL			create_selected = FALSE;
 	LLVolumeParams	volume_params;
-	
+
 	switch (pcode) 
 	{
 	case LL_PCODE_LEGACY_GRASS:
 		//  Randomize size of grass patch 
-		scale.setVec(10.f + ll_frand(20.f), 10.f + ll_frand(20.f),  1.f + ll_frand(2.f));
-		state = rand() % LLVOGrass::sMaxGrassSpecies;
+		scale.setVec(10.f + ll_frand(20.f),
+					 10.f + ll_frand(20.f),
+					 1.f + ll_frand(2.f));
+		state = getTreeGrassSpecies(LLVOGrass::sSpeciesNames,
+									"LastGrass",
+									LLVOGrass::sMaxGrassSpecies);
 		break;
-
 
 	case LL_PCODE_LEGACY_TREE:
 	case LL_PCODE_TREE_NEW:
-		state = rand() % LLVOTree::sMaxTreeSpecies;
+		state = getTreeGrassSpecies(LLVOTree::sSpeciesNames,
+									"LastTree",
+									LLVOTree::sMaxTreeSpecies);
 		break;
 
 	case LL_PCODE_SPHERE:
@@ -231,8 +255,9 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	// Play creation sound
 	if (gAudiop)
 	{
-		gAudiop->triggerSound( LLUUID(gSavedSettings.getString("UISndObjectCreate")),
-							   gAgent.getID(), 1.0f, LLAudioEngine::AUDIO_TYPE_UI);
+		gAudiop->triggerSound(LLUUID(gSavedSettings.getString("UISndObjectCreate")),
+							  gAgent.getID(), 1.0f,
+							  LLAudioEngine::AUDIO_TYPE_UI);
 	}
 
 	gMessageSystem->newMessageFast(_PREHASH_ObjectAdd);
@@ -252,7 +277,8 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 			group_id = parcel->getOwnerID();
 		}
 	}
-	else if (gAgent.hasPowerInGroup(parcel->getGroupID(), GP_LAND_ALLOW_CREATE) && !parcel->getIsGroupOwned())
+	else if (gAgent.hasPowerInGroup(parcel->getGroupID(), GP_LAND_ALLOW_CREATE)
+			 && !parcel->getIsGroupOwned())
 	{
 		group_id = parcel->getGroupID();
 	}
@@ -269,7 +295,7 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	{
 		flags |= FLAGS_CREATE_SELECTED;
 	}
-	gMessageSystem->addU32Fast(_PREHASH_AddFlags, flags );
+	gMessageSystem->addU32Fast(_PREHASH_AddFlags, flags);
 
 	LLPCode volume_pcode;	// ...PCODE_VOLUME, or the original on error
 	switch (pcode)
@@ -277,11 +303,11 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	case LL_PCODE_SPHERE:
 		rotation.setQuat(90.f * DEG_TO_RAD, LLVector3::y_axis);
 
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE_HALF, LL_PCODE_PATH_CIRCLE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1, 1 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE_HALF, LL_PCODE_PATH_CIRCLE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1, 1);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
@@ -289,11 +315,11 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	case LL_PCODE_TORUS:
 		rotation.setQuat(90.f * DEG_TO_RAD, LLVector3::y_axis);
 
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_CIRCLE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1.f, 0.25f );	// "top size"
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_CIRCLE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1.f, 0.25f);	// "top size"
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
@@ -301,11 +327,11 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	case LLViewerObject::LL_VO_SQUARE_TORUS:
 		rotation.setQuat(90.f * DEG_TO_RAD, LLVector3::y_axis);
 
-		volume_params.setType( LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_CIRCLE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1.f, 0.25f );	// "top size"
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_CIRCLE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1.f, 0.25f);	// "top size"
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
@@ -313,101 +339,101 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	case LLViewerObject::LL_VO_TRIANGLE_TORUS:
 		rotation.setQuat(90.f * DEG_TO_RAD, LLVector3::y_axis);
 
-		volume_params.setType( LL_PCODE_PROFILE_EQUALTRI, LL_PCODE_PATH_CIRCLE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1.f, 0.25f );	// "top size"
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_EQUALTRI, LL_PCODE_PATH_CIRCLE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1.f, 0.25f);	// "top size"
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_SPHERE_HEMI:
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE_HALF, LL_PCODE_PATH_CIRCLE );
-		//volume_params.setBeginAndEndS( 0.5f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 0.5f );
-		volume_params.setRatio	( 1, 1 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE_HALF, LL_PCODE_PATH_CIRCLE);
+		//volume_params.setBeginAndEndS(0.5f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 0.5f);
+		volume_params.setRatio	(1, 1);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_CUBE:
-		volume_params.setType( LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1, 1 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1, 1);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_PRISM:
-		volume_params.setType( LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 0, 1 );
-		volume_params.setShear	( -0.5f, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(0, 1);
+		volume_params.setShear	(-0.5f, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_PYRAMID:
-		volume_params.setType( LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 0, 0 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_SQUARE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(0, 0);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_TETRAHEDRON:
-		volume_params.setType( LL_PCODE_PROFILE_EQUALTRI, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 0, 0 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_EQUALTRI, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(0, 0);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_CYLINDER:
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1, 1 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1, 1);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_CYLINDER_HEMI:
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.25f, 0.75f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 1, 1 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.25f, 0.75f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(1, 1);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_CONE:
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.f, 1.f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 0, 0 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.f, 1.f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(0, 0);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
 
 	case LL_PCODE_CONE_HEMI:
-		volume_params.setType( LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE );
-		volume_params.setBeginAndEndS( 0.25f, 0.75f );
-		volume_params.setBeginAndEndT( 0.f, 1.f );
-		volume_params.setRatio	( 0, 0 );
-		volume_params.setShear	( 0, 0 );
+		volume_params.setType(LL_PCODE_PROFILE_CIRCLE, LL_PCODE_PATH_LINE);
+		volume_params.setBeginAndEndS(0.25f, 0.75f);
+		volume_params.setBeginAndEndT(0.f, 1.f);
+		volume_params.setRatio	(0, 0);
+		volume_params.setShear	(0, 0);
 		LLVolumeMessage::packVolumeParams(&volume_params, gMessageSystem);
 		volume_pcode = LL_PCODE_VOLUME;
 		break;
@@ -419,19 +445,19 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	}
 	gMessageSystem->addU8Fast(_PREHASH_PCode, volume_pcode);
 
-	gMessageSystem->addVector3Fast(_PREHASH_Scale,			scale );
-	gMessageSystem->addQuatFast(_PREHASH_Rotation,			rotation );
-	gMessageSystem->addVector3Fast(_PREHASH_RayStart,		ray_start_region );
-	gMessageSystem->addVector3Fast(_PREHASH_RayEnd,			ray_end_region );
-	gMessageSystem->addU8Fast(_PREHASH_BypassRaycast,		(U8)b_hit_land );
-	gMessageSystem->addU8Fast(_PREHASH_RayEndIsIntersection, (U8)FALSE );
+	gMessageSystem->addVector3Fast(_PREHASH_Scale,			scale);
+	gMessageSystem->addQuatFast(_PREHASH_Rotation,			rotation);
+	gMessageSystem->addVector3Fast(_PREHASH_RayStart,		ray_start_region);
+	gMessageSystem->addVector3Fast(_PREHASH_RayEnd,			ray_end_region);
+	gMessageSystem->addU8Fast(_PREHASH_BypassRaycast,		(U8)b_hit_land);
+	gMessageSystem->addU8Fast(_PREHASH_RayEndIsIntersection, (U8)FALSE);
 	gMessageSystem->addU8Fast(_PREHASH_State, state);
 
 	// Limit raycast to a single object.  
 	// Speeds up server raycast + avoid problems with server ray hitting objects
 	// that were clipped by the near plane or culled on the viewer.
 	LLUUID ray_target_id;
-	if( hit_obj )
+	if (hit_obj)
 	{
 		ray_target_id = hit_obj->getID();
 	}
@@ -439,8 +465,8 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	{
 		ray_target_id.setNull();
 	}
-	gMessageSystem->addUUIDFast(_PREHASH_RayTargetID,			ray_target_id );
-	
+	gMessageSystem->addUUIDFast(_PREHASH_RayTargetID,			ray_target_id);
+
 	// Pack in name value pairs
 	gMessageSystem->sendReliable(regionp->getHost());
 
@@ -452,7 +478,7 @@ BOOL LLToolPlacer::addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics )
 	}
 
 	// VEFFECT: AddObject
-	LLHUDEffectSpiral *effectp = (LLHUDEffectSpiral *)LLHUDManager::getInstance()->createViewerEffect(LLHUDObject::LL_HUD_EFFECT_BEAM, TRUE);
+	LLHUDEffectSpiral *effectp = (LLHUDEffectSpiral*)LLHUDManager::getInstance()->createViewerEffect(LLHUDObject::LL_HUD_EFFECT_BEAM, TRUE);
 	effectp->setSourceObject((LLViewerObject*)gAgent.getAvatarObject());
 	effectp->setPositionGlobal(regionp->getPosGlobalFromRegion(ray_end_region));
 	effectp->setDuration(LL_HUD_DUR_SHORT);
@@ -473,13 +499,15 @@ BOOL LLToolPlacer::addDuplicate(S32 x, S32 y)
 	BOOL b_hit_land = FALSE;
 	S32 hit_face = -1;
 	LLViewerObject* hit_obj = NULL;
-	BOOL success = raycastForNewObjPos( x, y, &hit_obj, &hit_face, &b_hit_land, &ray_start_region, &ray_end_region, &regionp );
-	if( !success )
+	BOOL success = raycastForNewObjPos(x, y, &hit_obj, &hit_face, &b_hit_land,
+									   &ray_start_region, &ray_end_region,
+									   &regionp);
+	if (!success)
 	{
 		make_ui_sound("UISndInvalidOp");
 		return FALSE;
 	}
-	if( hit_obj && (hit_obj->isAvatar() || hit_obj->isAttachment()) )
+	if (hit_obj && (hit_obj->isAvatar() || hit_obj->isAttachment()))
 	{
 		// Can't create objects on avatars or attachments
 		make_ui_sound("UISndInvalidOp");
@@ -491,7 +519,7 @@ BOOL LLToolPlacer::addDuplicate(S32 x, S32 y)
 	// Speeds up server raycast + avoid problems with server ray hitting objects
 	// that were clipped by the near plane or culled on the viewer.
 	LLUUID ray_target_id;
-	if( hit_obj )
+	if (hit_obj)
 	{
 		ray_target_id = hit_obj->getID();
 	}
@@ -501,13 +529,13 @@ BOOL LLToolPlacer::addDuplicate(S32 x, S32 y)
 	}
 
 	LLSelectMgr::getInstance()->selectDuplicateOnRay(ray_start_region,
-										ray_end_region,
-										b_hit_land,			// suppress raycast
-										FALSE,				// intersection
-										ray_target_id,
-										gSavedSettings.getBOOL("CreateToolCopyCenters"),
-										gSavedSettings.getBOOL("CreateToolCopyRotates"),
-										FALSE);				// select copy
+													 ray_end_region,
+													 b_hit_land,	// suppress raycast
+													 FALSE,			// intersection
+													 ray_target_id,
+													 gSavedSettings.getBOOL("CreateToolCopyCenters"),
+													 gSavedSettings.getBOOL("CreateToolCopyRotates"),
+													 FALSE);		// select copy
 
 	if (regionp
 		&& (regionp->getRegionFlags() & REGION_FLAGS_SANDBOX))
@@ -524,25 +552,26 @@ BOOL LLToolPlacer::placeObject(S32 x, S32 y, MASK mask)
 	BOOL added = TRUE;
 
 //MK
-	if (gRRenabled && (gAgent.mRRInterface.mContainsEdit || gAgent.mRRInterface.mContainsRez))
+	if (gRRenabled &&
+		(gAgent.mRRInterface.mContainsEdit || gAgent.mRRInterface.mContainsRez))
 	{
 		return TRUE;
 	}
 //mk
-	
+
 	if (gSavedSettings.getBOOL("CreateToolCopySelection"))
 	{
 		added = addDuplicate(x, y);
 	}
 	else
 	{
-		added = addObject( sObjectType, x, y, FALSE );
+		added = addObject(sObjectType, x, y, FALSE);
 	}
 
 	// ...and go back to the default tool
 	if (added && !gSavedSettings.getBOOL("CreateToolKeepSelected"))
 	{
-		LLToolMgr::getInstance()->getCurrentToolset()->selectTool( LLToolCompTranslate::getInstance() );
+		LLToolMgr::getInstance()->getCurrentToolset()->selectTool(LLToolCompTranslate::getInstance());
 	}
 
 	return added;
@@ -550,7 +579,7 @@ BOOL LLToolPlacer::placeObject(S32 x, S32 y, MASK mask)
 
 BOOL LLToolPlacer::handleHover(S32 x, S32 y, MASK mask)
 {
-	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolPlacer" << llendl;		
+	lldebugst(LLERR_USER_INPUT) << "hover handled by LLToolPlacer" << llendl;
 	gViewerWindow->getWindow()->setCursor(UI_CURSOR_TOOLCREATE);
 	return TRUE;
 }
@@ -585,31 +614,30 @@ LLPCode LLToolPlacerPanel::sTree		= LL_PCODE_LEGACY_TREE;
 LLPCode LLToolPlacerPanel::sGrass		= LL_PCODE_LEGACY_GRASS;
 
 S32			LLToolPlacerPanel::sButtonsAdded = 0;
-LLButton*	LLToolPlacerPanel::sButtons[ TOOL_PLACER_NUM_BUTTONS ];
+LLButton*	LLToolPlacerPanel::sButtons[TOOL_PLACER_NUM_BUTTONS];
 
 LLToolPlacerPanel::LLToolPlacerPanel(const std::string& name, const LLRect& rect)
-	:
-	LLPanel( name, rect )
+:	LLPanel(name, rect)
 {
 	/* DEPRECATED - JC
-	addButton( "UIImgCubeUUID",			"UIImgCubeSelectedUUID",		&LLToolPlacerPanel::sCube );
-	addButton( "UIImgPrismUUID",		"UIImgPrismSelectedUUID",		&LLToolPlacerPanel::sPrism );
-	addButton( "UIImgPyramidUUID",		"UIImgPyramidSelectedUUID",		&LLToolPlacerPanel::sPyramid );
-	addButton( "UIImgTetrahedronUUID",	"UIImgTetrahedronSelectedUUID",	&LLToolPlacerPanel::sTetrahedron );
-	addButton( "UIImgCylinderUUID",		"UIImgCylinderSelectedUUID",	&LLToolPlacerPanel::sCylinder );
-	addButton( "UIImgHalfCylinderUUID",	"UIImgHalfCylinderSelectedUUID",&LLToolPlacerPanel::sCylinderHemi );
-	addButton( "UIImgConeUUID",			"UIImgConeSelectedUUID",		&LLToolPlacerPanel::sCone );
-	addButton( "UIImgHalfConeUUID",		"UIImgHalfConeSelectedUUID",	&LLToolPlacerPanel::sConeHemi );
-	addButton( "UIImgSphereUUID",		"UIImgSphereSelectedUUID",		&LLToolPlacerPanel::sSphere );
-	addButton( "UIImgHalfSphereUUID",	"UIImgHalfSphereSelectedUUID",	&LLToolPlacerPanel::sSphereHemi );
-	addButton( "UIImgTreeUUID",			"UIImgTreeSelectedUUID",		&LLToolPlacerPanel::sTree );
-	addButton( "UIImgGrassUUID",		"UIImgGrassSelectedUUID",		&LLToolPlacerPanel::sGrass );
-	addButton( "ObjectTorusImageID",	"ObjectTorusActiveImageID",		&LLToolPlacerPanel::sTorus );
-	addButton( "ObjectTubeImageID",		"ObjectTubeActiveImageID",		&LLToolPlacerPanel::sSquareTorus );
+	addButton("UIImgCubeUUID",			"UIImgCubeSelectedUUID",		&LLToolPlacerPanel::sCube);
+	addButton("UIImgPrismUUID",		"UIImgPrismSelectedUUID",		&LLToolPlacerPanel::sPrism);
+	addButton("UIImgPyramidUUID",		"UIImgPyramidSelectedUUID",		&LLToolPlacerPanel::sPyramid);
+	addButton("UIImgTetrahedronUUID",	"UIImgTetrahedronSelectedUUID",	&LLToolPlacerPanel::sTetrahedron);
+	addButton("UIImgCylinderUUID",		"UIImgCylinderSelectedUUID",	&LLToolPlacerPanel::sCylinder);
+	addButton("UIImgHalfCylinderUUID",	"UIImgHalfCylinderSelectedUUID",&LLToolPlacerPanel::sCylinderHemi);
+	addButton("UIImgConeUUID",			"UIImgConeSelectedUUID",		&LLToolPlacerPanel::sCone);
+	addButton("UIImgHalfConeUUID",		"UIImgHalfConeSelectedUUID",	&LLToolPlacerPanel::sConeHemi);
+	addButton("UIImgSphereUUID",		"UIImgSphereSelectedUUID",		&LLToolPlacerPanel::sSphere);
+	addButton("UIImgHalfSphereUUID",	"UIImgHalfSphereSelectedUUID",	&LLToolPlacerPanel::sSphereHemi);
+	addButton("UIImgTreeUUID",			"UIImgTreeSelectedUUID",		&LLToolPlacerPanel::sTree);
+	addButton("UIImgGrassUUID",		"UIImgGrassSelectedUUID",		&LLToolPlacerPanel::sGrass);
+	addButton("ObjectTorusImageID",	"ObjectTorusActiveImageID",		&LLToolPlacerPanel::sTorus);
+	addButton("ObjectTubeImageID",		"ObjectTubeActiveImageID",		&LLToolPlacerPanel::sSquareTorus);
 	*/
 }
 
-void LLToolPlacerPanel::addButton( const std::string& up_state, const std::string& down_state, LLPCode* pcode )
+void LLToolPlacerPanel::addButton(const std::string& up_state, const std::string& down_state, LLPCode* pcode)
 {
 	const S32 TOOL_SIZE = 32;
 	const S32 HORIZ_SPACING = TOOL_SIZE + 5;
@@ -625,20 +653,15 @@ void LLToolPlacerPanel::addButton( const std::string& up_state, const std::strin
 	// Build the rectangle, recalling the origin is at lower left
 	// and we want the icons to build down from the top.
 	LLRect rect;
-	rect.setLeftTopAndSize(
-		HPAD + (column * HORIZ_SPACING),
-		help_rect.mBottom - VPAD - (row * VERT_SPACING),
-		TOOL_SIZE,
-		TOOL_SIZE );
+	rect.setLeftTopAndSize(HPAD + (column * HORIZ_SPACING),
+						   help_rect.mBottom - VPAD - (row * VERT_SPACING),
+						   TOOL_SIZE,
+						   TOOL_SIZE);
 
-	LLButton* btn = new LLButton(
-		std::string("ToolPlacerOptBtn"),
-		rect,
-		up_state,
-		down_state,
-		LLStringUtil::null, &LLToolPlacerPanel::setObjectType,
-		pcode,
-		LLFontGL::getFontSansSerif());
+	LLButton* btn = new LLButton(std::string("ToolPlacerOptBtn"), rect,
+								 up_state, down_state, LLStringUtil::null,
+								 &LLToolPlacerPanel::setObjectType, pcode,
+								 LLFontGL::getFontSansSerif());
 	btn->setFollowsBottom();
 	btn->setFollowsLeft();
 	addChild(btn);
@@ -648,8 +671,8 @@ void LLToolPlacerPanel::addButton( const std::string& up_state, const std::strin
 }
 
 // static 
-void	LLToolPlacerPanel::setObjectType( void* data )
+void	LLToolPlacerPanel::setObjectType(void* data)
 {
 	LLPCode pcode = *(LLPCode*) data;
-	LLToolPlacer::setObjectType( pcode );
+	LLToolPlacer::setObjectType(pcode);
 }

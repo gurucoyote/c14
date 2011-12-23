@@ -581,7 +581,7 @@ LLPluginClassMedia* LLMediaCtrl::getMediaPlugin()
 //
 void LLMediaCtrl::draw()
 {
-	if (! mWebBrowserImage)
+	if (!mWebBrowserImage)
 		return;
 
 	if (gRestoreGL == 1)

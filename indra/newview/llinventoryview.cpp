@@ -213,7 +213,6 @@ void LLInventoryViewFinder::draw()
 		filtered_by_all_types = FALSE;
 	}
 
-
 	if (!childGetValue("check_calling_card"))
 	{
 		filter &= ~(0x1 << LLInventoryType::IT_CALLINGCARD);

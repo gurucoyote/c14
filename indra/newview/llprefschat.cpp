@@ -41,13 +41,15 @@
 #include "llstylemap.h"
 #include "lltexteditor.h"
 #include "lluictrlfactory.h"
+
 #include "llviewercontrol.h"
+#include "lltranslate.h"
 
 class LLPrefsChatImpl : public LLPanel
 {
 public:
 	LLPrefsChatImpl();
-	/*virtual*/ ~LLPrefsChatImpl(){};
+	/*virtual*/ ~LLPrefsChatImpl() { }
 
 	void apply();
 	void cancel();
@@ -74,7 +76,6 @@ private:
 	BOOL mPlayTypingSound;
 	BOOL mShowTypingInfo;
 	BOOL mChatBubbles;
-	BOOL mTranslateChat;
 	LLColor4 mSystemChatColor;
 	LLColor4 mUserChatColor;
 	LLColor4 mAgentChatColor;
@@ -85,21 +86,26 @@ private:
 	LLColor4 mBGChatColor;
 	LLColor4 mScriptErrorColor;
 	LLColor4 mHTMLLinkColor;
+#if TRANSLATE_CHAT
+	BOOL mTranslateChat;
 	std::string mTranslateLanguage;
+#endif
 };
 
 
 LLPrefsChatImpl::LLPrefsChatImpl()
-	:	LLPanel(std::string("Chat Preferences Panel"))
+:	LLPanel(std::string("Chat Preferences Panel"))
 {
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_chat.xml");
 	childSetCommitCallback("chat_full_width_check", onCommitChatFullWidth, this);
 	childSetCommitCallback("console_box_per_message_check", onCommitCheckBoxedMessages, this);
 	childSetCommitCallback("bubble_text_chat", onCommitCheckChatBubbles, this);
 	refreshValues(); // initialize member data from saved settings
-	childSetValue("translate_language_combobox", mTranslateLanguage);
 	childSetEnabled("disable_messages_spacing_check", !mConsoleBoxPerMessage);
 	childSetEnabled("show_typing_info_check", !mChatBubbles);
+#if TRANSLATE_CHAT
+	childSetValue("translate_language_combobox", mTranslateLanguage);
+#endif
 }
 
 //static
@@ -155,7 +161,6 @@ void LLPrefsChatImpl::refreshValues()
 	mPlayTypingAnim				= gSavedSettings.getBOOL("PlayTypingAnim"); 
 	mPlayTypingSound			= gSavedSettings.getBOOL("PlayTypingSound"); 
 	mShowTypingInfo				= gSavedSettings.getBOOL("ShowTypingInfo"); 
-	mTranslateChat				= gSavedSettings.getBOOL("TranslateChat");
 	mSystemChatColor			= gSavedSettings.getColor4("SystemChatColor");
 	mUserChatColor				= gSavedSettings.getColor4("UserChatColor");
 	mAgentChatColor				= gSavedSettings.getColor4("AgentChatColor");
@@ -166,7 +171,10 @@ void LLPrefsChatImpl::refreshValues()
 	mBGChatColor				= gSavedSettings.getColor4("BackgroundChatColor");
 	mScriptErrorColor			= gSavedSettings.getColor4("ScriptErrorColor");
 	mHTMLLinkColor				= gSavedSettings.getColor4("HTMLLinkColor");
+#if TRANSLATE_CHAT
+	mTranslateChat				= gSavedSettings.getBOOL("TranslateChat");
 	mTranslateLanguage			= gSavedSettings.getString("TranslateLanguage");
+#endif
 }
 
 void LLPrefsChatImpl::cancel()
@@ -177,7 +185,7 @@ void LLPrefsChatImpl::cancel()
 	gSavedSettings.setU32("LinksForChattingObjects",	mLinksForChattingObjects);
 	gSavedSettings.setF32("ChatPersistTime",			mChatPersist);
 	gSavedSettings.setF32("ConsoleBackgroundOpacity",	mConsoleOpacity);
-	gSavedSettings.setF32("ChatBubbleOpacity",			mBubbleOpacity);	
+	gSavedSettings.setF32("ChatBubbleOpacity",			mBubbleOpacity);
 	gSavedSettings.setBOOL("ChatShowTimestamps",		mShowTimestamps);
 	gSavedSettings.setBOOL("UseChatBubbles",			mChatBubbles);
 	gSavedSettings.setBOOL("ChatFullWidth",				mChatFullWidth);
@@ -187,7 +195,6 @@ void LLPrefsChatImpl::cancel()
 	gSavedSettings.setBOOL("PlayTypingAnim",			mPlayTypingAnim); 
 	gSavedSettings.setBOOL("PlayTypingSound",			mPlayTypingSound); 
 	gSavedSettings.setBOOL("ShowTypingInfo",			mShowTypingInfo); 
-	gSavedSettings.setBOOL("TranslateChat",				mTranslateChat);
 	gSavedSettings.setColor4("SystemChatColor",			mSystemChatColor);
 	gSavedSettings.setColor4("UserChatColor",			mUserChatColor);
 	gSavedSettings.setColor4("AgentChatColor",			mAgentChatColor);
@@ -198,12 +205,17 @@ void LLPrefsChatImpl::cancel()
 	gSavedSettings.setColor4("BackgroundChatColor",		mBGChatColor);
 	gSavedSettings.setColor4("ScriptErrorColor",		mScriptErrorColor);
 	gSavedSettings.setColor4("HTMLLinkColor",			mHTMLLinkColor);
-	gSavedSettings.setString("TranslateLanguage",		mTranslateLanguage);	
+#if TRANSLATE_CHAT
+	gSavedSettings.setBOOL("TranslateChat",				mTranslateChat);
+	gSavedSettings.setString("TranslateLanguage",		mTranslateLanguage);
+#endif
 }
 
 void LLPrefsChatImpl::apply()
 {
+#if TRANSLATE_CHAT
 	gSavedSettings.setString("TranslateLanguage", childGetValue("translate_language_combobox"));
+#endif
 	refreshValues(); // member values become the official values and cancel becomes a no-op.
 	LLTextEditor::setLinkColor(mHTMLLinkColor);
 }
@@ -211,8 +223,9 @@ void LLPrefsChatImpl::apply()
 //---------------------------------------------------------------------------
 
 LLPrefsChat::LLPrefsChat()
-:	impl( * new LLPrefsChatImpl() )
-{ }
+:	impl(* new LLPrefsChatImpl())
+{
+}
 
 LLPrefsChat::~LLPrefsChat()
 {

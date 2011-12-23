@@ -60,6 +60,8 @@ public:
 	std::string generateSerialNumber();
 	bool setupSLURLHandler();
 
+	static void setReceivedSLURL(std::string slurl)	{ sReceivedSLURL = slurl; }
+
 protected:
 	virtual bool beingDebugged();
 	
@@ -72,6 +74,10 @@ protected:
 
 	virtual bool initSLURLHandler();
 	virtual bool sendURLToOtherInstance(const std::string& url);
+	virtual std::string getReceivedSLURL()		{ return sReceivedSLURL; }
+	virtual void clearReceivedSLURL()			{ sReceivedSLURL.clear(); }
+
+	static std::string sReceivedSLURL;
 };
 
 #if LL_DBUS_ENABLED

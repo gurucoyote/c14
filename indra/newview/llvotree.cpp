@@ -79,6 +79,7 @@ F32 LLVOTree::sLODAngles[sMAX_NUM_TREE_LOD_LEVELS] = { 30.f, 20.f, 15.f, F_ALMOS
 F32 LLVOTree::sTreeFactor = 1.f;
 
 LLVOTree::SpeciesMap LLVOTree::sSpeciesTable;
+LLVOTree::SpeciesNames LLVOTree::sSpeciesNames;
 S32 LLVOTree::sMaxTreeSpecies = 0;
 
 // Tree variables and functions
@@ -239,11 +240,13 @@ void LLVOTree::initClass()
 
 			if (species >= sMaxTreeSpecies) sMaxTreeSpecies = species + 1;
 
+			std::string name;
+			static LLStdStringHandle name_string = LLXmlTree::addAttributeString("name");
+			success &= tree_def->getFastAttributeString(name_string, name);
+			sSpeciesNames[name] = species;
+
 			if (!success)
 			{
-				std::string name;
-				static LLStdStringHandle name_string = LLXmlTree::addAttributeString("name");
-				tree_def->getFastAttributeString(name_string, name);
 				llwarns << "Incomplete definition of tree " << name << llendl;
 			}
 		}

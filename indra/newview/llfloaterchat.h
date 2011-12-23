@@ -90,8 +90,10 @@ private:
 
 	static void onClickMute(void *data);
 	static void onClickToggleShowMute(LLUICtrl* ctrl, void *data);
-	static void onClickToggleTranslateChat(LLUICtrl* ctrl, void *data);
 	static void onClickToggleActiveSpeakers(void* userdata);
+#if TRANSLATE_CHAT
+	static void onClickToggleTranslateChat(LLUICtrl* ctrl, void *data);
+#endif
 
 	LLChatBar*				mChatBarPanel;
 	LLPanelActiveSpeakers*	mSpeakerPanel;

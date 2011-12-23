@@ -83,6 +83,14 @@ S32 LLNetMap::sMiniMapCenter = 1;
 
 LLNetMap::LLNetMap(const std::string& name)
 :	LLPanel(name),
+	mNorthLabel(NULL),
+	mSouthLabel(NULL),
+	mWestLabel(NULL),
+	mEastLabel(NULL),
+	mNorthWestLabel(NULL),
+	mNorthEastLabel(NULL),
+	mSouthWestLabel(NULL),
+	mSouthEastLabel(NULL),
 	mScale(128.f),
 	mObjectMapTPM(1.f),
 	mObjectMapPixels(255.f),
@@ -114,15 +122,33 @@ LLNetMap::LLNetMap(const std::string& name)
 
 	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_mini_map.xml");
 
-	updateMinorDirections();
-
-	LLMenuGL* menu = LLUICtrlFactory::getInstance()->buildMenu("menu_mini_map.xml", this);
+	LLMenuGL* menu = LLUICtrlFactory::getInstance()->buildMenu("menu_mini_map.xml",
+															   this);
 	if (!menu)
 	{
 		menu = new LLMenuGL(LLStringUtil::null);
 	}
 	menu->setVisible(FALSE);
 	mPopupMenuHandle = menu->getHandle();
+}
+
+BOOL LLNetMap::postBuild()
+{
+	mNorthLabel = getChild<LLTextBox>("n_label", TRUE, FALSE);
+	if (mNorthLabel)
+	{
+		mSouthLabel		= getChild<LLTextBox>("s_label");
+		mWestLabel		= getChild<LLTextBox>("w_label");
+		mEastLabel		= getChild<LLTextBox>("e_label");
+		mNorthWestLabel	= getChild<LLTextBox>("nw_label");
+		mNorthEastLabel	= getChild<LLTextBox>("ne_label");
+		mSouthWestLabel	= getChild<LLTextBox>("sw_label");
+		mSouthEastLabel	= getChild<LLTextBox>("se_label");
+
+		updateMinorDirections();
+	}
+
+	return TRUE;
 }
 
 LLNetMap::~LLNetMap()
@@ -202,12 +228,13 @@ void LLNetMap::draw()
 			// Draw background rectangle
 			if (isBackgroundVisible())
 			{
-				gGL.color4fv(isBackgroundOpaque() ? getBackgroundColor().mV : getTransparentColor().mV);
+				gGL.color4fv(isBackgroundOpaque() ? getBackgroundColor().mV
+												  : getTransparentColor().mV);
 				gl_rect_2d(0, getRect().getHeight(), getRect().getWidth(), 0);
 			}
 		}
 
-		// region 0,0 is in the middle
+		// Region 0,0 is in the middle
 		S32 center_sw_left = getRect().getWidth() / 2 + llfloor(mCurPanX);
 		S32 center_sw_bottom = getRect().getHeight() / 2 + llfloor(mCurPanY);
 
@@ -217,16 +244,20 @@ void LLNetMap::draw()
 
 		if (sMiniMapRotate)
 		{
-			// rotate subsequent draws to agent rotation
+			// Rotate subsequent draws to agent rotation
 			rotation = atan2(camera->getAtAxis().mV[VX], camera->getAtAxis().mV[VY]);
 			glRotatef(rotation * RAD_TO_DEG, 0.f, 0.f, 1.f);
 		}
 
-		// figure out where agent is
+		// Figure out where agent is
 		S32 region_width = llround(LLWorld::getInstance()->getRegionWidthInMeters());
-		LLColor4 this_region_color = gColors.getColor("NetMapThisRegion");
-		LLColor4 live_region_color = gColors.getColor("NetMapLiveRegion");
-		LLColor4 dead_region_color = gColors.getColor("NetMapDeadRegion");
+
+		static LLCachedControl<LLColor4U> net_map_this_region(gColors, "NetMapThisRegion");
+		static LLCachedControl<LLColor4U> net_map_live_region(gColors, "NetMapLiveRegion");
+		static LLCachedControl<LLColor4U> net_map_dead_region(gColors, "NetMapDeadRegion");
+		LLColor4 this_region_color = LLColor4(net_map_this_region);
+		LLColor4 live_region_color = LLColor4(net_map_live_region);
+		LLColor4 dead_region_color = LLColor4(net_map_dead_region);
 
 		for (LLWorld::region_list_t::const_iterator iter = LLWorld::getInstance()->getRegionList().begin();
 			 iter != LLWorld::getInstance()->getRegionList().end(); ++iter)
@@ -244,7 +275,8 @@ void LLNetMap::draw()
 			F32 top =		bottom + mScale ;
 			F32 right =		left + mScale ;
 
-			gGL.color4fv(regionp == gAgent.getRegion() ? this_region_color.mV : live_region_color.mV);
+			gGL.color4fv(regionp == gAgent.getRegion() ? this_region_color.mV
+													   : live_region_color.mV);
 			if (!regionp->isAlive())
 			{
 				gGL.color4fv(dead_region_color.mV);
@@ -290,20 +322,27 @@ void LLNetMap::draw()
 			mUpdateNow = FALSE;
 
 			// Locate the centre of the object layer, accounting for panning
-			LLVector3 new_center = globalPosToView(gAgent.getCameraPositionGlobal(), sMiniMapRotate);
+			LLVector3 new_center = globalPosToView(gAgent.getCameraPositionGlobal(),
+												   sMiniMapRotate);
 			new_center.mV[0] -= mCurPanX;
 			new_center.mV[1] -= mCurPanY;
 			new_center.mV[2] = 0.f;
-			mObjectImageCenterGlobal = viewPosToGlobal(llround(new_center.mV[0]), llround(new_center.mV[1]), sMiniMapRotate);
+			mObjectImageCenterGlobal = viewPosToGlobal(llround(new_center.mV[0]),
+													   llround(new_center.mV[1]),
+													   sMiniMapRotate);
 
 			// Create the base texture.
 			U8 *default_texture = mObjectRawImagep->getData();
-			memset(default_texture, 0, mObjectImagep->getWidth() * mObjectImagep->getHeight() * mObjectImagep->getComponents());
+			memset(default_texture, 0,
+				   mObjectImagep->getWidth() * mObjectImagep->getHeight() *
+				   mObjectImagep->getComponents());
 
 			// Draw objects
 			gObjectList.renderObjectsForMap(*this);
 
-			mObjectImagep->setSubImage(mObjectRawImagep, 0, 0, mObjectImagep->getWidth(), mObjectImagep->getHeight());
+			mObjectImagep->setSubImage(mObjectRawImagep, 0, 0,
+									   mObjectImagep->getWidth(),
+									   mObjectImagep->getHeight());
 
 			map_timer.reset();
 		}
@@ -319,13 +358,17 @@ void LLNetMap::draw()
 
 		gGL.begin(LLRender::QUADS);
 			gGL.texCoord2f(0.f, 1.f);
-			gGL.vertex2f(map_center_agent.mV[VX] - image_half_width, image_half_height + map_center_agent.mV[VY]);
+			gGL.vertex2f(map_center_agent.mV[VX] - image_half_width,
+						 image_half_height + map_center_agent.mV[VY]);
 			gGL.texCoord2f(0.f, 0.f);
-			gGL.vertex2f(map_center_agent.mV[VX] - image_half_width, map_center_agent.mV[VY] - image_half_height);
+			gGL.vertex2f(map_center_agent.mV[VX] - image_half_width,
+						 map_center_agent.mV[VY] - image_half_height);
 			gGL.texCoord2f(1.f, 0.f);
-			gGL.vertex2f(image_half_width + map_center_agent.mV[VX], map_center_agent.mV[VY] - image_half_height);
+			gGL.vertex2f(image_half_width + map_center_agent.mV[VX],
+						 map_center_agent.mV[VY] - image_half_height);
 			gGL.texCoord2f(1.f, 1.f);
-			gGL.vertex2f(image_half_width + map_center_agent.mV[VX], image_half_height + map_center_agent.mV[VY]);
+			gGL.vertex2f(image_half_width + map_center_agent.mV[VX],
+						 image_half_height + map_center_agent.mV[VY]);
 		gGL.end();
 
 		gGL.popMatrix();
@@ -342,15 +385,19 @@ void LLNetMap::draw()
 		F32 min_pick_dist = mDotRadius * MIN_PICK_SCALE; 
 
 		// Draw avatars
-		LLColor4 avatar_color = gColors.getColor("MapAvatar");
-		LLColor4 friend_color = gColors.getColor("MapFriend");
+		static LLCachedControl<LLColor4U> map_avatar(gColors, "MapAvatar");
+		static LLCachedControl<LLColor4U> map_friend(gColors, "MapFriend");
+		LLColor4 avatar_color = LLColor4(map_avatar);
+		LLColor4 friend_color = LLColor4(map_friend);
+
 		std::vector<LLUUID> avatar_ids;
 		std::vector<LLVector3d> positions;
 		LLWorld::getInstance()->getAvatars(&avatar_ids, &positions);
 		for (U32 i = 0; i < avatar_ids.size(); i++)
 		{
-			// TODO: it'd be very cool to draw these in sorted order from lowest Z to highest.
-			// just be careful to sort the avatar IDs along with the positions. -MG
+			// TODO: it'd be very cool to draw these in sorted order from lowest
+			// Z to highest. Just be careful to sort the avatar IDs along with
+			// the positions. -MG
 			pos_map = globalPosToView(positions[i], sMiniMapRotate);
 			if (positions[i].mdV[VZ] == 0.f)
 			{
@@ -370,15 +417,16 @@ void LLNetMap::draw()
 //mk
 				LLWorldMapView::drawAvatar(pos_map.mV[VX], pos_map.mV[VY],
 										   is_agent_friend(avatar_ids[i])
-											 ? friend_color
-											 : avatar_color,
+												? friend_color
+												: avatar_color,
 										   pos_map.mV[VZ], mDotRadius);
 //MK
 			}
 //mk
 			F32	dist_to_cursor = dist_vec(LLVector2(pos_map.mV[VX],
 										  pos_map.mV[VY]),
-										  LLVector2(local_mouse_x, local_mouse_y));
+										  LLVector2(local_mouse_x,
+													local_mouse_y));
 			if (dist_to_cursor < min_pick_dist && dist_to_cursor < closest_dist)
 			{
 				closest_dist = dist_to_cursor;
@@ -389,7 +437,8 @@ void LLNetMap::draw()
 		// Draw dot for autopilot target
 		if (gAgent.getAutoPilot())
 		{
-			drawTracking(gAgent.getAutoPilotTargetGlobal(), sMiniMapRotate, gTrackColor);
+			drawTracking(gAgent.getAutoPilotTargetGlobal(),
+						 sMiniMapRotate, gTrackColor);
 		}
 		else
 		{
@@ -417,7 +466,7 @@ void LLNetMap::draw()
 				  dot_width, dot_width);
 
 		// Draw frustum
-		F32 meters_to_pixels = mScale/ LLWorld::getInstance()->getRegionWidthInMeters();
+		F32 meters_to_pixels = mScale / LLWorld::getInstance()->getRegionWidthInMeters();
 
 		F32 horiz_fov = camera->getView() * camera->getAspect();
 		F32 far_clip_meters = camera->getFar();
@@ -433,7 +482,9 @@ void LLNetMap::draw()
 
 		if (sMiniMapRotate)
 		{
-			gGL.color4fv(gColors.getColor("NetMapFrustum").mV);
+			static LLCachedControl<LLColor4U> net_map_frustum(gColors, "NetMapFrustum");
+			LLColor4 frustum_color = LLColor4(net_map_frustum);
+			gGL.color4fv(frustum_color.mV);
 
 			gGL.begin(LLRender::TRIANGLES);
 				gGL.vertex2f(ctr_x, ctr_y);
@@ -443,12 +494,16 @@ void LLNetMap::draw()
 		}
 		else
 		{
-			gGL.color4fv(gColors.getColor("NetMapFrustumRotating").mV);
+			static LLCachedControl<LLColor4U> net_map_frustum_rotating(gColors, "NetMapFrustumRotating");
+			LLColor4 frustum_color = LLColor4(net_map_frustum_rotating);
+			gGL.color4fv(frustum_color.mV);
 
 			// If we don't rotate the map, we have to rotate the frustum.
 			gGL.pushMatrix();
 				gGL.translatef(ctr_x, ctr_y, 0);
-				glRotatef(atan2(camera->getAtAxis().mV[VX], camera->getAtAxis().mV[VY]) * RAD_TO_DEG, 0.f, 0.f, -1.f);
+				glRotatef(atan2(camera->getAtAxis().mV[VX],
+								camera->getAtAxis().mV[VY]) * RAD_TO_DEG,
+								0.f, 0.f, -1.f);
 				gGL.begin(LLRender::TRIANGLES);
 					gGL.vertex2f(0, 0);
 					gGL.vertex2f(-half_width_pixels, far_clip_pixels);
@@ -459,15 +514,15 @@ void LLNetMap::draw()
 	}
 
 	// Rotation of 0 means that North is up
-	setDirectionPos(getChild<LLTextBox>("e_label"), rotation);
-	setDirectionPos(getChild<LLTextBox>("n_label"), rotation + F_PI_BY_TWO);
-	setDirectionPos(getChild<LLTextBox>("w_label"), rotation + F_PI);
-	setDirectionPos(getChild<LLTextBox>("s_label"), rotation + F_PI + F_PI_BY_TWO);
+	setDirectionPos(mEastLabel, rotation);
+	setDirectionPos(mNorthLabel, rotation + F_PI_BY_TWO);
+	setDirectionPos(mWestLabel, rotation + F_PI);
+	setDirectionPos(mSouthLabel, rotation + F_PI + F_PI_BY_TWO);
 
-	setDirectionPos(getChild<LLTextBox>("ne_label"), rotation + F_PI_BY_TWO / 2);
-	setDirectionPos(getChild<LLTextBox>("nw_label"), rotation + F_PI_BY_TWO + F_PI_BY_TWO / 2);
-	setDirectionPos(getChild<LLTextBox>("sw_label"), rotation + F_PI + F_PI_BY_TWO / 2);
-	setDirectionPos(getChild<LLTextBox>("se_label"), rotation + F_PI + F_PI_BY_TWO + F_PI_BY_TWO / 2);
+	setDirectionPos(mNorthEastLabel, rotation + F_PI_BY_TWO / 2);
+	setDirectionPos(mNorthWestLabel, rotation + F_PI_BY_TWO + F_PI_BY_TWO / 2);
+	setDirectionPos(mSouthWestLabel, rotation + F_PI + F_PI_BY_TWO / 2);
+	setDirectionPos(mSouthEastLabel, rotation + F_PI + F_PI_BY_TWO + F_PI_BY_TWO / 2);
 
 	LLView::draw();
 }
@@ -491,7 +546,8 @@ LLVector3 LLNetMap::globalPosToView(const LLVector3d& global_pos, BOOL rotated)
 
 	if (rotated)
 	{
-		F32 radians = atan2(LLViewerCamera::getInstance()->getAtAxis().mV[VX], LLViewerCamera::getInstance()->getAtAxis().mV[VY]);
+		F32 radians = atan2(LLViewerCamera::getInstance()->getAtAxis().mV[VX],
+							LLViewerCamera::getInstance()->getAtAxis().mV[VY]);
 		LLQuaternion rot(radians, LLVector3(0.f, 0.f, 1.f));
 		pos_local.rotVec(rot);
 	}
@@ -506,10 +562,10 @@ void LLNetMap::drawTracking(const LLVector3d& pos_global, BOOL rotated,
 							const LLColor4& color, BOOL draw_arrow)
 {
 	LLVector3 pos_local = globalPosToView(pos_global, rotated);
-	if ((pos_local.mV[VX] < 0) ||
-		(pos_local.mV[VY] < 0) ||
-		(pos_local.mV[VX] >= getRect().getWidth()) ||
-		(pos_local.mV[VY] >= getRect().getHeight()))
+	if (pos_local.mV[VX] < 0 ||
+		pos_local.mV[VY] < 0 ||
+		pos_local.mV[VX] >= getRect().getWidth() ||
+		pos_local.mV[VY] >= getRect().getHeight())
 	{
 		if (draw_arrow)
 		{
@@ -623,7 +679,7 @@ BOOL LLNetMap::handleToolTip(S32 x, S32 y, std::string& msg, LLRect* sticky_rect
 //MK
 		if (gRRenabled && gAgent.mRRInterface.mContainsShowloc)
 		{
-			msg.assign ("(Region hidden)");
+			msg.assign("(Region hidden)");
 		}
 //mk
 		msg.append("\n");
@@ -662,23 +718,25 @@ void LLNetMap::setDirectionPos(LLTextBox* text_box, F32 rotation)
 
 void LLNetMap::updateMinorDirections()
 {
-	if (getChild<LLTextBox>("ne_label", TRUE, FALSE) == NULL)
+	if (!mNorthEastLabel)
 	{
 		return;
 	}
 
 	// Hide minor directions if they cover too much of the map
-	bool show_minors = getChild<LLTextBox>("ne_label")->getRect().getHeight() <
-						 MAP_MINOR_DIR_THRESHOLD * llmin(getRect().getWidth(),
-														 getRect().getHeight());
+	bool show_minors = mNorthEastLabel->getRect().getHeight() <
+						MAP_MINOR_DIR_THRESHOLD * llmin(getRect().getWidth(),
+														getRect().getHeight());
 
-	getChild<LLTextBox>("ne_label")->setVisible(show_minors);
-	getChild<LLTextBox>("nw_label")->setVisible(show_minors);
-	getChild<LLTextBox>("sw_label")->setVisible(show_minors);
-	getChild<LLTextBox>("se_label")->setVisible(show_minors);
+	mNorthEastLabel->setVisible(show_minors);
+	mNorthWestLabel->setVisible(show_minors);
+	mSouthEastLabel->setVisible(show_minors);
+	mSouthWestLabel->setVisible(show_minors);
 }
 
-void LLNetMap::renderScaledPointGlobal(const LLVector3d& pos, const LLColor4U &color, F32 radius_meters)
+void LLNetMap::renderScaledPointGlobal(const LLVector3d& pos,
+									   const LLColor4U &color,
+									   F32 radius_meters)
 {
 	LLVector3 local_pos;
 	local_pos.setVec(pos - mObjectImageCenterGlobal);
@@ -687,7 +745,7 @@ void LLNetMap::renderScaledPointGlobal(const LLVector3d& pos, const LLColor4U &c
 	renderPoint(local_pos, color, diameter_pixels);
 }
 
-void LLNetMap::renderPoint(const LLVector3 &pos_local, const LLColor4U &color, 
+void LLNetMap::renderPoint(const LLVector3 &pos_local, const LLColor4U &color,
 						   S32 diameter, S32 relative_height)
 {
 	if (diameter <= 0)

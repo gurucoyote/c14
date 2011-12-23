@@ -218,7 +218,7 @@ BOOL LLAvatarListEntry::isDead()
 
 LLFloaterAvatarList* LLFloaterAvatarList::sInstance = NULL;
 
-LLFloaterAvatarList::LLFloaterAvatarList() :  LLFloater(std::string("radar"))
+LLFloaterAvatarList::LLFloaterAvatarList() : LLFloater(std::string("radar"))
 {
 	llassert_always(sInstance == NULL);
 	sInstance = this;
@@ -283,11 +283,6 @@ void LLFloaterAvatarList::showInstance()
 	}
 }
 
-void LLFloaterAvatarList::draw()
-{
-	LLFloater::draw();
-}
-
 void LLFloaterAvatarList::onOpen()
 {
 	gSavedSettings.setBOOL("ShowRadar", TRUE);
@@ -336,6 +331,7 @@ BOOL LLFloaterAvatarList::postBuild()
 
 	childSetAction("send_keys_btn", onClickSendKeys, this);
 
+	childSetCommitCallback("update_enabled_cb", onCommitUpdate, this);
 	getChild<LLRadioGroup>("update_rate")->setSelectedIndex(gSavedSettings.getU32("RadarUpdateRate"));
 	childSetCommitCallback("update_rate", onCommitUpdateRate, this);
 
@@ -365,16 +361,10 @@ void LLFloaterAvatarList::updateAvatarList()
 	//llinfos << "radar refresh: updating map" << llendl;
 
 	// Check whether updates are enabled
-	LLCheckboxCtrl* check = getChild<LLCheckboxCtrl>("update_enabled_cb");
-	if (check && !check->getValue())
+	if (!mUpdate)
 	{
-		mUpdate = FALSE;
 		refreshTracker();
 		return;
-	}
-	else
-	{
-		mUpdate = TRUE;
 	}
 
 	LLVector3d mypos = gAgent.getPositionGlobal();
@@ -389,11 +379,13 @@ void LLFloaterAvatarList::updateAvatarList()
 		sorted_avatar_ids = avatar_ids;
 		std::sort(sorted_avatar_ids.begin(), sorted_avatar_ids.end());
 
-		for (std::vector<LLCharacter*>::const_iterator iter = LLCharacter::sInstances.begin(); iter != LLCharacter::sInstances.end(); ++iter)
+		for (std::vector<LLCharacter*>::const_iterator iter = LLCharacter::sInstances.begin();
+			 iter != LLCharacter::sInstances.end(); ++iter)
 		{
 			LLUUID avid = (*iter)->getID();
 
-			if (!std::binary_search(sorted_avatar_ids.begin(), sorted_avatar_ids.end(), avid))
+			if (!std::binary_search(sorted_avatar_ids.begin(),
+									sorted_avatar_ids.end(), avid))
 			{
 				avatar_ids.push_back(avid);
 			}
@@ -452,7 +444,9 @@ void LLFloaterAvatarList::updateAvatarList()
 				{
 					// Avatar already in list, update position
 					F32 dist = (F32)(position - mypos).magVec();
-					mAvatars[avid].setPosition(position, (avatarp->getRegion() == gAgent.getRegion()), true, dist < 20.0, dist < 100.0);
+					mAvatars[avid].setPosition(position,
+											   (avatarp->getRegion() == gAgent.getRegion()),
+											   true, dist < 20.0, dist < 100.0);
 				}
 				else
 				{
@@ -500,7 +494,10 @@ void LLFloaterAvatarList::updateAvatarList()
 				{
 					// Avatar already in list, update position
 					F32 dist = (F32)(position - mypos).magVec();
-					mAvatars[avid].setPosition(position, gAgent.getRegion()->pointInRegionGlobal(position), false, dist < 20.0, dist < 100.0);
+					mAvatars[avid].setPosition(position,
+											   gAgent.getRegion()->pointInRegionGlobal(position),
+											   false, dist < 20.0,
+											   dist < 100.0);
 				}
 				else
 				{
@@ -782,6 +779,7 @@ void LLFloaterAvatarList::onClickIM(void* userdata)
 	}
 }
 
+// static
 void LLFloaterAvatarList::onClickTeleportOffer(void *userdata)
 {
 	LLFloaterAvatarList *self = (LLFloaterAvatarList*)userdata;
@@ -793,11 +791,12 @@ void LLFloaterAvatarList::onClickTeleportOffer(void *userdata)
 	}
 }
 
+// static
 void LLFloaterAvatarList::onClickTrack(void *userdata)
 {
 	LLFloaterAvatarList *self = (LLFloaterAvatarList*)userdata;
 	
- 	LLScrollListItem *item =   self->mAvatarList->getFirstSelected();
+ 	LLScrollListItem *item = self->mAvatarList->getFirstSelected();
 	if (!item) return;
 
 	LLUUID agent_id = item->getUUID();
@@ -847,7 +846,9 @@ void LLFloaterAvatarList::refreshTracker()
 			}
 			pos = gAgent.getPosGlobalFromAgent(avatarp->getCharacterPosition());
 		}
-		if (pos != LLTracker::getTrackedPositionGlobal())
+
+		F32 dist = (pos - LLTracker::getTrackedPositionGlobal()).magVec();
+		if (dist > 1.0f)
 		{
 			std::string name = mAvatars[mTrackedAvatar].getDisplayName();
 			LLTracker::trackLocation(pos, name, "");
@@ -883,7 +884,8 @@ void LLFloaterAvatarList::onClickMark(void *userdata)
 	LLFloaterAvatarList *self = (LLFloaterAvatarList*)userdata;
 	LLDynamicArray<LLUUID> ids = self->mAvatarList->getSelectedIDs();
 
-	for (LLDynamicArray<LLUUID>::iterator itr = ids.begin(); itr != ids.end(); ++itr)
+	for (LLDynamicArray<LLUUID>::iterator itr = ids.begin(); itr != ids.end();
+		 ++itr)
 	{
 		LLUUID avid = *itr;
 		LLAvatarListEntry *entry = self->getAvatarEntry(avid);
@@ -894,6 +896,7 @@ void LLFloaterAvatarList::onClickMark(void *userdata)
 	}
 }
 
+//static
 void LLFloaterAvatarList::onClickFocus(void *userdata)
 {
 	LLFloaterAvatarList *self = (LLFloaterAvatarList*)userdata;
@@ -999,9 +1002,12 @@ void LLFloaterAvatarList::focusOnNext(BOOL marked_only)
 		entry = &iter->second;
 
 		if (entry->isDead())
+		{
 			continue;
+		}
 
-		if (next == NULL && ((!marked_only && entry->isDrawn()) || entry->isMarked()))
+		if (next == NULL &&
+			((!marked_only && entry->isDrawn()) || entry->isMarked()))
 		{
 			next = entry;
 		}
@@ -1071,6 +1077,7 @@ void LLFloaterAvatarList::onClickGetKey(void *userdata)
 	gViewerWindow->mWindow->copyTextToClipboard(utf8str_to_wstring(buffer));
 }
 
+//static
 void LLFloaterAvatarList::onClickSendKeys(void *userdata)
 {
 	LLFloaterAvatarList *self = (LLFloaterAvatarList*)userdata;
@@ -1139,9 +1146,7 @@ static void send_eject(const LLUUID& avatar_id, bool ban)
 	}
 }
 
-static void send_estate_message(
-	const char* request,
-	const LLUUID &target)
+static void send_estate_message(const char* request, const LLUUID& target)
 {
 
 	LLMessageSystem* msg = gMessageSystem;
@@ -1172,14 +1177,38 @@ static void send_estate_message(
 	msg->sendReliable(gAgent.getRegion()->getHost());
 }
 
-static void cmd_freeze(const LLUUID& avatar, const std::string &name)      { send_freeze(avatar, true); }
-static void cmd_unfreeze(const LLUUID& avatar, const std::string &name)    { send_freeze(avatar, false); }
-static void cmd_eject(const LLUUID& avatar, const std::string &name)       { send_eject(avatar, false); }
-static void cmd_ban(const LLUUID& avatar, const std::string &name)         { send_eject(avatar, true); }
-static void cmd_profile(const LLUUID& avatar, const std::string &name)     { LLFloaterAvatarInfo::showFromDirectory(avatar); }
-static void cmd_estate_eject(const LLUUID &avatar, const std::string &name){ send_estate_message("teleporthomeuser", avatar); }
+static void cmd_freeze(const LLUUID& avatar, const std::string &name)
+{
+	send_freeze(avatar, true);
+}
 
-void LLFloaterAvatarList::doCommand(void (*func)(const LLUUID &avatar, const std::string &name))
+static void cmd_unfreeze(const LLUUID& avatar, const std::string &name)
+{
+	send_freeze(avatar, false);
+}
+
+static void cmd_eject(const LLUUID& avatar, const std::string &name)
+{
+	send_eject(avatar, false);
+}
+
+static void cmd_ban(const LLUUID& avatar, const std::string &name)
+{
+	send_eject(avatar, true);
+}
+
+static void cmd_profile(const LLUUID& avatar, const std::string &name)
+{
+	LLFloaterAvatarInfo::showFromDirectory(avatar);
+}
+
+static void cmd_estate_eject(const LLUUID &avatar, const std::string &name)
+{
+	send_estate_message("teleporthomeuser", avatar);
+}
+
+void LLFloaterAvatarList::doCommand(void (*func)(const LLUUID &avatar,
+												 const std::string &name))
 {
 	LLDynamicArray<LLUUID> ids = mAvatarList->getSelectedIDs();
 
@@ -1197,8 +1226,8 @@ void LLFloaterAvatarList::doCommand(void (*func)(const LLUUID &avatar, const std
 
 std::string LLFloaterAvatarList::getSelectedNames(const std::string& separator)
 {
-	std::string ret = "";
-	
+	std::string ret;
+
 	LLDynamicArray<LLUUID> ids = mAvatarList->getSelectedIDs();
 	for (LLDynamicArray<LLUUID>::iterator itr = ids.begin(); itr != ids.end(); ++itr)
 	{
@@ -1280,7 +1309,8 @@ void LLFloaterAvatarList::callbackEjectFromEstate(const LLSD& notification, cons
 }
 
 //static
-void LLFloaterAvatarList::callbackIdle(void *userdata) {
+void LLFloaterAvatarList::callbackIdle(void *userdata)
+{
 	if (LLFloaterAvatarList::sInstance != NULL)
 	{
 		// Do not update at every frame: this would be insane !
@@ -1296,7 +1326,8 @@ void LLFloaterAvatarList::onClickFreeze(void *userdata)
 	LLSD args;
 	LLSD payload;
 	args["AVATAR_NAME"] = ((LLFloaterAvatarList*)userdata)->getSelectedNames();
-	LLNotifications::instance().add("FreezeAvatarFullname", args, payload, callbackFreeze);
+	LLNotifications::instance().add("FreezeAvatarFullname", args, payload,
+									callbackFreeze);
 }
 
 //static
@@ -1305,7 +1336,8 @@ void LLFloaterAvatarList::onClickEject(void *userdata)
 	LLSD args;
 	LLSD payload;
 	args["AVATAR_NAME"] = ((LLFloaterAvatarList*)userdata)->getSelectedNames();
-	LLNotifications::instance().add("EjectAvatarFullname", args, payload, callbackEject);
+	LLNotifications::instance().add("EjectAvatarFullname", args, payload,
+									callbackEject);
 }
 
 //static
@@ -1319,7 +1351,8 @@ void LLFloaterAvatarList::onClickMute(void *userdata)
 	LLDynamicArray<LLUUID> ids = self->mAvatarList->getSelectedIDs();
 	if (ids.size() > 0)
 	{
-		for (LLDynamicArray<LLUUID>::iterator itr = ids.begin(); itr != ids.end(); ++itr)
+		for (LLDynamicArray<LLUUID>::iterator itr = ids.begin();
+			 itr != ids.end(); ++itr)
 		{
 			LLUUID agent_id = *itr;
 		
@@ -1388,12 +1421,14 @@ void LLFloaterAvatarList::onClickTeleport(void* userdata)
 		LLAvatarListEntry *entry = self->getAvatarEntry(agent_id);
 		if (entry)
 		{
-//			llinfos << "Trying to teleport to " << entry->getDisplayName() << " at " << entry->getPosition() << llendl;
+//			llinfos << "Trying to teleport to " << entry->getDisplayName()
+//					<< " at " << entry->getPosition() << llendl;
 			gAgent.teleportViaLocation(entry->getPosition());
 		}
 	}
 }
 
+//static
 void LLFloaterAvatarList::onSelectName(LLUICtrl*, void* userdata)
 {
 	LLFloaterAvatarList* self = (LLFloaterAvatarList*)userdata;
@@ -1413,9 +1448,21 @@ void LLFloaterAvatarList::onSelectName(LLUICtrl*, void* userdata)
 	}
 }
 
+//static
 void LLFloaterAvatarList::onCommitUpdateRate(LLUICtrl*, void* userdata)
 {
 	LLFloaterAvatarList* self = (LLFloaterAvatarList*)userdata;
 
 	self->mUpdateRate = gSavedSettings.getU32("RadarUpdateRate") * 3 + 3;
+}
+
+//static
+void LLFloaterAvatarList::onCommitUpdate(LLUICtrl* ctrl, void* userdata)
+{
+	LLFloaterAvatarList* self = (LLFloaterAvatarList*)userdata;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (self && check)
+	{
+		self->mUpdate = check->getValue();
+	}
 }

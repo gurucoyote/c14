@@ -19,11 +19,11 @@ if (WINDOWS)
     set(LLPRIMITIVE_LIBRARIES 
         llprimitive
         debug libcollada14dom22-d
-        debug libboost_filesystem-vc80-mt-gd-1_39
-        debug libboost_system-vc80-gd-mt-1_39
+        debug libboost_filesystem-vc80-mt-gd-1_45
+        debug libboost_system-vc80-gd-mt-1_45
         optimized libcollada14dom22
-        optimized libboost_filesystem-vc80-mt-1_39
-        optimized libboost_system-vc80-mt-1_39
+        optimized libboost_filesystem-vc80-mt-1_45
+        optimized libboost_system-vc80-mt-1_45
         )
 elseif (LINUX)
     set(LLPRIMITIVE_LIBRARIES 
@@ -33,7 +33,7 @@ elseif (LINUX)
         xml2
        	pcrecpp
         pcre
-        boost_system-gcc41-mt-1_39
+        boost_system-mt
         )
 elseif (DARWIN)
     set(LLPRIMITIVE_LIBRARIES 
@@ -43,6 +43,6 @@ elseif (DARWIN)
         xml2
        	pcrecpp
         pcre
-        boost_system-xgcc40-mt-1_39
+        boost_system-mt
         )
 endif (WINDOWS)

@@ -34,21 +34,16 @@
 
 #include "llconsole.h"
 
-// linden library includes
-#include "llmath.h"
-#include "llviewercontrol.h"
-#include "llcriticaldamp.h"
 #include "llfontgl.h"
 #include "llgl.h"
-#include "llui.h"
-#include "llviewertexturelist.h"
-#include "llviewerwindow.h"
-#include "lltextparser.h"
-#include "llsd.h"
-#include "llfontgl.h"
 #include "llmath.h"
+#include "llsd.h"
+#include "lltextparser.h"
 
 #include "llstartup.h"
+#include "llviewercontrol.h"
+#include "llviewertexturelist.h"
+#include "llviewerwindow.h"
 
 LLConsole* gConsole = NULL;  // Created and destroyed in LLViewerWindow.
 
@@ -72,6 +67,8 @@ LLConsole::LLConsole(const std::string& name, const LLRect &rect,
 	mQueueMutex()
 {
 	mTimer.reset();
+
+	mRoundedSquare = LLUI::getUIImage("rounded_square.tga");
 
 	setFontSize(font_size_index); 
 }
@@ -142,7 +139,8 @@ void LLConsole::draw()
 
 	{
 		LLMutexLock lock(&mQueueMutex);
-		for (paragraph_t::iterator paragraph_it = mNewParagraphs.begin(); paragraph_it != mNewParagraphs.end(); paragraph_it++)
+		for (paragraph_t::iterator paragraph_it = mNewParagraphs.begin();
+			 paragraph_it != mNewParagraphs.end(); paragraph_it++)
 		{
 			Paragraph* paragraph = *paragraph_it;
 			mParagraphs.push_back(paragraph);
@@ -151,7 +149,7 @@ void LLConsole::draw()
 		mNewParagraphs.clear();
 	}
 
-	if (mParagraphs.empty()) 	//No text to draw.
+	if (mParagraphs.empty()) 	// No text to draw.
 	{
 		return;
 	}
@@ -175,7 +173,7 @@ void LLConsole::draw()
 		if (num_lines > max_lines ||
 			(mLinePersistTime > (F32)0.f &&
 			 ((*paragraph_it)->mAddTime - skip_time) / (mLinePersistTime - mFadeTime) <= (F32)0.f))
-		{							//All lines above here are done.  Lose them.
+		{	// All lines above here are done.  Lose them.
 			for (U32 i = 0; i < paragraph_num; i++)
 			{
 				if (!mParagraphs.empty())
@@ -198,8 +196,6 @@ void LLConsole::draw()
 
 	// draw remaining lines
 	F32 y_pos = 0.f;
-
-	LLUIImagePtr imagep = LLUI::getUIImage("rounded_square.tga");
 
 	static LLCachedControl<F32> console_background_opacity(gSavedSettings, "ConsoleBackgroundOpacity");
 	F32 console_opacity = llclamp((F32)console_background_opacity, 0.f, 1.f);
@@ -225,7 +221,8 @@ void LLConsole::draw()
 			bkg_height = 8;
 		}
 		S32 bkg_width = 0;
-		for (paragraph_it = mParagraphs.rbegin(); paragraph_it != mParagraphs.rend(); paragraph_it++)
+		for (paragraph_it = mParagraphs.rbegin();
+			 paragraph_it != mParagraphs.rend(); paragraph_it++)
 		{
 			target_height = llfloor((*paragraph_it)->mLines.size() * line_height + message_spacing);
 			target_width =  llfloor((*paragraph_it)->mMaxWidth + CONSOLE_GUTTER_RIGHT);
@@ -240,13 +237,14 @@ void LLConsole::draw()
 			y_pos += ((*paragraph_it)->mLines.size()) * line_height;
 			y_pos += message_spacing;  //Extra spacing between messages.
 		}
-		imagep->drawSolid(-CONSOLE_GUTTER_LEFT,
-						  (S32)(y_pos + line_height - bkg_height - message_spacing),
-						  bkg_width, bkg_height, color);
+		mRoundedSquare->drawSolid(-CONSOLE_GUTTER_LEFT,
+								  (S32)(y_pos + line_height - bkg_height - message_spacing),
+								  bkg_width, bkg_height, color);
 	}
 	y_pos = 0.f;
 
-	for (paragraph_it = mParagraphs.rbegin(); paragraph_it != mParagraphs.rend(); paragraph_it++)
+	for (paragraph_it = mParagraphs.rbegin();
+		 paragraph_it != mParagraphs.rend(); paragraph_it++)
 	{
 		target_width =  llfloor((*paragraph_it)->mMaxWidth + CONSOLE_GUTTER_RIGHT);
 		y_pos += ((*paragraph_it)->mLines.size()) * line_height;
@@ -255,9 +253,9 @@ void LLConsole::draw()
 		{
 			// per-message block boxes
 			target_height = llfloor((*paragraph_it)->mLines.size() * line_height + 8);
-			imagep->drawSolid(-CONSOLE_GUTTER_LEFT,
-							  (S32)(y_pos + line_height - target_height),
-							  target_width, target_height, color);
+			mRoundedSquare->drawSolid(-CONSOLE_GUTTER_LEFT,
+									  (S32)(y_pos + line_height - target_height),
+									  target_width, target_height, color);
 		}
 
 		F32 y_off = 0;
@@ -283,23 +281,19 @@ void LLConsole::draw()
 						seg_it != (*line_it).end();
 						seg_it++)
 				{
-					mFont->render((*seg_it).mText, 0, (*seg_it).mXPosition - 8, y_pos -  y_off,
-						LLColor4(
-							(*seg_it).mColor.mV[VRED], 
-							(*seg_it).mColor.mV[VGREEN], 
-							(*seg_it).mColor.mV[VBLUE], 
-							(*seg_it).mColor.mV[VALPHA]*alpha),
-						LLFontGL::LEFT, 
-						LLFontGL::BASELINE,
-						LLFontGL::DROP_SHADOW,
-						S32_MAX,
-						target_width
-						);
+					mFont->render((*seg_it).mText, 0,
+								  (*seg_it).mXPosition - 8, y_pos -  y_off,
+								  LLColor4((*seg_it).mColor.mV[VRED], 
+										   (*seg_it).mColor.mV[VGREEN], 
+										   (*seg_it).mColor.mV[VBLUE], 
+										   (*seg_it).mColor.mV[VALPHA] * alpha),
+								  LLFontGL::LEFT, LLFontGL::BASELINE,
+								  LLFontGL::DROP_SHADOW, S32_MAX, target_width);
 				}
 				y_off += line_height;
 			}
 		}
-		y_pos  += message_spacing;  //Extra spacing between messages.
+		y_pos  += message_spacing;  // Extra spacing between messages.
 	}
 }
 

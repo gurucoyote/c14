@@ -168,6 +168,10 @@ protected:
 	virtual bool initHardwareTest() { return true; } // A false result indicates the app should quit.
 	virtual bool initSLURLHandler();
 	virtual bool sendURLToOtherInstance(const std::string& url);
+#if LL_DBUS_ENABLED
+	virtual std::string getReceivedSLURL()	{ return ""; }
+	virtual void clearReceivedSLURL()		{}
+#endif
 
 	virtual bool initParseCommandLine(LLCommandLineParser& clp) 
         { return true; } // Allow platforms to specify the command line args.

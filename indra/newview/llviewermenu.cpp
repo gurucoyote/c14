@@ -1575,7 +1575,6 @@ void init_restrained_life_menu(LLMenuGL* menu)
 	menu->append(new LLMenuItemCheckGL("Forbid give to #RLV/", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveForbidGiveToRLV"));
 	menu->append(new LLMenuItemCheckGL("Show '...' for muted text when deafened", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveShowEllipsis"));
 	menu->appendSeparator();
-	menu->append(new LLMenuItemCheckGL("Enable the extended @getcommand version", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveExtendedGetcommand"));
 	menu->append(new LLMenuItemCheckGL("Debug mode", menu_toggle_control, NULL, menu_check_control, (void*) "RestrainedLoveDebug"));
 }
 //mk

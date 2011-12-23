@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<floater can_close="true" can_drag_on_left="false" can_minimize="true"
-     can_resize="false" height="440" min_height="100" min_width="100"
-     name="floater_about" rect_control="FloaterAboutRect"
-     title="About Snowglobe" width="470">
-	<text_editor bottom="-434" embedded_items="false"
-	     follows="left|top|right|bottom" font="SansSerifSmall" height="168" left="6"
-  max_length="65536" mouse_opaque="true" name="credits" width="458"
-  word_wrap="true">
+<floater name="floater_about" title="About this viewer"
+ can_close="true" can_drag_on_left="false" can_minimize="true" can_resize="false"
+ width="470" height="440" min_width="470" min_height="440">
+	<tab_container name="Info" tab_min_width="90" tab_position="top"
+	 left="0" bottom="0" width="470" height="420">
+		<panel name="version_info" label="Version Info" border="true" mouse_opaque="true"
+		 left="1" bottom="-416" width="468" height="418" follows="left|top|right|bottom">
+			<text_editor name="support" embedded_items="false" word_wrap="true"
+			 max_length="65536" font="SansSerif" mouse_opaque="true"
+			 left="5" bottom="-394" width="460" height="390" follows="left|top|right|bottom"/>
+			<button name="copy_button" label="Copy this version information to the clipboard"
+			 font="SansSerif" mouse_opaque="true"
+			 left="10" bottom="-416" width="328" height="20" follows="left|right|bottom"/>
+			<button name="close_button" label="Close" font="SansSerif" mouse_opaque="true"
+			 left_delta="338" bottom_delta="0" width="110" height="20" follows="left|right|bottom"/>
+		</panel>
+		<panel name="authors_credits" label="Authors &amp; Credits" border="true" mouse_opaque="true"
+		 left="1" bottom="-416" width="468" height="418" follows="left|top|right|bottom">
+			<text_editor name="credits" word_wrap="true" embedded_items="false"
+			 max_length="65536" font="SansSerifSmall" mouse_opaque="true"
+			 left="5" bottom="-414" width="460" height="410" follows="left|top|right|bottom">
 The Cool VL Viewer is brought to you and maintained by Henri Beauchamp.
 
 Special credits:
@@ -48,13 +61,13 @@ zlib Copyright (c) 1995-2002 Jean-loup Gailly and Mark Adler.
 All rights reserved.  See licenses.txt for details.
 
 Voice chat Audio coding: Polycom(R) Siren14(TM) (ITU-T Rec. G.722.1 Annex C)
-</text_editor>
-
-	<text_editor bottom_delta="174" embedded_items="false"
-	     follows="left|top|right|bottom" font="SansSerif" height="238" left="6"
-	     max_length="65536" mouse_opaque="true" name="support" width="458"
-	     word_wrap="true" />
+			</text_editor>
+		</panel>
+	</tab_container>
 	<string name="you_are_at">
 		You are at [POSITION]
+	</string>
+	<string name="ErrorFetchingServerReleaseNotesURL">
+		Error fetching server release notes URL.
 	</string>
 </floater>

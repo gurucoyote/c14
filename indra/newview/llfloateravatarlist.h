@@ -28,8 +28,8 @@ class LLFloaterAvatarList;
  * Instances are kept in a map<LLAvatarListEntry>. We keep track of the
  * frame where the avatar was last seen.
  */
-class LLAvatarListEntry {
-
+class LLAvatarListEntry
+{
 public:
 
 	/**
@@ -159,7 +159,6 @@ public:
 	/*virtual*/ void onClose(bool app_quitting);
 	/*virtual*/ void onOpen();
 	/*virtual*/ BOOL postBuild();
-	/*virtual*/ void draw();
 
 	/**
 	 * @brief Toggles interface visibility
@@ -197,6 +196,7 @@ private:
 
 public:
 	static LLFloaterAvatarList* getInstance() { return sInstance; }
+
 private:
 	// when a line editor loses keyboard focus, it is committed.
 	// commit callbacks are named onCommitWidgetName by convention.
@@ -271,6 +271,8 @@ private:
 	static void onSelectName(LLUICtrl*, void *userdata);
 
 	static void onCommitUpdateRate(LLUICtrl*, void *userdata);
+	static void onCommitUpdate(LLUICtrl* ctrl, void* userdata);
+
 	static void onClickSendKeys(void *userdata);
 
 	static void callbackIdle(void *userdata);

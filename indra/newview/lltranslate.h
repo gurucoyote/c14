@@ -33,6 +33,11 @@
 #ifndef LL_LLTRANSLATE_H
 #define LL_LLTRANSLATE_H
 
+// Deprecated code: Google is no more providing free translation services
+#define TRANSLATE_CHAT 0
+
+#if TRANSLATE_CHAT
+
 #include "llhttpclient.h"
 #include "llbufferstream.h"
 #include "jsoncpp/reader.h"
@@ -121,5 +126,7 @@ private:
 	static const char* m_GoogleTranslation;
 	static const char* m_GoogleLanguage;
 };
+
+#endif	// TRANSLATE_CHAT
 
 #endif

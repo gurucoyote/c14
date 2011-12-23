@@ -70,9 +70,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>1f55ce0e6fadff74c0b37418abd3afd3</string>
+            <string>61d2bafe3d963e2e96e7e51d4762a81f</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/glod-1.0pre4-windows-20111019.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/glod-1.0pre4-windows-20111130.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -240,30 +240,23 @@
           <key>darwin</key>
           <map>
             <key>md5sum</key>
-            <string>71defd179827bf172b76d6020023e0e8</string>
+            <string>b1891d0e52104e6db59687db8c11a527</string>
             <key>url</key>
-            <uri>http://s3.amazonaws.com/viewer-source-downloads/install_pkgs/boost-1.39.0-darwin-20100222a.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/boost-1.45.0-darwin-20110304.tar.bz2</uri>
           </map>
           <key>linux</key>
           <map>
             <key>md5sum</key>
-            <string>4db3d74e40d149eeec06f4d97a609bb1</string>
+            <string>c82e43153021da9a6e005a977d5f7d35</string>
             <key>url</key>
-            <uri>http://s3.amazonaws.com/viewer-source-downloads/install_pkgs/boost-1.39.0-linux-20100624.tar.bz2</uri>
-          </map>
-          <key>linux64</key>
-          <map>
-            <key>md5sum</key>
-            <string>af4badd6b2c10bc4db82ff1256695892</string>
-            <key>url</key>
-            <uri>http://s3.amazonaws.com/viewer-source-downloads/install_pkgs/boost-1.39.0-linux64-20100119.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/boost-1.45.0-linux-20110310.tar.bz2</uri>
           </map>
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>39c612143e1ec850808364138348aedb</string>
+            <string>b70d20082163619aca88d7d2301454f0</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/boost-1.39.0-windows-vc80-20100630.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/boost-1.45.0-windows-vc80-20111130.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -294,9 +287,9 @@
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>090f5ea94cba30fc3386f80819abe4ee</string>
+            <string>e9d3b7d9f81943adab56941e87b6ff14</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/colladadom-2.2-windows-vc8-20110826.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/colladadom-2.2-windows-vc80-20111201.tar.bz2</uri>
           </map>
         </map>
       </map>
@@ -1060,9 +1053,9 @@ anguage Infrstructure (CLI) international standard</string>
           <key>windows</key>
           <map>
             <key>md5sum</key>
-            <string>db32c928dfeaace1307e542795d3732b</string>
+            <string>66bc1793b4b1608af3ad1efd0a2bbc2f</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/hacd-win32-20111022.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/hacd-win32-20111130.tar.bz2</uri>
           </map>
           <key>darwin</key>
           <map>
@@ -1074,9 +1067,9 @@ anguage Infrstructure (CLI) international standard</string>
           <key>linux</key>
           <map>
             <key>md5sum</key>
-            <string>9e7d1ad5b756a3113e1fbeb906807722</string>
+            <string>606a5a6cf0d0eae92f3b346605ad753a</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/hacd-linux-20111022.tar.bz2</uri>
+            <uri>http://sldev.free.fr/libraries/hacd-linux-20111130.tar.bz2</uri>
           </map>
         </map>
       </map>

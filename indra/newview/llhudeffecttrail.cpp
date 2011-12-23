@@ -277,11 +277,12 @@ void LLHUDEffectSpiral::setTargetObject(LLViewerObject *objp)
 void LLHUDEffectSpiral::render()
 {
 	F32 time = mTimer.getElapsedTimeF32();
+	static LLCachedControl<bool> show_selection_beam(gSavedSettings, "ShowSelectionBeam");
 
-	if ((!mSourceObject.isNull() && mSourceObject->isDead()) ||
+	if (mKillTime < time ||
+		(!mSourceObject.isNull() && mSourceObject->isDead()) ||
 	    (!mTargetObject.isNull() && mTargetObject->isDead()) ||
-	    mKillTime < time ||
-		(!mPartSourcep.isNull() && !gSavedSettings.getBOOL("ShowSelectionBeam")) )
+	    (!mPartSourcep.isNull() && !show_selection_beam))
 	{
 		markDead();
 		return;

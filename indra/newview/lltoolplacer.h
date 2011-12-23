@@ -33,8 +33,9 @@
 #ifndef LL_TOOLPLACER_H
 #define LL_TOOLPLACER_H
 
-#include "llprimitive.h"
 #include "llpanel.h"
+#include "llprimitive.h"
+
 #include "lltool.h"
 
 class LLButton;
@@ -43,44 +44,47 @@ class LLViewerRegion;
 ////////////////////////////////////////////////////
 // LLToolPlacer
 
-class LLToolPlacer
- :	public LLTool
+class LLToolPlacer : public LLTool
 {
 public:
 	LLToolPlacer();
 
-	virtual BOOL	placeObject(S32 x, S32 y, MASK mask);
-	virtual BOOL	handleHover(S32 x, S32 y, MASK mask);
-	virtual void	handleSelect();	// do stuff when your tool is selected
-	virtual void	handleDeselect();	// clean up when your tool is deselected
+	virtual BOOL placeObject(S32 x, S32 y, MASK mask);
+	virtual BOOL handleHover(S32 x, S32 y, MASK mask);
+	virtual void handleSelect(); 	// do stuff when your tool is selected
+	virtual void handleDeselect();	// clean up when your tool is deselected
 
-	static void	setObjectType( LLPCode type )		{ sObjectType = type; }
-	static LLPCode getObjectType()					{ return sObjectType; }
+	static void	setObjectType(LLPCode type)		{ sObjectType = type; }
+	static LLPCode getObjectType()				{ return sObjectType; }
 
 protected:
 	static LLPCode	sObjectType;
 
 private:
-	BOOL addObject( LLPCode pcode, S32 x, S32 y, U8 use_physics );
-	BOOL raycastForNewObjPos( S32 x, S32 y, LLViewerObject** hit_obj, S32* hit_face, 
-							  BOOL* b_hit_land, LLVector3* ray_start_region, LLVector3* ray_end_region, LLViewerRegion** region );
+	S32  getTreeGrassSpecies(std::map<std::string, S32> &table,
+							 const char *control,
+							 S32 max);
+	BOOL addObject(LLPCode pcode, S32 x, S32 y, U8 use_physics);
+	BOOL raycastForNewObjPos(S32 x, S32 y, LLViewerObject** hit_obj,
+							 S32* hit_face, BOOL* b_hit_land,
+							 LLVector3* ray_start_region,
+							 LLVector3* ray_end_region,
+							 LLViewerRegion** region);
 	BOOL addDuplicate(S32 x, S32 y);
 };
 
 ////////////////////////////////////////////////////
 // LLToolPlacerPanel
 
-
 const S32 TOOL_PLACER_NUM_BUTTONS = 14;
-
 
 class LLToolPlacerPanel : public LLPanel
 {
 public:
 
 	LLToolPlacerPanel(const std::string& name, const LLRect& rect);
- 	
-	static void	setObjectType( void* data );
+ 
+	static void	setObjectType(void* data);
 
 	static LLPCode sCube;
 	static LLPCode sPrism;
@@ -99,11 +103,13 @@ public:
 	static LLPCode sGrass;
 
 private:
-	void		addButton( const std::string& up_state, const std::string& down_state, LLPCode* pcode );
+	void addButton(const std::string& up_state,
+				   const std::string& down_state,
+				   LLPCode* pcode);
 
 private:
 	static S32			sButtonsAdded;
-	static LLButton*	sButtons[ TOOL_PLACER_NUM_BUTTONS ];
+	static LLButton*	sButtons[TOOL_PLACER_NUM_BUTTONS];
 };
 
 #endif

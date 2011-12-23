@@ -281,9 +281,208 @@ RRInterface::~RRInterface()
 //static
 void RRInterface::init()
 {
+	// Info commands (not "blacklistable").
+	sCommandsMap.insert(rr_command_entry_t("version", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("versionnew", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("versionnum", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("versionnumbl", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getcommand", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getstatus", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getstatusall", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getsitid", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getoutfit", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getattach", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getinv", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getinvworn", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getpath", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getpathnew", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("findfolder", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getgroup", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getdebug_", RR_INFO));
+	sCommandsMap.insert(rr_command_entry_t("getenv_", RR_INFO));
+
+	// Miscellaneous non-info commands that are not "blacklistable".
+	sCommandsMap.insert(rr_command_entry_t("notify", RR_MISCELLANEOUS));
+	sCommandsMap.insert(rr_command_entry_t("clear", RR_MISCELLANEOUS));
+	sCommandsMap.insert(rr_command_entry_t("detachme%f", RR_MISCELLANEOUS));
+	sCommandsMap.insert(rr_command_entry_t("setrot%f", RR_MISCELLANEOUS));
+	sCommandsMap.insert(rr_command_entry_t("adjustheight%f", RR_MISCELLANEOUS));
+	sCommandsMap.insert(rr_command_entry_t("emote", RR_MISCELLANEOUS));
+
+	// Normal commands, "blacklistable".
+
+	// Movement restrictions
+	sCommandsMap.insert(rr_command_entry_t("fly", RR_MOVE));
+	sCommandsMap.insert(rr_command_entry_t("temprun", RR_MOVE));
+	sCommandsMap.insert(rr_command_entry_t("alwaysrun", RR_MOVE));
+	sVanillaBlackList += "fly,temprun,alwaysrun,";
+
+	// Chat sending restrictions
+	sCommandsMap.insert(rr_command_entry_t("sendchat", RR_SENDCHAT));
+	sCommandsMap.insert(rr_command_entry_t("chatshout", RR_SENDCHAT));
+	sCommandsMap.insert(rr_command_entry_t("chatnormal", RR_SENDCHAT));
+	sCommandsMap.insert(rr_command_entry_t("chatwhisper", RR_SENDCHAT));
+	sVanillaBlackList += "sendchat,chatshout,chatnormal,chatwhisper,";
+
+	// Chat receiving restrictions
+	sCommandsMap.insert(rr_command_entry_t("recvchat", RR_RECEIVECHAT ));
+	sCommandsMap.insert(rr_command_entry_t("recvchat_sec", RR_RECEIVECHAT ));
+	sCommandsMap.insert(rr_command_entry_t("recvchatfrom", RR_RECEIVECHAT ));
+	sVanillaBlackList += "recvchat,recvchat_sec,recvchatfrom,";
+
+	// Chat on private channels restrictions
+	sCommandsMap.insert(rr_command_entry_t("sendchannel", RR_CHANNEL));
+	sCommandsMap.insert(rr_command_entry_t("sendchannel_sec", RR_CHANNEL));
+	sRolePlayBlackList += "sendchannel,sendchannel_sec,";
+	sVanillaBlackList += "sendchannel,sendchannel_sec,";
+
+	// Chat and emotes redirections
+	sCommandsMap.insert(rr_command_entry_t("redirchat", RR_REDIRECTION));
+	sCommandsMap.insert(rr_command_entry_t("rediremote", RR_REDIRECTION));
+
+	// Emotes restrictions
+	sCommandsMap.insert(rr_command_entry_t("recvemote", RR_EMOTE));
+	sCommandsMap.insert(rr_command_entry_t("recvemote_sec", RR_EMOTE));
+	sCommandsMap.insert(rr_command_entry_t("recvemotefrom", RR_EMOTE));
+	sRolePlayBlackList += "recvemote,recvemote_sec,recvemotefrom,";
+	sVanillaBlackList += "recvemote,recvemote_sec,recvemotefrom,";
+
+	// Instant messaging restrictions
+	sCommandsMap.insert(rr_command_entry_t("sendim", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("sendim_sec", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("sendimto", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("startim", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("startimto", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("recvim", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("recvim_sec", RR_INSTANTMESSAGE));
+	sCommandsMap.insert(rr_command_entry_t("recvimfrom", RR_INSTANTMESSAGE));
+	sRolePlayBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
+	sVanillaBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
+
+	// Teleport restrictions
+	sCommandsMap.insert(rr_command_entry_t("tplm", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("tploc", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("tplure", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("tplure_sec", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("sittp", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("standtp", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("tpto%f", RR_TELEPORT));
+	sCommandsMap.insert(rr_command_entry_t("accepttp", RR_TELEPORT));
+	sVanillaBlackList += "tplm,tploc,tplure,tplure_sec,sittp,standtp,accepttp,"; // tpto used by teleporters: allow
+
+	// Inventory access restrictions
+	sCommandsMap.insert(rr_command_entry_t("showinv", RR_INVENTORY));
+	sCommandsMap.insert(rr_command_entry_t("viewnote", RR_INVENTORY));
+	sCommandsMap.insert(rr_command_entry_t("viewscript", RR_INVENTORY));
+	sCommandsMap.insert(rr_command_entry_t("viewtexture", RR_INVENTORY));
+	sCommandsMap.insert(rr_command_entry_t("unsharedwear", RR_INVENTORYLOCK));
+	sCommandsMap.insert(rr_command_entry_t("unsharedunwear", RR_INVENTORYLOCK));
+	sRolePlayBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
+	sVanillaBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
+
+	// Building restrictions
+	sCommandsMap.insert(rr_command_entry_t("edit", RR_BUILD));
+	sCommandsMap.insert(rr_command_entry_t("editobj", RR_BUILD));
+	sCommandsMap.insert(rr_command_entry_t("rez", RR_BUILD));
+	sRolePlayBlackList += "edit,editobj,rez,";
+	sVanillaBlackList += "edit,editobj,rez,";
+
+	// Sitting restrictions
+	sCommandsMap.insert(rr_command_entry_t("unsit", RR_SIT));
+	sCommandsMap.insert(rr_command_entry_t("unsit%f", RR_SIT));
+	sCommandsMap.insert(rr_command_entry_t("sit", RR_SIT));
+	sCommandsMap.insert(rr_command_entry_t("sit%f", RR_SIT));
+	sVanillaBlackList += "unsit,unsit%f,sit,sit%f,";
+
+	// Locking commands
+	sCommandsMap.insert(rr_command_entry_t("detach", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("detachthis", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("detachallthis", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("detachthis_except", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("detachallthis_except", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("attachthis", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("attachallthis", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("attachthis_except", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("attachallthis_except", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("addattach", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("remattach", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("addoutfit", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("remoutfit", RR_LOCK));
+	sCommandsMap.insert(rr_command_entry_t("defaultwear", RR_LOCK));
+	sVanillaBlackList += "detach,detachthis,detachallthis,detachthis_except,detachallthis_except,attachthis,attachallthis,attachthis_except,attachallthis_except,addattach,remattach,addoutfit,remoutfit,defaultwear,";
+
+	// Detach/remove commands
+	sCommandsMap.insert(rr_command_entry_t("detach%f", RR_DETACH));
+	sCommandsMap.insert(rr_command_entry_t("detachall%f", RR_DETACH));
+	sCommandsMap.insert(rr_command_entry_t("detachthis%f", RR_DETACH));
+	sCommandsMap.insert(rr_command_entry_t("detachallthis%f", RR_DETACH));
+	sCommandsMap.insert(rr_command_entry_t("remattach%f", RR_DETACH));
+	sCommandsMap.insert(rr_command_entry_t("remoutfit%f", RR_DETACH));
+
+	// Attach/wear commands
+	sCommandsMap.insert(rr_command_entry_t("attach%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachover%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachoverorreplace%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachall%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachallover%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachalloverorreplace%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachthis%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachthisoverorreplace%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachallthis%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachallthisover%f", RR_ATTACH));
+	sCommandsMap.insert(rr_command_entry_t("attachallthisoverorreplace%f", RR_ATTACH));
+
+	// Touch restrictions
+	sCommandsMap.insert(rr_command_entry_t("fartouch", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchfar", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchall", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchworld", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchthis", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchme", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchattach", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchattachself", RR_TOUCH));
+	sCommandsMap.insert(rr_command_entry_t("touchattachother", RR_TOUCH));
+	sVanillaBlackList += "fartouch,touchfar,touchall,touchworld,touchthis,touchme,touchattach,touchattachself,touchattachother,";
+
+	// Location/mapping restrictions
+	sCommandsMap.insert(rr_command_entry_t("showworldmap", RR_LOCATION));
+	sCommandsMap.insert(rr_command_entry_t("showminimap", RR_LOCATION));
+	sCommandsMap.insert(rr_command_entry_t("showloc", RR_LOCATION));
+	sRolePlayBlackList += "showworldmap,showminimap,showloc,";
+	sVanillaBlackList += "showworldmap,showminimap,showloc,";
+
+	// Name viewing restrictions
+	sCommandsMap.insert(rr_command_entry_t("shownames", RR_NAME));
+	sCommandsMap.insert(rr_command_entry_t("showhovertextall", RR_NAME));
+	sCommandsMap.insert(rr_command_entry_t("showhovertext", RR_NAME));
+	sCommandsMap.insert(rr_command_entry_t("showhovertexthud", RR_NAME));
+	sCommandsMap.insert(rr_command_entry_t("showhovertextworld", RR_NAME));
+	sRolePlayBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
+	sVanillaBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
+
+	// Group restrictions
+	sCommandsMap.insert(rr_command_entry_t("setgroup", RR_GROUP));
+	sCommandsMap.insert(rr_command_entry_t("setgroup%f", RR_GROUP));
+	sRolePlayBlackList += "setgroup,";
+	sVanillaBlackList += "setgroup,";	// @setgroup=force May be used as a helper: allow
+
+	// Permissions/extra-restriction commands.
+	sCommandsMap.insert(rr_command_entry_t("permissive", RR_PERM));
+	sCommandsMap.insert(rr_command_entry_t("acceptpermission", RR_PERM));
+	sVanillaBlackList += "permissive,acceptpermission,";
+
+	// Debug settings commands.
+	sCommandsMap.insert(rr_command_entry_t("setdebug", RR_DEBUG));
+	sCommandsMap.insert(rr_command_entry_t("setdebug_%f", RR_DEBUG));
+	sRolePlayBlackList += "setdebug";
+	sVanillaBlackList += "setdebug,setdebug_%f,";
+	
+	sVanillaBlackList += "setenv";
+
 	gRRenabled = gSavedSettings.getBOOL("RestrainedLove");
-	if (gRRenabled)
-	{
+	if (gRRenabled) {
 		sRRNoSetEnv = gSavedSettings.getBOOL("RestrainedLoveNoSetEnv");
 		sRestrainedLoveDebug = gSavedSettings.getBOOL("RestrainedLoveDebug");
 		sUntruncatedEmotes = gSavedSettings.getBOOL("RestrainedLoveUntruncatedEmotes");
@@ -292,208 +491,10 @@ void RRInterface::init()
 		sSendimMessage = gSavedSettings.getString("RestrainedLoveSendimMessage");
 		sBlackList = gSavedSettings.getString("RestrainedLoveBlacklist");
 
-		// Info commands (not "blacklistable").
-		sCommandsMap.insert(rr_command_entry_t("version", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("versionnew", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("versionnum", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getcommand", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getstatus", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getstatusall", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getsitid", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getoutfit", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getattach", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getinv", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getinvworn", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getpath", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getpathnew", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("findfolder", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getgroup", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getdebug_", RR_INFO));
-		sCommandsMap.insert(rr_command_entry_t("getenv_", RR_INFO));
-
-		// Miscellaneous non-info commands that are not "blacklistable".
-		sCommandsMap.insert(rr_command_entry_t("notify", RR_MISCELLANEOUS));
-		sCommandsMap.insert(rr_command_entry_t("clear", RR_MISCELLANEOUS));
-		sCommandsMap.insert(rr_command_entry_t("detachme%f", RR_MISCELLANEOUS));
-		sCommandsMap.insert(rr_command_entry_t("setrot%f", RR_MISCELLANEOUS));
-		sCommandsMap.insert(rr_command_entry_t("adjustheight%f", RR_MISCELLANEOUS));
-		sCommandsMap.insert(rr_command_entry_t("emote", RR_MISCELLANEOUS));
-
-		// Normal commands, "blacklistable".
-
-		// Movement restrictions
-		sCommandsMap.insert(rr_command_entry_t("fly", RR_MOVE));
-		sCommandsMap.insert(rr_command_entry_t("temprun", RR_MOVE));
-		sCommandsMap.insert(rr_command_entry_t("alwaysrun", RR_MOVE));
-		sVanillaBlackList += "fly,temprun,alwaysrun,";
-
-		// Chat sending restrictions
-		sCommandsMap.insert(rr_command_entry_t("sendchat", RR_SENDCHAT));
-		sCommandsMap.insert(rr_command_entry_t("chatshout", RR_SENDCHAT));
-		sCommandsMap.insert(rr_command_entry_t("chatnormal", RR_SENDCHAT));
-		sCommandsMap.insert(rr_command_entry_t("chatwhisper", RR_SENDCHAT));
-		sVanillaBlackList += "sendchat,chatshout,chatnormal,chatwhisper,";
-
-		// Chat receiving restrictions
-		sCommandsMap.insert(rr_command_entry_t("recvchat", RR_RECEIVECHAT ));
-		sCommandsMap.insert(rr_command_entry_t("recvchat_sec", RR_RECEIVECHAT ));
-		sCommandsMap.insert(rr_command_entry_t("recvchatfrom", RR_RECEIVECHAT ));
-		sVanillaBlackList += "recvchat,recvchat_sec,recvchatfrom,";
-
-		// Chat on private channels restrictions
-		sCommandsMap.insert(rr_command_entry_t("sendchannel", RR_CHANNEL));
-		sCommandsMap.insert(rr_command_entry_t("sendchannel_sec", RR_CHANNEL));
-		sRolePlayBlackList += "sendchannel,sendchannel_sec,";
-		sVanillaBlackList += "sendchannel,sendchannel_sec,";
-
-		// Chat and emotes redirections
-		sCommandsMap.insert(rr_command_entry_t("redirchat", RR_REDIRECTION));
-		sCommandsMap.insert(rr_command_entry_t("rediremote", RR_REDIRECTION));
-
-		// Emotes restrictions
-		sCommandsMap.insert(rr_command_entry_t("recvemote", RR_EMOTE));
-		sCommandsMap.insert(rr_command_entry_t("recvemote_sec", RR_EMOTE));
-		sCommandsMap.insert(rr_command_entry_t("recvemotefrom", RR_EMOTE));
-		sRolePlayBlackList += "recvemote,recvemote_sec,recvemotefrom,";
-		sVanillaBlackList += "recvemote,recvemote_sec,recvemotefrom,";
-
-		// Instant messaging restrictions
-		sCommandsMap.insert(rr_command_entry_t("sendim", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("sendim_sec", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("sendimto", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("startim", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("startimto", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("recvim", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("recvim_sec", RR_INSTANTMESSAGE));
-		sCommandsMap.insert(rr_command_entry_t("recvimfrom", RR_INSTANTMESSAGE));
-		sRolePlayBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
-		sVanillaBlackList += "sendim,sendim_sec,sendimto,startim,startimto,recvim,recvim_sec,recvimfrom,";
-
-		// Teleport restrictions
-		sCommandsMap.insert(rr_command_entry_t("tplm", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("tploc", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("tplure", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("tplure_sec", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("sittp", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("standtp", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("tpto%f", RR_TELEPORT));
-		sCommandsMap.insert(rr_command_entry_t("accepttp", RR_TELEPORT));
-		sVanillaBlackList += "tplm,tploc,tplure,tplure_sec,sittp,standtp,accepttp,"; // tpto used by teleporters: allow
-
-		// Inventory access restrictions
-		sCommandsMap.insert(rr_command_entry_t("showinv", RR_INVENTORY));
-		sCommandsMap.insert(rr_command_entry_t("viewnote", RR_INVENTORY));
-		sCommandsMap.insert(rr_command_entry_t("viewscript", RR_INVENTORY));
-		sCommandsMap.insert(rr_command_entry_t("viewtexture", RR_INVENTORY));
-		sCommandsMap.insert(rr_command_entry_t("unsharedwear", RR_INVENTORYLOCK));
-		sCommandsMap.insert(rr_command_entry_t("unsharedunwear", RR_INVENTORYLOCK));
-		sRolePlayBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
-		sVanillaBlackList += "showinv,viewnote,viewscript,viewtexture,unsharedwear,unsharedunwear,";
-
-		// Building restrictions
-		sCommandsMap.insert(rr_command_entry_t("edit", RR_BUILD));
-		sCommandsMap.insert(rr_command_entry_t("editobj", RR_BUILD));
-		sCommandsMap.insert(rr_command_entry_t("rez", RR_BUILD));
-		sRolePlayBlackList += "edit,editobj,rez,";
-		sVanillaBlackList += "edit,editobj,rez,";
-
-		// Sitting restrictions
-		sCommandsMap.insert(rr_command_entry_t("unsit", RR_SIT));
-		sCommandsMap.insert(rr_command_entry_t("unsit%f", RR_SIT));
-		sCommandsMap.insert(rr_command_entry_t("sit", RR_SIT));
-		sCommandsMap.insert(rr_command_entry_t("sit%f", RR_SIT));
-		sVanillaBlackList += "unsit,unsit%f,sit,sit%f,";
-
-		// Locking commands
-		sCommandsMap.insert(rr_command_entry_t("detach", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("detachthis", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("detachallthis", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("detachthis_except", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("detachallthis_except", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("attachthis", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("attachallthis", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("attachthis_except", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("attachallthis_except", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("addattach", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("remattach", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("addoutfit", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("remoutfit", RR_LOCK));
-		sCommandsMap.insert(rr_command_entry_t("defaultwear", RR_LOCK));
-		sVanillaBlackList += "detach,detachthis,detachallthis,detachthis_except,detachallthis_except,attachthis,attachallthis,attachthis_except,attachallthis_except,addattach,remattach,addoutfit,remoutfit,defaultwear,";
-
-		// Detach/remove commands
-		sCommandsMap.insert(rr_command_entry_t("detach%f", RR_DETACH));
-		sCommandsMap.insert(rr_command_entry_t("detachall%f", RR_DETACH));
-		sCommandsMap.insert(rr_command_entry_t("detachthis%f", RR_DETACH));
-		sCommandsMap.insert(rr_command_entry_t("detachallthis%f", RR_DETACH));
-		sCommandsMap.insert(rr_command_entry_t("remattach%f", RR_DETACH));
-		sCommandsMap.insert(rr_command_entry_t("remoutfit%f", RR_DETACH));
-
-		// Attach/wear commands
-		sCommandsMap.insert(rr_command_entry_t("attach%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachover%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachoverorreplace%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachall%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachallover%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachalloverorreplace%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachthis%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachthisover%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachthisoverorreplace%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachallthis%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachallthisover%f", RR_ATTACH));
-		sCommandsMap.insert(rr_command_entry_t("attachallthisoverorreplace%f", RR_ATTACH));
-
-		// Touch restrictions
-		sCommandsMap.insert(rr_command_entry_t("fartouch", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchfar", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchall", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchworld", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchthis", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchme", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchattach", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchattachself", RR_TOUCH));
-		sCommandsMap.insert(rr_command_entry_t("touchattachother", RR_TOUCH));
-		sVanillaBlackList += "fartouch,touchfar,touchall,touchworld,touchthis,touchme,touchattach,touchattachself,touchattachother,";
-
-		// Location/mapping restrictions
-		sCommandsMap.insert(rr_command_entry_t("showworldmap", RR_LOCATION));
-		sCommandsMap.insert(rr_command_entry_t("showminimap", RR_LOCATION));
-		sCommandsMap.insert(rr_command_entry_t("showloc", RR_LOCATION));
-		sRolePlayBlackList += "showworldmap,showminimap,showloc,";
-		sVanillaBlackList += "showworldmap,showminimap,showloc,";
-
-		// Name viewing restrictions
-		sCommandsMap.insert(rr_command_entry_t("shownames", RR_NAME));
-		sCommandsMap.insert(rr_command_entry_t("showhovertextall", RR_NAME));
-		sCommandsMap.insert(rr_command_entry_t("showhovertext", RR_NAME));
-		sCommandsMap.insert(rr_command_entry_t("showhovertexthud", RR_NAME));
-		sCommandsMap.insert(rr_command_entry_t("showhovertextworld", RR_NAME));
-		sRolePlayBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
-		sVanillaBlackList += "shownames,showhovertextall,showhovertext,showhovertexthud,showhovertextworld,";
-
-		// Group restrictions
-		sCommandsMap.insert(rr_command_entry_t("setgroup", RR_GROUP));
-		sCommandsMap.insert(rr_command_entry_t("setgroup%f", RR_GROUP));
-		sRolePlayBlackList += "setgroup,";
-		sVanillaBlackList += "setgroup,";	// @setgroup=force May be used as a helper: allow
-
-		// Permissions/extra-restriction commands.
-		sCommandsMap.insert(rr_command_entry_t("permissive", RR_PERM));
-		sCommandsMap.insert(rr_command_entry_t("acceptpermission", RR_PERM));
-		sVanillaBlackList += "permissive,acceptpermission,";
-
-		// Debug settings commands.
-		sCommandsMap.insert(rr_command_entry_t("setdebug", RR_DEBUG));
-		sCommandsMap.insert(rr_command_entry_t("setdebug_%f", RR_DEBUG));
-		sRolePlayBlackList += "setdebug";
-		sVanillaBlackList += "setdebug,setdebug_%f,";
-
 		if (!sRRNoSetEnv) {
 			sCommandsMap.insert(rr_command_entry_t("setenv", RR_ENVIRONMENT));
 			sCommandsMap.insert(rr_command_entry_t("setenv_%f", RR_ENVIRONMENT));
 		}
-		sVanillaBlackList += "setenv";
 
 		llinfos << "RestrainedLove enabled and initialized." << llendl;
 	}
@@ -523,6 +524,15 @@ std::string RRInterface::getVersion()
 std::string RRInterface::getVersion2()
 {
 	return RR_VIEWER_NAME_NEW" viewer v"RR_VERSION" ("RR_SLV_VERSION")";
+}
+
+std::string RRInterface::getVersionNum()
+{
+	std::string res = RR_VERSION_NUM;
+	if (!sBlackList.empty()) {
+		res += "," + sBlackList;
+	}
+	return res;
 }
 
 BOOL RRInterface::isAllowed(LLUUID object_uuid, std::string action, BOOL log_it)
@@ -1156,6 +1166,8 @@ BOOL RRInterface::handleCommand(LLUUID uuid, std::string command)
 		if (behav == "version") return answerOnChat(param, getVersion());
 		else if (behav == "versionnew") return answerOnChat(param, getVersion2());
 		else if (behav == "versionnum") return answerOnChat(param, RR_VERSION_NUM);
+		else if (behav == "versionnumbl") return answerOnChat(param, getVersionNum());
+		else if (behav == "getblacklist") return answerOnChat (param, dumpList2String(getBlacklist(option), ","));
 		else if (behav == "getoutfit") return answerOnChat(param, getOutfit(option));
 		else if (behav == "getattach") return answerOnChat(param, getAttachments(option));
 		else if (behav == "getstatus") return answerOnChat(param, getStatus(uuid, option));
@@ -1752,18 +1764,30 @@ std::string RRInterface::getStatus(LLUUID object_uuid, std::string rule)
 {
 	std::string res;
 	std::string name;
+	std::string separator = "/";
+	// If rule contains a specification of the separator, extract it
+	size_t ind = rule.find (";");
+	if (ind != std::string::npos) {
+		separator = rule.substr(ind + 1);
+		rule = rule.substr(0, ind);
+	}
+	if (separator.empty()) {
+		separator = "/"; // Prevent a hack to force the avatar to say something
+	}
+
 	RRMAP::iterator it;
 	if (object_uuid.isNull()) {
 		it = mSpecialObjectBehaviours.begin();
 	} else {
 		it = mSpecialObjectBehaviours.find(object_uuid.asString());
 	}
+
 	while (it != mSpecialObjectBehaviours.end() &&
 		   (object_uuid.isNull() ||
 			it != mSpecialObjectBehaviours.upper_bound(object_uuid.asString())))
 	{
 		if (rule.empty() || it->second.find(rule) != std::string::npos) {
-			res += "/";
+			res += separator;
 			res += it->second;
 		}
 		it++;
@@ -1779,7 +1803,6 @@ std::string RRInterface::getCommand(std::string match, bool blacklist)
 	// When RestrainedLoveExtendedGetcommand is TRUE, @getcommand returns
 	// @behav=force commands as "behav%f" in excess to their @behave=y/n version
 	// (returned as "behav").
-	bool strip_force = !gSavedSettings.getBOOL("RestrainedLoveExtendedGetcommand");
 	LLStringUtil::toLower(match);
 	rr_command_map_t::iterator it;
 	for (it = sCommandsMap.begin(); it != sCommandsMap.end(); it++) {
@@ -1789,9 +1812,6 @@ std::string RRInterface::getCommand(std::string match, bool blacklist)
 		name = force ? command.substr(0, i) : command;
 		temp = res + "/";
 		if (match.empty() || command.find(match) != std::string::npos) {
-			if (strip_force &&force) {
-				command = name;
-			}
 			if (temp.find("/" + command + "/") == std::string::npos
 				&& (blacklist || !isBlacklisted(name, force))) {
 				res += "/" + command;
@@ -1823,6 +1843,22 @@ std::string RRInterface::getCommandsByType(S32 type, bool blacklist)
 			}
 		}
 	}
+	return res;
+}
+
+std::deque<std::string> RRInterface::getBlacklist(std::string filter)
+{
+	std::deque<std::string> list, res;
+	list = parse(sBlackList, ",");
+	res.clear();
+
+	size_t size = list.size();
+	for (size_t i = 0; i < size; i++) {
+		if (filter.empty() || list[i].find(filter) != std::string::npos) {
+			res.push_back(list[i]);
+		}
+	}
+
 	return res;
 }
 
@@ -2003,8 +2039,16 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 			S32 count = cats->count();
 			bool found_one = false;
 			if (withWornInfo) {
-				res += "|" + getWornItems(root);
+				std::string worn_items = getWornItems(root);
+				res += "|";
 				found_one = true;
+				if (worn_items == "n") {
+					res += "10";
+				} else if (worn_items != "N") {
+					res += "30";
+				} else {
+					res += worn_items;
+				}
 			}
 			for (S32 i = 0; i < count; ++i) {
 				LLInventoryCategory* cat = cats->get(i);
@@ -2013,7 +2057,16 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 					if (found_one) res += ",";
 					res += name.c_str();
 					if (withWornInfo) {
-						res += "|" + getWornItems(cat);
+						std::string worn_items = getWornItems(cat);
+						res += "|";
+						found_one = true;
+						if (worn_items == "n") {
+							res += "10";
+						} else if (worn_items != "N") {
+							res += "30";
+						} else {
+							res += worn_items;
+						}
 					}
 					found_one = true;
 				}
@@ -3867,7 +3920,8 @@ bool RRInterface::canDetach(LLViewerObject* attached_object, BOOL handle_nostrip
 	RRMAP::iterator it = mSpecialObjectBehaviours.begin();
 	while (it != mSpecialObjectBehaviours.end()) {
 		if (it->second == "detach") {
-			if (gObjectList.findObject(LLUUID(it->first)) == root) {
+			LLViewerObject* this_prim = gObjectList.findObject(LLUUID(it->first));
+			if (this_prim && (this_prim->getRootEdit() == root)) {
 				return false;
 			}
 		}

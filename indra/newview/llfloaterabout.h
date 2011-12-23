@@ -40,13 +40,21 @@ class LLFloaterAbout
 {
 public:
 	LLFloaterAbout();
-	virtual ~LLFloaterAbout();
+	/*virtual*/ ~LLFloaterAbout();
+	/*virtual*/ BOOL postBuild();
 
 	static void show(void*);
+	static LLFloaterAbout* getInstance() { return sInstance; }
+
+	void updateServerReleaseNotesURL(const std::string& url);
 
 private:
+	void setSupportText(const std::string& server_release_notes_url);
+
+	static void onClickCopyToClipboard(void* userdata);
+	static void onClickClose(void* userdata);
+
 	static LLFloaterAbout* sInstance;
 };
-
 
 #endif // LL_LLFLOATERABOUT_H

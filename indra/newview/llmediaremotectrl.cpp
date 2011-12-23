@@ -35,6 +35,7 @@
 #include "llmediaremotectrl.h"
 
 #include "llaudioengine.h"
+#include "llbutton.h"
 #include "lliconctrl.h"
 #include "llmimetypes.h"
 #include "lloverlaybar.h"
@@ -45,7 +46,6 @@
 #include "llpanelaudiovolume.h"
 #include "llparcel.h"
 #include "llviewercontrol.h"
-#include "llbutton.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -58,7 +58,12 @@ LLMediaRemoteCtrl::LLMediaRemoteCtrl(const std::string& name,
 									 const std::string& xml_file,
 									 const ERemoteType type)
 :	LLPanel(name, rect, FALSE),
-	mType(type)
+	mType(type),
+	mPlay(NULL),
+	mPause(NULL),
+	mStop(NULL),
+	mIcon(NULL),
+	mPlayLabel("")
 {
 	setIsChrome(TRUE);
 	setFocusRoot(TRUE);
@@ -70,15 +75,31 @@ BOOL LLMediaRemoteCtrl::postBuild()
 {
 	if (mType == REMOTE_MEDIA)
 	{
-		childSetAction("media_play", LLOverlayBar::mediaPlay, this);
-		childSetAction("media_stop", LLOverlayBar::mediaStop, this);
-		childSetAction("media_pause", LLOverlayBar::mediaPause, this);
+		mPlay = getChild<LLButton>("media_play");
+		mPlay->setClickedCallback(LLOverlayBar::mediaPlay, this);
+
+		mPause = getChild<LLButton>("media_pause");
+		mPause->setClickedCallback(LLOverlayBar::mediaPause, this);
+
+		mStop = getChild<LLButton>("media_stop");
+		mStop->setClickedCallback(LLOverlayBar::mediaStop, this);
+
+		mIcon = getChild<LLIconCtrl>("media_icon");
+
+		mPlayLabel = getString("play_label");
 	}
 	else if (mType == REMOTE_MUSIC)
 	{
-		childSetAction("music_play", LLOverlayBar::musicPlay, this);
-		childSetAction("music_stop", LLOverlayBar::musicStop, this);
-		childSetAction("music_pause", LLOverlayBar::musicPause, this);
+		mPlay = getChild<LLButton>("music_play");
+		mPlay->setClickedCallback(LLOverlayBar::musicPlay, this);
+
+		mPause = getChild<LLButton>("music_pause");
+		mPause->setClickedCallback(LLOverlayBar::musicPause, this);
+
+		mStop = getChild<LLButton>("music_stop");
+		mStop->setClickedCallback(LLOverlayBar::musicStop, this);
+
+		mPlayLabel = getString("play_label");
 	}
 	else if (mType == REMOTE_VOLUME)
 	{
@@ -93,13 +114,16 @@ void LLMediaRemoteCtrl::draw()
 {
 	LLParcel* parcel = LLViewerParcelMgr::getInstance()->getAgentParcel();
 
+	static LLCachedControl<LLColor4U> icon_disabled_color(gColors, "IconDisabledColor");
+	static LLCachedControl<LLColor4U> icon_enabled_color(gColors, "IconEnabledColor");
+
 	if (mType == REMOTE_MEDIA)
 	{
 		bool media_play_enabled = false;
 		bool media_stop_enabled = false;
 		bool media_show_pause = false;
 
-		LLColor4 media_icon_color = LLUI::sColorsGroup->getColor("IconDisabledColor");
+		LLColor4 media_icon_color = LLColor4(icon_disabled_color);
 		std::string media_type = "none/none";
 		std::string media_url;
 
@@ -107,7 +131,7 @@ void LLMediaRemoteCtrl::draw()
 		if (gOverlayBar && audio_streaming_video && parcel && parcel->getMediaURL()[0])
 		{
 			media_play_enabled = true;
-			media_icon_color = LLUI::sColorsGroup->getColor("IconEnabledColor");
+			media_icon_color = LLColor4(icon_enabled_color);
 			media_type = parcel->getMediaType();
 			media_url = parcel->getMediaURL();
 
@@ -136,28 +160,27 @@ void LLMediaRemoteCtrl::draw()
 			}
 		}
 
-		childSetEnabled("media_play", media_play_enabled);
-		childSetEnabled("media_stop", media_stop_enabled);
-		childSetEnabled("media_pause", media_show_pause);
-		childSetVisible("media_pause", media_show_pause);
-		childSetVisible("media_play", !media_show_pause);
+		mPlay->setEnabled(media_play_enabled);
+		mPlay->setVisible(!media_show_pause);
+		mStop->setEnabled(media_stop_enabled);
+		mPause->setEnabled(media_show_pause);
+		mPause->setVisible(media_show_pause);
 
 		const std::string media_icon_name = LLMIMETypes::findIcon(media_type);
-		LLIconCtrl* media_icon = getChild<LLIconCtrl>("media_icon");
-		if (media_icon && !media_icon_name.empty())
+		if (mIcon && !media_icon_name.empty())
 		{
-			media_icon->setImage(media_icon_name);
+			mIcon->setImage(media_icon_name);
 		}
-		childSetColor("media_icon", media_icon_color);
+		mIcon->setColor(media_icon_color);
 		if (media_url.empty())
 		{
-			media_url = getString("play_label");
+			media_url = mPlayLabel;
 		}
 		else
 		{
-			media_url = getString("play_label") + " (" + media_url + ")";
+			media_url = mPlayLabel + " (" + media_url + ")";
 		}
-		childSetToolTip("media_play", media_url);
+		mPlay->setToolTip(media_url);
 	}
 	else if (mType == REMOTE_MUSIC)
 	{
@@ -165,7 +188,7 @@ void LLMediaRemoteCtrl::draw()
 		bool music_stop_enabled = false;
 		bool music_show_pause = false;
 
-		LLColor4 music_icon_color = LLUI::sColorsGroup->getColor("IconDisabledColor");
+		LLColor4 music_icon_color = LLColor4(icon_disabled_color);
 		std::string music_url;
 
 		static LLCachedControl<bool> audio_streaming_music(gSavedSettings, "AudioStreamingMusic");
@@ -174,7 +197,7 @@ void LLMediaRemoteCtrl::draw()
 		{
 			music_url = parcel->getMusicURL();
 			music_play_enabled = true;
-			music_icon_color = LLUI::sColorsGroup->getColor("IconEnabledColor");
+			music_icon_color = LLColor4(icon_enabled_color);
 
 			if (gOverlayBar->musicPlaying())
 			{
@@ -188,22 +211,22 @@ void LLMediaRemoteCtrl::draw()
 			}
 		}
 
-		childSetEnabled("music_play", music_play_enabled);
-		childSetEnabled("music_stop", music_stop_enabled);
-		childSetEnabled("music_pause", music_show_pause);
-		childSetVisible("music_pause", music_show_pause);
-		childSetVisible("music_play", !music_show_pause);
+		mPlay->setEnabled(music_play_enabled);
+		mPlay->setVisible(!music_show_pause);
+		mStop->setEnabled(music_stop_enabled);
+		mPause->setEnabled(music_show_pause);
+		mPause->setVisible(music_show_pause);
 
 		childSetColor("music_icon", music_icon_color);
 		if (music_url.empty())
 		{
-			music_url = getString("play_label");
+			music_url = mPlayLabel;
 		}
 		else
 		{
-			music_url = getString("play_label") + " (" + music_url + ")";
+			music_url = mPlayLabel + " (" + music_url + ")";
 		}
-		childSetToolTip("music_play", music_url);
+		mPlay->setToolTip(music_url);
 	}
 
 	LLPanel::draw();

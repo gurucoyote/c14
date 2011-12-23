@@ -35,6 +35,9 @@
 
 #include "llpanel.h"
 
+class LLButton;
+class LLIconCtrl;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 class LLMediaRemoteCtrl : public LLPanel
@@ -58,6 +61,11 @@ public:
 
 private:
 	ERemoteType mType;
+	LLButton*	mPlay;
+	LLButton*	mPause;
+	LLButton*	mStop;
+	LLIconCtrl*	mIcon;
+	std::string	mPlayLabel;
 };
 
 #endif

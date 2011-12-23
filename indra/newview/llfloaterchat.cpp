@@ -144,8 +144,10 @@ BOOL LLFloaterChat::postBuild()
 	if (mChatBarPanel)
 	{
 		mChatBarPanel->setGestureCombo(getChild<LLComboBox>("Gesture", TRUE, FALSE));
+#if TRANSLATE_CHAT
 		childSetCommitCallback("translate chat", onClickToggleTranslateChat, this);
 		childSetValue("translate chat", gSavedSettings.getBOOL("TranslateChat"));
+#endif
 	}
 
 	childSetCommitCallback("show mutes", onClickToggleShowMute, this);
@@ -431,6 +433,7 @@ void LLFloaterChat::onClickToggleShowMute(LLUICtrl* ctrl, void *data)
 	}
 }
 
+#if TRANSLATE_CHAT
 // Update the "TranslateChat" pref after "translate chat" checkbox is toggled in
 // the "Local Chat" floater.
 //static
@@ -440,6 +443,7 @@ void LLFloaterChat::onClickToggleTranslateChat(LLUICtrl* ctrl, void *data)
 	if (!check) return;
 	gSavedSettings.setBOOL("TranslateChat", check->get());
 }
+#endif
 
 // Update the "translate chat" checkbox after the "TranslateChat" pref is set in
 // some other place (e.g. prefs dialog).

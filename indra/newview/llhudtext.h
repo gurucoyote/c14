@@ -33,17 +33,19 @@
 #ifndef LL_LLHUDTEXT_H
 #define LL_LLHUDTEXT_H
 
-#include "llpointer.h"
+#include <set>
+#include <vector>
 
-#include "llhudobject.h"
+#include "llfontgl.h"
+#include "llframetimer.h"
+#include "llpointer.h"
+#include "llrect.h"
+#include "llui.h"
 #include "v4color.h"
 #include "v4coloru.h"
 #include "v2math.h"
-#include "llrect.h"
-#include "llframetimer.h"
-#include "llfontgl.h"
-#include <set>
-#include <vector>
+
+#include "llhudobject.h"
 
 // Renders a 2D text billboard floating at the location specified.
 class LLDrawable;
@@ -179,6 +181,8 @@ private:
 	EVertAlignment	mVertAlignment;
 	S32				mLOD;
 	BOOL			mHidden;
+
+	LLUIImagePtr	mRoundedSquare;
 
 //MK
 	// I am making these members public. I know, it's evil, but they are needed in RRInterface. None of them will be harmed, promised.
