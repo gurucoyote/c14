@@ -26,7 +26,7 @@ list all
 RenderAnisotropic				1	0
 RenderAvatarCloth				0	0
 RenderAvatarLODFactor			1	1.0
-RenderAvatarVP					1	0
+RenderAvatarVP					1	1
 RenderCubeMap					1	1
 RenderFarClip					1	256
 RenderFlexTimeFactor			1	1.0
@@ -65,7 +65,7 @@ list Low
 RenderAnisotropic			1	0
 RenderAvatarCloth			1	0
 RenderAvatarLODFactor		1	0.5
-RenderAvatarVP				1	0
+RenderAvatarVP				1	1
 RenderFarClip				1	64
 RenderFlexTimeFactor		1	0.5
 RenderGlowResolutionPow		1	8
@@ -212,8 +212,8 @@ WindLightUseAtmosShaders	0	0
 //
 list safe
 RenderAnisotropic			1	0
-RenderAvatarCloth			0	0
-RenderAvatarVP				0	0
+RenderAvatarCloth			1	0
+RenderAvatarVP				1	0
 RenderLightingDetail		1	0
 RenderObjectBump			0	0
 RenderMaxPartCount			1	1024
@@ -370,31 +370,6 @@ list ATI_Radeon_X1700
 Disregard128DefaultDrawDistance	1	0
 list ATI_Mobility_Radeon_X1xxx
 Disregard128DefaultDrawDistance	1	0
-
-
-
-
-// Avatar hardware skinning causes
-// invisible avatars on HD 2600... so I masked
-// out other possible bad ones till it's fixed
-
-list ATI_Radeon_HD_2300
-RenderAvatarVP				0	0
-RenderAvatarCloth			0	0
-Disregard128DefaultDrawDistance	1	0
-list ATI_Radeon_HD_2400
-RenderAvatarVP				0	0
-RenderAvatarCloth			0	0
-Disregard128DefaultDrawDistance	1	0
-list ATI_Radeon_HD_2600
-RenderAvatarVP				0	0
-RenderAvatarCloth			0	0
-list ATI_Radeon_HD_2900
-RenderAvatarVP				0	0
-RenderAvatarCloth			0	0
-list ATI_Radeon_HD_3800
-RenderAvatarVP				0	0
-RenderAvatarCloth			0	0
 
 // ATI cards generally perform better when not using VBOs for streaming data
 

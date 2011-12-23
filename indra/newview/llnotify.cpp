@@ -44,7 +44,6 @@
 #include "lltextbox.h"
 #include "lltexteditor.h"
 #include "lluiconstants.h"
-#include "llui.h"
 #include "lluictrlfactory.h"
 #include "llxmlnode.h"
 
@@ -53,10 +52,10 @@
 #include "llviewerregion.h"
 //mk
 #include "llfloaterchat.h"		// for add_chat_history()
+#include "lloverlaybar.h"		// for gOverlayBar
 #include "llviewercontrol.h"
 #include "llviewerdisplay.h"
 #include "llviewertexturelist.h"
-#include "lloverlaybar.h"		// for gOverlayBar
 
 // Globals
 LLNotifyBoxView* gNotifyBoxView = NULL;
@@ -108,12 +107,14 @@ bool LLNotifyBox::onNotification(const LLSD& notify)
 		}
 		else
 		{
-			bool is_script_dialog = (notification->getName() == "ScriptDialog" ||
-									 notification->getName() == "ScriptDialogOurs");
-			bool is_ours = (notification->getName() == "ScriptDialogOurs" ||
-							notification->getName() == "ScriptTextBoxOurs" ||
-							notification->getName() == "LoadWebPageOurs" ||
-							notification->getName() == "ObjectGiveItemOurs");
+			std::string dialog_name = notification->getName();
+			bool is_script_dialog = (dialog_name == "ScriptDialog" ||
+									 dialog_name == "ScriptDialogOurs");
+			bool is_ours = (dialog_name == "ScriptDialogOurs" ||
+							dialog_name == "ScriptTextBoxOurs" ||
+							dialog_name == "ScriptQuestionOurs" ||
+							dialog_name == "LoadWebPageOurs" ||
+							dialog_name == "ObjectGiveItemOurs");
 			LLNotifyBox* notify_box = new LLNotifyBox(notification,
 													  is_script_dialog,
 													  is_ours);
@@ -162,6 +163,8 @@ LLNotifyBox::LLNotifyBox(LLNotificationPtr notification,
 		sFont = LLFontGL::getFontSansSerif ();
 		sFontSmall = LLFontGL::getFontSansSerifSmall();
 	}
+
+	mRoundedSquare = LLUI::getUIImage("rounded_square.tga");
 
 	// setup paramaters
 	mMessage = notification->getMessage();
@@ -554,54 +557,52 @@ void LLNotifyBox::draw()
 
 void LLNotifyBox::drawBackground() const
 {
-	LLUIImagePtr imagep = LLUI::getUIImage("rounded_square.tga");
-	if (imagep)
+	if (mRoundedSquare)
 	{
-		gGL.getTexUnit(0)->bind(imagep->getImage());
+		gGL.getTexUnit(0)->bind(mRoundedSquare->getImage());
 		// set proper background color depending on whether notify box is a caution or not
-		LLColor4 color = mIsCaution? gColors.getColor("NotifyCautionBoxColor") : gColors.getColor("NotifyBoxColor");
+		static LLCachedControl<LLColor4U> notify_caution_box_color(gColors, "NotifyCautionBoxColor");
+		static LLCachedControl<LLColor4U> notify_box_color(gColors, "NotifyBoxColor");
+		LLColor4 color = mIsCaution? LLColor4(notify_caution_box_color) : LLColor4(notify_box_color);
 		if (gFocusMgr.childHasKeyboardFocus(this))
 		{
+			static LLCachedControl<LLColor4U> floater_focus_border_color(gColors, "FloaterFocusBorderColor");
+			static LLCachedControl<LLColor4U> color_drop_shadow(gColors, "ColorDropShadow");
 			const S32 focus_width = 2;
-			color = gColors.getColor("FloaterFocusBorderColor");
+			color = LLColor4(floater_focus_border_color);
 			gGL.color4fv(color.mV);
 			gl_segmented_rect_2d_tex(-focus_width,
 									 getRect().getHeight() + focus_width,
 									 getRect().getWidth() + focus_width,
 									 -focus_width,
-									 imagep->getTextureWidth(),
-									 imagep->getTextureHeight(),
+									 mRoundedSquare->getTextureWidth(),
+									 mRoundedSquare->getTextureHeight(),
 									 16,
 									 mIsTip ? ROUNDED_RECT_TOP :
 											  ROUNDED_RECT_BOTTOM);
-			color = gColors.getColor("ColorDropShadow");
+			color = LLColor4(color_drop_shadow);
 			gGL.color4fv(color.mV);
 			gl_segmented_rect_2d_tex(0,
 									 getRect().getHeight(),
 									 getRect().getWidth(),
 									 0,
-									 imagep->getTextureWidth(),
-									 imagep->getTextureHeight(),
+									 mRoundedSquare->getTextureWidth(),
+									 mRoundedSquare->getTextureHeight(),
 									 16,
 									 mIsTip ? ROUNDED_RECT_TOP :
 											  ROUNDED_RECT_BOTTOM);
 
-			if (mIsCaution)
-			{
-				color = gColors.getColor("NotifyCautionBoxColor");
-			}
-			else
-			{
-				color = gColors.getColor("NotifyBoxColor");
-			}
+			static LLCachedControl<LLColor4U> notify_caution_box_color(gColors, "NotifyCautionBoxColor");
+			static LLCachedControl<LLColor4U> notify_box_color(gColors, "NotifyBoxColor");
+			color = mIsCaution ? LLColor4(notify_caution_box_color) : LLColor4(notify_box_color);
 
 			gGL.color4fv(color.mV);
 			gl_segmented_rect_2d_tex(1,
 									 getRect().getHeight() - 1,
 									 getRect().getWidth() - 1,
 									 1,
-									 imagep->getTextureWidth(),
-									 imagep->getTextureHeight(),
+									 mRoundedSquare->getTextureWidth(),
+									 mRoundedSquare->getTextureHeight(),
 									 16,
 									 mIsTip ? ROUNDED_RECT_TOP :
 											  ROUNDED_RECT_BOTTOM);
@@ -613,8 +614,8 @@ void LLNotifyBox::drawBackground() const
 									 getRect().getHeight(),
 									 getRect().getWidth(),
 									 0,
-									 imagep->getTextureWidth(),
-									 imagep->getTextureHeight(),
+									 mRoundedSquare->getTextureWidth(),
+									 mRoundedSquare->getTextureHeight(),
 									 16,
 									 mIsTip ? ROUNDED_RECT_TOP :
 											  ROUNDED_RECT_BOTTOM);

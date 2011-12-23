@@ -99,7 +99,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.8}
+{1.26.2.9}
 
 Language,ca
 {No}
@@ -2624,7 +2624,7 @@ array set Properties {
 {<%InstallDir%>}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,FileSize
-{75477186}
+{75455276}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,Name
 {Program Files}

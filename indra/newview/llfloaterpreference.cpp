@@ -320,7 +320,7 @@ void LLPreferenceCore::setPersonalInfo(const std::string& visibility, bool im_vi
 
 void LLPreferenceCore::refreshEnabledGraphics()
 {
-	LLFloaterHardwareSettings::instance()->refreshEnabledState();
+	LLFloaterHardwareSettings::instance()->refresh();
 	mDisplayPanel->refreshEnabledState();
 }
 

@@ -670,7 +670,7 @@ FolderLock RRInterface::isFolderLockedWithoutException(LLInventoryCategory* cat,
 		// param will always be equal to "n" in this case since we added it to command, but we don't care about this here
 		if (parseCommand(command + "=n", behav, option, param)) // detach=n, recvchat=n, recvim=n, unsit=n, recvim:<uuid>=add, clear=tplure:
 		{
-			// find whether this object has issued a "{attach/detach}[all]this" command on a folder that is either this one, or a parent
+			// find whether this object has issued a "{attach|detach}[all]this" command on a folder that is either this one, or a parent
 			this_object_locks = false;
 			if (behav == attach_or_detach+"this") {
 				if (getCategoryUnderRlvShare(option) == cat) {
@@ -1516,9 +1516,6 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 		gAgent.resetAxes(rot);
 	}
 	else if (command == "adjustheight") { // adjustheight:adjustment_centimeters=force or adjustheight:ref_pelvis_to_foot;scalar[;delta]=force
-		if (!gSavedSettings.controlExists(AVATARHEIGHTOFFSET)) {
-			return FALSE;
-		}
 		LLVOAvatar* avatar = gAgent.getAvatarObject();
 		if (avatar) {
 			F32 val = (F32)atoi(option.c_str()) / 100.0f;
@@ -1542,7 +1539,7 @@ BOOL RRInterface::force(LLUUID object_uuid, std::string command, std::string opt
 			} else if (val < -1.0f) {
 				val = -1.0f;
 			}
-			gSavedSettings.setF32(AVATARHEIGHTOFFSET, val);
+			gSavedSettings.setF32("AvatarOffsetZ", val);
 		}
 	}
 	else if (command == "setgroup") {
@@ -2044,7 +2041,7 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 				found_one = true;
 				if (worn_items == "n") {
 					res += "10";
-				} else if (worn_items != "N") {
+				} else if (worn_items == "N") {
 					res += "30";
 				} else {
 					res += worn_items;
@@ -2062,7 +2059,7 @@ std::string RRInterface::getInventoryList(std::string path, BOOL withWornInfo /*
 						found_one = true;
 						if (worn_items == "n") {
 							res += "10";
-						} else if (worn_items != "N") {
+						} else if (worn_items == "N") {
 							res += "30";
 						} else {
 							res += worn_items;
@@ -2951,14 +2948,22 @@ std::string RRInterface::stringReplace(std::string s, std::string what, std::str
 
 std::string RRInterface::getDummyName(std::string name, EChatAudible audible /* = CHAT_AUDIBLE_FULLY */)
 {
+	std::string res;
 	size_t len = name.length();
-	if (len < 2) return ""; // just to avoid crashing in some cases
-	// We use mLaunchTimestamp in order to modify the scrambling when the session restarts(it stays consistent during the session though)
-	// But in crashy situations, let's not make it change at EVERY session, more like once a day or so
-	// A day is 86400 seconds, the closest power of two is 65536, that's a 16-bit shift
-	unsigned char hash = name.at(3) + len + (mLaunchTimestamp >> 16); // very lame hash function I know... but it should be linear enough(the old length method was way too gaussian with a peak at 11 to 16 characters)
+	if (len == 0) return res; // just to avoid crashing in some cases
+
+	// We use mLaunchTimestamp in order to modify the scrambling when the
+	// session restarts (it stays consistent during the session though)
+	// But in crashy situations, let's not make it change at EVERY session,
+	// more like once a day or so
+	// A day is 86400 seconds, the closest power of two is 65536, that's a
+	// 16 bits shift.
+	// Very lame hash function I know... but it should be linear enough (the
+	// old length method was way too gaussian with a peak at 11 to 16
+	// characters)
+	unsigned char hash = name.at(len - 1) + len + (mLaunchTimestamp >> 16);
+
 	unsigned char mod = hash % 28;
-	std::string res = "";
 	switch (mod) {
 		case 0:		res = "A resident";			break;
 		case 1:		res = "This resident";		break;
@@ -2989,7 +2994,9 @@ std::string RRInterface::getDummyName(std::string name, EChatAudible audible /* 
 		case 26:	res = "Unidentified one";	break;
 		default:	res = "An unknown person";	break;
 	}
-	if (audible == CHAT_AUDIBLE_BARELY) res += " afar";
+	if (audible == CHAT_AUDIBLE_BARELY) {
+		res += " afar";
+	}
 	return res;
 }
 

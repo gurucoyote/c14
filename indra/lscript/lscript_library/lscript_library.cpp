@@ -302,7 +302,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llGroundRepel", NULL, "fif");
 	addFunction(10.f, 3.f, dummy_func, "llGiveInventoryList", NULL, "ksl");
 
-// script calls for vehicle action
+	// script calls for vehicle action
 	addFunction(10.f, 0.f, dummy_func, "llSetVehicleType", NULL, "i");
 	addFunction(10.f, 0.f, dummy_func, "llSetVehicleFloatParam", NULL, "if");
 	addFunction(10.f, 0.f, dummy_func, "llSetVehicleVectorParam", NULL, "iv");
@@ -506,10 +506,27 @@ void LLScriptLibrary::init()
 
 	// Server RC magnum v11.10.31.244254 new function:
 	addFunction(10.f, 0.f, dummy_func, "llSetKeyframedMotion", NULL, "ll");
+
+	// Server RC Le Tigre v11.10.30.245889 new function:
+	addFunction(10.f, 0.f, dummy_func, "llTransferLindenDollars", "k", "ki");
 }
 
-LLScriptLibraryFunction::LLScriptLibraryFunction(F32 eu, F32 st, void (*exec_func)(LLScriptLibData *, LLScriptLibData *, const LLUUID &), const char *name, const char *ret_type, const char *args, BOOL god_only)
-		: mEnergyUse(eu), mSleepTime(st), mExecFunc(exec_func), mName(name), mReturnType(ret_type), mArgs(args), mGodOnly(god_only)
+LLScriptLibraryFunction::LLScriptLibraryFunction(F32 eu,
+												 F32 st,
+												 void (*exec_func)(LLScriptLibData*,
+																   LLScriptLibData*,
+																   const LLUUID &),
+												 const char* name,
+												 const char* ret_type,
+												 const char* args,
+												 BOOL god_only)
+:	mEnergyUse(eu),
+	mSleepTime(st),
+	mExecFunc(exec_func),
+	mName(name),
+	mReturnType(ret_type),
+	mArgs(args),
+	mGodOnly(god_only)
 {
 }
 
@@ -517,13 +534,24 @@ LLScriptLibraryFunction::~LLScriptLibraryFunction()
 {
 }
 
-void LLScriptLibrary::addFunction(F32 eu, F32 st, void (*exec_func)(LLScriptLibData *, LLScriptLibData *, const LLUUID &), const char *name, const char *ret_type, const char *args, BOOL god_only)
+void LLScriptLibrary::addFunction(F32 eu,
+								  F32 st,
+								  void (*exec_func)(LLScriptLibData*,
+													LLScriptLibData*,
+													const LLUUID &),
+								  const char* name,
+								  const char* ret_type,
+								  const char* args,
+								  BOOL god_only)
 {
 	LLScriptLibraryFunction func(eu, st, exec_func, name, ret_type, args, god_only);
 	mFunctions.push_back(func);
 }
 
-void LLScriptLibrary::assignExec(const char *name, void (*exec_func)(LLScriptLibData *, LLScriptLibData *, const LLUUID &))
+void LLScriptLibrary::assignExec(const char* name,
+								 void (*exec_func)(LLScriptLibData*,
+												   LLScriptLibData*,
+												   const LLUUID &))
 {
 	for (std::vector<LLScriptLibraryFunction>::iterator i = mFunctions.begin(); 
 		 i != mFunctions.end(); ++i)

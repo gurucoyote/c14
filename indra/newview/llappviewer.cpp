@@ -1944,7 +1944,7 @@ bool LLAppViewer::initConfiguration()
 	LLFirstUse::addConfigVariable("FirstOverrideKeys");
 	LLFirstUse::addConfigVariable("FirstAttach");
 	LLFirstUse::addConfigVariable("FirstAttachNeck");
-	LLFirstUse::addConfigVariable("FirstAttachAvatarCenter");
+	LLFirstUse::addConfigVariable("FirstAttachRoot");
 	LLFirstUse::addConfigVariable("FirstAppearance");
 	LLFirstUse::addConfigVariable("FirstInventory");
 	LLFirstUse::addConfigVariable("FirstSandbox");

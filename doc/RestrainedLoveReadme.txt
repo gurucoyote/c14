@@ -2,7 +2,7 @@ This is the edited version of the original readme file by Marine Kelley.
 The file has been edited to take into account the improvements by Henri Beauchamp, as well as the Cool VL Viewer.
 
 -------------
-Version 2.08.01.20
+Version 2.08.01.21
 
 
 WHAT IS IT ?
@@ -155,6 +155,11 @@ Since v1.23d you may set the RestrainedLoveAddReplace advanced setting to TRUE s
 
 RELEASE NOTES :
 ---------------
+2.08.01.21 (@versionnum = 2080121) by Henri Beauchamp:
+- Fixed a crash bug that occurred when someone with a display name of less than 4 characters was chatting while @shownames=n was in force (thanks Kathrine Jasma for the bug report).
+- Fixed a breakage in @getinvworn that was introduced in v2.08.01.20 (thanks Ibrew Meads for the bug report and fix).
+
+
 2.08.01.20 (@versionnum = 2080120) by Henri Beauchamp (equivalent to Marine's v2.08.01.00):
 - Inclusion of Marine Kelley's change:
 	- added : @getblacklist[:partial_name]=2222 to retrieve a comma separated list of blacklisted commands.

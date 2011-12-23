@@ -117,11 +117,17 @@ BOOL LLFloaterAbout::postBuild()
 	childSetAction("copy_button", onClickCopyToClipboard, this);
 	childSetAction("close_button", onClickClose, this);
 
-	LLViewerTextEditor *credits_widget = getChild<LLViewerTextEditor>("credits", true);
-	credits_widget->setCursorPos(0);
-	credits_widget->setEnabled(FALSE);
-	credits_widget->setTakesFocus(TRUE);
-	credits_widget->setHandleEditKeysDirectly(TRUE);
+	LLViewerTextEditor* text = getChild<LLViewerTextEditor>("credits", true);
+	text->setCursorPos(0);
+	text->setEnabled(FALSE);
+	text->setTakesFocus(TRUE);
+	text->setHandleEditKeysDirectly(TRUE);
+
+	text = getChild<LLViewerTextEditor>("licenses", true);
+	text->setCursorPos(0);
+	text->setEnabled(FALSE);
+	text->setTakesFocus(TRUE);
+	text->setHandleEditKeysDirectly(TRUE);
 
 	std::string support_url;
 	LLViewerRegion* region = gAgent.getRegion();
@@ -134,12 +140,16 @@ BOOL LLFloaterAbout::postBuild()
 			{
 				// The URL is itself a capability URL: start fetching the
 				// actual server release notes URL
+				LL_DEBUGS("About") << "Fetching release notes URL from cap: "
+								   << url << LL_ENDL;
 				LLServerReleaseNotesURLFetcher::startFetch();
 				support_url = LLTrans::getString("RetrievingData");
 			}
 			else
 			{
 				// On OpenSim grids, we could still get a direct URL
+				LL_DEBUGS("About") << "Got release notes URL: "
+								   << url << LL_ENDL;
 				support_url = url;
 			}
 		}
@@ -175,7 +185,7 @@ static std::string get_viewer_release_notes_url()
 void LLFloaterAbout::setSupportText(const std::string& server_release_notes_url)
 {
 	LLColor4 fg_color = gColors.getColor("TextFgReadOnlyColor");
-	LLViewerTextEditor *support_widget = getChild<LLViewerTextEditor>("support", true);
+	LLViewerTextEditor* support_widget = getChild<LLViewerTextEditor>("support", true);
 
 	// We need to prune the highlights, and clear() is not doing it...
 	support_widget->removeTextFromEnd(support_widget->getMaxLength());

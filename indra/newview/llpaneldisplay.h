@@ -155,6 +155,8 @@ protected:
 	BOOL mReflections;
 	BOOL mAvatarVP;
 
+	bool mRiggedMeshWarned;	// true when warned about rigged mesh & RenderAvatarVP
+
 	S32 mReflectionDetail;
 
 	BOOL mAvatarImpostors;

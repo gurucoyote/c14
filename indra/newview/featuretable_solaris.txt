@@ -46,7 +46,7 @@ list Class0
 VertexShaderEnable	1	0
 RenderVBO			1	0
 RenderDistance		1	64
-RenderAvatarVP		1	0
+RenderAvatarVP		1	1
 RenderAvatarMode	1	0
 RenderLighting		1	0
 RenderObjectBump	1	0
@@ -92,14 +92,14 @@ RenderRippleWater	1	1
 //
 list NoPixelShaders
 VertexShaderEnable	0	0
-RenderAvatarVP		0  0
+RenderAvatarVP		0	0
 
 //
 // No Vertex Shaders available
 //
 list NoVertexShaders
 VertexShaderEnable	0	0
-RenderAvatarVP		0  0
+RenderAvatarVP		0	0
 
 //
 // "Default" setups for safe, low, medium, high
@@ -107,7 +107,7 @@ RenderAvatarVP		0  0
 list safe
 RenderVBO			1	0
 RenderAniso			1	0
-RenderAvatarVP		0	0
+RenderAvatarVP		1	0
 RenderLighting		1	0
 RenderParticleCount	1	1024
 RenderTerrainDetail 1	0

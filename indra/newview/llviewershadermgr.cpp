@@ -404,27 +404,27 @@ void LLViewerShaderMgr::setShaders()
 
 		if (LLFeatureManager::getInstance()->isFeatureAvailable("RenderDeferred") &&
 		    gSavedSettings.getBOOL("RenderDeferred") &&
-			gSavedSettings.getBOOL("RenderAvatarVP") &&
+//			gSavedSettings.getBOOL("RenderAvatarVP") &&
 			gSavedSettings.getBOOL("WindLightUseAtmosShaders"))
 		{
 			if (gSavedSettings.getS32("RenderShadowDetail") > 0)
 			{
 				if (gSavedSettings.getBOOL("RenderDeferredGI"))
-				{ //shadows + gi
+				{	//shadows + gi
 					deferred_class = 3;
 				}
 				else
-				{ //shadows
+				{	//shadows
 					deferred_class = 2;
 				}
 			}
 			else
-			{ //no shadows
+			{	//no shadows
 				deferred_class = 1;
 			}
 
 			//make sure hardware skinning is enabled
-			//gSavedSettings.setBOOL("RenderAvatarVP", TRUE);
+			gSavedSettings.setBOOL("RenderAvatarVP", TRUE);
 			
 			//make sure atmospheric shaders are enabled
 			//gSavedSettings.setBOOL("WindLightUseAtmosShaders", TRUE);
@@ -438,7 +438,7 @@ void LLViewerShaderMgr::setShaders()
 			wl_class = 1;
 		}
 
-		if(!gSavedSettings.getBOOL("EnableRippleWater"))
+		if (!gSavedSettings.getBOOL("EnableRippleWater"))
 		{
 			water_class = 0;
 		}

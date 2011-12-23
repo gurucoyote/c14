@@ -15,6 +15,7 @@
 			<button name="close_button" label="Close" font="SansSerif" mouse_opaque="true"
 			 left_delta="338" bottom_delta="0" width="110" height="20" follows="left|right|bottom"/>
 		</panel>
+
 		<panel name="authors_credits" label="Authors &amp; Credits" border="true" mouse_opaque="true"
 		 left="1" bottom="-416" width="468" height="418" follows="left|top|right|bottom">
 			<text_editor name="credits" word_wrap="true" embedded_items="false"
@@ -33,7 +34,14 @@ Coders:
 The Snowglobe branch of the SL viewer includes source code contributions of the following residents: Able Whitman, Adam Marker, Admiral Admiral, Agathos Frascati, Aimee Trescothick, Alejandro Rosenthal, Aleric Inglewood, Alissa Sabre, Angus Boyd, Ann Congrejo, Archimedes Plutonian, Ardy Lay, Argent Stonecutter, Armin Weatherwax, Asuka Neely, Balp Allen, Be Holder, Benja Kepler, Biancaluce Robbiani, Blakar Ogre, blino Nakamura, Boroondas Gupte, Bulli Schumann, bushing Spatula, Carjay McGinnis, Catherine Pfeffer, Celierra Darling, Cron Stardust, Cypren Christenson, Dale Glass, Drewan Keats, Dylan Haskell, Dzonatas Sol, Eddy Stryker, EponymousDylan Ra, Eva Nowicka, Farallon Greyskin, Feep Larsson, Flemming Congrejo, Fluf Fredriksson, Fremont Cunningham, Geneko Nemeth, Gigs Taggart, Ginko Bayliss, Grazer Kline, Gudmund Shepherd, Hamncheese Omlet, HappySmurf Papp, Henri Beauchamp, Hikkoshi Sakai, Hiro Sommambulist, Hoze Menges, Ian Kas, Irene Muni, Iskar Ariantho, Jacek Antonelli, JB Kraft, Joghert LeSabre, Kage Pixel, Ken March, Kerutsen Sellery, Khyota Wulluf, Kitty Barnett, Kunnis Basiat, Latif Khalifa, Lisa Lowe, Lockhart Cordoso, maciek marksman, Magnus Balczo, Malwina Dollinger, march Korda, Matthew Dowd, McCabe Maxsted, Michelle2 Zenovka, Mm Alder, Mr Greggan, Nicholaz Beresford, Nounouch Hapmouche, Patric Mills, Paul Churchill, Paula Innis, Pixel Gausman, Peekay Semyorka, Peter Lameth, Pf Shan, princess niven, Renault Clio, resu Ampan, Ringo Tuxing, Robin Cornelius, Ryozu Kojima, Salahzar Stenvaag, Sammy Frederix, Scrippy Scofield, Seg Baphomet, Sergen Davies, Shawn Kaufmat, SignpostMarv Martin, Simon Nolan, SpacedOut Frye, Sporked Friis, Stevex Janus, Still Defiant, Strife Onizuka, Tayra Dagostino, TBBle Kurosawa, Teardrops Fall, Techwolf Lupindo, tenebrous pau, Tharax Ferraris, Thickbrick Sleaford, Thraxis Epsilon, tiamat bingyi, TraductoresAnonimos Alter, Tue Torok, Twisted Laws, Vadim Bigbear, Vector Hastings, Vex Streeter, Vixen Heron, Whoops Babii, Wilton Lundquist, Zarkonnen Decosta, Zi Ree, Zipherius Turas
 
 The remaining 1% of the code is what makes this viewer so much better and unique. This viewer includes code contributed by (in alphabetical order): Able Whitman, Aimee Trescothick, Aleric Inglewood, Alissa Sabre, Ardy Lay, Armin Weatherwax, Boroondas Gupte, Carjay McGinnis, Dale Glass, Elektra Hesse, Gigs Taggart, Guru Coyote, Hazim Gazov, Henri Beauchamp, Jacek Antonelli, JB Kraft, jcool410, Jonathan Yap, Kadah Coba, Kathrine Jansma, Khyota Wulluf, Kitty Barnett, Lance Corrimal, Latif Khalifa, Marine Kelley, McCabe Maxsted, Michelle2 Zenovka, Mm Alder, Nicholaz Beresford, Nicky Dasmijn, Robin Cornelius, Satomi Ahn, Siana Gearz, Shyotl Kuhr, Sione Lomu, Techwolf Lupindo, Thickbrick Sleaford, Tom Meta, Vadim Bigbear, Zi Ree, Zwagoth Klaar and other, unknown authors.
+			</text_editor>
+		</panel>
 
+		<panel name="licenses_copyrights" label="Licences &amp; Copyrights" border="true" mouse_opaque="true"
+		 left="1" bottom="-416" width="468" height="418" follows="left|top|right|bottom">
+			<text_editor name="licenses" word_wrap="true" embedded_items="false"
+			 max_length="65536" font="SansSerifSmall" mouse_opaque="true"
+			 left="5" bottom="-414" width="460" height="410" follows="left|top|right|bottom">
 Copyrights:
 
 3Dconnexion SDK Copyright (c) 1992-2007 3Dconnexion.

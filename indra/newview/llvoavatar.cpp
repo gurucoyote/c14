@@ -3472,6 +3472,7 @@ void LLVOAvatar::idleUpdateNameTag(const LLVector3& root_pos_last)
 							line += ", ";
 						}
 						line += "Typing";
+						need_comma = true;
 					}
 					if (mute_flags != -1)
 					{

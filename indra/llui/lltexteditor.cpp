@@ -4150,10 +4150,12 @@ void LLTextEditor::pruneSegments()
 		std::for_each(iter, mSegments.end(), DeletePointer());
 		mSegments.erase(iter, mSegments.end());
 	}
+/*	We don't care, and it can happen legally for removeTextFromEnd(text->getMaxLength())
 	else
 	{
 		llwarns << "Tried to erase end of empty LLTextEditor" << llendl;
 	}
+*/
 }
 
 void LLTextEditor::findEmbeddedItemSegments()

@@ -14037,10 +14037,10 @@
       <key>Value</key>
       <integer>1</integer>
     </map>
-    <key>WarnFirstAttachAvatarCenter</key>
+    <key>WarnFirstAttachRoot</key>
     <map>
       <key>Comment</key>
-      <string>Enables FirstAttachAvatarCenter warning dialog</string>
+      <string>Enables FirstAttachRoot warning dialog</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>

@@ -201,9 +201,9 @@ void LLFirstUse::useAttach(S32 attach_pt, std::string joint)
 	{
 		warning_name += "Neck";
 	}
-	else if (joint == "Avatar Center")
+	else if (joint == "Root")
 	{
-		warning_name += "AvatarCenter";
+		warning_name += "Root";
 	}
 
 	LLSD args;

@@ -5296,9 +5296,12 @@ bool script_question_cb(const LLSD& notification, const LLSD& response)
 	}
 
 	LLMuteList* ml = LLMuteList::getInstance();
-	if (ml && response["Mute"]) // mute
+	if (ml && response["client_side_mute"]) // mute
 	{
-		ml->add(LLMute(item_id, notification["payload"]["object_name"].asString(), LLMute::OBJECT));
+		LLMute mute(item_id, notification["payload"]["object_name"].asString(), LLMute::OBJECT);
+		ml->add(mute);
+		LLFloaterMute::showInstance();
+		LLFloaterMute::getInstance()->selectMute(mute.mID);
 
 		// purge the message queue of any previously queued requests from the same source. DEV-4879
 		class OfferMatcher : public LLNotifyBoxView::Matcher
@@ -5361,7 +5364,8 @@ void process_script_question(LLMessageSystem *msg, void **user_data)
 	std::string throttle_name = owner_name;
 	std::string self_name;
 	gAgent.getName(self_name);
-	if (owner_name == self_name)
+	bool is_ours = (owner_name == self_name);
+	if (is_ours)
 	{
 		throttle_name = taskid.getString();
 	}
@@ -5455,25 +5459,22 @@ void process_script_question(LLMessageSystem *msg, void **user_data)
 		payload["object_name"] = object_name;
 		payload["owner_name"] = owner_name;
 //MK
-		if (auto_acceptable_permission && !(caution && gSavedSettings.getBOOL("PermissionsCautionEnabled")))
+		if (auto_acceptable_permission &&
+			!(caution && gSavedSettings.getBOOL("PermissionsCautionEnabled")))
 		{
 			// reply with the permissions granted
 			LLNotifications::instance().forceResponse(LLNotification::Params("ScriptQuestion").payload(payload), 0/*YES*/);
 			return;
 		}
 //mk
+		std::string dialog_name = is_ours ? "ScriptQuestionOurs" : "ScriptQuestion";
 		// check whether cautions are even enabled or not
-		if (gSavedSettings.getBOOL("PermissionsCautionEnabled"))
+		if (caution && gSavedSettings.getBOOL("PermissionsCautionEnabled"))
 		{
 			// display the caution permissions prompt
-			LLNotifications::instance().add(caution ? "ScriptQuestionCaution" : "ScriptQuestion", args, payload);
+			dialog_name = "ScriptQuestionCaution";
 		}
-		else
-		{
-			// fall back to default behavior if cautions are entirely disabled
-			LLNotifications::instance().add("ScriptQuestion", args, payload);
-		}
-
+		LLNotifications::instance().add(dialog_name, args, payload);
 	}
 }
 

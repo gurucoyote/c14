@@ -26,8 +26,8 @@
 
 #define RR_VIEWER_NAME "RestrainedLife"
 #define RR_VIEWER_NAME_NEW "RestrainedLove"
-#define RR_VERSION_NUM "2080120"
-#define RR_VERSION "2.08.01.20"
+#define RR_VERSION_NUM "2080121"
+#define RR_VERSION "2.08.01.21"
 #define RR_SLV_VERSION "Cool VL Viewer v1.26.2"
 
 #define RR_PREFIX "@"
@@ -40,9 +40,6 @@
 // Define to 0 if you wish @getcommand to return @behav=force commands as
 // "behav%f" in excess to their @behave=y/n version (returned as "behav").
 #define STRIP_FORCE_FLAG 1
-
-// Set this to the name of the variable used to store the avatar height offset
-#define AVATARHEIGHTOFFSET "AvatarOffsetZ"
 
 // wearable types as strings
 #define WS_ALL "all"

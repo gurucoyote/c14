@@ -96,7 +96,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.8}
+{1.26.2.9}
 
 Language,ca
 {No}
@@ -1986,6 +1986,22 @@ Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b
 Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
 Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b95d-0f02-eaa2011546b9 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Script Condition} -component ScriptCondition
 Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b95d-0f02-eaa2011546b9 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Script Condition} -component ScriptCondition
+Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b95d-0f02-eaa2011546b9 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Script Condition} -component ScriptCondition
+Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b95d-0f02-eaa2011546b9 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Script Condition} -component ScriptCondition
+Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Condition 37F1949E-1276-B95D-0F02-EAA2011546B9 -active Yes -name 37f1949e-1276-b95d-0f02-eaa2011546b9 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Script Condition} -component ScriptCondition
+Condition E472A696-B7D3-AFA5-5427-0F22EDD22FD6 -active Yes -name e472a696-b7d3-afa5-5427-0f22edd22fd6 -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {File Permission Condition} -component FilePermissionCondition
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
+Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
 Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
 Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
 Action 28019102-E8FD-5FB2-7010-5AB011A0B29A -active Yes -name 28019102-e8fd-5fb2-7010-5ab011a0b29a -type action -parent 65E03A0A-C592-321F-0D2D-7AC24FF70B7C -setup Install -title {Check Action} -component ExecuteAction
@@ -2755,7 +2771,7 @@ array set Properties {
 {<%InstallDir%>}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,FileSize
-{123213754}
+{123228466}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,Name
 {Program Files}

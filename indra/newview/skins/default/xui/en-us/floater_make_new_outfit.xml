@@ -71,9 +71,9 @@ This tool allows to make a new folder and save copies of the items you are now w
 		Attachments:
 	</text>
 	<check_box bottom_delta="0" enabled="false" follows="left|top" font="SansSerifSmall"
-		 tool_tip="BEWARE: this attachment point was undefined in older viewers: it will not appear as attached in the proper place on your avatar when the latter is rendered by such viewers."
-	     height="16" initial_value="false" label="Avatar Center" left_delta="100"
-	     mouse_opaque="true" name="checkbox_Avatar Center" radio_style="false" width="100" />
+		 tool_tip="This is the center of the avatar, that DOES NOT follow the animations playing on the latter (i.e. this point is not really suitable for anything but invisible attachments). BEWARE: this attachment point was undefined in older viewers: it will not appear as attached in the proper place on your avatar when the latter is rendered by such viewers (this however won't matter for invisible attachments)."
+	     height="16" initial_value="false" label="Root" left_delta="100"
+	     mouse_opaque="true" name="checkbox_Root" radio_style="false" width="100" />
 	<check_box bottom_delta="0" enabled="false" follows="left|top" font="SansSerifSmall"
 	     height="16" initial_value="false" label="Skull" left_delta="100"
 	     mouse_opaque="true" name="checkbox_Skull" radio_style="false"

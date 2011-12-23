@@ -96,6 +96,8 @@ LLPanelDisplay::LLPanelDisplay()
 
 BOOL LLPanelDisplay::postBuild()
 {
+	mRiggedMeshWarned = false;
+
 	// Setup graphic card capabilities
 	bool cubemap = gGLManager.mHasCubeMap && LLCubeMap::sUseCubeMaps;
 	LLFeatureManager* fm = LLFeatureManager::getInstance();
@@ -402,6 +404,12 @@ void LLPanelDisplay::refresh()
 	mWindLight = mCanDoWindlight && gSavedSettings.getBOOL("WindLightUseAtmosShaders");
 	mReflections = mCanDoReflections && gSavedSettings.getBOOL("RenderWaterReflections");
 	mAvatarVP = mCanDoSkinning && gSavedSettings.getBOOL("RenderAvatarVP");
+
+	if (mCanDoSkinning && !mAvatarVP && !mRiggedMeshWarned)
+	{
+		LLNotifications::instance().add("RiggedMeshUnavailable");
+		mRiggedMeshWarned = true;
+	}
 
 	// reflection radio
 	mReflectionDetail = gSavedSettings.getS32("RenderReflectionDetail");
@@ -730,9 +738,9 @@ void LLPanelDisplay::apply()
 void LLPanelDisplay::onChangeQuality(LLUICtrl *ctrl, void *data)
 {
 	LLSliderCtrl* sldr = static_cast<LLSliderCtrl*>(ctrl);
-	LLPanelDisplay* cur_panel = static_cast<LLPanelDisplay*>(data);
+	LLPanelDisplay* self = static_cast<LLPanelDisplay*>(data);
 
-	if (sldr == NULL || cur_panel == NULL)
+	if (sldr == NULL || self == NULL)
 	{
 		return;
 	}
@@ -741,7 +749,7 @@ void LLPanelDisplay::onChangeQuality(LLUICtrl *ctrl, void *data)
 	LLFeatureManager::getInstance()->setGraphicsLevel(set, true);
 
 	LLFloaterPreference::refreshEnabledGraphics();
-	cur_panel->refresh();
+	self->refresh();
 }
 
 void LLPanelDisplay::onChangeCustom(LLUICtrl *ctrl, void *data)
