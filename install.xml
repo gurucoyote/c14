@@ -240,9 +240,9 @@
           <key>darwin</key>
           <map>
             <key>md5sum</key>
-            <string>b1891d0e52104e6db59687db8c11a527</string>
+            <string>2cad51575b429be4fdadb5d63da1c739</string>
             <key>url</key>
-            <uri>http://sldev.free.fr/libraries/boost-1.45.0-darwin-20110304.tar.bz2</uri>
+			<uri>https://github.com/downloads/siana/SingularityViewer/boost-1.45.0-darwin-20110604.tar.bz2</uri>
           </map>
           <key>linux</key>
           <map>
