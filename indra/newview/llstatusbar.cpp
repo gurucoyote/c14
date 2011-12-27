@@ -266,8 +266,10 @@ void LLStatusBar::draw()
 void LLStatusBar::refresh()
 {
 	static F32 saved_bwtotal = 0.0f;
+#if LL_LINUX || LL_WINDOWS
 	static U32 saved_mmargin = 0;
 	static F32 saved_mratio = 0;
+#endif
 
 	F32 bwtotal = gViewerThrottle.getMaxBandwidth() / 1000.f;
 	if (bwtotal != saved_bwtotal)
