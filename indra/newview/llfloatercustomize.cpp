@@ -1777,9 +1777,9 @@ void LLFloaterCustomize::initWearablePanels()
 	part->mCameraOffset.setVec(-2.5f, 0.5f, 0.5f);
 	panel->addSubpart("Body Detail", SUBPART_SKIN_BODYDETAIL, part);
 
-	panel->addTextureDropTarget(TEX_HEAD_BODYPAINT,  "Head Tattoos", 	LLUUID::null, TRUE);
-	panel->addTextureDropTarget(TEX_UPPER_BODYPAINT, "Upper Tattoos", 	LLUUID::null, TRUE);
-	panel->addTextureDropTarget(TEX_LOWER_BODYPAINT, "Lower Tattoos", 	LLUUID::null, TRUE);
+	panel->addTextureDropTarget(TEX_HEAD_BODYPAINT, "Head Skin", LLUUID::null, TRUE);
+	panel->addTextureDropTarget(TEX_UPPER_BODYPAINT, "Upper Body", LLUUID::null, TRUE);
+	panel->addTextureDropTarget(TEX_LOWER_BODYPAINT, "Lower Body", LLUUID::null, TRUE);
 
 	/////////////////////////////////////////
 	// Hair

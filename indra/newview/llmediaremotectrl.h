@@ -61,11 +61,13 @@ public:
 
 private:
 	ERemoteType mType;
+	LLIconCtrl*	mIcon;
 	LLButton*	mPlay;
 	LLButton*	mPause;
 	LLButton*	mStop;
-	LLIconCtrl*	mIcon;
-	std::string	mPlayLabel;
+	std::string	mIconToolTip;
+	std::string mCachedURL;
+	std::string mCachedMetaData;
 };
 
 #endif

@@ -1,6 +1,6 @@
 /** 
- * @file llpanelaudioprefs.h
- * @brief Audio preference definitions
+ * @file llprefsmedia.h
+ * @brief Media preference definitions
  *
  * $LicenseInfo:firstyear=2001&license=viewergpl$
  * 
@@ -30,18 +30,18 @@
  * $/LicenseInfo$
  */
 
-#ifndef LL_LLPANELAUDIOPREFS_H
-#define LL_LLPANELAUDIOPREFS_H
+#ifndef LL_LLPREFSMEDIA_H
+#define LL_LLPREFSMEDIA_H
 
 #include "llpanel.h"
 
 class LLUICtrl;
 
-class LLPanelAudioPrefs : public LLPanel
+class LLPrefsMedia : public LLPanel
 {
 public:
-	LLPanelAudioPrefs();
-	/*virtual*/ ~LLPanelAudioPrefs() { };
+	LLPrefsMedia();
+	/*virtual*/ ~LLPrefsMedia() { };
 
 	void apply() { refreshValues(); }
 	void cancel();	// Cancel the changed values.
@@ -51,10 +51,13 @@ public:
 	static void* createVolumePanel(void* data);
 
 	static void onCommitCheckBoxMedia(LLUICtrl* ctrl, void* user_data);
+	static void onCommitCheckBoxAudio(LLUICtrl* ctrl, void* user_data);
 	static void onCommitCheckBoxFilter(LLUICtrl* ctrl, void* user_data);
 
 private:
 	void refreshValues();
+
+	bool	mRunningFMOD;
 
 	F32		mPreviousVolume;
 	F32		mPreviousMusicVolume;
@@ -67,6 +70,7 @@ private:
 	F32		mPreviousRolloff;
 
 	BOOL	mPreviousStreamingMusic;
+	BOOL	mPreviousNotifyStreamChanges;
 	BOOL	mPreviousStreamingVideo;
 	BOOL	mPreviousMediaEnableFilter;
 	BOOL	mPreviousMediaLookupIP;

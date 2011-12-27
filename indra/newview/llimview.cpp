@@ -605,7 +605,7 @@ void LLIMMgr::addMessage(const LLUUID& session_id,
 		from_name = SYSTEM_FROM;
 	}
 
-	// don't process muted IMs
+	// Don't process muted IMs
 	LLMuteList* ml = LLMuteList::getInstance();
 	if (ml && ml->isMuted(other_participant_id, LLMute::flagTextChat) &&
 		!ml->isLinden(from_name))
@@ -1637,6 +1637,21 @@ public:
 			{
 				is_this_agent = TRUE;
 			}
+
+			// Don't process muted IMs
+			if (!is_this_agent && ml && !ml->isLinden(name) &&
+				ml->isMuted(from_id, LLMute::flagTextChat))
+			{
+				// Muted agent
+				return;
+			}
+			else if (!session_id.isNull() &&
+					 ml && ml->isMuted(session_id, LLMute::flagTextChat))
+			{
+				// Muted group
+				return;
+			}
+
 			gIMMgr->addMessage(session_id, from_id, name, buffer,
 							   std::string((char*)&bin_bucket[0]),
 							   IM_SESSION_INVITE,
@@ -1649,7 +1664,7 @@ public:
 						 message.substr(message_offset);
 			LLFloaterChat::addChat(chat, TRUE, is_this_agent);
 
-			//K now we want to accept the invitation
+			// OK, now we want to accept the invitation
 			std::string url = gAgent.getRegion()->getCapability("ChatSessionRequest");
 			if (!url.empty())
 			{

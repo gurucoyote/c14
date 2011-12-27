@@ -1,6 +1,6 @@
 /** 
- * @file llpanelaudioprefs.cpp
- * @brief Audio preference implementation
+ * @file llprefsmedia.cpp
+ * @brief Media preference implementation
  *
  * $LicenseInfo:firstyear=2001&license=viewergpl$
  * 
@@ -33,9 +33,10 @@
 #include "llviewerprecompiledheaders.h"
 
 // file include
-#include "llpanelaudioprefs.h"
+#include "llprefsmedia.h"
 
 // linden library includes
+#include "llaudioengine.h"
 #include "llcheckboxctrl.h"
 #include "lluictrlfactory.h"
 
@@ -43,62 +44,67 @@
 #include "llpanelaudiovolume.h"
 #include "llviewercontrol.h"
 
-//
-// Static functions
-//
-
 //static
-void* LLPanelAudioPrefs::createVolumePanel(void* data)
+void* LLPrefsMedia::createVolumePanel(void* data)
 {
 	LLPanelAudioVolume* panel = new LLPanelAudioVolume();
 	return panel;
 }
 
-LLPanelAudioPrefs::LLPanelAudioPrefs()
+LLPrefsMedia::LLPrefsMedia()
 {
 	mFactoryMap["Volume Panel"]	= LLCallbackMap(createVolumePanel, NULL);
-	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_audio.xml", &getFactoryMap());
+	LLUICtrlFactory::getInstance()->buildPanel(this, "panel_preferences_media.xml", &getFactoryMap());
 }
 
-BOOL LLPanelAudioPrefs::postBuild()
+BOOL LLPrefsMedia::postBuild()
 {
+	childSetCommitCallback("streaming_music", onCommitCheckBoxAudio, this);
 	childSetCommitCallback("streaming_video", onCommitCheckBoxMedia, this);
 	childSetCommitCallback("media_enable_filter", onCommitCheckBoxFilter, this);
 
 	refreshValues(); // initialize member data from saved settings
 
-	// Disable sub-settings check box when needed
+	// Disable sub-settings check boxes when needed
+	mRunningFMOD = gAudiop && gAudiop->getDriverName(false) == "FMOD";
+	childSetEnabled("notify_stream_changes",
+					mRunningFMOD && mPreviousStreamingMusic);
+	if (!mRunningFMOD)
+	{
+		gSavedSettings.setBOOL("NotifyStreamChanges", FALSE);
+	}
+	childSetEnabled("auto_streaming_video", mPreviousStreamingVideo);
 	if (!mPreviousStreamingVideo)
 	{
 		gSavedSettings.setBOOL("ParcelMediaAutoPlayEnable", FALSE);
-		childDisable("auto_streaming_video");
 	}
 	childSetEnabled("media_lookup_ip", mPreviousMediaEnableFilter);
 
 	return TRUE;
 }
 
-void LLPanelAudioPrefs::refreshValues()
+void LLPrefsMedia::refreshValues()
 {
-	mPreviousVolume				= gSavedSettings.getF32("AudioLevelMaster");
-	mPreviousSFX				= gSavedSettings.getF32("AudioLevelSFX");
-	mPreviousUI					= gSavedSettings.getF32("AudioLevelUI");
-	mPreviousEnvironment		= gSavedSettings.getF32("AudioLevelAmbient");
-	mPreviousMusicVolume		= gSavedSettings.getF32("AudioLevelMusic");
-	mPreviousMediaVolume		= gSavedSettings.getF32("AudioLevelMedia");
-	mPreviousDoppler			= gSavedSettings.getF32("AudioLevelDoppler");
-	mPreviousRolloff			= gSavedSettings.getF32("AudioLevelRolloff");
+	mPreviousVolume					= gSavedSettings.getF32("AudioLevelMaster");
+	mPreviousSFX					= gSavedSettings.getF32("AudioLevelSFX");
+	mPreviousUI						= gSavedSettings.getF32("AudioLevelUI");
+	mPreviousEnvironment			= gSavedSettings.getF32("AudioLevelAmbient");
+	mPreviousMusicVolume			= gSavedSettings.getF32("AudioLevelMusic");
+	mPreviousMediaVolume			= gSavedSettings.getF32("AudioLevelMedia");
+	mPreviousDoppler				= gSavedSettings.getF32("AudioLevelDoppler");
+	mPreviousRolloff				= gSavedSettings.getF32("AudioLevelRolloff");
 
-	mPreviousStreamingMusic		= gSavedSettings.getBOOL("AudioStreamingMusic");
-	mPreviousStreamingVideo		= gSavedSettings.getBOOL("AudioStreamingVideo");
-	mPreviousMediaEnableFilter	= gSavedSettings.getBOOL("MediaEnableFilter");
-	mPreviousMediaLookupIP		= gSavedSettings.getBOOL("MediaLookupIP");
+	mPreviousStreamingMusic			= gSavedSettings.getBOOL("AudioStreamingMusic");
+	mPreviousNotifyStreamChanges	= gSavedSettings.getBOOL("NotifyStreamChanges");
+	mPreviousStreamingVideo			= gSavedSettings.getBOOL("AudioStreamingVideo");
+	mPreviousMediaEnableFilter		= gSavedSettings.getBOOL("MediaEnableFilter");
+	mPreviousMediaLookupIP			= gSavedSettings.getBOOL("MediaLookupIP");
 
-	mPreviousMuteAudio			= gSavedSettings.getBOOL("MuteAudio");
-	mPreviousMuteWhenMinimized	= gSavedSettings.getBOOL("MuteWhenMinimized");
+	mPreviousMuteAudio				= gSavedSettings.getBOOL("MuteAudio");
+	mPreviousMuteWhenMinimized		= gSavedSettings.getBOOL("MuteWhenMinimized");
 }
 
-void LLPanelAudioPrefs::cancel()
+void LLPrefsMedia::cancel()
 {
 	gSavedSettings.setF32("AudioLevelMaster",		mPreviousVolume);
 	gSavedSettings.setF32("AudioLevelUI",			mPreviousUI);
@@ -110,6 +116,7 @@ void LLPanelAudioPrefs::cancel()
 	gSavedSettings.setF32("AudioLevelRolloff",		mPreviousRolloff);
 
 	gSavedSettings.setBOOL("AudioStreamingMusic",	mPreviousStreamingMusic);
+	gSavedSettings.setBOOL("NotifyStreamChanges",	mPreviousNotifyStreamChanges);
 	gSavedSettings.setBOOL("AudioStreamingVideo",	mPreviousStreamingVideo);
 	gSavedSettings.setBOOL("MediaEnableFilter",		mPreviousMediaEnableFilter);
 	gSavedSettings.setBOOL("MediaLookupIP",			mPreviousMediaLookupIP);
@@ -119,9 +126,9 @@ void LLPanelAudioPrefs::cancel()
 }
 
 //static
-void LLPanelAudioPrefs::onCommitCheckBoxMedia(LLUICtrl* ctrl, void* user_data)
+void LLPrefsMedia::onCommitCheckBoxMedia(LLUICtrl* ctrl, void* user_data)
 {
-	LLPanelAudioPrefs* self = (LLPanelAudioPrefs*)user_data;
+	LLPrefsMedia* self = (LLPrefsMedia*)user_data;
 	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
 	if (!self || !check) return;
 
@@ -134,9 +141,20 @@ void LLPanelAudioPrefs::onCommitCheckBoxMedia(LLUICtrl* ctrl, void* user_data)
 }
 
 //static
-void LLPanelAudioPrefs::onCommitCheckBoxFilter(LLUICtrl* ctrl, void* user_data)
+void LLPrefsMedia::onCommitCheckBoxAudio(LLUICtrl* ctrl, void* user_data)
 {
-	LLPanelAudioPrefs* self = (LLPanelAudioPrefs*)user_data;
+	LLPrefsMedia* self = (LLPrefsMedia*)user_data;
+	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
+	if (!self || !check) return;
+
+	self->childSetEnabled("notify_stream_changes",
+						  self->mRunningFMOD && check->get());
+}
+
+//static
+void LLPrefsMedia::onCommitCheckBoxFilter(LLUICtrl* ctrl, void* user_data)
+{
+	LLPrefsMedia* self = (LLPrefsMedia*)user_data;
 	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
 	if (self && check)
 	{

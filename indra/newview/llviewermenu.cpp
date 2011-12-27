@@ -964,6 +964,12 @@ void init_client_menu(LLMenuGL* menu)
 									   &menu_toggle_control, NULL,
 									   &menu_check_control,
 									   (void*)"MainMemorySafetyCheck"));
+#if LL_LINUX || LL_WINDOWS
+	menu->append(new LLMenuItemCheckGL("Allow Swapping",
+									   &menu_toggle_control, NULL,
+									   &menu_check_control,
+									   (void*)"AllowSwapping"));
+#endif
 	menu->appendSeparator();
 
 	menu->append(new LLMenuItemToggleGL("Show Updates", &gShowObjectUpdates));
@@ -1465,10 +1471,10 @@ void init_debug_rendering_menu(LLMenuGL* menu)
 
 	item = new LLMenuItemCheckGL("Load Textures Progressively", menu_toggle_control, NULL, menu_check_control, (void*)"TextureProgressiveLoad");
 	menu->append(item);
-
+#if 0	// This setting is way too dangerous to expose it to anyone...
 	item = new LLMenuItemCheckGL("Full Res Textures", menu_toggle_control, NULL, menu_check_control, (void*)"TextureLoadFullRes");
 	menu->append(item);
-
+#endif
 	item = new LLMenuItemCheckGL("Boost Attachments Textures", menu_toggle_control, NULL, menu_check_control, (void*)"TextureBoostAttachments");
 	menu->append(item);
 

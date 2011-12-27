@@ -43,7 +43,6 @@
 #include "lltabcontainervertical.h"
 
 class LLMessageSystem;
-class LLPanelAudioPrefs;
 class LLPanelDisplay;
 class HBPanelGrids;
 class LLPanelLCD;
@@ -54,6 +53,7 @@ class HBPrefsCool;
 class LLPrefsGeneral;
 class LLPrefsIM;
 class LLPrefsInput;
+class LLPrefsMedia;
 class LLPrefsNotifications;
 class LLPrefsVoice;
 class LLScrollListCtrl;
@@ -79,11 +79,11 @@ public:
 
 private:
 	LLTabContainer			*mTabContainer;
-	LLPanelAudioPrefs		*mAudioPanel;
 	LLPanelDisplay	        *mDisplayPanel;
 	LLPanelLCD				*mLCDPanel;
 	LLPanelSkins			*mSkinsPanel;
 	LLPrefsGeneral	        *mPrefsGeneral;
+	LLPrefsMedia			*mAudioPanel;
 	LLPrefsNetwork	        *mPrefsNetwork;
 	LLPrefsChat				*mPrefsChat;
 	LLPrefsVoice			*mPrefsVoice;

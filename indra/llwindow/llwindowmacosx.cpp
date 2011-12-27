@@ -1165,8 +1165,6 @@ void LLWindowMacOSX::gatherInput()
 
 		}
 	}
-
-	updateCursor();
 }
 
 BOOL LLWindowMacOSX::getPosition(LLCoordScreen *position)
@@ -2779,29 +2777,29 @@ static void initPixmapCursor(int cursorid, int hotspotX, int hotspotY)
 	gCursors[cursorid] = createImageCursor(fullpath.c_str(), hotspotX, hotspotY);
 }
 
-void LLWindowMacOSX::updateCursor()
+void LLWindowMacOSX::setCursor(ECursorType cursor)
 {
 	OSStatus result = noErr;
 
-	if (mNextCursor == UI_CURSOR_ARROW && mBusyCount > 0)
+	if (cursor == UI_CURSOR_ARROW && mBusyCount > 0)
 	{
-		mNextCursor = UI_CURSOR_WORKING;
+		cursor = UI_CURSOR_WORKING;
 	}
-
-	if (mCurrentCursor == mNextCursor)
+	
+	if(mCurrentCursor == cursor)
 		return;
 
 	// RN: replace multi-drag cursors with single versions
-	if (mNextCursor == UI_CURSOR_ARROWDRAGMULTI)
+	if (cursor == UI_CURSOR_ARROWDRAGMULTI)
 	{
-		mNextCursor = UI_CURSOR_ARROWDRAG;
+		cursor = UI_CURSOR_ARROWDRAG;
 	}
-	else if (mNextCursor == UI_CURSOR_ARROWCOPYMULTI)
+	else if (cursor == UI_CURSOR_ARROWCOPYMULTI)
 	{
-		mNextCursor = UI_CURSOR_ARROWCOPY;
+		cursor = UI_CURSOR_ARROWCOPY;
 	}
 
-	switch (mNextCursor)
+	switch (cursor)
 	{
 	default:
 	case UI_CURSOR_ARROW:
@@ -2853,9 +2851,8 @@ void LLWindowMacOSX::updateCursor()
 	case UI_CURSOR_TOOLPLAY:
 	case UI_CURSOR_TOOLPAUSE:
 	case UI_CURSOR_TOOLMEDIAOPEN:
-		result = setImageCursor(gCursors[mNextCursor]);
+		result = setImageCursor(gCursors[cursor]);
 		break;
-
 	}
 
 	if (result != noErr)
@@ -2863,7 +2860,7 @@ void LLWindowMacOSX::updateCursor()
 		InitCursor();
 	}
 
-	mCurrentCursor = mNextCursor;
+	mCurrentCursor = cursor;
 }
 
 ECursorType LLWindowMacOSX::getCursor() const

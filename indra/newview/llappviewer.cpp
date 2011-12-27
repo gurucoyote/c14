@@ -44,6 +44,7 @@
 #include "llpumpio.h"
 #include "llrender.h"
 #include "llsingleton.h"
+#include "llsys.h"
 #include "lltexteditor.h"
 #include "lluictrlfactory.h"
 #include "llvector4a.h"
@@ -478,6 +479,8 @@ static void settings_to_globals()
 	LLSelectMgr::sRenderLightRadius		= gSavedSettings.getBOOL("RenderLightRadius");
 	LLPipeline::sAutoMaskAlphaDeferred	= gSavedSettings.getBOOL("RenderAutoMaskAlphaDeferred");
 	LLPipeline::sAutoMaskAlphaNonDeferred = gSavedSettings.getBOOL("RenderAutoMaskAlphaNonDeferred");
+
+	LLMemoryInfo::setAllowSwapping(gSavedSettings.getBOOL("AllowSwapping"));
 
 	gFrameStats.setTrackStats(gSavedSettings.getBOOL("StatsSessionTrackFrameStats"));
 	gAgentPilot.mNumRuns		= gSavedSettings.getS32("StatsNumRuns");
@@ -1375,8 +1378,7 @@ bool LLAppViewer::cleanup()
 
 		// shut down the audio subsystem
 
-		bool want_longname = false;
-		if (gAudiop->getDriverName(want_longname) == "FMOD")
+		if (gAudiop->getDriverName(false) == "FMOD")
 		{
 			// This hack exists because fmod likes to occasionally
 			// crash or hang forever when shutting down, for no

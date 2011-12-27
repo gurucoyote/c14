@@ -69,7 +69,7 @@ public:
 	/*virtual*/ void showCursorFromMouseMove();
 	/*virtual*/ void hideCursorUntilMouseMove();
 	/*virtual*/ BOOL isCursorHidden();
-	/*virtual*/ void updateCursor();
+	/*virtual*/ void setCursor(ECursorType cursor);
 	/*virtual*/ ECursorType getCursor() const;
 	/*virtual*/ void captureMouse();
 	/*virtual*/ void releaseMouse();

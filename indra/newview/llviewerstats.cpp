@@ -37,6 +37,7 @@
 #if LL_LCD_COMPILE
 #include "lllcd.h"
 #endif
+#include "llsys.h"
 #include "lltimer.h"
 #include "message.h"
 
@@ -590,6 +591,8 @@ void update_statistics(U32 frame_count)
 #else
 	viewer_stats->setStat(LLViewerStats::ST_LOGITECH_LCD, false);
 #endif
+
+	viewer_stats->mMemoryUsageStat.addValue(gMemoryUsage);
 }
 
 class ViewerStatsResponder : public LLHTTPClient::Responder

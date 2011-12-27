@@ -122,9 +122,14 @@ public:
 	U32 getPhysicalMemoryClamped() const; ///< Memory size in clamped bytes
 
 	//get the available memory infomation in KiloBytes.
+	static void getMaxMemoryKB(U32& max_physical_mem_kb, U32& max_virtual_mem_kb);
 	static void getAvailableMemoryKB(U32& avail_physical_mem_kb, U32& avail_virtual_mem_kb);
-};
 
+	static void setAllowSwapping(BOOL allow) { sAllowSwapping = allow; }
+
+private:
+	static BOOL sAllowSwapping;
+};
 
 LL_COMMON_API std::ostream& operator<<(std::ostream& s, const LLOSInfo& info);
 LL_COMMON_API std::ostream& operator<<(std::ostream& s, const LLCPUInfo& info);
@@ -136,5 +141,6 @@ BOOL LL_COMMON_API gunzip_file(const std::string& srcfile, const std::string& ds
 BOOL LL_COMMON_API gzip_file(const std::string& srcfile, const std::string& dstfile);
 
 extern LL_COMMON_API LLCPUInfo gSysCPU;
+extern LL_COMMON_API F32 gMemoryUsage;
 
 #endif // LL_LLSYS_H

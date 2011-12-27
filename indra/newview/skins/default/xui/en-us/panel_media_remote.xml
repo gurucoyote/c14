@@ -1,7 +1,8 @@
 <panel bg_visible="false" border="false" border_visible="false" bottom="-34"
      enabled="true" follows="left|top" hidden="false" left="571"
      mouse_opaque="true" name="media_remote" >
-	<icon name="media_icon" left="4" bottom="-19" width="16" height="16" image_name="media_icon.tga"/>
+	<icon name="media_icon" left="4" bottom="-19" width="16" height="16" image_name="media_icon.tga"
+	 tool_tip="Media stream" mouse_opaque="true" />
 	<button bottom="-20" enabled="true" follows="left|top" font="SansSerif" halign="center"
 	     height="17" hidden="false" image_selected="button_anim_play_selected.tga"
 	     image_unselected="button_anim_play.tga" label="" label_selected=""
@@ -21,13 +22,4 @@
 	     image_unselected="button_anim_stop.tga" label="" label_selected=""
 	     left_delta="17" mouse_opaque="true" name="media_stop" scale_image="true"
 	     tool_tip="Stop media" width="17" />
-	<string name="play_label">
-		Play media
-	</string>
-	<string name="stop_label">
-		Stop media
-	</string>
-	<string name="pause_label">
-		Pause media
-	</string>
 </panel>

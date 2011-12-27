@@ -5950,9 +5950,9 @@
     <key>TextureLoadFullRes</key>
     <map>
       <key>Comment</key>
-      <string>If TRUE, always load textures at full resolution (discard = 0)</string>
+      <string>If TRUE, load ALL textures at FULL resolution. DANGEROUS: causes out of memory crashes !</string>
       <key>Persist</key>
-      <integer>1</integer>
+      <integer>0</integer>
       <key>Type</key>
       <string>Boolean</string>
       <key>Value</key>
@@ -6265,6 +6265,28 @@
       <string>Boolean</string>
       <key>Value</key>
       <integer>0</integer>
+    </map>
+    <key>MultiReattachMinDelay</key>
+    <map>
+      <key>Comment</key>
+      <string>Minimum delay (in seconds) after rezzing before the viewer attempts to reattach multiple attachments</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>10.0</real>
+    </map>
+    <key>MultiReattachMaxDelay</key>
+    <map>
+      <key>Comment</key>
+      <string>Maximum delay (in seconds) after rezzing before the viewer gives up to reattach missing attachments</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>30.0</real>
     </map>
     <key>LCDDestination</key>
     <map>
@@ -6985,6 +7007,17 @@
         <integer>100</integer>
       </array>
     </map>
+    <key>NotifyStreamChanges</key>
+    <map>
+      <key>Comment</key>
+      <string>Whether or not to notify when audio stream changes (i.e. when a new title is played)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
     <key>MediaOnAPrimUI</key>
     <map>
       <key>Comment</key>
@@ -7010,13 +7043,24 @@
     <key>MainMemorySafetyMargin</key>
     <map>
       <key>Comment</key>
-      <string>Safety margin of main virtual memory to let free in mega-bytes</string>
+      <string>Safety margin of main virtual memory to let free in mega-bytes (minimum is 48Mb, which is very low and unsafe...)</string>
       <key>Persist</key>
       <integer>1</integer>
       <key>Type</key>
       <string>U32</string>
       <key>Value</key>
-      <real>200</real>
+      <real>150</real>
+    </map>
+    <key>SafetyMargin1stStepRatio</key>
+    <map>
+      <key>Comment</key>
+      <string>Multiplier applied to the safety margin to determine when the first memory reduction step is taken (minimum is 2.0)</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>2.5</real>
     </map>
     <key>MainMemorySafetyCheck</key>
     <map>
@@ -7028,6 +7072,17 @@
       <string>Boolean</string>
       <key>Value</key>
       <integer>1</integer>
+    </map>
+    <key>AllowSwapping</key>
+    <map>
+      <key>Comment</key>
+      <string>Whether or not to allow the viewer process to swap when running out of physical memory</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
     </map>
     <key>MenuAccessKeyTime</key>
     <map>

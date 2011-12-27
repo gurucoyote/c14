@@ -189,7 +189,7 @@ LLSocket::ptr_t LLSocket::create(EType type, U16 port)
 LLSocket::ptr_t LLSocket::create(apr_status_t& status, LLSocket::ptr_t& listen_socket)
 {
 	LLMemType m1(LLMemType::MTYPE_IO_TCP);
-	if (!listen_socket->getSocket())
+	if (!listen_socket || !listen_socket->getSocket())
 	{
 		status = APR_ENOSOCKET;
 		return LLSocket::ptr_t();
@@ -208,20 +208,14 @@ LLSocket::ptr_t LLSocket::create(apr_status_t& status, LLSocket::ptr_t& listen_s
 	return rv;
 }
 
-
 bool LLSocket::blockingConnect(const LLHost& host)
 {
 	if (!mSocket) return false;
 	apr_sockaddr_t* sa = NULL;
 	std::string ip_address;
 	ip_address = host.getIPString();
-	if (ll_apr_warn_status(apr_sockaddr_info_get(
-		&sa,
-		ip_address.c_str(),
-		APR_UNSPEC,
-		host.getPort(),
-		0,
-		mPool())))
+	if (ll_apr_warn_status(apr_sockaddr_info_get(&sa, ip_address.c_str(),
+						   APR_UNSPEC, host.getPort(), 0, mPool())))
 	{
 		return false;
 	}
@@ -279,8 +273,8 @@ void LLSocket::setNonBlocking()
 /// LLIOSocketReader
 ///
 
-LLIOSocketReader::LLIOSocketReader(LLSocket::ptr_t socket) :
-	mSource(socket),
+LLIOSocketReader::LLIOSocketReader(LLSocket::ptr_t socket)
+:	mSource(socket),
 	mInitialized(false)
 {
 	LLMemType m1(LLMemType::MTYPE_IO_TCP);
@@ -293,12 +287,11 @@ LLIOSocketReader::~LLIOSocketReader()
 }
 
 // virtual
-LLIOPipe::EStatus LLIOSocketReader::process_impl(
-	const LLChannelDescriptors& channels,
-	buffer_ptr_t& buffer,
-	bool& eos,
-	LLSD& context,
-	LLPumpIO* pump)
+LLIOPipe::EStatus LLIOSocketReader::process_impl(const LLChannelDescriptors& channels,
+												 buffer_ptr_t& buffer,
+												 bool& eos,
+												 LLSD& context,
+												 LLPumpIO* pump)
 {
 	//LLFastTimer t(LLFastTimer::FTM_PROCESS_SOCKET_READER);
 	PUMP_DEBUG;
@@ -379,8 +372,8 @@ LLIOPipe::EStatus LLIOSocketReader::process_impl(
 /// LLIOSocketWriter
 ///
 
-LLIOSocketWriter::LLIOSocketWriter(LLSocket::ptr_t socket) :
-	mDestination(socket),
+LLIOSocketWriter::LLIOSocketWriter(LLSocket::ptr_t socket)
+:	mDestination(socket),
 	mLastWritten(NULL),
 	mInitialized(false)
 {
@@ -394,12 +387,11 @@ LLIOSocketWriter::~LLIOSocketWriter()
 }
 
 // virtual
-LLIOPipe::EStatus LLIOSocketWriter::process_impl(
-	const LLChannelDescriptors& channels,
-	buffer_ptr_t& buffer,
-	bool& eos,
-	LLSD& context,
-	LLPumpIO* pump)
+LLIOPipe::EStatus LLIOSocketWriter::process_impl(const LLChannelDescriptors& channels,
+												 buffer_ptr_t& buffer,
+												 bool& eos,
+												 LLSD& context,
+												 LLPumpIO* pump)
 {
 	//LLFastTimer t(LLFastTimer::FTM_PROCESS_SOCKET_WRITER);
 	PUMP_DEBUG;
@@ -509,9 +501,10 @@ LLIOPipe::EStatus LLIOSocketWriter::process_impl(
 		{
 			done = true;
 		}
-
 	}
+
 	PUMP_DEBUG;
+
 	if (done && eos)
 	{
 		return STATUS_DONE;
@@ -525,11 +518,11 @@ LLIOPipe::EStatus LLIOSocketWriter::process_impl(
 ///
 
 LLIOServerSocket::LLIOServerSocket(LLIOServerSocket::socket_t listener,
-								   factory_t factory) :
-								   mListenSocket(listener),
-								   mReactor(factory),
-								   mInitialized(false),
-								   mResponseTimeout(DEFAULT_CHAIN_EXPIRY_SECS)
+								   factory_t factory)
+:	mListenSocket(listener),
+	mReactor(factory),
+	mInitialized(false),
+	mResponseTimeout(DEFAULT_CHAIN_EXPIRY_SECS)
 {
 	LLMemType m1(LLMemType::MTYPE_IO_TCP);
 }
@@ -546,12 +539,11 @@ void LLIOServerSocket::setResponseTimeout(F32 timeout_secs)
 }
 
 // virtual
-LLIOPipe::EStatus LLIOServerSocket::process_impl(
-	const LLChannelDescriptors& channels,
-	buffer_ptr_t& buffer,
-	bool& eos,
-	LLSD& context,
-	LLPumpIO* pump)
+LLIOPipe::EStatus LLIOServerSocket::process_impl(const LLChannelDescriptors& channels,
+												 buffer_ptr_t& buffer,
+												 bool& eos,
+												 LLSD& context,
+												 LLPumpIO* pump)
 {
 	PUMP_DEBUG;
 	LLMemType m1(LLMemType::MTYPE_IO_TCP);

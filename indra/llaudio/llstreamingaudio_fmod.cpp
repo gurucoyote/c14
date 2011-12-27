@@ -40,11 +40,7 @@
 
 #include "llmath.h"
 
-#include "fmod.h"
-#include "fmod_errors.h"
-
 #include "llstreamingaudio_fmod.h"
-
 
 class LLAudioStreamManagerFMOD
 {
@@ -54,9 +50,12 @@ public:
 	bool stopStream(); // Returns true if the stream was successfully stopped.
 	bool ready();
 
-	const std::string& getURL() 	{ return mInternetStreamURL; }
+	const std::string& getURL()	{ return mInternetStreamURL; }
 
 	int getOpenState();
+
+	FSOUND_STREAM* getStream()	{ return mInternetStream; }
+
 protected:
 	FSOUND_STREAM* mInternetStream;
 	bool mReady;
@@ -64,15 +63,14 @@ protected:
 	std::string mInternetStreamURL;
 };
 
-
-
 //---------------------------------------------------------------------------
 // Internet Streaming
 //---------------------------------------------------------------------------
-LLStreamingAudio_FMOD::LLStreamingAudio_FMOD() :
-	mCurrentInternetStreamp(NULL),
+LLStreamingAudio_FMOD::LLStreamingAudio_FMOD()
+:	mCurrentInternetStreamp(NULL),
 	mFMODInternetStreamChannel(-1),
-	mGain(1.0f)
+	mGain(1.0f),
+	mNewMetaData(false)
 {
 	// Number of milliseconds of audio to buffer for the audio card.
 	// Must be larger than the usual Second Life frame stutter time.
@@ -87,12 +85,33 @@ LLStreamingAudio_FMOD::LLStreamingAudio_FMOD() :
 	//FSOUND_Stream_Net_SetBufferProperties(20000, 40, 80);
 }
 
-
 LLStreamingAudio_FMOD::~LLStreamingAudio_FMOD()
 {
 	// nothing interesting/safe to do.
 }
 
+//static
+signed char F_CALLBACKAPI LLStreamingAudio_FMOD::metaDataCallback(char *name,
+																  char *value,
+																  void *userdata)
+{
+	LLStreamingAudio_FMOD* self = (LLStreamingAudio_FMOD*)userdata;
+	if (!self) return false;
+	
+	std::string token(name);
+	if (token == "TITLE" || token == "TIT2" || token == "Title")
+	{
+		self->mTitle.assign(value);
+		self->mNewMetaData = true;
+	}
+	else if (token == "ARTIST" || token == "TPE1" || token == "WM/AlbumTitle")
+	{
+		self->mArtist.assign(value);
+		self->mNewMetaData = true;
+	}
+
+	return true;
+}
 
 void LLStreamingAudio_FMOD::start(const std::string& url)
 {
@@ -117,7 +136,6 @@ void LLStreamingAudio_FMOD::start(const std::string& url)
 		mURL.clear();
 	}
 }
-
 
 void LLStreamingAudio_FMOD::update()
 {
@@ -160,41 +178,55 @@ void LLStreamingAudio_FMOD::update()
 				// Reset volume to previously set volume
 				setGain(getGain());
 				FSOUND_SetPaused(mFMODInternetStreamChannel, false);
+				if (mCurrentInternetStreamp->getStream())
+				{
+					FSOUND_Stream_Net_SetMetadataCallback(mCurrentInternetStreamp->getStream(),
+														  &LLStreamingAudio_FMOD::metaDataCallback,
+														  this);
+				}
 			}
 		}
 	}
-		
-	switch(open_state)
-	{
-	default:
-	case 0:
-		// success
-		break;
-	case -1:
-		// stream handle is invalid
-		llwarns << "InternetStream - invalid handle" << llendl;
-		stop();
-		return;
-	case -2:
-		// opening
-		break;
-	case -3:
-		// failed to open, file not found, perhaps
-		llwarns << "InternetSteam - failed to open" << llendl;
-		stop();
-		return;
-	case -4:
-		// connecting
-		break;
-	case -5:
-		// buffering
-		break;
-	}
 
+	switch (open_state)
+	{
+		default:
+		case 0:
+			// success
+			break;
+		case -1:
+			// stream handle is invalid
+			llwarns << "InternetStream - invalid handle" << llendl;
+			stop();
+			return;
+		case -2:
+			// opening
+			break;
+		case -3:
+			// failed to open, file not found, perhaps
+			llwarns << "InternetSteam - failed to open" << llendl;
+			stop();
+			return;
+		case -4:
+			// connecting
+			break;
+		case -5:
+			// buffering
+			break;
+	}
 }
 
 void LLStreamingAudio_FMOD::stop()
 {
+	if (mCurrentInternetStreamp && mCurrentInternetStreamp->getStream())
+	{
+		FSOUND_Stream_Net_SetMetadataCallback(mCurrentInternetStreamp->getStream(),
+											  NULL, NULL);
+	}
+	mNewMetaData = false;
+	mArtist.clear();
+	mTitle.clear();
+
 	if (mFMODInternetStreamChannel != -1)
 	{
 		FSOUND_SetPaused(mFMODInternetStreamChannel, true);
@@ -204,14 +236,16 @@ void LLStreamingAudio_FMOD::stop()
 
 	if (mCurrentInternetStreamp)
 	{
-		llinfos << "Stopping internet stream: " << mCurrentInternetStreamp->getURL() << llendl;
+		llinfos << "Stopping internet stream: "
+				<< mCurrentInternetStreamp->getURL() << llendl;
 		if (mCurrentInternetStreamp->stopStream())
 		{
 			delete mCurrentInternetStreamp;
 		}
 		else
 		{
-			llwarns << "Pushing stream to dead list: " << mCurrentInternetStreamp->getURL() << llendl;
+			llwarns << "Pushing stream to dead list: "
+					<< mCurrentInternetStreamp->getURL() << llendl;
 			mDeadStreams.push_back(mCurrentInternetStreamp);
 		}
 		mCurrentInternetStreamp = NULL;
@@ -239,7 +273,6 @@ void LLStreamingAudio_FMOD::pause(int pauseopt)
 	}
 }
 
-
 // A stream is "playing" if it has been requested to start.  That
 // doesn't necessarily mean audio is coming out of the speakers.
 int LLStreamingAudio_FMOD::isPlaying()
@@ -258,18 +291,15 @@ int LLStreamingAudio_FMOD::isPlaying()
 	}
 }
 
-
 F32 LLStreamingAudio_FMOD::getGain()
 {
 	return mGain;
 }
 
-
 std::string LLStreamingAudio_FMOD::getURL()
 {
 	return mURL;
 }
-
 
 void LLStreamingAudio_FMOD::setGain(F32 vol)
 {
@@ -283,12 +313,11 @@ void LLStreamingAudio_FMOD::setGain(F32 vol)
 	}
 }
 
-
 ///////////////////////////////////////////////////////
 // manager of possibly-multiple internet audio streams
 
-LLAudioStreamManagerFMOD::LLAudioStreamManagerFMOD(const std::string& url) :
-	mInternetStream(NULL),
+LLAudioStreamManagerFMOD::LLAudioStreamManagerFMOD(const std::string& url)
+:	mInternetStream(NULL),
 	mReady(false)
 {
 	mInternetStreamURL = url;
