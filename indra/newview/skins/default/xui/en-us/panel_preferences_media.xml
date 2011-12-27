@@ -21,10 +21,15 @@
 	 radio_style="false" enabled="true" mouse_opaque="true"
 	 label="Play Streaming Music When Available (uses more bandwidth)" font="SansSerifSmall"
 	 bottom_delta="0" left="142" height="16" width="350" follows="left|top" />
+	<check_box name="notify_stream_changes" control_name="NotifyStreamChanges"
+	 radio_style="false" enabled="true" mouse_opaque="true"
+	 label="Notify about streaming music title changes" font="SansSerifSmall"
+	 tool_tip="When using FMOD as the audio driver, you may check this box to get notified about parcel music title changes. Note that the currently playing music title is also reported when available in the tool tip of the music controls icon, on the bottom right of the viewer window."
+	 bottom_delta="-20" left_delta="20" height="16" width="330" follows="left|top" />
 	<check_box name="streaming_video" control_name="AudioStreamingVideo"
 	 radio_style="false" enabled="true" mouse_opaque="true"
 	 label="Play Streaming Media When Available (uses more bandwidth)" font="SansSerifSmall"
-	 bottom_delta="-20" left_delta="0" height="16" width="350" follows="left|top" />
+	 bottom_delta="-24" left="142" height="16" width="350" follows="left|top" />
 	<check_box name="auto_streaming_video" control_name="ParcelMediaAutoPlayEnable"
 	 radio_style="false" enabled="true" mouse_opaque="true"
 	 label="Automatically play media" font="SansSerifSmall"
@@ -33,7 +38,7 @@
 	 radio_style="false" enabled="true" mouse_opaque="true"
 	 label="Parcel media and audio stream filtering" font="SansSerifSmall"
 	 tool_tip="This setting entitles you to allow/deny/whitelist/blacklist the servers for parcel audio and media streams. When the viewer connects to a media or streaming server, your IP is exposed and some people might use it to try and track you and make assumptions about what your alt avatars could be."
-	 bottom_delta="-20" left="142" height="16" width="350" follows="left|top" />
+	 bottom_delta="-24" left="142" height="16" width="350" follows="left|top" />
 	<check_box name="media_lookup_ip" control_name="MediaLookupIP"
 	 radio_style="false" enabled="true" mouse_opaque="true"
 	 label="Lookup IP address for filtered domains" font="SansSerifSmall"

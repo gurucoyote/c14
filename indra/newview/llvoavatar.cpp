@@ -2671,8 +2671,11 @@ BOOL LLVOAvatar::idleUpdate(LLAgent &agent, LLWorld &world, const F64 &time)
 // Check attachments
 void LLVOAvatar::checkAttachments()
 {
-	const F32 LAZY_ATTACH_DELAY = 10.0f;
+	static bool initialized = false;
 	static bool first_run = true;
+	static F32 min_delay = 5.0f;
+	static F32 max_delay = 30.0f;
+	static F32 delay_delta = 0.0f;
 
 	if (!mIsSelf)
 	{
@@ -2683,20 +2686,40 @@ void LLVOAvatar::checkAttachments()
 	{
 		if (first_run)
 		{
-			if (gAttachmentsTimer.getElapsedTimeF32() > LAZY_ATTACH_DELAY)
+			if (!initialized)
+			{
+				min_delay = gSavedSettings.getF32("MultiReattachMinDelay");
+				if (min_delay < 5.0f)
+				{
+					min_delay = 5.0f;
+				}
+				max_delay = gSavedSettings.getF32("MultiReattachMaxDelay");
+				if (max_delay < min_delay + 5.0f)
+				{
+					max_delay = min_delay + 5.0f;
+				}
+				initialized = true;
+			}
+			if (gAttachmentsTimer.getElapsedTimeF32() < min_delay)
+			{
+				delay_delta = 0.0f;	// must be rest each time the timer is reset
+			}
+			if (gAttachmentsTimer.getElapsedTimeF32() > min_delay + delay_delta)
 			{
 				first_run = false;
 				LLVOAvatar* avatarp = gAgent.getAvatarObject();
 				if (!avatarp) return;
 				std::set<LLUUID> worn;
-				for (LLVOAvatar::attachment_map_t::iterator iter = avatarp->mAttachmentPoints.begin(); 
+				LLVOAvatar::attachment_map_t::iterator iter;
+				for (iter = avatarp->mAttachmentPoints.begin();
 					 iter != avatarp->mAttachmentPoints.end(); )
 				{
 					LLVOAvatar::attachment_map_t::iterator curiter = iter++;
 					LLViewerJointAttachment* attachment = curiter->second;
-					for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();
+					LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter;
+					for (attachment_iter = attachment->mAttachedObjects.begin();
 						 attachment_iter != attachment->mAttachedObjects.end();
-						 ++attachment_iter)
+						 attachment_iter++)
 					{
 						LLViewerObject *attached_object = (*attachment_iter);
 						if (attached_object)
@@ -2720,7 +2743,7 @@ void LLVOAvatar::checkAttachments()
 						LLSD array = iter->second;
 						if (array.isArray())
 						{
-							for (int i = 0; i < array.size(); i++)
+							for (S32 i = 0; i < array.size(); i++)
 							{
 								LLSD map = array[i];
 								if (map.has("inv_item_id"))
@@ -2731,17 +2754,34 @@ void LLVOAvatar::checkAttachments()
 										LLViewerInventoryItem* item = gInventory.getItem(item_id);
 										if (item)
 										{
+											LL_DEBUGS("AutoReattach") << "Reattaching: "
+																	  << item_id.asString()
+																	  << LL_ENDL;
 											rez_attachment(item, NULL, false);
 										}
 										else
 										{
-											llwarns << item_id.asString() << " not found in inventory, could not reattach." << llendl;
+											if (gAttachmentsTimer.getElapsedTimeF32() < max_delay)
+											{
+												first_run = true;
+												delay_delta = gAttachmentsTimer.getElapsedTimeF32() - min_delay + 1.0f;
+												LL_DEBUGS("AutoReattach") << item_id.asString()
+																		  << " not yet found in inventory. Will retry in one second..."
+																		  << LL_ENDL;
+											}
+											else
+											{
+												llwarns << item_id.asString()
+														<< " not found in inventory, could not reattach."
+														<< llendl;
+											}
 										}
 									}
 								}
 								else
 								{
-									llwarns << "Malformed attachments list file (no \"inv_item_id\" key). Aborting." << llendl;
+									llwarns << "Malformed attachments list file (no \"inv_item_id\" key). Aborting."
+											<< llendl;
 									llsd_xml.close();
 									return;
 								}
@@ -2749,12 +2789,24 @@ void LLVOAvatar::checkAttachments()
 						}
 						else
 						{
-							llwarns << "Malformed attachments list file (not an array). Aborting." << llendl;
+							llwarns << "Malformed attachments list file (not an array). Aborting."
+									<< llendl;
 							llsd_xml.close();
 							return;
 						}
 					}
 					llsd_xml.close();
+
+					if (!first_run)
+					{
+						// Force a saving of the attachments list on next run
+						gAttachmentsListDirty = true;
+
+						// Notify the Make New Outfit floater, if opened
+						LLFloaterMakeNewOutfit::setDirty();
+
+						llinfos << "Auto re-attachment process completed." << llendl;
+					}
 				}
 			}
 		}
@@ -2765,21 +2817,35 @@ void LLVOAvatar::checkAttachments()
 			LLSD array = list.emptyArray();
 			LLVOAvatar* avatarp = gAgent.getAvatarObject();
 			if (!avatarp) return;
-			for (LLVOAvatar::attachment_map_t::iterator iter = avatarp->mAttachmentPoints.begin(); 
+			LLVOAvatar::attachment_map_t::iterator iter;
+			for (iter = avatarp->mAttachmentPoints.begin();
 				 iter != avatarp->mAttachmentPoints.end(); )
 			{
 				LLVOAvatar::attachment_map_t::iterator curiter = iter++;
 				LLViewerJointAttachment* attachment = curiter->second;
-				for (LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter = attachment->mAttachedObjects.begin();
+				LLViewerJointAttachment::attachedobjs_vec_t::iterator attachment_iter;
+				for (attachment_iter = attachment->mAttachedObjects.begin();
 					 attachment_iter != attachment->mAttachedObjects.end();
 					 ++attachment_iter)
 				{
 					LLViewerObject *attached_object = (*attachment_iter);
 					if (attached_object)
 					{
-						LLSD entry = list.emptyMap();
-						entry.insert("inv_item_id", attached_object->getAttachmentItemID());
-						array.append(entry);
+						LLUUID item_id = attached_object->getAttachmentItemID();
+						LLViewerInventoryItem* item = gInventory.getItem(item_id);
+						if (item)
+						{
+							LLSD entry = list.emptyMap();
+							entry.insert("inv_item_id", item_id);
+							array.append(entry);
+						}
+						else
+						{
+							// This may happen (e.g. for Linden Realms and their HUD)
+							LL_DEBUGS("AutoReattach") << item_id.asString()
+													  << " not found in inventory. Not saving in attachments list."
+													  << LL_ENDL;
+						}
 					}
 				}
 			}
@@ -2790,7 +2856,8 @@ void LLVOAvatar::checkAttachments()
 			llofstream list_file(filename);
 			LLSDSerialize::toPrettyXML(list, list_file);
 			list_file.close();
-			//llinfos << "Worn attachments list saved to: " << filename << llendl;
+			LL_DEBUGS("AutoReattach") << "Worn attachments list saved to: "
+									  << filename << LL_ENDL;
 
 			// Notify the Make New Outfit floater, if opened
 			LLFloaterMakeNewOutfit::setDirty();

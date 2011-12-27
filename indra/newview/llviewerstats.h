@@ -105,8 +105,9 @@ public:
 	LLStat mSimMemRSSStat;
 	*/
 
-
 	LLStat mSimPingStat;
+
+	LLStat mMemoryUsageStat;
 
 	void resetStats();
 public:
@@ -173,7 +174,7 @@ public:
 		ST_TEX_BAKES = 56,
 		ST_TEX_REBAKES = 57,
 		ST_LOGITECH_LCD = 58,
-		
+
 		ST_COUNT = 59
 	};
 
@@ -187,7 +188,7 @@ public:
 	F64 incStat(EStatType type, F64 value = 1.f);	// add value to the stat
 
 	void updateFrameStats(const F64 time_diff);
-	
+
 	void addToMessage(LLSD &body) const;
 
 private:
@@ -205,7 +206,7 @@ void output_statistics(void*);
 void update_statistics(U32 frame_count);
 void send_stats();
 
-extern std::map<S32,LLFrameTimer> gDebugTimers;
-extern std::map<S32,std::string> gDebugTimerLabel;
+extern std::map<S32, LLFrameTimer> gDebugTimers;
+extern std::map<S32, std::string> gDebugTimerLabel;
 
 #endif // LL_LLVIEWERSTATS_H

@@ -37,15 +37,18 @@
 #include "llaudioengine.h"
 #include "llbutton.h"
 #include "lliconctrl.h"
+#include "llparcel.h"
+#include "llstreamingaudio.h"
+#include "lluictrlfactory.h"
+
 #include "llmimetypes.h"
 #include "lloverlaybar.h"
+#include "llpanelaudiovolume.h"
+#include "llviewercontrol.h"
 #include "llviewermedia.h"
 #include "llviewerparcelmedia.h"
 #include "llviewerparcelmgr.h"
-#include "lluictrlfactory.h"
-#include "llpanelaudiovolume.h"
-#include "llparcel.h"
-#include "llviewercontrol.h"
+#include "lltrans.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -59,11 +62,11 @@ LLMediaRemoteCtrl::LLMediaRemoteCtrl(const std::string& name,
 									 const ERemoteType type)
 :	LLPanel(name, rect, FALSE),
 	mType(type),
+	mIcon(NULL),
 	mPlay(NULL),
 	mPause(NULL),
 	mStop(NULL),
-	mIcon(NULL),
-	mPlayLabel("")
+	mIconToolTip("")
 {
 	setIsChrome(TRUE);
 	setFocusRoot(TRUE);
@@ -75,6 +78,9 @@ BOOL LLMediaRemoteCtrl::postBuild()
 {
 	if (mType == REMOTE_MEDIA)
 	{
+		mIcon = getChild<LLIconCtrl>("media_icon");
+		mIconToolTip = mIcon->getToolTip();
+
 		mPlay = getChild<LLButton>("media_play");
 		mPlay->setClickedCallback(LLOverlayBar::mediaPlay, this);
 
@@ -83,13 +89,12 @@ BOOL LLMediaRemoteCtrl::postBuild()
 
 		mStop = getChild<LLButton>("media_stop");
 		mStop->setClickedCallback(LLOverlayBar::mediaStop, this);
-
-		mIcon = getChild<LLIconCtrl>("media_icon");
-
-		mPlayLabel = getString("play_label");
 	}
 	else if (mType == REMOTE_MUSIC)
 	{
+		mIcon = getChild<LLIconCtrl>("music_icon");
+		mIconToolTip = mIcon->getToolTip();
+
 		mPlay = getChild<LLButton>("music_play");
 		mPlay->setClickedCallback(LLOverlayBar::musicPlay, this);
 
@@ -98,8 +103,6 @@ BOOL LLMediaRemoteCtrl::postBuild()
 
 		mStop = getChild<LLButton>("music_stop");
 		mStop->setClickedCallback(LLOverlayBar::musicStop, this);
-
-		mPlayLabel = getString("play_label");
 	}
 	else if (mType == REMOTE_VOLUME)
 	{
@@ -167,20 +170,23 @@ void LLMediaRemoteCtrl::draw()
 		mPause->setVisible(media_show_pause);
 
 		const std::string media_icon_name = LLMIMETypes::findIcon(media_type);
-		if (mIcon && !media_icon_name.empty())
+		if (mIcon)
 		{
-			mIcon->setImage(media_icon_name);
+			if (!media_icon_name.empty())
+			{
+				mIcon->setImage(media_icon_name);
+			}
+			mIcon->setColor(media_icon_color);
+			if (media_url.empty())
+			{
+				media_url = mIconToolTip;
+			}
+			else
+			{
+				media_url = mIconToolTip + " (" + media_url + ")";
+			}
+			mIcon->setToolTip(media_url);
 		}
-		mIcon->setColor(media_icon_color);
-		if (media_url.empty())
-		{
-			media_url = mPlayLabel;
-		}
-		else
-		{
-			media_url = mPlayLabel + " (" + media_url + ")";
-		}
-		mPlay->setToolTip(media_url);
 	}
 	else if (mType == REMOTE_MUSIC)
 	{
@@ -217,16 +223,56 @@ void LLMediaRemoteCtrl::draw()
 		mPause->setEnabled(music_show_pause);
 		mPause->setVisible(music_show_pause);
 
-		childSetColor("music_icon", music_icon_color);
-		if (music_url.empty())
+		if (mIcon)
 		{
-			music_url = mPlayLabel;
+			mIcon->setColor(music_icon_color);
+
+			std::string tool_tip = mIconToolTip;
+			if (!music_url.empty())
+			{
+				tool_tip += " (" + music_url + ")";
+				if (mCachedURL != music_url)
+				{
+					mCachedURL = music_url;
+					mCachedMetaData.clear();
+				}
+			}
+			if (music_show_pause && gAudiop)
+			{
+				LLStreamingAudioInterface* stream = gAudiop->getStreamingAudioImpl();
+				if (stream)
+				{
+					if (stream->newMetaData())
+					{
+						mCachedMetaData.clear();
+						std::string temp = stream->getArtist();
+						if (!temp.empty())
+						{
+							mCachedMetaData += "\n" + getString("artist_string") + ": " + temp;
+						}
+						temp = stream->getTitle();
+						if (!temp.empty())
+						{
+							mCachedMetaData += "\n" + getString("title_string") + ": " + temp;
+						}
+						stream->gotMetaData();
+						static LLCachedControl<bool> notify_stream_changes(gSavedSettings, "NotifyStreamChanges");
+						if (notify_stream_changes && !mCachedMetaData.empty())
+						{
+							LLSD args;
+							args["STREAM_DATA"] = mCachedMetaData;
+							LLNotifications::instance().add("StreamChanged", args);
+						}
+					}
+				}
+				else
+				{
+					mCachedMetaData.clear();
+				}
+				tool_tip += mCachedMetaData;
+			}
+			mIcon->setToolTip(tool_tip);
 		}
-		else
-		{
-			music_url = mPlayLabel + " (" + music_url + ")";
-		}
-		mPlay->setToolTip(music_url);
 	}
 
 	LLPanel::draw();

@@ -1576,17 +1576,19 @@ void LLWindowWin32::initCursors()
 	}
 }
 
-void LLWindowWin32::updateCursor()
+
+
+void LLWindowWin32::setCursor(ECursorType cursor)
 {
-	if (mNextCursor == UI_CURSOR_ARROW && mBusyCount > 0)
+	if (cursor == UI_CURSOR_ARROW && mBusyCount > 0)
 	{
-		mNextCursor = UI_CURSOR_WORKING;
+		cursor = UI_CURSOR_WORKING;
 	}
 
-	if (mCurrentCursor != mNextCursor)
+	if( mCurrentCursor != cursor )
 	{
-		mCurrentCursor = mNextCursor;
-		SetCursor(mCursor[mNextCursor]);
+		mCurrentCursor = cursor;
+		SetCursor( mCursor[cursor] );
 	}
 }
 
@@ -1665,8 +1667,6 @@ void LLWindowWin32::gatherInput()
 	}
 
 	mInputProcessingPaused = FALSE;
-
-	updateCursor();
 
 	// clear this once we've processed all mouse messages that might have occurred after
 	// we slammed the mouse position

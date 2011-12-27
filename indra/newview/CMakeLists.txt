@@ -271,7 +271,6 @@ set(viewer_SOURCE_FILES
     llnetmap.cpp
     llnotify.cpp
     lloverlaybar.cpp
-    llpanelaudioprefs.cpp
     llpanelaudiovolume.cpp
     llpanelavatar.cpp
     llpanelclassified.cpp
@@ -322,6 +321,7 @@ set(viewer_SOURCE_FILES
     llprefsgeneral.cpp
     llprefsim.cpp
     llprefsinput.cpp
+    llprefsmedia.cpp
     llprefsnetwork.cpp
     llprefsnotifications.cpp
     llprefsvoice.cpp
@@ -689,7 +689,6 @@ set(viewer_HEADER_FILES
     llnetmap.h
     llnotify.h
     lloverlaybar.h
-    llpanelaudioprefs.h
     llpanelaudiovolume.h
     llpanelavatar.h
     llpanelclassified.h
@@ -741,6 +740,7 @@ set(viewer_HEADER_FILES
     llprefsgeneral.h
     llprefsim.h
     llprefsinput.h
+    llprefsmedia.h
     llprefsnetwork.h
     llprefsnotifications.h
     llprefsvoice.h

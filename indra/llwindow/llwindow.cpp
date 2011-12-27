@@ -268,7 +268,6 @@ LLWindow::LLWindow(BOOL fullscreen, U32 flags)
 	  mSupportedResolutions(NULL),
 	  mNumSupportedResolutions(0),
 	  mCurrentCursor(UI_CURSOR_ARROW),
-	  mNextCursor(UI_CURSOR_ARROW),
 	  mCursorHidden(FALSE),
 	  mBusyCount(0),
 	  mIsMouseClipping(FALSE),

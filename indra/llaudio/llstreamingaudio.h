@@ -51,6 +51,10 @@ class LLStreamingAudioInterface
 	virtual void setGain(F32 vol) = 0;
 	virtual F32 getGain() = 0;
 	virtual std::string getURL() = 0;
+	virtual bool newMetaData()		{ return false; }
+	virtual void gotMetaData()		{}
+	virtual std::string getArtist()	{ return ""; }
+	virtual std::string getTitle()	{ return ""; }
 };
 
 #endif // LL_STREAMINGAUDIO_H

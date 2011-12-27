@@ -36,13 +36,16 @@
 
 #include "stdtypes.h" // from llcommon
 
+#include "fmod.h"
+#include "fmod_errors.h"
+
 #include "llstreamingaudio.h"
 
 class LLAudioStreamManagerFMOD;
 
 class LLStreamingAudio_FMOD : public LLStreamingAudioInterface
 {
- public:
+public:
 	LLStreamingAudio_FMOD();
 	/*virtual*/ ~LLStreamingAudio_FMOD();
 
@@ -54,15 +57,26 @@ class LLStreamingAudio_FMOD : public LLStreamingAudioInterface
 	/*virtual*/ void setGain(F32 vol);
 	/*virtual*/ F32 getGain();
 	/*virtual*/ std::string getURL();
+	/*virtual*/ bool newMetaData()		{ return mNewMetaData; }
+	/*virtual*/ void gotMetaData()		{ mNewMetaData = false; }
+	/*virtual*/ std::string getArtist()	{ return mArtist; }
+	/*virtual*/ std::string getTitle()	{ return mTitle; }
 
 private:
+	static signed char F_CALLBACKAPI metaDataCallback(char *name,
+													  char *value,
+													  void *userdata);
+
 	LLAudioStreamManagerFMOD *mCurrentInternetStreamp;
 	int mFMODInternetStreamChannel;
 	std::list<LLAudioStreamManagerFMOD *> mDeadStreams;
 
 	std::string mURL;
 	F32 mGain;
-};
 
+	bool mNewMetaData;
+	std::string mArtist;
+	std::string mTitle;
+};
 
 #endif // LL_STREAMINGAUDIO_FMOD_H

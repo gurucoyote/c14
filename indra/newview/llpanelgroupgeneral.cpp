@@ -221,10 +221,11 @@ BOOL LLPanelGroupGeneral::postBuild()
 	{
 		LLMuteList* ml = LLMuteList::getInstance();
 		bool receive_chat = !(ml && ml->isMuted(mGroupID, "", LLMute::flagTextChat));
-		mCtrlReceiveChat->setCommitCallback(onCommitReceiveChat);
+		mCtrlReceiveChat->setCommitCallback(onCommitUserOnly);
 		mCtrlReceiveChat->setCallbackUserData(this);
 		mCtrlReceiveChat->set(receive_chat);
 		mCtrlReceiveChat->setEnabled(data.mID.notNull());
+		mCtrlReceiveChat->resetDirty();
 	}
 
 	mCtrlListGroup = getChild<LLCheckBoxCtrl>("list_groups_in_profile", TRUE, FALSE);
@@ -298,36 +299,6 @@ void LLPanelGroupGeneral::onCommitUserOnly(LLUICtrl* ctrl, void* data)
 }
 
 // static
-void LLPanelGroupGeneral::onCommitReceiveChat(LLUICtrl* ctrl, void* data)
-{
-	LLPanelGroupGeneral* self = (LLPanelGroupGeneral*)data;
-	LLCheckBoxCtrl* check = (LLCheckBoxCtrl*)ctrl;
-	if (self && check)
-	{
-		LLMuteList* ml = LLMuteList::getInstance();
-		LLGroupData data;
-		if (ml && gAgent.getGroupData(self->mGroupID, data))
-		{
-			LLMute mute(self->mGroupID, data.mName, LLMute::GROUP);
-			if (check->get())
-			{
-				if (ml->isMuted(self->mGroupID, "", LLMute::flagTextChat))
-				{
-					ml->remove(mute, LLMute::flagTextChat);
-				}
-			}
-			else
-			{
-				if (!ml->isMuted(self->mGroupID, "", LLMute::flagTextChat))
-				{
-					ml->add(mute, LLMute::flagTextChat);
-				}
-			}
-		}
-	}
-}
-
-// static
 void LLPanelGroupGeneral::onCommitEnrollment(LLUICtrl* ctrl, void* data)
 {
 	onCommitAny(ctrl, data);
@@ -340,8 +311,8 @@ void LLPanelGroupGeneral::onCommitEnrollment(LLUICtrl* ctrl, void* data)
 	}
 
 	// Make sure the agent can change enrollment info.
-	if (!gAgent.hasPowerInGroup(self->mGroupID, GP_MEMBER_OPTIONS)
-		|| !self->mAllowEdit)
+	if (!gAgent.hasPowerInGroup(self->mGroupID, GP_MEMBER_OPTIONS) ||
+		!self->mAllowEdit)
 	{
 		return;
 	}
@@ -484,7 +455,8 @@ void LLPanelGroupGeneral::draw()
 
 bool LLPanelGroupGeneral::apply(std::string& mesg)
 {
-	BOOL has_power_in_group = gAgent.hasPowerInGroup(mGroupID,GP_GROUP_CHANGE_IDENTITY);
+	BOOL has_power_in_group = gAgent.hasPowerInGroup(mGroupID,
+													 GP_GROUP_CHANGE_IDENTITY);
 
 	if (has_power_in_group || mGroupID.isNull())
 	{
@@ -598,12 +570,40 @@ bool LLPanelGroupGeneral::apply(std::string& mesg)
 	if (mCtrlReceiveNotices)
 	{
 		receive_notices = mCtrlReceiveNotices->get();
+		mCtrlReceiveNotices->resetDirty();
 	}
 	if (mCtrlListGroup)
 	{
 		list_in_profile = mCtrlListGroup->get();
+		mCtrlListGroup->resetDirty();
 	}
 	gAgent.setUserGroupFlags(mGroupID, receive_notices, list_in_profile);
+
+	if (mCtrlReceiveChat)
+	{
+		LLGroupData data;
+		LLMuteList* ml = LLMuteList::getInstance();
+		LLGroupMgrGroupData* gdatap = LLGroupMgr::getInstance()->getGroupData(mGroupID);
+		if (ml && gdatap)
+		{
+			LLMute mute(mGroupID, gdatap->mName, LLMute::GROUP);
+			if (mCtrlReceiveChat->get())
+			{
+				if (ml->isMuted(mGroupID, "", LLMute::flagTextChat))
+				{
+					ml->remove(mute, LLMute::flagTextChat);
+				}
+			}
+			else
+			{
+				if (!ml->isMuted(mGroupID, "", LLMute::flagTextChat))
+				{
+					ml->add(mute, LLMute::flagTextChat);
+				}
+			}
+		}
+		mCtrlReceiveChat->resetDirty();
+	}
 
 	mChanged = FALSE;
 
@@ -808,11 +808,22 @@ void LLPanelGroupGeneral::update(LLGroupChange gc)
 	if (mCtrlReceiveNotices)
 	{
 		mCtrlReceiveNotices->setVisible(is_member);
-		if (is_member)
-		{
-			mCtrlReceiveNotices->setEnabled(mAllowEdit);
-		}
+		mCtrlReceiveNotices->setEnabled(mAllowEdit && is_member);
 		mCtrlReceiveNotices->resetDirty();
+	}
+
+	if (mCtrlReceiveChat)
+	{
+		mCtrlReceiveChat->setVisible(is_member);
+		mCtrlReceiveChat->setEnabled(mAllowEdit);
+		mCtrlReceiveChat->resetDirty();
+	}
+
+	if (mCtrlListGroup)
+	{
+		mCtrlListGroup->setVisible(is_member);
+		mCtrlListGroup->setEnabled(mAllowEdit);
+		mCtrlListGroup->resetDirty();
 	}
 
 	if (mGroupName)
@@ -969,6 +980,7 @@ void LLPanelGroupGeneral::updateChanged()
 		mCtrlEnrollmentFee,
 		mSpinEnrollmentFee,
 		mCtrlReceiveNotices,
+		mCtrlReceiveChat,
 		mCtrlListGroup,
 		mActiveTitleLabel,
 		mComboActiveTitle

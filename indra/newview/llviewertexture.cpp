@@ -428,7 +428,7 @@ bool LLViewerTexture::isMemoryForTextureLow()
 
 #if LL_LINUX || LL_WINDOWS
 	static LLCachedControl<U32> main_memory_safety_margin(gSavedSettings, "MainMemorySafetyMargin");
-	S32 min_free_main_memory = main_memory_safety_margin * 1024;
+	static LLCachedControl<F32> first_step_ratio(gSavedSettings, "SafetyMargin1stStepRatio");
 
 	static F32 last_memory_check = 0.0f;
 	static F32 last_draw_distance_reduce = 0.0f;
@@ -439,8 +439,21 @@ bool LLViewerTexture::isMemoryForTextureLow()
 		// Check main memory
 		last_memory_check = sMemoryCheckTimer.getElapsedTimeF32();
 		U32 avail_physical_mem_kb, avail_virtual_mem_kb;
+		if (main_memory_safety_margin < 48)
+		{
+			// 48Mb minimum
+			gSavedSettings.setU32("MainMemorySafetyMargin", 48);
+		}
+		if (first_step_ratio < 2.0f)
+		{
+			gSavedSettings.setF32("SafetyMargin1stStepRatio", 2.0f);
+		}
+		else if (first_step_ratio > 5.0f)
+		{
+			gSavedSettings.setF32("SafetyMargin1stStepRatio", 5.0f);
+		}
 		LLMemoryInfo::getAvailableMemoryKB(avail_physical_mem_kb, avail_virtual_mem_kb);
-		if (avail_virtual_mem_kb < min_free_main_memory)
+		if (avail_virtual_mem_kb < main_memory_safety_margin * 1024)
 		{
 			// Avoid crashes by reducing the draw distance.
 			if (last_memory_check - last_draw_distance_reduce > 20.0f * discard_delta_time)
@@ -470,7 +483,7 @@ bool LLViewerTexture::isMemoryForTextureLow()
 
 			low_mem = true;
 		}
-		else if (avail_virtual_mem_kb < 2 * min_free_main_memory)
+		else if (avail_virtual_mem_kb < (U32)(first_step_ratio * 1024.f) * main_memory_safety_margin)
 		{
 			low_mem = true;
 		}

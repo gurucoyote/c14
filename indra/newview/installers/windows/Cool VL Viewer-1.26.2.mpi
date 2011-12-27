@@ -99,7 +99,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.10}
+{1.26.2.11}
 
 Language,ca
 {No}
@@ -1488,7 +1488,6 @@ File 35B16E29-F459-41EB-9FA5-A012E3565948 -active Yes -name panel_master_volume.
 File 0EFEC1D5-6464-4BF6-AE60-F9EB900B9534 -active Yes -name panel_media_remote.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 03C1F543-BB28-46E7-A41F-99009083212E -active Yes -name panel_music_remote.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 3EF83C3D-5193-4E50-BEA1-0D2D2AB347AF -active Yes -name panel_overlaybar.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
-File 8CD5F775-EB18-4DBF-B800-240013497263 -active Yes -name panel_preferences_audio.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 69076AC2-0724-4B0C-BDE6-04A10163DD5F -active Yes -name panel_preferences_chat.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File AE942B29-AB3F-4F6D-B6B6-113A1C33E3B5 -active Yes -name panel_preferences_cool.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 699C25C1-5C60-49F1-A776-7D564B9ADBB7 -active Yes -name panel_preferences_general.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
@@ -1621,6 +1620,7 @@ File FEE7EA97-FD36-4D66-B3E0-B6CCE167F13C -active Yes -name xui_version.xml -par
 File 39972322-9C3C-4D8B-9D09-A9730C78A431 -active Yes -name floater_make_new_outfit.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File D19576F0-3555-46DB-AB6F-DA5175A1C87F -active Yes -name floater_model_preview.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File E1673CAE-74C1-4FCB-B4B2-AA83500F04D3 -active Yes -name floater_rlv_blacklist.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
+File 4A796934-7169-40F1-BBC2-0ED8242C5993 -active Yes -name panel_preferences_media.xml -parent 98BF77B0-C5E3-411F-A8F1-A6918D4831BB
 File 801E5197-45CE-4174-AC68-EDFCE93D9D7F -active Yes -name colors.xml -parent 3A542087-9E49-4945-AF4C-16608F2D6BE6
 File A8FE3E97-54B4-466F-BA84-6CEDCEA3E613 -active Yes -name silver -type dir -parent 1E430344-AAB4-45B1-AC0E-F04E115F6E46
 File C442D02F-67F7-47C5-B00D-AF6EFF9268D1 -active Yes -name xui -type dir -parent A8FE3E97-54B4-466F-BA84-6CEDCEA3E613
@@ -2073,6 +2073,7 @@ Action 9458B859-AB20-42E9-80B0-639BB6A74119 -active Yes -name 9458b859-ab20-42e9
 Action DD955477-004B-48F7-ACF9-13A503388F7D -active Yes -name dd955477-004b-48f7-acf9-13a503388f7d -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete 7zip original copy} -component DeleteFile
 Action 17BC28A6-13BC-460F-AE5A-E0BCF7C8CF22 -active Yes -name 17bc28a6-13bc-460f-ae5a-e0bcf7c8cf22 -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete old crash logger} -component DeleteFile
 Condition 6A01C55A-DFE4-46CA-A37B-10068168A8D3 -active Yes -name 6a01c55a-dfe4-46ca-a37b-10068168a8d3 -parent 17BC28A6-13BC-460F-AE5A-E0BCF7C8CF22 -setup Install -title {File Exists Condition} -component FileExistsCondition
+Action 91AA0096-486C-45C5-BD47-553B21AAC20B -active Yes -name 91aa0096-486c-45c5-bd47-553b21aac20b -type action -parent 3C21DA1A-D305-47D2-838F-CA155241BD62 -setup Install -title {Delete old XUI files} -component DeleteFile
 ActionGroup 899C40A6-424B-4146-B482-A7A14C6C93C8 -active Yes -name 899c40a6-424b-4146-b482-a7a14c6c93c8 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Check Actions}
 Action 3403FC28-506E-4DE9-A478-821A8B55AB9C -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Action 319C5014-8D5E-4C77-B2AA-1CBB59111A55 -active Yes -name 3403fc28-506e-4de9-a478-821a8b55ab9c -type action -parent 899C40A6-424B-4146-B482-A7A14C6C93C8 -setup Install -title {Set Virtual Text} -operator OR -component SetVirtualText
@@ -2624,7 +2625,7 @@ array set Properties {
 {<%InstallDir%>}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,FileSize
-{75460893}
+{75475839}
 
 4BD78D4C-6617-4C3F-8DC8-E11325B1ED0F,Name
 {Program Files}
@@ -3036,6 +3037,12 @@ array set Properties {
 
 8E1DD48A-F8F3-414D-822F-CF4D4DC85F05,Operator
 {does not exist}
+
+91AA0096-486C-45C5-BD47-553B21AAC20B,Files
+{<%InstallDir%>/skins/default/xui/en-us/panel_preferences_audio.xml}
+
+91AA0096-486C-45C5-BD47-553B21AAC20B,IgnoreErrors
+{Yes}
 
 9256DF5F-1F56-461B-88A7-1AC277134159,String1
 {<%NeedProprietaryComponents%>}

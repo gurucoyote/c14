@@ -96,7 +96,7 @@ InstallPassword
 {}
 
 InstallVersion
-{1.26.2.10}
+{1.26.2.11}
 
 Language,ca
 {No}
@@ -1668,7 +1668,6 @@ File 8F7D71DF-A58D-566E-3B43-6B27A239BA6B -active Yes -name panel_notifications_
 File 0D2665AA-48AC-5C5C-0CFB-877A3D22DC29 -active Yes -name panel_overlaybar.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File C32AD781-00FF-CA0F-56BC-68977CA29223 -active Yes -name panel_place.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File FF1967D2-E68A-89BD-68CC-C41DC7F03819 -active Yes -name panel_place_small.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
-File 50A2A14F-65E5-D5E0-3349-650CBCE3E3A4 -active Yes -name panel_preferences_audio.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File 244908F5-9DC3-BA08-8417-9C9F2DCAC5D9 -active Yes -name panel_preferences_chat.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File 931D4A86-3931-83E8-33AF-2274E0F0D9DD -active Yes -name panel_preferences_cool.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File C970151B-2D56-05F4-D603-C0AC37193F4C -active Yes -name panel_preferences_general.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
@@ -1706,6 +1705,7 @@ File 78A575F5-844E-CDD9-27E6-21AA60A20DEF -active Yes -name panel_preferences_gr
 File 91096D6D-A13F-8AC5-24D4-20FBD8439A85 -active Yes -name floater_make_new_outfit.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File B2FC6A5A-A1BD-1B1D-C68B-696B84655581 -active Yes -name floater_rlv_blacklist.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File 7A0058C4-31F7-8CE7-8857-3BC62449A5F8 -active Yes -name floater_model_preview.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
+File 912F8DF4-3D86-D39C-CEF7-04BEFDAA4AA1 -active Yes -name panel_preferences_media.xml -parent D8EFD99D-CE67-9B93-8A34-27E9522DD8CB
 File 1327C11E-BDEA-7087-1846-28626D26E1CA -active Yes -name silver -type dir -parent 1A5E0B77-9229-C5DB-CFD4-CCC6746E6B64
 File 503D710E-EA97-DE95-5732-0D75B6200404 -active Yes -name colors.xml -parent 1327C11E-BDEA-7087-1846-28626D26E1CA
 File 654CAB03-F1A1-02A4-3A8B-390B37E64EC9 -active Yes -name colors_base.xml -parent 1327C11E-BDEA-7087-1846-28626D26E1CA
@@ -2167,6 +2167,7 @@ Action 97A2D2A8-676C-FE70-4F1A-BE501CF63A9F -active Yes -name 97a2d2a8-676c-fe70
 Action 1B048CDA-F332-1C4A-6A20-568E24C84FDF -active Yes -name 1b048cda-f332-1c4a-6a20-568e24c84fdf -type action -parent C201C2D2-A390-FA01-0226-0E42B30CDB8D -setup Install -title {Write Text To File} -component WriteTextToFile
 Action 379B6C9C-D339-8C4C-5656-2696CAFADFE8 -active Yes -name db900f52-ebed-1566-7bd5-f04888ffca14 -type action -parent C201C2D2-A390-FA01-0226-0E42B30CDB8D -setup Install -title {Install Uninstaller} -component InstallUninstaller
 Condition 10428D1A-F56B-DE56-12E2-9F5857367F35 -active Yes -name ff06d201-3627-9b53-bb6e-9b811a11a81e -parent 379B6C9C-D339-8C4C-5656-2696CAFADFE8 -setup Install -title {String Is Condition} -component StringIsCondition
+Action 1378D6C6-9F2B-61AE-7966-59A2B8017FB9 -active Yes -name 1378d6c6-9f2b-61ae-7966-59a2b8017fb9 -type action -parent C201C2D2-A390-FA01-0226-0E42B30CDB8D -setup Install -title {Delete old XUI files} -component DeleteFile
 ActionGroup 85975844-D41F-574F-BDEE-A5A900FC1A84 -active Yes -name 85975844-d41f-574f-bdee-a5a900fc1a84 -type actiongroup -parent ActionGroupsInstall -setup Install -title {Check Actions}
 Action FD2831E9-3502-5E6F-D8A1-5E5A715C1D0C -active Yes -name fd2831e9-3502-5e6f-d8a1-5e5a715c1d0c -type action -parent 85975844-D41F-574F-BDEE-A5A900FC1A84 -setup Install -title {Set Virtual Text} -component SetVirtualText
 Action 5E38443A-2D47-2E93-8D3E-80C44A3BDA1A -active Yes -name 5e38443a-2d47-2e93-8d3e-80c44a3bda1a -type action -parent 85975844-D41F-574F-BDEE-A5A900FC1A84 -setup Install -title {Set Virtual Text} -operator OR -component SetVirtualText
@@ -2323,6 +2324,12 @@ array set Properties {
 
 11B11D91-10DB-D9FC-69ED-97918BC099BA,String
 {<%SnowglobeDir%>}
+
+1378D6C6-9F2B-61AE-7966-59A2B8017FB9,Files
+{<%InstallDir%>/skins/default/xui/en-us/panel_preferences_audio.xml}
+
+1378D6C6-9F2B-61AE-7966-59A2B8017FB9,IgnoreErrors
+{Yes}
 
 16551329-0A41-D09B-046B-7232840F394B,Action
 {Uninstall Actions}
@@ -2811,7 +2818,7 @@ array set Properties {
 {<%InstallDir%>}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,FileSize
-{123240841}
+{123253154}
 
 6CAFA81B-7B7F-0154-8D65-21519C7C1743,Name
 {Program Files}

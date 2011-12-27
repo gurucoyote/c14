@@ -45,6 +45,7 @@
 #include "llnotifications.h"
 #include "llrect.h"
 #include "llresmgr.h"
+#include "llsys.h"
 #include "lltextbox.h"
 #include "lluictrlfactory.h"
 #include "message.h"
@@ -101,6 +102,7 @@ static void onClickScriptDebug(void*);
 
 LLStatusBar::LLStatusBar(const std::string& name, const LLRect& rect)
 :	LLPanel(name, LLRect(), FALSE),		// not mouse opaque
+	mVisibility(true),
 	mBalance(0),
 	mHealth(100),
 	mSquareMetersCredit(0),
@@ -207,7 +209,24 @@ LLStatusBar::LLStatusBar(const std::string& name, const LLRect& rect)
 //	mSGPacketLoss->setMouseOpaque(FALSE);
 	mSGPacketLoss->mPerSec = FALSE;
 	addChild(mSGPacketLoss);
+#if LL_LINUX || LL_WINDOWS
+	x -= SIM_STAT_WIDTH + 2;
 
+	r.set(x - SIM_STAT_WIDTH, y + MENU_BAR_HEIGHT - 1, x, y + 1);
+	mSGMemoryUsage = new LLStatGraph("MemoryUsagePercent", r);
+	mSGMemoryUsage->setFollows(FOLLOWS_BOTTOM | FOLLOWS_RIGHT);
+	mSGMemoryUsage->setStat(&LLViewerStats::getInstance()->mMemoryUsageStat);
+	text = getString("memory_usage_tooltip") + " ";
+	mSGMemoryUsage->setLabel(text);
+	mSGMemoryUsage->setUnits("%");
+	mSGMemoryUsage->setMin(0.f);
+	mSGMemoryUsage->setMax(100.f);
+	mSGMemoryUsage->setThreshold(2, 100.f);
+	mSGMemoryUsage->setPrecision(0);
+//	mSGMemoryUsage->setMouseOpaque(FALSE);
+	mSGMemoryUsage->mPerSec = FALSE;
+	addChild(mSGMemoryUsage);
+#endif
 	mTextStat = getChild<LLTextBox>("stat_btn");
 	mTextStat->setClickedCallback(onClickStatGraph);
 }
@@ -246,16 +265,44 @@ void LLStatusBar::draw()
 // Per-frame updates of visibility
 void LLStatusBar::refresh()
 {
-	// Adding Net Stat Meter back in
+	static F32 saved_bwtotal = 0.0f;
+	static U32 saved_mmargin = 0;
+	static F32 saved_mratio = 0;
+
 	F32 bwtotal = gViewerThrottle.getMaxBandwidth() / 1000.f;
-	mSGBandwidth->setMin(0.f);
-	mSGBandwidth->setMax(bwtotal * 1.25f);
-	mSGBandwidth->setThreshold(0, bwtotal * 0.75f);
-	mSGBandwidth->setThreshold(1, bwtotal);
-	mSGBandwidth->setThreshold(2, bwtotal);
+	if (bwtotal != saved_bwtotal)
+	{
+		saved_bwtotal = bwtotal;
+		mSGBandwidth->setMin(0.f);
+		mSGBandwidth->setMax(bwtotal * 1.25f);
+		mSGBandwidth->setThreshold(0, bwtotal * 0.75f);
+		mSGBandwidth->setThreshold(1, bwtotal);
+		mSGBandwidth->setThreshold(2, bwtotal);
+	}
+
+#if LL_LINUX || LL_WINDOWS
+	static LLCachedControl<bool> main_memory_safety_check(gSavedSettings, "MainMemorySafetyCheck");
+	static LLCachedControl<U32> main_memory_safety_margin(gSavedSettings, "MainMemorySafetyMargin");
+	static LLCachedControl<F32> first_step_ratio(gSavedSettings, "SafetyMargin1stStepRatio");
+	if (main_memory_safety_check &&
+		(saved_mmargin != main_memory_safety_margin ||
+		 saved_mratio != first_step_ratio))
+	{
+		saved_mmargin = main_memory_safety_margin;
+		saved_mratio = first_step_ratio;
+		U32 max_mem, max_phys;
+		LLMemoryInfo::getMaxMemoryKB(max_phys, max_mem);
+		// Threshold at which the texture bias gets increased
+		U32 bias_mem = max_mem - (U32)(first_step_ratio * 1024.f) * main_memory_safety_margin;
+		// Threshold at which the draw distance gets decreased
+		U32 dd_mem = max_mem - 1024 * main_memory_safety_margin;
+		mSGMemoryUsage->setThreshold(0, 100.f * (F32)bias_mem / (F32)max_mem);
+		mSGMemoryUsage->setThreshold(1, 100.f * (F32)dd_mem / (F32)max_mem);
+	}
+	mSGMemoryUsage->setVisible(mVisibility && main_memory_safety_check);
+#endif
 
 	// *TODO: Localize / translate time
-
 	// Get current UTC time, adjusted for the user's clock
 	// being off.
 	time_t utc_time;
@@ -354,7 +401,7 @@ void LLStatusBar::refresh()
 	{
 		buttonRect = mBtnNoBuild->getRect();
 		// No Build Zone
-		r.setOriginAndSize( x, y, buttonRect.getWidth(), buttonRect.getHeight());
+		r.setOriginAndSize(x, y, buttonRect.getWidth(), buttonRect.getHeight());
 		mBtnNoBuild->setRect(r);
 		x += buttonRect.getWidth();
 	}
@@ -540,27 +587,32 @@ void LLStatusBar::refresh()
 	S32 new_right = getRect().getWidth();
 
 	r = mTextStat->getRect();
-	r.translate( new_right - r.mRight, 0);
+	r.translate(new_right - r.mRight, 0);
 	mTextStat->setRect(r);
-	new_right -= r.getWidth() + 12;
+	new_right -= r.getWidth() + 15;
+	mTextStat->setEnabled(TRUE);
 
-	static LLCachedControl<bool> search_visible(gSavedSettings, "ShowSearchBar");
+	static LLCachedControl<bool> show_search_bar(gSavedSettings, "ShowSearchBar");
+	bool search_visible = mVisibility && show_search_bar;
 	if (search_visible)
 	{
 		r = mBtnSearchBevel->getRect();
-		r.translate( new_right - r.mRight, 0);
+		r.translate(new_right - r.mRight, 0);
 		mBtnSearchBevel->setRect(r);
 
 		r = mBtnSearch->getRect();
-		r.translate( new_right - r.mRight, 0);
+		r.translate(new_right - r.mRight, 0);
 		mBtnSearch->setRect(r);
 		new_right -= r.getWidth();
 
 		r = mLineEditSearch->getRect();
-		r.translate( new_right - r.mRight, 0);
+		r.translate(new_right - r.mRight, 0);
 		mLineEditSearch->setRect(r);
 		new_right -= r.getWidth() + 6;
 	}
+	mLineEditSearch->setVisible(search_visible);
+	mBtnSearch->setVisible(search_visible);
+	mBtnSearchBevel->setVisible(search_visible);
 
 	// Set rects of money, buy money, time
 	r = mTextBalance->getRect();
@@ -569,13 +621,13 @@ void LLStatusBar::refresh()
 	new_right -= r.getWidth() - 18;
 
 	r = mBtnBuyCurrency->getRect();
-	r.translate( new_right - r.mRight, 0);
+	r.translate(new_right - r.mRight, 0);
 	mBtnBuyCurrency->setRect(r);
 	new_right -= r.getWidth() + 6;
 
 	r = mTextTime->getRect();
 	// mTextTime->getTextPixelWidth();
-	r.translate( new_right - r.mRight, 0);
+	r.translate(new_right - r.mRight, 0);
 	mTextTime->setRect(r);
 	// new_right -= r.getWidth() + MENU_PARCEL_SPACING;
 
@@ -585,18 +637,11 @@ void LLStatusBar::refresh()
 	const S32 PARCEL_RIGHT =  llmin(mTextTime->getRect().mLeft, mTextParcelName->getTextPixelWidth() + x + 5);
 	r.set(x + 4, getRect().getHeight() - 2, PARCEL_RIGHT, 0);
 	mTextParcelName->setRect(r);
-
-	// Set search bar visibility
-	mLineEditSearch->setVisible(search_visible);
-	mBtnSearch->setVisible(search_visible);
-	mBtnSearchBevel->setVisible(search_visible);
-	mSGBandwidth->setVisible(TRUE);
-	mSGPacketLoss->setVisible(TRUE);
-	mTextStat->setEnabled(TRUE);
 }
 
 void LLStatusBar::setVisibleForMouselook(bool visible)
 {
+	mVisibility = visible;
 	mTextBalance->setVisible(visible);
 	mTextTime->setVisible(visible);
 	mBtnBuyCurrency->setVisible(visible);
@@ -605,6 +650,9 @@ void LLStatusBar::setVisibleForMouselook(bool visible)
 	mBtnSearchBevel->setVisible(visible);
 	mSGBandwidth->setVisible(visible);
 	mSGPacketLoss->setVisible(visible);
+#if LL_LINUX || LL_WINDOWS
+	mSGMemoryUsage->setVisible(visible);
+#endif
 	setBackgroundVisible(visible);
 }
 

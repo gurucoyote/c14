@@ -104,7 +104,8 @@ public:
 	void setLandCredit(S32 credit);
 	void setLandCommitted(S32 committed);
 
-	void setVisibleForMouselook(bool visible); // some elements should hide in mouselook
+	// some elements should hide in mouselook
+	void setVisibleForMouselook(bool visible);
 
 	// ACCESSORS
 	S32 getBalance() const;
@@ -122,6 +123,8 @@ private:
 	static void onClickStatGraph(void* data);
 
 private:
+	bool			mVisibility;
+
 	LLTextBox*		mTextBalance;
 	LLTextBox*		mTextHealth;
 	LLTextBox*		mTextTime;
@@ -130,6 +133,7 @@ private:
 
 	LLStatGraph*	mSGBandwidth;
 	LLStatGraph*	mSGPacketLoss;
+	LLStatGraph*	mSGMemoryUsage;
 
 	LLButton*		mBtnScriptError;
 	LLButton*		mBtnHealth;

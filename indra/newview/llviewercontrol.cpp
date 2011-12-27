@@ -37,25 +37,25 @@
 
 #include "indra_constants.h"
 #include "llaudioengine.h"
+#include "llavatarnamecache.h"
+#include "llerrorcontrol.h"
+#include "llfloater.h"
 #include "llkeyboard.h"
 #include "llparcel.h"
 #include "llrender.h"
+#include "llsys.h"
 #include "llversionviewer.h"
 
-// For Listeners
 #include "llagent.h"
 #include "llappviewer.h"
-#include "llavatarnamecache.h"
 #include "llcallingcard.h"
 #include "llconsole.h"
 #include "lldirpicker.h"
 #include "lldrawpoolbump.h"
 #include "lldrawpoolterrain.h"
-#include "llerrorcontrol.h"
 #include "llfeaturemanager.h"
 #include "llfilepicker.h"
 #include "llflexibleobject.h"
-#include "llfloater.h"
 #include "llfloaterchat.h"
 #include "llmeshrepository.h"
 #include "llnetmap.h"
@@ -107,6 +107,13 @@ extern bool gUpdateDrawDistance;
 
 ////////////////////////////////////////////////////////////////////////////
 // Listeners
+
+
+static bool handleAllowSwappingChanged(const LLSD& newvalue)
+{
+	LLMemoryInfo::setAllowSwapping(newvalue.asBoolean());
+	return true;
+}
 
 //MK
 static bool handleRestrainedLoveDebugChanged(const LLSD& newvalue)
@@ -646,6 +653,7 @@ static bool handleNonBlockingFilePickerChanged(const LLSD& newvalue)
 
 void settings_setup_listeners()
 {
+	gSavedSettings.getControl("AllowSwapping")->getSignal()->connect(boost::bind(&handleAllowSwappingChanged, _2));
 	gSavedSettings.getControl("RestrainedLoveDebug")->getSignal()->connect(boost::bind(&handleRestrainedLoveDebugChanged, _2));
 	gSavedSettings.getControl("FirstPersonAvatarVisible")->getSignal()->connect(boost::bind(&handleRenderAvatarMouselookChanged, _2));
 	gSavedSettings.getControl("RenderFarClip")->getSignal()->connect(boost::bind(&handleRenderFarClipChanged, _2));

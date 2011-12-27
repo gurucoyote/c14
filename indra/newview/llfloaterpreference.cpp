@@ -51,7 +51,6 @@
 #include "llcommandhandler.h"
 #include "llfloaterabout.h"
 #include "llfloaterhardwaresettings.h"
-#include "llpanelaudioprefs.h"
 #include "llpaneldisplay.h"
 #include "hbpanelgrids.h"
 #include "llpanellogin.h"
@@ -62,6 +61,7 @@
 #include "llprefsgeneral.h"
 #include "llprefsim.h"
 #include "llprefsinput.h"
+#include "llprefsmedia.h"
 #include "llprefsnetwork.h"
 #include "llprefsnotifications.h"
 #include "llprefsvoice.h"
@@ -128,7 +128,7 @@ LLPreferenceCore::LLPreferenceCore(LLTabContainer* tab_container,
 							   FALSE, onTabChanged, mTabContainer);
 	mDisplayPanel->setDefaultBtn(default_btn);
 
-	mAudioPanel = new LLPanelAudioPrefs();
+	mAudioPanel = new LLPrefsMedia();
 	mTabContainer->addTabPanel(mAudioPanel, mAudioPanel->getLabel(),
 							   FALSE, onTabChanged, mTabContainer);
 	mAudioPanel->setDefaultBtn(default_btn);
