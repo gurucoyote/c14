@@ -2163,7 +2163,7 @@ bool LLAppViewer::initConfiguration()
     mYieldTime = gSavedSettings.getS32("YieldTime");
              
 	// XUI:translate
-	gSecondLife = "Cool VL Viewer";
+	gSecondLife = "Coyote C14";
 
 	// Read skin/branding settings if specified.
 	//if (! gDirUtilp->getSkinDir().empty())

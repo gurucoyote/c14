@@ -41,19 +41,19 @@
   <font name="DejaVu"
 	comment="Name of DejaVu font (bold)"
 	font_style="BOLD">
-    <file>DejaVuSansBold.ttf</file>
+    <file>DejaVuSans-Bold.ttf</file>
   </font>
 
   <font name="DejaVu"
 	comment="Name of DejaVu font (italic)"
 	font_style="ITALIC">
-    <file>DejaVuSansOblique.ttf</file>
+    <file>DejaVuSans-Oblique.ttf</file>
   </font>
 
   <font name="DejaVu"
 	comment="Name of DejaVu font (bold italic)"
 	font_style="BOLD|ITALIC">
-    <file>DejaVuSansBoldOblique.ttf</file>
+    <file>DejaVuSans-BoldOblique.ttf</file>
   </font>
 
   <font name="Helvetica"
@@ -86,7 +86,7 @@
 
   <font_size name="Monospace"
 	     comment="Size for monospaced font (points, or 1/72 of an inch)"
-	     size="9.0"
+	     size="11.0"
 	     />
   <font_size name="Huge"
 	     comment="Size of huge font (points, or 1/72 of an inch)"
@@ -98,11 +98,11 @@
 	     />
   <font_size name="Medium"
 	     comment="Size of medium font (points, or 1/72 of an inch)"
-	     size="10.0"
+	     size="11.0"
 	     />
   <font_size name="Small"
 	     comment="Size of small font (points, or 1/72 of an inch)"
-	     size="9"
+	     size="10.0"
 	     />
 </fonts>
 

@@ -98,9 +98,9 @@ set(GRID agni CACHE STRING "Target Grid")
 set(VIEWER ON CACHE BOOL "Build Second Life viewer.")
 set(VIEWER_CHANNEL "CommunityDeveloper" CACHE STRING "Viewer Channel Name")
 set(VIEWER_LOGIN_CHANNEL ${VIEWER_CHANNEL} CACHE STRING "Fake login channel for A/B Testing")
-set(VIEWER_BRANDING_ID "cool_vl_viewer" CACHE STRING "Viewer branding id (currently cool_vl_viewer)")
-set(VIEWER_BRANDING_NAME "Cool VL Viewer")
-set(VIEWER_BRANDING_NAME_CAMELCASE "CoolVLViewer")
+set(VIEWER_BRANDING_ID "coyote_c14" CACHE STRING "Viewer branding id (currently coyote_c14)")
+set(VIEWER_BRANDING_NAME "Coyote C14")
+set(VIEWER_BRANDING_NAME_CAMELCASE "CoyoteC14")
 
 set(STANDALONE OFF CACHE BOOL "Do not use Linden-supplied prebuilt libraries.")
 

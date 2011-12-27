@@ -98,7 +98,7 @@ def get_channel(srctree):
     
 
 DEFAULT_SRCTREE = os.path.dirname(sys.argv[0])
-DEFAULT_CHANNEL = 'Cool VL Viewer'
+DEFAULT_CHANNEL = 'Coyote C14'
 
 ARGUMENTS=[
     dict(name='actions',

@@ -77,7 +77,7 @@ class PlatformSetup(object):
     standalone = 'OFF'
     unattended = 'OFF'
     universal = 'OFF'
-    project_name = 'SecondLife'
+    project_name = 'CoyoteC14'
     distcc = True
     cmake_opts = []
     word_size = 32

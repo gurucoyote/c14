@@ -45,7 +45,7 @@ class ViewerManifest(LLManifest):
         self.exclude("*.svn*")
         self.path(src="../../scripts/messages/message_template.msg", dst="app_settings/message_template.msg")
         self.path(src="../../etc/message.xml", dst="app_settings/message.xml")
-        self.path(src="../../doc/CoolVLViewerReadme.txt", dst="CoolVLViewerReadme.txt")
+        self.path(src="../../doc/CoyoteC14Readme.txt", dst="CoyoteC14Readme.txt")
         self.path(src="../../doc/RestrainedLoveReadme.txt", dst="RestrainedLoveReadme.txt")
 
         if self.prefix(src="app_settings"):
@@ -118,7 +118,7 @@ class ViewerManifest(LLManifest):
     def channel(self):
         return self.args['channel']
     def channel_unique(self):
-        return self.channel().replace("Cool VL Viewer", "").strip()
+        return self.channel().replace("Coyote C14", "").strip()
     def channel_oneword(self):
         return "".join(self.channel_unique().split())
     def channel_lowerword(self):
@@ -126,7 +126,7 @@ class ViewerManifest(LLManifest):
     def viewer_branding_id(self):
         return self.args['branding_id']
     def installer_prefix(self):
-        return "CoolVLViewer_"
+        return "CoyoteC14_"
 
     def flags_list(self):
         """ Convenience function that returns the command-line flags
@@ -146,7 +146,7 @@ class ViewerManifest(LLManifest):
 
 class WindowsManifest(ViewerManifest):
     def final_exe(self):
-    	return "CoolVLViewer.exe"
+    	return "CoyoteC14.exe"
 
     def construct(self):
         super(WindowsManifest, self).construct()
@@ -302,7 +302,7 @@ class DarwinManifest(ViewerManifest):
                 self.path("licenses-mac.txt", dst="licenses.txt")
                 self.path("featuretable_mac.txt")
                 self.path("SecondLife.nib")
-                self.path("cool_vl_viewer.icns")
+                self.path("coyote_c14.icns")
 
                 # Translations
                 self.path("English.lproj")
@@ -416,10 +416,10 @@ class DarwinManifest(ViewerManifest):
                                  { 'viewer_binary' : self.dst_path_of('Contents/MacOS/'+self.app_name())})
 
     def app_name(self):
-        return "Cool VL Viewer"
+        return "Coyote C14"
         
     def info_plist_name(self):
-        return "Info-CoolVLViewer.plist"
+        return "Info-CoyoteC14.plist"
 
     def package_finish(self):
         channel_standin = self.app_name()
@@ -468,7 +468,7 @@ class DarwinManifest(ViewerManifest):
         # will use the release .DS_Store, and will look broken.
         # - Ambroff 2008-08-20
 		# Added a .DS_Store for snowglobe - Merov 2009-06-17
-        # Using Snowglobe's .DS_Store for the Cool VL Viewer - Henri Beauchamp
+        # Using Snowglobe's .DS_Store for the Coyote C14 - Henri Beauchamp
 
         dmg_template = os.path.join ('installers', 'darwin', 'snowglobe-dmg')
 
@@ -548,10 +548,10 @@ class LinuxManifest(ViewerManifest):
         self.path("featuretable_linux.txt")
 
     def wrapper_name(self):
-        return "cool_vl_viewer"
+        return "coyote_c14"
 
     def binary_name(self):
-        return "cool_vl_viewer-bin"
+        return "coyote_c14-bin"
     
     def icon_name(self):
     	return "cvlv_icon.png"
