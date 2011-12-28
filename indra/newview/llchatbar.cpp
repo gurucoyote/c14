@@ -268,7 +268,7 @@ void LLChatBar::layout()
 	if (mInputEditor)
 	{
 		input_width = rect_width - 2 * segment_width - 3 * pad - gesture_width;
-		r.setOriginAndSize(x, y + 2, input_width, 18);
+		r.setOriginAndSize(x, y + 2, input_width, 22); // GC: was 18
 		mInputEditor->reshape(r.getWidth(), r.getHeight(), TRUE);
 		mInputEditor->setRect(r);
 		x += input_width + pad;
